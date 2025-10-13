@@ -3,7 +3,7 @@ import 'cally'
 
 function App() {
   return (
-    <div>Appgg</div>
+    <div>App</div>
   )
 }
 
