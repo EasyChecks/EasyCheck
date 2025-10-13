@@ -18,7 +18,6 @@ important
 1.give a name and describe what are you doing "do a mapping" describe"1. 2. 3."
 
 #dependency & library (both)
-npm i react-big-calendar
 npm install @headlessui/react
 npm i @material-tailwind/react
 npx create-flowbite-react@latest
