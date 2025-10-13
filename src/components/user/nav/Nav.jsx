@@ -26,24 +26,32 @@ function Nav() {
   return (
     <>
       <div 
-          className='fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200
-          font-prompt '>
+          className='fixed bottom-0 left-0 right-0 bg-black p-4 border-t border-gray-200
+          font-prompt shadow-lg'>
         <div className='flex justify-around'>
           {items.map(item => (
             <NavLink
               key={item.id}
               to={item.path}
               end={item.path === '/'}
-              className={({isActive}) => `flex flex-col items-center cursor-pointer ${isActive ? 'text-[#48CBFF]' : 'text-[#A5A5A5]'}`}
+              className={({isActive}) => `
+                p-2 rounded-lg flex flex-col items-center cursor-pointer 
+                transition-all duration-300 ease-in-out
+                hover:drop-shadow-[0_4px_8px_rgba(72,203,255,0.4)]
+                ${isActive ? 'text-[#48CBFF] drop-shadow-[0_2px_4px_rgba(72,203,255,0.3)]' : 'text-[#A5A5A5]'}
+              ` }
             >
               {({isActive}) => (
                 <>
-                  <div>
+                  <div className='transition-all duration-300 ease-in-out'>
                     {React.cloneElement(item.icon, {
-                      fill: isActive ? '#48CBFF' : '#A5A5A5'
+                      fill: isActive ? '#48CBFF' : '#A5A5A5',
+                      className: 'transition-all duration-300 ease-in-out filter hover:drop-shadow-[0_4px_8px_rgba(72,203,255,0.6)]'
                     })}
                   </div>
-                  <div className="text-center">{item.text}</div>
+                  <div className="text-center text-xs mt-1 transition-all duration-300 ease-in-out font-medium">
+                    {item.text}
+                  </div>
                 </>
               )}
             </NavLink>
