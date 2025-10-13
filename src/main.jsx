@@ -6,6 +6,7 @@ import "./index.css";
 
 export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
 
+// 🔹 กำหนด router ทั้งหมดในที่เดียว
 const router = createBrowserRouter([
   { 
     path: '/', 
