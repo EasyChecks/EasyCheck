@@ -2,18 +2,14 @@ import React from 'react'
 import 'cally'
 import Button from './components/ui/button'
 import { Calendar } from "./components/ui/calendar"
+import Nav from './components/user/nav/Nav'
 
 function App() {
   return (
     <>
-      <Button variant="default">Hello</Button>
-      <div>App GGEZ asdsadsadsadsa</div>
-      <div>App GGEZ
-        <div>YEDHODMAK</div>
+      <div>
+          <Nav />
       </div>
-      <div>App GGEZ</div>
-      <div>Hello I'm Nigg</div>
-      <div>hjh</div>
     </>
   )
 }
