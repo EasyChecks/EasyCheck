@@ -3,7 +3,9 @@ import 'cally'
 
 function App() {
   return (
-    <div>App GGEZ</div>
+    <div>App GGEZ
+      <div>YEDHODMAK</div>
+    </div>
   )
 }
 
