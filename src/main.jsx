@@ -8,9 +8,20 @@ import {
 } from 'react-router-dom'
 import React from "react"
 
+export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
+
 const router = createBrowserRouter([
-  { path: '/', 
+  { 
+    path: '/', 
     element: <App /> 
+  },
+  { 
+    path: '/leave', 
+    element: <Wait /> 
+  },
+  { 
+    path: '/calendar', 
+    element: <Wait /> 
   },
 ])
 
