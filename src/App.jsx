@@ -6,6 +6,8 @@ function App() {
     <div>App GGEZ
       <div>YEDHODMAK</div>
     </div>
+    <div>App GGEZ</div>
+    <div>Hello I'm Nigg</div>
   )
 }
 
