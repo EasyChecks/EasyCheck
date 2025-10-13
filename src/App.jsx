@@ -4,6 +4,7 @@ import 'cally'
 function App() {
   return (
     <div>App GGEZ</div>
+    <div>Hello I'm Nigg</div>
   )
 }
 
