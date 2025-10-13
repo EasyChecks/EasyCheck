@@ -26,7 +26,7 @@ function Nav() {
   return (
     <>
       <div 
-          className='fixed bottom-0 left-0 right-0 bg-black p-4 border-t border-gray-200
+          className='fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200
           font-prompt shadow-lg'>
         <div className='flex justify-around'>
           {items.map(item => (
