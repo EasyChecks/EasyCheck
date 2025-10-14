@@ -2,7 +2,9 @@ import React from 'react'
 
 function takept() {
   return (
-    <div>takept</div>
+    <div>
+        takept
+    </div>
   )
 }
 
