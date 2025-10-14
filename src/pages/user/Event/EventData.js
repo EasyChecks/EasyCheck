@@ -1,37 +1,25 @@
-const eventList = [
+const EventData = [
   {
     id: 1,
     title: "คุยงานกับลูกค้า",
-    person: "คุณธิติกร",
-    location: "โบกเทคบางนา",
-    dateStart: "2025-09-23",
-    dateEnd: "2025-09-24",
-    time: "09:00 - 11:00",
-    description: "เก็บ requirements ของลูกค้า",
-    status: "ยังไม่เข้าร่วม",
+    description: "เก็บ requirement ของลูกค้า",
+    location: "โซนเมกะบางนา",
+    time: "23/09/2025 → 24/09/2025 (09:00 - 11:00)",
   },
   {
     id: 2,
-    title: "ลงตรวจไซต์งาน",
-    person: "คุณภัทรพล",
-    location: "Site งานโครงการ A",
-    dateStart: "2025-09-25",
-    dateEnd: "2025-09-25",
-    time: "13:00 - 15:00",
-    description: "ตรวจสอบพื้นที่และวัดขนาดติดตั้ง",
-    status: "ลา",
+    title: "ลงตรวจ site งาน",
+    description: "ตรวจความเรียบร้อยของโครงการ",
+    location: "คลองเตย",
+    time: "25/09/2025 (10:00 - 12:00)",
   },
   {
     id: 3,
     title: "ติดตั้งสินค้าที่บ้านลูกค้า",
-    person: "คุณเกียรติศักดิ์",
-    location: "หมู่บ้าน The Grand",
-    dateStart: "2025-09-26",
-    dateEnd: "2025-09-26",
-    time: "09:00 - 17:00",
-    description: "ติดตั้งระบบอุปกรณ์ลูกค้า",
-    status: "เข้าร่วมแล้ว",
+    description: "ติดตั้งระบบให้ลูกค้ารายใหม่",
+    location: "ลาดพร้าว 71",
+    time: "27/09/2025 (13:00 - 15:00)",
   },
 ];
 
-export default eventList;
+export default EventData;

@@ -1,84 +1,99 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import eventList from "./EventData";
+import EventData from "./EventData";
 
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [joined, setJoined] = useState(false);
 
-  const event = eventList.find((item) => item.id === parseInt(id));
-
-  const handleJoin = () => {
-    setJoined(true);
-  };
+  const event = EventData.find((e) => e.id === parseInt(id));
 
   if (!event) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600 text-lg">
-        ไม่พบข้อมูลอีเวนต์
+      <div
+        style={{
+          padding: "20px",
+          textAlign: "center",
+          fontFamily: "Prompt, sans-serif",
+        }}
+      >
+        <h3>ไม่พบข้อมูลอีเว้นท์</h3>
+        <button
+          onClick={() => navigate("/event")}
+          style={{
+            marginTop: "10px",
+            backgroundColor: "#48CBFF",
+            color: "#fff",
+            padding: "8px 16px",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          🔙 กลับไปหน้าอีเว้นท์
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white px-6 py-8">
-      <button
-        onClick={() => navigate(-1)}
-        className="text-blue-600 text-lg font-medium mb-4"
+    <div
+      style={{
+        backgroundColor: "#E6F7FF",
+        minHeight: "100vh",
+        fontFamily: "Prompt, sans-serif",
+        padding: "24px",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: "12px",
+          padding: "24px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          maxWidth: "600px",
+          margin: "0 auto",
+        }}
       >
-        ← กลับ
-      </button>
+        <h2
+          style={{
+            color: "#48CBFF",
+            fontWeight: "600",
+            fontSize: "22px",
+            marginBottom: "12px",
+          }}
+        >
+          {event.title}
+        </h2>
 
-      <h1 className="text-3xl font-semibold text-gray-800 mb-6">อีเวนต์</h1>
+        <p>
+          <b>สถานที่:</b> {event.location}
+        </p>
+        <p>
+          <b>เวลา:</b> {event.time}
+        </p>
+        <p>
+          <b>รายละเอียด:</b> {event.description}
+        </p>
 
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">{event.title}</h2>
-          <p className="text-gray-500 text-base">{event.person}</p>
-        </div>
-
-        <div>
-          <p className="text-gray-500 text-base">สถานที่</p>
-          <p className="text-gray-700 text-base">{event.location}</p>
-        </div>
-
-        <div>
-          <p className="text-gray-500 text-base">สถานะ</p>
-          <span
-            className={`inline-block text-white px-3 py-1 rounded-md text-sm ${
-              joined ? "bg-green-800" : "bg-gray-600"
-            }`}
-          >
-            {joined ? "เข้าร่วมแล้ว" : event.status}
-          </span>
-        </div>
-
-        <div>
-          <p className="text-gray-500 text-base">ช่วงเวลา</p>
-          <p className="text-gray-700 text-base">
-            {event.dateStart} → {event.dateEnd}
-          </p>
-          <p className="text-gray-700 text-base">เวลา {event.time}</p>
-        </div>
-
-        <div>
-          <p className="text-gray-500 text-base">รายละเอียดงาน</p>
-          <p className="text-gray-700 text-base">{event.description}</p>
-        </div>
+        <button
+          onClick={() => navigate("/event")}
+          style={{
+            marginTop: "20px",
+            backgroundColor: "#48CBFF",
+            color: "#fff",
+            padding: "8px 16px",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <span>🔙</span> กลับไปหน้าอีเว้นท์
+        </button>
       </div>
-
-      <button
-        onClick={handleJoin}
-        disabled={joined}
-        className={`w-full mt-8 py-3 rounded-xl text-white text-base font-medium ${
-          joined
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-500 hover:bg-blue-600"
-        }`}
-      >
-        {joined ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
-      </button>
     </div>
   );
 }
