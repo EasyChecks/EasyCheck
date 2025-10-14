@@ -1,19 +1,18 @@
 import React from 'react'
 import 'cally'
-import Button from './components/ui/button'
-import { Calendar } from "./components/ui/calendar"
-import Nav from './components/user/nav/Nav'
-import Auth from './pages/Auth/Auth'
 
 function App() {
   return (
     <>
-      <div>
-        <Auth />
-        <Nav />
+      <div>App GGEZ asdsadsadsadsa</div>
+      <div>App GGEZ
+        <div>YEDHODMAK</div>
       </div>
+      <div>App GGEZ</div>
+      <div>Hello I'm Nigg</div>
+      <div>hjh</div>
     </>
   )
 }
 
-export default App;
+export default App
