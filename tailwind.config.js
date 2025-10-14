@@ -7,9 +7,6 @@ export default {
   ],
   theme: {
   	extend: {
-			fontFamily: {
-			prompt: ['"Prompt"', 'sans-serif']
-			},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
