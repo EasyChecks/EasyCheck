@@ -1,16 +1,33 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 
 
 function Auth() {
   const [showPwd, setShowPwd] = useState(false)
   const [showReset, setShowReset] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   // Reset form state (inside same file, modal)
-  const [Username, setUsername] = useState('')
-  const [Password, setPassword] = useState('')
+  const [Username, setUsernameReset] = useState('')
+  const [Password, setPasswordReset] = useState('')
   const [NewPassword, setNewPassword] = useState('')
+/**
+ * Handles Escape key press event. If the showReset state is true, sets
+ * showReset state to false.
+ * @param {KeyboardEvent} e - the key event
+ */
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+
+  const { login, getDashboardPath } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const from = location.state?.from?.pathname || '/'
 
   useEffect(() => {
     function onKey(e) {
@@ -19,6 +36,50 @@ function Auth() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [showReset])
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      // Simulate API call - replace with actual authentication
+      const response = await mockLoginAPI(username, password)
+
+      if (response.success) {
+        login(response.user)
+        const dashboardPath = getDashboardPath(response.user.role)
+        navigate(dashboardPath, { replace: true })
+      } else {
+        setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
+      }
+    } catch (err) {
+      setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Mock login API - replace with actual API call
+  const mockLoginAPI = async (username, password) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Mock user data based on username
+    const mockUsers = {
+      'admin': { id: 1, username: 'admin', role: 'admin', name: 'Administrator' },
+      'superadmin': { id: 2, username: 'superadmin', role: 'superadmin', name: 'Super Admin' },
+      'manager': { id: 3, username: 'manager', role: 'manager', name: 'หัวหน้า' },
+      'user': { id: 4, username: 'user', role: 'user', name: 'ผู้ใช้' }
+    }
+
+    const user = mockUsers[username.toLowerCase()]
+    if (user && password === '123456') {
+      return { success: true, user }
+    }
+
+    return { success: false }
+  }
 
   return (
     <div className="min-h-screen relative bg-white">
@@ -29,7 +90,7 @@ function Auth() {
 
       {/* sticky card (full-width flush to left/right) */}
       <section
-        className="font-prompt fixed inset-x-0 bottom-0 left-0 right-0 bg-white rounded-t-[28px] shadow-lg px-6 pb-8 pt-10 z-40 overflow-hidden"
+        className="font-prompt fixed inset-x-0 bottom-0 left-0 right-0 xl:left-[400px] xl:right-[500px] 2xl:left-[500px] 2xl:right-[500px] bg-white rounded-t-[28px] shadow-lg md:px-[60px] lg:px-[80px] xl:px-[40px] px-6 pb-8 pt-6 z-40 overflow-hidden"
         style={{ boxShadow: '0 -18px 40px rgba(72,203,255,0.18)' }}
       >
         {/* blue soft-glow */}
@@ -44,25 +105,30 @@ function Auth() {
         />
 
         <div className="space-y-5 relative z-10">
+          {/* header */}
+      <header className="w-full flex items-center justify-center text-center font-prompt font-bold  md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3">
+        Login
+      </header>
           {/* Username */}
           <div className="flex flex-col gap-2">
-            <label className=" sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Username</label>
+            <label className=" sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px]">Username</label>
             <input
               type="text"
               placeholder="กรอกชื่อผู้ใช้"
-              className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
+              className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px]"
             />
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-2">
-            <label className=" sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Password</label>
+            <label className=" sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px]">Password</label>
             <div className="relative">
               <input
                 type={showPwd ? 'text' : 'password'}
                 placeholder="กรอกรหัสผ่าน"
-                className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none pr-12 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
+                className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none pr-12 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px]"
               />
+              {/* toggle password */}
               <button
                 type="button"
                 onClick={() => setShowPwd((s) => !s)}
@@ -84,8 +150,8 @@ function Auth() {
           </div>
 
           {/* primary button */}
-          <div>
-            <button className="bg-[#48CBFF] text-white  sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px] rounded-xl py-3 w-full">
+          <div className="flex justify-center">
+            <button className="bg-[#48CBFF] text-white  sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] rounded-xl py-3 w-1/4 xl:w-[200px]">
               เข้าสู่ระบบ
             </button>
           </div>
@@ -95,7 +161,7 @@ function Auth() {
             <button
               type="button"
               onClick={() => setShowReset(true)}
-              className="text-[#888888]  sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]"
+              className="text-[#888888]  sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]"
             >
               เปลี่ยนรหัสผ่าน
             </button>
@@ -125,7 +191,7 @@ function Auth() {
             {/* Username */}
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
-                <label className="sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">
+                <label className="sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
                   Username <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -133,12 +199,12 @@ function Auth() {
                   onChange={(e) => setUsername(e.target.value)}
                   type="text"
                   placeholder="กรอกชื่อผู้ใช้"
-                  className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
+                  className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px]"
                 />
               </div>
               {/* Password */}
               <div className="flex flex-col gap-1">
-                <label className="sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">
+                <label className="sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
                   Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -147,7 +213,7 @@ function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="กรอกรหัสผ่านเดิม"
-                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
+                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px]"
                   />
                   {/* toggle password */}
                   <button
@@ -171,7 +237,7 @@ function Auth() {
               </div>
               {/* New Password */}        
               <div className="flex flex-col gap-1">
-                <label className="sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">
+                <label className="sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
                   New Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -180,7 +246,7 @@ function Auth() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     type={showNewPassword ? 'text' : 'password'}
                     placeholder="กรอกรหัสผ่านใหม่"
-                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
+                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px]"
                   />
                   {/* toggle password */}
                   <button
@@ -203,20 +269,22 @@ function Auth() {
                 </div>
               </div>
               {/* actions */}
-              <button
-                className="mt-2 bg-[#48CBFF] text-white rounded-xl py-3 w-full sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]"
-                onClick={() => {
-                  // placeholder: perform validation / submit
-                  setShowReset(false)
-                  setUsername('')
-                  setPassword('')
-                  setNewPassword('')
-                }}
-              >
-                ยืนยัน
-              </button>
+              <div className='flex justify-center'>
+                <button
+                  className="mt-2 bg-[#48CBFF] text-white rounded-xl py-3 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] w-1/2 xl:w-[200px]"
+                  onClick={() => {
+                    // placeholder: perform validation / submit
+                    setShowReset(false)
+                    setUsername('')
+                    setPassword('')
+                    setNewPassword('')
+                  }}
+                >
+                  ยืนยัน
+                </button>
+              </div>
                {/* back  */}
-              <div className="text-center mt-2 sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">
+              <div className="text-center mt-2 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
                 <button
                   type="button"
                   onClick={() => setShowReset(false)}
