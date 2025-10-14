@@ -1,29 +1,20 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import App from "./App.jsx";
-import "./index.css";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+import {
+  createBrowserRouter,
+  RouterProvider
+} from 'react-router-dom'
 
-export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
-
-// 🔹 กำหนด router ทั้งหมดในที่เดียว
 const router = createBrowserRouter([
-  { 
-    path: '/', 
+  { path: '/', 
     element: <App /> 
-  },
-  { 
-    path: '/leave', 
-    element: <Wait /> 
-  },
-  { 
-    path: '/calendar', 
-    element: <Wait /> 
   },
 ])
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>
-);
+  </StrictMode>,
+)
