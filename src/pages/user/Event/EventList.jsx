@@ -10,6 +10,7 @@ function EventList() {
 
   return (
     <div>
+      <Link to="/">go to main</Link>
       <h2>📅 รายการกิจกรรมทั้งหมด</h2>
       <ul>
         {events.map((event) => (
