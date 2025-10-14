@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/useAuth'
 
 
 function Auth() {
   const [showPwd, setShowPwd] = useState(false)
   const [showReset, setShowReset] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   // Reset form state (inside same file, modal)
-  const [Username, setUsername] = useState('')
-  const [Password, setPassword] = useState('')
+  const [Username, setUsernameReset] = useState('')
+  const [Password, setPasswordReset] = useState('')
   const [NewPassword, setNewPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+
+  const { login, getDashboardPath } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     function onKey(e) {
@@ -19,6 +28,50 @@ function Auth() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [showReset])
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      // Simulate API call - replace with actual authentication
+      const response = await mockLoginAPI(username, password)
+
+      if (response.success) {
+        login(response.user)
+        const dashboardPath = getDashboardPath(response.user.role)
+        navigate(dashboardPath, { replace: true })
+      } else {
+        setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
+      }
+    } catch {
+      setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Mock login API - replace with actual API call
+  const mockLoginAPI = async (username, password) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Mock user data based on username
+    const mockUsers = {
+      'admin': { id: 1, username: 'admin', role: 'admin', name: 'Administrator' },
+      'superadmin': { id: 2, username: 'superadmin', role: 'superadmin', name: 'Super Admin' },
+      'manager': { id: 3, username: 'manager', role: 'manager', name: 'หัวหน้า' },
+      'user': { id: 4, username: 'user', role: 'user', name: 'ผู้ใช้' }
+    }
+
+    const user = mockUsers[username.toLowerCase()]
+    if (user && password === '123456') {
+      return { success: true, user }
+    }
+
+    return { success: false }
+  }
 
   return (
     <div className="min-h-screen relative bg-white">
@@ -44,11 +97,19 @@ function Auth() {
         />
 
         <div className="space-y-5 relative z-10">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
           {/* Username */}
           <div className="flex flex-col gap-2">
             <label className=" sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Username</label>
             <input
               type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="กรอกชื่อผู้ใช้"
               className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
             />
@@ -60,6 +121,8 @@ function Auth() {
             <div className="relative">
               <input
                 type={showPwd ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="กรอกรหัสผ่าน"
                 className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none pr-12 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
               />
@@ -85,8 +148,12 @@ function Auth() {
 
           {/* primary button */}
           <div>
-            <button className="bg-[#48CBFF] text-white  sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px] rounded-xl py-3 w-full">
-              เข้าสู่ระบบ
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="bg-[#48CBFF] text-white sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px] rounded-xl py-3 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
             </button>
           </div>
 
@@ -130,7 +197,7 @@ function Auth() {
                 </label>
                 <input
                   value={Username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsernameReset(e.target.value)}
                   type="text"
                   placeholder="กรอกชื่อผู้ใช้"
                   className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
@@ -144,7 +211,7 @@ function Auth() {
                 <div className="relative">
                   <input
                     value={Password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPasswordReset(e.target.value)}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="กรอกรหัสผ่านเดิม"
                     className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"

@@ -11,7 +11,7 @@ import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard.jsx";
 import ManagerDashboard from "./pages/admin/ManagerDashboard.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import { AuthProvider } from "./contexts/AuthContext.jsx";
+import { AuthProvider } from "./contexts/AuthProvider.jsx";
 
 export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
 
