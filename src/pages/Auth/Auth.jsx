@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
+
 function Auth() {
   const [showPwd, setShowPwd] = useState(false)
   const [showReset, setShowReset] = useState(false)
@@ -21,17 +22,14 @@ function Auth() {
 
   return (
     <div className="min-h-screen relative bg-white">
-      {/* header (top center) */}
-      <header className="w-full flex items-center justify-center font-bold md:text-[36px] lg:text-[40px] xl:text-[44px] text-[30px] py-6">
+      {/* header */}
+      <header className="w-full flex items-center justify-center font-prompt font-bold  md:text-[36px] lg:text-[40px] xl:text-[44px] text-[30px] py-6">
         Login
       </header>
 
-      {/* filler */}
-      <div className="h-28" />
-
-      {/* sticky card */}
+      {/* sticky card (full-width flush to left/right) */}
       <section
-        className="fixed inset-x-0 bottom-0 mx-auto max-w-lg bg-white rounded-t-[28px] shadow-lg px-6 pb-8 pt-10 z-40 overflow-hidden"
+        className="font-prompt fixed inset-x-0 bottom-0 left-0 right-0 bg-white rounded-t-[28px] shadow-lg px-6 pb-8 pt-10 z-40 overflow-hidden"
         style={{ boxShadow: '0 -18px 40px rgba(72,203,255,0.18)' }}
       >
         {/* blue soft-glow */}
@@ -48,22 +46,22 @@ function Auth() {
         <div className="space-y-5 relative z-10">
           {/* Username */}
           <div className="flex flex-col gap-2">
-            <label className="sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Username</label>
+            <label className=" sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Username</label>
             <input
               type="text"
               placeholder="กรอกชื่อผู้ใช้"
-              className="bg-[#F3F3F3] rounded-md px-4 py-3 w-full outline-none"
+              className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
             />
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-2">
-            <label className="sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Password</label>
+            <label className=" sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]">Password</label>
             <div className="relative">
               <input
                 type={showPwd ? 'text' : 'password'}
                 placeholder="กรอกรหัสผ่าน"
-                className="bg-[#F3F3F3] rounded-md px-4 py-3 w-full outline-none pr-12"
+                className="bg-[#F3F3F3]  rounded-md px-4 py-3 w-full outline-none pr-12 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
               />
               <button
                 type="button"
@@ -87,7 +85,7 @@ function Auth() {
 
           {/* primary button */}
           <div>
-            <button className="bg-[#48CBFF] text-white sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px] rounded-xl py-3 w-full">
+            <button className="bg-[#48CBFF] text-white  sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px] rounded-xl py-3 w-full">
               เข้าสู่ระบบ
             </button>
           </div>
@@ -97,7 +95,7 @@ function Auth() {
             <button
               type="button"
               onClick={() => setShowReset(true)}
-              className="text-[#888888] sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]"
+              className="text-[#888888]  sm:text-[18px] md:text-[24px] lg:text[28px] xl:text-[32px] text-[16px]"
             >
               เปลี่ยนรหัสผ่าน
             </button>
@@ -108,7 +106,7 @@ function Auth() {
       {/* Reset Password */}
       {showReset && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          className="font-prompt fixed inset-0 z-50 flex items-center justify-center px-4"
           aria-modal="true"
           role="dialog"
         >
@@ -135,7 +133,7 @@ function Auth() {
                   onChange={(e) => setUsername(e.target.value)}
                   type="text"
                   placeholder="กรอกชื่อผู้ใช้"
-                  className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none"
+                  className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
                 />
               </div>
               {/* Password */}
@@ -149,7 +147,7 @@ function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="กรอกรหัสผ่านเดิม"
-                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10"
+                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
                   />
                   {/* toggle password */}
                   <button
@@ -182,7 +180,7 @@ function Auth() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     type={showNewPassword ? 'text' : 'password'}
                     placeholder="กรอกรหัสผ่านใหม่"
-                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10"
+                    className="bg-[#F3F3F3] rounded-md px-3 py-2 w-full outline-none pr-10 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[22px] lg:placeholder:text-[26px] xl:placeholder:text-[30px]"
                   />
                   {/* toggle password */}
                   <button
@@ -224,7 +222,7 @@ function Auth() {
                   onClick={() => setShowReset(false)}
                   className="text-[#333]"
                 >
-                  กลับหน้าlogin
+                  กลับหน้า Login
                 </button>
               </div>
             </div>
