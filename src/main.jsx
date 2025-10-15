@@ -10,8 +10,12 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard.jsx";
 import ManagerDashboard from "./pages/admin/ManagerDashboard.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
+import LeaveDetail from "./pages/user/Leave/LeaveDetail.jsx";
+import ListLeave from "./pages/user/Leave/ListLeave.jsx";
+
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
+import LeaveScreen from "./pages/user/Leave/LeaveScreen.jsx";
 
 export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
 
@@ -58,10 +62,26 @@ const router = createBrowserRouter([
     )
   },
   {
-    path: '/leave',
+    path: '/user/leave/list',
     element: (
-      <ProtectedRoute>
-        <Wait />
+      <ProtectedRoute allowedRoles={['user']}>
+        <ListLeave />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/user/leave/detail/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['user']}>
+        <LeaveDetail />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/user/leave',
+    element: (
+      <ProtectedRoute allowedRoles={['user']}>
+        <LeaveScreen />
       </ProtectedRoute>
     )
   },

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IoAdd } from 'react-icons/io5';
-import LeaveFormScreen from './LeaveFormScreen';
+import LeaveForm from './LeaveForm';
 import Nav from '../../../components/user/nav/Nav';
 import LeaveList from '../../../components/common/Leave/LeaveList';
 
@@ -16,18 +16,18 @@ function LeaveScreen() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen font-sans bg-sky-500">
+    <div className="min-h-screen font-prompt bg-sky-500">
       <header className="p-4 text-center">
         <h1 className="text-xl font-bold text-white">การลา</h1>
       </header>
 
-      <main className="px-4 pb-24">
+      <main className="px-4 pb-32 relative z-0">
         <LeaveList leaveItems={userLeaveData} />
       </main>
 
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed flex items-center px-4 py-2 bg-white rounded-full shadow-lg bottom-24 right-6"
+        className="fixed flex items-center px-4 py-2 bg-white rounded-full shadow-lg bottom-24 right-6 z-40 hover:scale-105 transition-transform"
       >
         <IoAdd className="mr-1 text-blue-600" />
         <span className="text-sm font-semibold text-blue-600">ขอลางาน</span>
@@ -35,7 +35,7 @@ function LeaveScreen() {
 
       <Nav />
       
-      {isModalOpen && <LeaveFormScreen closeModal={() => setIsModalOpen(false)} />}
+      {isModalOpen && <LeaveForm closeModal={() => setIsModalOpen(false)} />}
     </div>
   );
 }
