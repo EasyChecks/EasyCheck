@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { IoAdd } from 'react-icons/io5';
 import LeaveForm from './LeaveForm';
 import Nav from '../../../components/user/nav/Nav';
-import LeaveList from '../../../components/common/Leave/LeaveList';
+import LeaveList from '../../../components/user/Leave/LeaveList';
 
 
 const userLeaveData = [
@@ -29,7 +28,7 @@ function LeaveScreen() {
         onClick={() => setIsModalOpen(true)}
         className="fixed flex items-center px-4 py-2 bg-white rounded-full shadow-lg bottom-24 right-6 z-40 hover:scale-105 transition-transform"
       >
-        <IoAdd className="mr-1 text-blue-600" />
+        <span className="mr-1 text-xl text-blue-600">+</span>
         <span className="text-sm font-semibold text-blue-600">ขอลางาน</span>
       </button>
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import LeaveForm from '../../../components/common/Leave/LeaveForm';
 
 
 function LeaveFormScreen({ closeModal }) {
