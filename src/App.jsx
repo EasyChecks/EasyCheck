@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
-import { useAuth } from './contexts/useAuth'
-
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext'
 
 function App() {
   const { user, loading, getDashboardPath } = useAuth()
@@ -30,8 +29,8 @@ function App() {
       </div>
     )
   }
-}
 
-export default App
+  return null();
+}
 
 
