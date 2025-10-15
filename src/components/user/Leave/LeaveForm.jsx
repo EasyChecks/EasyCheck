@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { IoClose, IoCalendarOutline } from 'react-icons/io5';
-import { FiUploadCloud, FiFileText } from 'react-icons/fi';
+import { FiUploadCloud, FiFileText, FiX, FiCalendar } from 'react-icons/fi';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -31,7 +30,7 @@ function LeaveForm({ closeModal }) {
       <header className="flex items-center justify-between pb-4 mb-4 border-b">
         <h1 className="text-xl font-bold text-blue-800">เอกสารการลา</h1>
         <button onClick={closeModal} className="text-2xl text-gray-500 hover:text-gray-800">
-          <IoClose />
+          <FiX />
         </button>
       </header>
 
@@ -72,7 +71,7 @@ function LeaveForm({ closeModal }) {
                 dateFormat="dd/MM/yyyy"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <IoCalendarOutline className="absolute text-gray-400 -translate-y-1/2 pointer-events-none top-1/2 right-3" />
+              <FiCalendar className="absolute text-gray-400 -translate-y-1/2 pointer-events-none top-1/2 right-3" />
             </div>
             <div className="relative">
               <DatePicker
@@ -81,7 +80,7 @@ function LeaveForm({ closeModal }) {
                 dateFormat="dd/MM/yyyy"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <IoCalendarOutline className="absolute text-gray-400 -translate-y-1/2 pointer-events-none top-1/2 right-3" />
+              <FiCalendar className="absolute text-gray-400 -translate-y-1/2 pointer-events-none top-1/2 right-3" />
             </div>
           </div>
         </div>
