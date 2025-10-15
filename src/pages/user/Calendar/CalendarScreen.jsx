@@ -3,13 +3,72 @@ import React, { useState } from 'react'
 function CalendarScreen() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [showMonthPicker, setShowMonthPicker] = useState(false)
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear())
+  const [expanded, setExpanded] = useState(false)
 
   // Mock events data - รอทีมทำ API
   const mockEvents = [
-    { id: 1, date: '2024-01-15', title: 'ประชุมทีม', type: 'meeting', color: 'blue' },
-    { id: 2, date: '2024-01-20', title: 'วันหยุด', type: 'holiday', color: 'red' },
-    { id: 3, date: '2024-01-25', title: 'อบรม', type: 'training', color: 'green' },
+    { id: 1, date: '2025-11-23', title: 'เตรียมตัวนำเสนอโปรเจค', type: 'meeting', status: 'normal' },
+    { id: 2, date: '2025-11-24', title: 'นำเสนอโปรเจค', type: 'meeting', status: 'normal' },
+    { id: 3, date: '2025-11-25', title: 'นำเสนอโปรเจค', type: 'meeting', status: 'normal' },
   ]
+
+  // Mock attendance data - ข้อมูลการลงเวลา
+  const mockAttendance = [
+    { date: '2025-10-03', status: 'late' },
+    { date: '2025-10-04', status: 'absent' },
+    { date: '2025-10-08', status: 'late' },
+    { date: '2025-10-11', status: 'leave' },
+    { date: '2025-10-17', status: 'late' },
+    { date: '2025-10-18', status: 'absent' },
+  ]
+
+  // Custom styles for select dropdown
+  const selectStyles = `
+    .custom-select {
+      appearance: none;
+      background-color: white;
+      border: 2px solid #48CBFF;
+      border-radius: 12px;
+      padding: 10px 40px 10px 16px;
+      font-weight: 600;
+      color: #1f2937;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2348CBFF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      box-shadow: 0 2px 4px rgba(72, 203, 255, 0.1);
+    }
+    
+    .custom-select:hover {
+      border-color: #2BB0E8;
+      box-shadow: 0 4px 8px rgba(72, 203, 255, 0.2);
+    }
+    
+    .custom-select:focus {
+      outline: none;
+      border-color: #48CBFF;
+      box-shadow: 0 0 0 3px rgba(72, 203, 255, 0.2);
+    }
+    
+    .custom-select option {
+      padding: 12px 16px;
+      background-color: white;
+      color: #1f2937;
+      font-weight: 500;
+    }
+    
+    .custom-select option:checked {
+      background-color: #BFECFF;
+      color: #0891b2;
+    }
+    
+    .custom-select option:hover {
+      background-color: #E0F7FF;
+    }
+  `
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear()
@@ -29,14 +88,33 @@ function CalendarScreen() {
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
   ]
 
+  const monthShortNames = [
+    'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+    'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+  ]
+
   const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
+
+  // Note data
+  const Note = [
+    { color: "bg-red-600/75", text: "ขาดงาน", value: "absent" },
+    { color: "bg-emerald-400/75", text: "สาย", value: "late" },
+    { color: "bg-blue-600/75", text: "วันลาของพนักงาน", value: "leave" },
+    { color: "bg-sky-300/75", text: "วันหยุดนักขัตฤกษ์", value: "holiday" },
+    { color: "bg-yellow-200/75", text: "วันหยุด", value: "dayoff" },
+    { color: "bg-black", text: "วันนี้", value: "normal" }
+  ]
 
   const previousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+    // เปลี่ยน selectedDate ให้ตรงกับเดือนใหม่ด้วย
+    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
   }
 
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+    // เปลี่ยน selectedDate ให้ตรงกับเดือนใหม่ด้วย
+    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
   }
 
   const isToday = (day) => {
@@ -61,13 +139,60 @@ function CalendarScreen() {
     return mockEvents.some(event => event.date === dateStr)
   }
 
+  const getDateStatus = (day) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
+    // ตรวจสอบว่าเป็นวันหยุดนักขัตฤกษ์หรือไม่
+    const holidayEvent = mockEvents.find(event => event.date === dateStr && event.status === 'holiday')
+    if (holidayEvent) return 'holiday'
+    
+    // ตรวจสอบข้อมูลการลงเวลา
+    const attendance = mockAttendance.find(att => att.date === dateStr)
+    if (attendance) return attendance.status
+    
+    return null
+  }
+
+  const getStatusColor = (status) => {
+    const statusColors = {
+      'absent': 'bg-red-600/75 text-gray-800',
+      'late': 'bg-orange-500/75 text-gray-800',
+      'leave': 'bg-blue-600/75 text-gray-800',
+      'holiday': 'bg-sky-300/75 text-gray-800',
+      'dayoff': 'bg-yellow-200/75 text-gray-800',
+      'normal': 'bg-black/75 text-white',
+    }
+    return statusColors[status] || ''
+  }
+
   const getEventsForSelectedDate = () => {
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
     return mockEvents.filter(event => event.date === dateStr)
   }
 
+  const handleMonthSelect = (monthIndex) => {
+    setCurrentDate(new Date(pickerYear, monthIndex, 1))
+    // เปลี่ยน selectedDate ให้ตรงกับเดือนใหม่ด้วย
+    setSelectedDate(new Date(pickerYear, monthIndex, 1))
+    setShowMonthPicker(false)
+  }
+
+  const goToToday = () => {
+    const today = new Date()
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1))
+    setSelectedDate(today)
+    setShowMonthPicker(false)
+  }
+
+  const toggleExpand = () => {
+    setExpanded(!expanded)
+  }
+
   return (
     <div className="space-y-6">
+      {/* Custom Select Styles */}
+      <style>{selectStyles}</style>
+      
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-800">ปฏิทิน</h1>
@@ -87,9 +212,76 @@ function CalendarScreen() {
             </svg>
           </button>
           
-          <h2 className="text-xl font-bold text-gray-800">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear() + 543}
-          </h2>
+          {/* Month/Year Picker Button */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setPickerYear(currentDate.getFullYear())
+                setShowMonthPicker(!showMonthPicker)
+              }}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <span className="font-semibold text-gray-800">
+                {monthShortNames[currentDate.getMonth()]} {currentDate.getFullYear() + 543}
+              </span>
+              <svg 
+                className={`w-4 h-4 transition-transform ${showMonthPicker ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Month Picker Popup */}
+            {showMonthPicker && (
+              <>
+                {/* Backdrop */}
+                <div 
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowMonthPicker(false)}
+                />
+                
+                {/* Popup */}
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 w-80">
+                  {/* Year Navigation */}
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      onClick={() => setPickerYear(prev => prev - 1)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <span className="text-xl">&lt;</span>
+                    </button>
+                    <h3 className="text-2xl font-bold text-gray-800">{pickerYear + 543}</h3>
+                    <button
+                      onClick={() => setPickerYear(prev => prev + 1)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <span className="text-xl">&gt;</span>
+                    </button>
+                  </div>
+
+                  {/* Month Grid */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {monthShortNames.map((month, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleMonthSelect(index)}
+                        className={`py-3 px-4 rounded-lg font-medium transition-all ${
+                          currentDate.getMonth() === index && currentDate.getFullYear() === pickerYear
+                            ? 'bg-blue-500 text-white'
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {month}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           
           <button
             onClick={nextMonth}
@@ -120,6 +312,22 @@ function CalendarScreen() {
           {/* Days of the month */}
           {Array.from({ length: daysInMonth }).map((_, index) => {
             const day = index + 1
+            const dateStatus = getDateStatus(day)
+            const isTodayDate = isToday(day)
+            const isSelected = isSelectedDate(day)
+            
+            // กำหนดสีตาม priority: วันนี้ > วันที่เลือก > status
+            let colorClass = ''
+            if (isTodayDate) {
+              colorClass = 'bg-black text-white font-bold'
+            } else if (isSelected) {
+              colorClass = 'bg-gray-200 text-gray-800 font-bold'
+            } else if (dateStatus) {
+              colorClass = getStatusColor(dateStatus)
+            } else {
+              colorClass = 'hover:bg-gray-100'
+            }
+            
             return (
               <button
                 key={day}
@@ -127,19 +335,58 @@ function CalendarScreen() {
                 className={`
                   aspect-square rounded-lg flex flex-col items-center justify-center relative
                   transition-all duration-200
-                  ${isToday(day) ? 'bg-blue-500 text-white font-bold' : ''}
-                  ${isSelectedDate(day) && !isToday(day) ? 'bg-blue-100 text-blue-600 font-bold' : ''}
-                  ${!isToday(day) && !isSelectedDate(day) ? 'hover:bg-gray-100' : ''}
+                  ${colorClass}
                 `}
               >
                 <span className="text-sm">{day}</span>
                 {hasEvent(day) && (
-                  <div className="w-1 h-1 bg-orange-500 rounded-full absolute bottom-1" />
+                  <div className="w-1.5 h-1.5 bg-orange-500 rounded-full absolute bottom-1" />
                 )}
               </button>
             )
           })}
         </div>
+      </div>
+
+      {/* Note */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <div className="flex items-center justify-between">
+          <div className="font-bold text-[16px] sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px]">หมายเหตุ</div>
+          <button
+            onClick={toggleExpand}
+            className="ml-2 p-2 rounded hover:bg-gray-100"
+            aria-expanded={expanded}
+            aria-controls="note-list"
+          >
+            <svg
+              className="w-6 h-6 text-gray-800"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 8"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d={expanded ? "m1 1 5.326 5.7a.909.909 0 0 0 1.348 0L13 1" : "M13 7 7.674 1.3a.91.91 0 0 0-1.348 0L1 7"}
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Note List */}
+        {expanded && (
+          <div id="note-list" className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {Note.map((note, i) => (
+              <div key={i} className="flex items-center gap-3 p-2">
+                <div className={`w-5 h-5 ${note.color} rounded-full flex-shrink-0`}></div>
+                <div className="text-[16px] sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px]">{note.text}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Events for Selected Date */}
@@ -157,38 +404,21 @@ function CalendarScreen() {
           </div>
         ) : (
           <div className="space-y-3">
-            {getEventsForSelectedDate().map(event => (
-              <div key={event.id} className="flex items-center space-x-3 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className={`w-3 h-3 rounded-full bg-${event.color}-500`} />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">{event.title}</p>
-                  <p className="text-sm text-gray-600">
-                    {event.type === 'meeting' ? 'ประชุม' : event.type === 'holiday' ? 'วันหยุด' : 'อบรม'}
-                  </p>
+            {getEventsForSelectedDate().map(event => {
+              const statusColor = getStatusColor(event.status)
+              return (
+                <div key={event.id} className={`flex items-center space-x-3 p-4 rounded-lg ${statusColor} transition-colors`}>
+                  <div className="flex-1">
+                    <p className="font-medium">{event.title}</p>
+                    <p className="text-sm opacity-90">
+                      {event.type === 'meeting' ? 'ประชุม' : event.type === 'holiday' ? 'วันหยุด' : 'อบรม'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
-      </div>
-
-      {/* Legend */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">สัญลักษณ์</h3>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-blue-500 rounded" />
-            <span className="text-sm text-gray-700">วันนี้</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-blue-100 rounded border-2 border-blue-600" />
-            <span className="text-sm text-gray-700">วันที่เลือก</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-orange-500 rounded-full" />
-            <span className="text-sm text-gray-700">มีกิจกรรม</span>
-          </div>
-        </div>
       </div>
     </div>
   )
