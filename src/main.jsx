@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
-import EventList from "./pages/user/Event/EventList.jsx";
+import Event from "./pages/user/Event/Event.jsx";
 import EventDetails from "./pages/user/Event/EventDetails.jsx";
 import Auth from "./pages/Auth/Auth.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
@@ -29,7 +29,7 @@ export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Wait
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />
+    element: <Navigate to="/auth" replace />
   },
   {
     path: '/auth',
@@ -68,6 +68,10 @@ const router = createBrowserRouter([
     ),
     children: [
       {
+        index: true,
+        element: <Navigate to="/user/dashboard" replace />
+      },
+      {
         path: 'dashboard',
         element: <UserDashboard />
       },
@@ -84,11 +88,11 @@ const router = createBrowserRouter([
         element: <CalendarScreen />
       },
       {
-        path: 'events',
-        element: <EventList />
+        path: 'event',
+        element: <Event />
       },
       {
-        path: 'events/:id',
+        path: 'event/:id',
         element: <EventDetails />
       },
       {
@@ -122,38 +126,6 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={['user']}>
         <LeaveDetail />
-      </ProtectedRoute>
-    )
-  },
-  {
-    path: '/user/leave',
-    element: (
-      <ProtectedRoute allowedRoles={['user']}>
-        <LeaveScreen />
-      </ProtectedRoute>
-    )
-  },
-  {
-    path: '/calendar',
-    element: (
-      <ProtectedRoute>
-        <Wait />
-      </ProtectedRoute>
-    )
-  },
-  {
-    path: '/event',
-    element: (
-      <ProtectedRoute>
-        <EventList />
-      </ProtectedRoute>
-    )
-  },
-  {
-    path: '/event/:id',
-    element: (
-      <ProtectedRoute>
-        <EventDetails />
       </ProtectedRoute>
     )
   }
