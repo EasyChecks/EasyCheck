@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
+import userData from '../../data/userData'
 
 function UserDashboard() {
-  const { user, attendance } = useAuth()
+  const { attendance } = useAuth()
   const [currentTime, setCurrentTime] = useState(new Date())
 
   // Update time every second
@@ -14,13 +15,13 @@ function UserDashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  // Mock data - รอทีมทำ API
+  // Mock data - ใช้ข้อมูลจาก userData.js
   const mockData = {
-    user: user || {
-      name: 'สมชาย ใจดี',
-      employeeId: 'EMP001',
-      department: 'แผนกพัฒนา',
-      position: 'พนักงาน'
+    user: {
+      name: userData.name,
+      employeeId: userData.workInfo.employeeId,
+      department: userData.department,
+      position: userData.position
     },
     leave: {
       remaining: 10,

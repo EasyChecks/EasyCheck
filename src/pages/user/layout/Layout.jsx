@@ -2,19 +2,20 @@ import React, { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Nav from '../../../components/user/nav/Nav'
 import { useAuth } from '../../../contexts/useAuth'
+import userData from '../../../data/userData'
 
 function Layout() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { logout } = useAuth()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
-  // Mock user data - รอทีมทำ API
-  const mockUser = user || {
-    name: 'สมชาย ใจดี',
-    position: 'พนักงาน',
-    department: 'แผนกพัฒนา',
-    employeeId: 'EMP001',
-    profileImage: null // ถ้าไม่มีรูป จะใช้ default
+  // ใช้ข้อมูลจาก userData.js โดยตรง
+  const mockUser = {
+    name: userData.name,
+    position: userData.position,
+    department: userData.department,
+    employeeId: userData.workInfo.employeeId,
+    profileImage: userData.profilePic
   }
 
   const handleLogout = () => {
@@ -27,7 +28,7 @@ function Layout() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pb-20 font-prompt">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white shadow-lg">
+      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white shadow-lg sticky w-full top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo and Title */}
@@ -124,7 +125,7 @@ function Layout() {
       {/* Click outside to close dropdown */}
       {showProfileMenu && (
         <div 
-          className="fixed inset-0 z-40" 
+          className="fixed inset-0 z-20" 
           onClick={() => setShowProfileMenu(false)}
         />
       )}
