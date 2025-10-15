@@ -177,7 +177,7 @@ function CalendarScreen() {
     setShowMonthPicker(false)
   }
 
-  const goToToday = () => {
+  const _goToToday = () => {
     const today = new Date()
     setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1))
     setSelectedDate(today)
