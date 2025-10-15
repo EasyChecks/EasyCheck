@@ -8,7 +8,7 @@ import EventDetails from "./pages/user/Event/EventDetails.jsx";
 import Auth from "./pages/Auth/Auth.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard.jsx";
-import ManagerDashboard from "./pages/admin/ManagerDashboard.jsx";
+import ManagerDashboard from "./pages/manager/ManagerDashboard.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
 import Layout from "./pages/user/layout/Layout.jsx";
 import CalendarScreen from "./pages/user/Calendar/CalendarScreen.jsx";
@@ -18,8 +18,10 @@ import ProfileScreen from "./pages/user/Profile/ProfileScreen.jsx";
 import LeaveScreen from "./pages/user/Leave/LeaveScreen.jsx";
 import LeaveDetail from "./pages/user/Leave/LeaveDetail.jsx";
 import ListLeave from "./pages/user/Leave/ListLeave.jsx";
+import ListLeaveAdmin from "./pages/user/Leave/LeaveForm.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
+import { LeaveProvider } from "./contexts/LeaveContext.jsx";
 
 export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
 
@@ -100,6 +102,14 @@ const router = createBrowserRouter([
     ]
   },
   {
+    path: '/user/leave',
+    element: (
+      <ProtectedRoute allowedRoles={['user']}>
+        <LeaveScreen />
+      </ProtectedRoute>
+    )
+  },
+  {
     path: '/user/leave/list',
     element: (
       <ProtectedRoute allowedRoles={['user']}>
@@ -152,7 +162,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <LeaveProvider>
+        <RouterProvider router={router} />
+      </LeaveProvider>
     </AuthProvider>
   </React.StrictMode>
 );
