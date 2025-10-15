@@ -68,7 +68,28 @@
   }
 }
 
+/* Custom Scrollbar Styles */
 @layer utilities {
+  /* For Webkit browsers (Chrome, Safari, Edge) */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 10px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 10px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+
+  /* Animation utilities from dev branch */
   .animate-blob {
     animation: blob 7s infinite;
   }
