@@ -16,6 +16,8 @@ import SettingsScreen from "./pages/user/Settings/SettingsScreen.jsx";
 import TakePhoto from "./pages/user/takept/takept.jsx";
 import ProfileScreen from "./pages/user/Profile/ProfileScreen.jsx";
 import LeaveScreen from "./pages/user/Leave/LeaveScreen.jsx";
+import LeaveDetail from "./pages/user/Leave/LeaveDetail.jsx";
+import ListLeave from "./pages/user/Leave/ListLeave.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
 
@@ -98,10 +100,26 @@ const router = createBrowserRouter([
     ]
   },
   {
-    path: '/leave',
+    path: '/user/leave/list',
     element: (
-      <ProtectedRoute>
-        <Wait />
+      <ProtectedRoute allowedRoles={['user']}>
+        <ListLeave />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/user/leave/detail/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['user']}>
+        <LeaveDetail />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/user/leave',
+    element: (
+      <ProtectedRoute allowedRoles={['user']}>
+        <LeaveScreen />
       </ProtectedRoute>
     )
   },
