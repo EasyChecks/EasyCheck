@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 @layer base {
   :root {
@@ -129,4 +128,42 @@
   20%, 40%, 60%, 80% {
     transform: translateX(5px);
   }
+}
+
+/* PuffLoader Animation */
+@keyframes puff-1 {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes puff-2 {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.animate-puff-1 {
+  animation: puff-1 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-puff-2 {
+  animation: puff-2 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 1.25s;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Nav from '../../../components/user/nav/Nav'
 import { useAuth } from '../../../contexts/useAuth'
@@ -8,14 +8,51 @@ function Layout() {
   const navigate = useNavigate()
   const { logout } = useAuth()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [profileData, setProfileData] = useState(() => {
+    const saved = localStorage.getItem('userProfileData')
+    return saved ? JSON.parse(saved) : userData
+  })
 
-  // ใช้ข้อมูลจาก userData.js โดยตรง
+  // อัพเดตข้อมูลเมื่อ localStorage เปลี่ยน
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('userProfileData')
+      if (saved) {
+        setProfileData(JSON.parse(saved))
+      }
+    }
+
+    // ฟังการเปลี่ยนแปลงของ localStorage
+    window.addEventListener('storage', handleStorageChange)
+    
+    // ตรวจสอบทุก 500ms (สำหรับการเปลี่ยนแปลงใน tab เดียวกัน)
+    const interval = setInterval(() => {
+      const saved = localStorage.getItem('userProfileData')
+      if (saved) {
+        const newData = JSON.parse(saved)
+        setProfileData(prevData => {
+          // เปรียบเทียบว่ามีการเปลี่ยนแปลงหรือไม่
+          if (JSON.stringify(prevData) !== JSON.stringify(newData)) {
+            return newData
+          }
+          return prevData
+        })
+      }
+    }, 500)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
+
+  // ใช้ข้อมูลจาก profileData ที่อัพเดตจาก localStorage
   const mockUser = {
-    name: userData.name,
-    position: userData.position,
-    department: userData.department,
-    employeeId: userData.workInfo.employeeId,
-    profileImage: userData.profilePic
+    name: profileData.name,
+    position: profileData.position,
+    department: profileData.department,
+    employeeId: profileData.workInfo?.employeeId || profileData.workInfo.employeeId,
+    profileImage: profileData.profilePic
   }
 
   const handleLogout = () => {

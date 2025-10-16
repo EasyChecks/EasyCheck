@@ -1,27 +1,36 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
-import App from "./App.jsx";
 import "./index.css";
-import Event from "./pages/user/Event/Event.jsx";
-import EventDetails from "./pages/user/Event/EventDetails.jsx";
-import Auth from "./pages/Auth/Auth.jsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
-import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard.jsx";
-import ManagerDashboard from "./pages/manager/ManagerDashboard.jsx";
-import UserDashboard from "./pages/user/UserDashboard.jsx";
-import Layout from "./pages/user/layout/Layout.jsx";
-import CalendarScreen from "./pages/user/Calendar/CalendarScreen.jsx";
-import SettingsScreen from "./pages/user/Settings/SettingsScreen.jsx";
-import TakePhoto from "./pages/user/takept/takept.jsx";
-import ProfileScreen from "./pages/user/Profile/ProfileScreen.jsx";
-import LeaveScreen from "./pages/user/Leave/LeaveScreen.jsx";
-import LeaveDetail from "./pages/user/Leave/LeaveDetail.jsx";
-import ListLeave from "./pages/user/Leave/ListLeave.jsx";
-import ListLeaveAdmin from "./pages/user/Leave/LeaveForm.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
 import { LeaveProvider } from "./contexts/LeaveContext.jsx";
+import { TeamProvider } from "./contexts/TeamContext.jsx";
+import { LoadingProvider } from "./contexts/LoadingContext.jsx";
+import PuffLoader from "./components/common/PuffLoader.jsx";
+
+// Import Auth และ Layout แบบปกติเพื่อความเร็ว (ใช้บ่อย)
+import Auth from "./pages/Auth/Auth.jsx";
+import Layout from "./pages/user/layout/Layout.jsx";
+import UserDashboard from "./pages/user/UserDashboard.jsx";
+
+// Lazy load หน้าที่ใช้น้อย
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
+const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard.jsx"));
+const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
+const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
+const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
+const ListLeave = lazy(() => import("./pages/user/Leave/ListLeave.jsx"));
+const CalendarScreen = lazy(() => import("./pages/user/Calendar/CalendarScreen.jsx"));
+const Event = lazy(() => import("./pages/user/Event/Event.jsx"));
+const EventDetails = lazy(() => import("./pages/user/Event/EventDetails.jsx"));
+const ProfileScreen = lazy(() => import("./pages/user/Profile/ProfileScreen.jsx"));
+const SettingsScreen = lazy(() => import("./pages/user/Settings/SettingsScreen.jsx"));
+const TeamAttendance = lazy(() => import("./pages/user/Team/TeamAttendance.jsx"));
+const LeaveApproval = lazy(() => import("./pages/user/Leave/LeaveApproval.jsx"));
+
+// Loading Component - ใช้ PuffLoader
+const PageLoader = () => <PuffLoader text="กำลังโหลด..." />;
 
 export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
 
@@ -39,7 +48,7 @@ const router = createBrowserRouter([
     path: '/admin',
     element: (
       <ProtectedRoute allowedRoles={['admin']}>
-        <AdminDashboard />
+        <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
       </ProtectedRoute>
     )
   },
@@ -47,22 +56,14 @@ const router = createBrowserRouter([
     path: '/superadmin',
     element: (
       <ProtectedRoute allowedRoles={['superadmin']}>
-        <SuperAdminDashboard />
-      </ProtectedRoute>
-    )
-  },
-  {
-    path: '/manager',
-    element: (
-      <ProtectedRoute allowedRoles={['manager']}>
-        <ManagerDashboard />
+        <Suspense fallback={<PageLoader />}><SuperAdminDashboard /></Suspense>
       </ProtectedRoute>
     )
   },
   {
     path: '/user',
     element: (
-      <ProtectedRoute allowedRoles={['user']}>
+      <ProtectedRoute allowedRoles={['user', 'manager']}>
         <Layout />
       </ProtectedRoute>
     ),
@@ -77,31 +78,39 @@ const router = createBrowserRouter([
       },
       {
         path: 'take-photo',
-        element: <TakePhoto />
+        element: <Suspense fallback={<PageLoader />}><TakePhoto /></Suspense>
       },
       {
         path: 'leave',
-        element: <LeaveScreen />
+        element: <Suspense fallback={<PageLoader />}><LeaveScreen /></Suspense>
       },
       {
         path: 'calendar',
-        element: <CalendarScreen />
+        element: <Suspense fallback={<PageLoader />}><CalendarScreen /></Suspense>
       },
       {
         path: 'event',
-        element: <Event />
+        element: <Suspense fallback={<PageLoader />}><Event /></Suspense>
       },
       {
         path: 'event/:id',
-        element: <EventDetails />
+        element: <Suspense fallback={<PageLoader />}><EventDetails /></Suspense>
       },
       {
         path: 'profile',
-        element: <ProfileScreen />
+        element: <Suspense fallback={<PageLoader />}><ProfileScreen /></Suspense>
       },
       {
         path: 'settings',
-        element: <SettingsScreen />
+        element: <Suspense fallback={<PageLoader />}><SettingsScreen /></Suspense>
+      },
+      {
+        path: 'team-attendance',
+        element: <Suspense fallback={<PageLoader />}><TeamAttendance /></Suspense>
+      },
+      {
+        path: 'leave-approval',
+        element: <Suspense fallback={<PageLoader />}><LeaveApproval /></Suspense>
       }
     ]
   },
@@ -109,7 +118,7 @@ const router = createBrowserRouter([
     path: '/user/leave',
     element: (
       <ProtectedRoute allowedRoles={['user']}>
-        <LeaveScreen />
+        <Suspense fallback={<PageLoader />}><LeaveScreen /></Suspense>
       </ProtectedRoute>
     )
   },
@@ -117,7 +126,7 @@ const router = createBrowserRouter([
     path: '/user/leave/list',
     element: (
       <ProtectedRoute allowedRoles={['user']}>
-        <ListLeave />
+        <Suspense fallback={<PageLoader />}><ListLeave /></Suspense>
       </ProtectedRoute>
     )
   },
@@ -125,7 +134,7 @@ const router = createBrowserRouter([
     path: '/user/leave/detail/:id',
     element: (
       <ProtectedRoute allowedRoles={['user']}>
-        <LeaveDetail />
+        <Suspense fallback={<PageLoader />}><LeaveDetail /></Suspense>
       </ProtectedRoute>
     )
   }
@@ -133,10 +142,14 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <LeaveProvider>
-        <RouterProvider router={router} />
-      </LeaveProvider>
-    </AuthProvider>
+    <LoadingProvider>
+      <AuthProvider>
+        <TeamProvider>
+          <LeaveProvider>
+            <RouterProvider router={router} />
+          </LeaveProvider>
+        </TeamProvider>
+      </AuthProvider>
+    </LoadingProvider>
   </React.StrictMode>
 );

@@ -1,12 +1,25 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../contexts/useAuth'
 
 function SettingsScreen() {
   const navigate = useNavigate()
   const { logout } = useAuth()
-  const [notifications, setNotifications] = useState(true)
-  const [darkMode, setDarkMode] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
+  const [showPrivacy, setShowPrivacy] = useState(false)
+
+  // ล็อกการเลื่อนหน้าเมื่อ Modal เปิด
+  useEffect(() => {
+    if (showTerms || showPrivacy) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showTerms, showPrivacy])
 
   const handleLogout = () => {
     if (logout) {
@@ -48,6 +61,7 @@ function SettingsScreen() {
           </button>
 
           <button
+            onClick={() => navigate('/auth?mode=reset')}
             className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center space-x-3">
@@ -68,90 +82,14 @@ function SettingsScreen() {
         </div>
       </div>
 
-      {/* App Settings */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">การตั้งค่าแอป</h2>
-        <div className="space-y-4">
-          {/* Notifications Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#FB923C">
-                  <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160ZM480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Z"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-800">การแจ้งเตือน</p>
-                <p className="text-sm text-gray-600">รับการแจ้งเตือนต่างๆ</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setNotifications(!notifications)}
-              className={`
-                w-14 h-7 rounded-full transition-colors duration-200
-                ${notifications ? 'bg-blue-500' : 'bg-gray-300'}
-              `}
-            >
-              <div className={`
-                w-5 h-5 bg-white rounded-full transition-transform duration-200
-                ${notifications ? 'translate-x-8' : 'translate-x-1'}
-              `} />
-            </button>
-          </div>
-
-          {/* Dark Mode Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#A855F7">
-                  <path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Z"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-800">โหมดมืด</p>
-                <p className="text-sm text-gray-600">เปิดใช้งานธีมมืด (เร็วๆ นี้)</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              disabled
-              className={`
-                w-14 h-7 rounded-full transition-colors duration-200 opacity-50
-                ${darkMode ? 'bg-blue-500' : 'bg-gray-300'}
-              `}
-            >
-              <div className={`
-                w-5 h-5 bg-white rounded-full transition-transform duration-200
-                ${darkMode ? 'translate-x-8' : 'translate-x-1'}
-              `} />
-            </button>
-          </div>
-
-          {/* Language Selection */}
-          <div className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#EC4899">
-                  <path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-156t86-127Q252-817 325-848.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82-31.5 155T763-197.5q-54 54.5-127 86T480-80Zm0-82q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-31.5-68.5T322-320H204q29 50 72.5 87t99.5 55Zm208 0q56-18 99.5-55t72.5-87H638q-9 38-22.5 73.5T584-178ZM170-400h136q-3-20-4.5-39.5T300-480q0-21 1.5-40.5T306-560H170q-5 20-7.5 39.5T160-480q0 21 2.5 40.5T170-400Zm216 0h188q3-20 4.5-39.5T580-480q0-21-1.5-40.5T574-560H386q-3 20-4.5 39.5T380-480q0 21 1.5 40.5T386-400Zm268 0h136q5-20 7.5-39.5T800-480q0-21-2.5-40.5T790-560H654q3 20 4.5 39.5T660-480q0 21-1.5 40.5T654-400Zm-16-240h118q-29-50-72.5-87T584-782q18 33 31.5 68.5T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22.5-73.5T376-782q-56 18-99.5 55T204-640Z"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-800">ภาษา</p>
-                <p className="text-sm text-gray-600">ไทย</p>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#9CA3AF">
-              <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
       {/* About */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h2 className="text-lg font-bold text-gray-800 mb-4">เกี่ยวกับ</h2>
         <div className="space-y-4">
-          <button className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={() => setShowTerms(true)}
+            className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors"
+          >
             <div className="text-left">
               <p className="font-medium text-gray-800">เงื่อนไขการใช้งาน</p>
             </div>
@@ -160,7 +98,10 @@ function SettingsScreen() {
             </svg>
           </button>
 
-          <button className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={() => setShowPrivacy(true)}
+            className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors"
+          >
             <div className="text-left">
               <p className="font-medium text-gray-800">นโยบายความเป็นส่วนตัว</p>
             </div>
@@ -186,6 +127,109 @@ function SettingsScreen() {
         </svg>
         <span>ออกจากระบบ</span>
       </button>
+
+      {/* Terms Modal */}
+      {showTerms && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowTerms(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800">เงื่อนไขการใช้งาน</h2>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="prose prose-sm">
+                <h3 className="font-bold text-lg mb-3">1. การยอมรับเงื่อนไข</h3>
+                <p className="text-gray-600 mb-4">
+                  การใช้งานแอปพลิเคชัน EasyCheck ถือว่าคุณยอมรับเงื่อนไขการใช้งานทั้งหมดนี้
+                </p>
+
+                <h3 className="font-bold text-lg mb-3">2. การใช้งาน</h3>
+                <p className="text-gray-600 mb-4">
+                  - ผู้ใช้ต้องใช้งานระบบด้วยความรับผิดชอบ<br/>
+                  - ห้ามใช้งานในทางที่ผิดกฎหมาย<br/>
+                  - ห้ามแชร์ข้อมูลเข้าสู่ระบบกับผู้อื่น
+                </p>
+
+                <h3 className="font-bold text-lg mb-3">3. ความรับผิดชอบ</h3>
+                <p className="text-gray-600 mb-4">
+                  ผู้ใช้มีหน้าที่รับผิดชอบในการรักษาความปลอดภัยของบัญชีผู้ใช้
+                </p>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowTerms(false)}
+                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition-colors"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy Modal */}
+      {showPrivacy && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowPrivacy(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800">นโยบายความเป็นส่วนตัว</h2>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="prose prose-sm">
+                <h3 className="font-bold text-lg mb-3">1. การเก็บรวบรวมข้อมูล</h3>
+                <p className="text-gray-600 mb-4">
+                  เราเก็บรวบรวมข้อมูลส่วนบุคคลที่จำเป็นต่อการให้บริการ เช่น:<br/>
+                  - ชื่อ-นามสกุล<br/>
+                  - รหัสพนักงาน<br/>
+                  - แผนก/ตำแหน่ง<br/>
+                  - ข้อมูลการเข้างาน-ออกงาน
+                </p>
+
+                <h3 className="font-bold text-lg mb-3">2. การใช้ข้อมูล</h3>
+                <p className="text-gray-600 mb-4">
+                  ข้อมูลของคุณจะถูกใช้เพื่อ:<br/>
+                  - บริหารจัดการเวลาทำงาน<br/>
+                  - ออกรายงานสำหรับฝ่ายบุคคล<br/>
+                  - ปรับปรุงการให้บริการ
+                </p>
+
+                <h3 className="font-bold text-lg mb-3">3. ความปลอดภัย</h3>
+                <p className="text-gray-600 mb-4">
+                  เรามีมาตรการรักษาความปลอดภัยข้อมูลตามมาตรฐาน PDPA
+                </p>
+
+                <h3 className="font-bold text-lg mb-3">4. สิทธิของผู้ใช้</h3>
+                <p className="text-gray-600 mb-4">
+                  คุณมีสิทธิ์:<br/>
+                  - เข้าถึงและแก้ไขข้อมูลส่วนตัว<br/>
+                  - ขอลบข้อมูลส่วนตัว<br/>
+                  - คัดค้านการประมวลผลข้อมูล
+                </p>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowPrivacy(false)}
+                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition-colors"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
