@@ -12,11 +12,11 @@ import PuffLoader from "./components/common/PuffLoader.jsx";
 // Import Auth และ Layout แบบปกติเพื่อความเร็ว (ใช้บ่อย)
 import Auth from "./pages/Auth/Auth.jsx";
 import Layout from "./pages/user/layout/Layout.jsx";
+import AdminLayout from "./pages/admin/layout/layout.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
 
 // Lazy load หน้าที่ใช้น้อย
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
-const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
@@ -47,18 +47,24 @@ const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <ProtectedRoute allowedRoles={['admin']}>
-        <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
+      <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+        <AdminLayout />
       </ProtectedRoute>
-    )
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/admin/dashboard" replace />
+      },
+      {
+        path: 'dashboard',
+        element: <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
+      }
+    ]
   },
   {
     path: '/superadmin',
-    element: (
-      <ProtectedRoute allowedRoles={['superadmin']}>
-        <Suspense fallback={<PageLoader />}><SuperAdminDashboard /></Suspense>
-      </ProtectedRoute>
-    )
+    element: <Navigate to="/admin" replace />
   },
   {
     path: '/user',
