@@ -7,6 +7,15 @@ const userData = {
   department: "JUBJUB",
   profilePic: "/images/niggatron.jpg",
   status: "ปฏิบัติงาน",
+  // Get role from logged in user
+  get role() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      return user?.role || 'user';
+    } catch {
+      return 'user';
+    }
+  },
 
   // ข้อมูลส่วนตัว
   personalInfo: {

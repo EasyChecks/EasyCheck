@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
+import PuffLoader from '../../components/common/PuffLoader'
 
 
 function Auth() {
+  const [searchParams] = useSearchParams()
   const [showPwd, setShowPwd] = useState(false)
   const [showReset, setShowReset] = useState(false)
   const [username, setUsername] = useState('')
@@ -17,9 +19,18 @@ function Auth() {
   const [NewPassword, setNewPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [resetError, setResetError] = useState('')
+  const [resetSuccess, setResetSuccess] = useState('')
 
   const { login, getDashboardPath } = useAuth()
   const navigate = useNavigate()
+
+  // Check if coming from Settings with mode=reset
+  useEffect(() => {
+    if (searchParams.get('mode') === 'reset') {
+      setShowReset(true)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     function onKey(e) {
@@ -30,10 +41,14 @@ function Auth() {
           handleLogin(e)
         }
       }
-      if (e.key === 'Escape' && showReset) setShowReset(false)
+      if (e.key === 'Escape' && showReset) {
+        setShowReset(false)
+        navigate('/auth', { replace: true })
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showReset, Username, Password, NewPassword, username, password])
 
   const handleLogin = async (e) => {
@@ -64,32 +79,93 @@ function Auth() {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000))
 
+    // Get stored passwords or use defaults
+    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
+    
     // Mock user data based on username
     const mockUsers = {
-      'admin': { id: 1, username: 'admin', role: 'admin', name: 'Administrator' },
-      'superadmin': { id: 2, username: 'superadmin', role: 'superadmin', name: 'Super Admin' },
-      'manager': { id: 3, username: 'manager', role: 'manager', name: 'หัวหน้า' },
-      'user': { id: 4, username: 'user', role: 'user', name: 'ผู้ใช้' }
+      'admin': { id: 1, username: 'admin', role: 'admin', name: 'Administrator', password: storedPasswords['admin'] || '123456' },
+      'superadmin': { id: 2, username: 'superadmin', role: 'superadmin', name: 'Super Admin', password: storedPasswords['superadmin'] || '123456' },
+      'manager': { id: 3, username: 'manager', role: 'manager', name: 'หัวหน้า', password: storedPasswords['manager'] || '123456' },
+      'user': { id: 4, username: 'user', role: 'user', name: 'ผู้ใช้', password: storedPasswords['user'] || '123456' },
+      'user1': { id: 5, username: 'user1', role: 'user', name: 'พนักงาน', password: storedPasswords['user1'] || '123456' }
     }
 
     const user = mockUsers[username.toLowerCase()]
-    if (user && password === '123456') {
-      return { success: true, user }
+    if (user && password === user.password) {
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user
+      return { success: true, user: userWithoutPassword }
     }
 
     return { success: false }
   }
 
   function handleResetConfirm() {
-    // placeholder: perform validation / submit
-    setShowReset(false)
-    setUsernameReset('')
-    setPasswordReset('')
-    setNewPassword('')
+    setResetError('')
+    setResetSuccess('')
+    
+    // Validation
+    if (!Username || !Password || !NewPassword) {
+      setResetError('กรุณากรอกข้อมูลให้ครบทุกช่อง')
+      return
+    }
+
+    if (NewPassword.length < 6) {
+      setResetError('รหัสผ่านใหม่ต้องมีอักขระอย่างน้อย 6 ตัว')
+      return
+    }
+
+    // Get stored passwords or use defaults
+    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
+    
+    // Verify current credentials
+    const mockUsers = {
+      'admin': { username: 'admin', password: storedPasswords['admin'] || '123456' },
+      'superadmin': { username: 'superadmin', password: storedPasswords['superadmin'] || '123456' },
+      'manager': { username: 'manager', password: storedPasswords['manager'] || '123456' },
+      'user': { username: 'user', password: storedPasswords['user'] || '123456' },
+      'user1': { username: 'user1', password: storedPasswords['user1'] || '123456' }
+    }
+
+    const user = mockUsers[Username.toLowerCase()]
+    
+    if (!user) {
+      setResetError('ไม่พบชื่อผู้ใช้นี้ในระบบ')
+      return
+    }
+
+    if (user.password !== Password) {
+      setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
+      return
+    }
+
+    // Update password in localStorage
+    const updatedPasswords = {
+      ...storedPasswords,
+      [Username.toLowerCase()]: NewPassword
+    }
+    localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
+    
+    // Show success message
+    setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
+    
+    // Reset form and close modal after 2 seconds
+    setTimeout(() => {
+      setShowReset(false)
+      setUsernameReset('')
+      setPasswordReset('')
+      setNewPassword('')
+      setResetSuccess('')
+      navigate('/auth', { replace: true })
+    }, 2000)
   }
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+      {/* Show PuffLoader when loading */}
+      {loading && <PuffLoader text="กำลังเข้าสู่ระบบ..." />}
+
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
@@ -172,17 +248,7 @@ function Auth() {
               onClick={handleLogin}
               disabled={loading}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  กำลังเข้าสู่ระบบ...
-                </span>
-              ) : (
-                'เข้าสู่ระบบ'
-              )}
+              เข้าสู่ระบบ
             </button>
           </div>
 
@@ -212,6 +278,20 @@ function Auth() {
               Reset Password
             </header>
 
+            {/* Error message */}
+            {resetError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-shake">
+                {resetError}
+              </div>
+            )}
+
+            {/* Success message */}
+            {resetSuccess && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                {resetSuccess}
+              </div>
+            )}
+
             {/* Username */}
             <div className="flex flex-col gap-2 group">
               <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
@@ -219,7 +299,10 @@ function Auth() {
               </label>
               <input
                 value={Username}
-                onChange={(e) => setUsernameReset(e.target.value)}
+                onChange={(e) => {
+                  setUsernameReset(e.target.value)
+                  setResetError('')
+                }}
                 type="text"
                 placeholder="กรอกชื่อผู้ใช้"
                 className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
@@ -234,7 +317,10 @@ function Auth() {
               <div className="relative">
                 <input
                   value={Password}
-                  onChange={(e) => setPasswordReset(e.target.value)}
+                  onChange={(e) => {
+                    setPasswordReset(e.target.value)
+                    setResetError('')
+                  }}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="กรอกรหัสผ่านเดิม"
                   className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
@@ -267,7 +353,10 @@ function Auth() {
               <div className="relative">
                 <input
                   value={NewPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value)
+                    setResetError('')
+                  }}
                   type={showNewPassword ? 'text' : 'password'}
                   placeholder="กรอกรหัสผ่านใหม่"
                   className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
@@ -295,11 +384,9 @@ function Auth() {
             {/* actions */}
             <div className='flex justify-center pt-2'>
               <button
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl py-3 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                onClick={() => {
-                  handleResetConfirm()
-                  setShowReset(false)
-                }}
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl py-3 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                onClick={handleResetConfirm}
+                disabled={!Username || !Password || !NewPassword || resetSuccess}
               >
                 ยืนยัน
               </button>
@@ -309,7 +396,12 @@ function Auth() {
             <div className="text-center mt-2 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
               <button
                 type="button"
-                onClick={() => setShowReset(false)}
+                onClick={() => {
+                  setShowReset(false)
+                  setResetError('')
+                  setResetSuccess('')
+                  navigate('/auth', { replace: true })
+                }}
                 className="text-gray-500 hover:text-cyan-500 transition-colors duration-200 hover:underline underline-offset-4"
               >
                 กลับหน้า Login

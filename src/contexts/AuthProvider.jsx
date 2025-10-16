@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
       case 'admin':
         return '/admin'
       case 'manager':
-        return '/manager'
+        return '/user/dashboard' // Manager ใช้ interface เดียวกับ user
       case 'user':
         return '/user/dashboard'
       default:
