@@ -129,16 +129,6 @@ function ListLeave() {
                     ))
                 )}
             </div>
-
-            {/* Floating Action Button - Add new leave */}
-            {/* <button 
-                onClick={() => navigate('/user/leave/request')}
-                className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-14 h-14 shadow-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-            </button> */}
         </div>
     )
 }

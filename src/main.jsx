@@ -67,6 +67,10 @@ const router = createBrowserRouter([
     element: <Navigate to="/admin" replace />
   },
   {
+    path: '/manager',
+    element: <Navigate to="/user" replace />
+  },
+  {
     path: '/user',
     element: (
       <ProtectedRoute allowedRoles={['user', 'manager']}>
@@ -123,7 +127,7 @@ const router = createBrowserRouter([
   {
     path: '/user/leave',
     element: (
-      <ProtectedRoute allowedRoles={['user']}>
+      <ProtectedRoute allowedRoles={['user', 'manager']}>
         <Suspense fallback={<PageLoader />}><LeaveScreen /></Suspense>
       </ProtectedRoute>
     )
@@ -131,7 +135,7 @@ const router = createBrowserRouter([
   {
     path: '/user/leave/list',
     element: (
-      <ProtectedRoute allowedRoles={['user']}>
+      <ProtectedRoute allowedRoles={['user', 'manager']}>
         <Suspense fallback={<PageLoader />}><ListLeave /></Suspense>
       </ProtectedRoute>
     )
@@ -139,7 +143,7 @@ const router = createBrowserRouter([
   {
     path: '/user/leave/detail/:id',
     element: (
-      <ProtectedRoute allowedRoles={['user']}>
+      <ProtectedRoute allowedRoles={['user', 'manager']}>
         <Suspense fallback={<PageLoader />}><LeaveDetail /></Suspense>
       </ProtectedRoute>
     )
