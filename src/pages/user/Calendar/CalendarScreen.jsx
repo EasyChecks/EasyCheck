@@ -177,13 +177,6 @@ function CalendarScreen() {
     setShowMonthPicker(false)
   }
 
-  const _goToToday = () => {
-    const today = new Date()
-    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1))
-    setSelectedDate(today)
-    setShowMonthPicker(false)
-  }
-
   const toggleExpand = () => {
     setExpanded(!expanded)
   }
@@ -283,6 +276,7 @@ function CalendarScreen() {
             )}
           </div>
           
+          {/* Next Month Button */}
           <button
             onClick={nextMonth}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -354,12 +348,12 @@ function CalendarScreen() {
           <div className="font-bold text-[16px] sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px]">หมายเหตุ</div>
           <button
             onClick={toggleExpand}
-            className="ml-2 p-2 rounded hover:bg-gray-100"
+            className="ml-2 p-2 rounded hover:bg-gray-100 transition-colors"
             aria-expanded={expanded}
             aria-controls="note-list"
           >
             <svg
-              className="w-6 h-6 text-gray-800"
+              className={`w-6 h-6 text-gray-800 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -370,15 +364,20 @@ function CalendarScreen() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d={expanded ? "m1 1 5.326 5.7a.909.909 0 0 0 1.348 0L13 1" : "M13 7 7.674 1.3a.91.91 0 0 0-1.348 0L1 7"}
+                d="M13 7 7.674 1.3a.91.91 0 0 0-1.348 0L1 7"
               />
             </svg>
           </button>
         </div>
 
         {/* Note List */}
-        {expanded && (
-          <div id="note-list" className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div 
+          id="note-list" 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            expanded ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {Note.map((note, i) => (
               <div key={i} className="flex items-center gap-3 p-2">
                 <div className={`w-5 h-5 ${note.color} rounded-full flex-shrink-0`}></div>
@@ -386,7 +385,7 @@ function CalendarScreen() {
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Events for Selected Date */}
