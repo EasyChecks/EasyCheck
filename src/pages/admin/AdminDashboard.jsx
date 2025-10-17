@@ -9,7 +9,7 @@ function AdminDashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Users */}
-          {/* <div className="bg-white rounded-2xl shadow-md p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#9333EA">
@@ -20,10 +20,10 @@ function AdminDashboard() {
             <h3 className="text-gray-600 text-sm mb-1">ผู้ใช้ทั้งหมด</h3>
             <p className="text-3xl font-bold text-gray-800">1,234</p>
             <p className="text-xs text-green-600 mt-1">+12% จากเดือนที่แล้ว</p>
-          </div> */}
+          </div>
 
           {/* Active Sessions */}
-          {/* <div className="bg-white rounded-2xl shadow-md p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#3B82F6">
@@ -34,10 +34,10 @@ function AdminDashboard() {
             <h3 className="text-gray-600 text-sm mb-1">เซสชันที่ใช้งาน</h3>
             <p className="text-3xl font-bold text-gray-800">856</p>
             <p className="text-xs text-blue-600 mt-1">ออนไลน์ตอนนี้</p>
-          </div> */}
+          </div>
 
           {/* Total Organizations */}
-          {/* <div className="bg-white rounded-2xl shadow-md p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#22C55E">
@@ -48,10 +48,10 @@ function AdminDashboard() {
             <h3 className="text-gray-600 text-sm mb-1">องค์กรทั้งหมด</h3>
             <p className="text-3xl font-bold text-gray-800">45</p>
             <p className="text-xs text-green-600 mt-1">+3 องค์กรใหม่</p>
-          </div> */}
+          </div>
 
           {/* System Health */}
-          {/* <div className="bg-white rounded-2xl shadow-md p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F97316">
@@ -62,11 +62,11 @@ function AdminDashboard() {
             <h3 className="text-gray-600 text-sm mb-1">สถานะระบบ</h3>
             <p className="text-3xl font-bold text-green-600">99.9%</p>
             <p className="text-xs text-gray-500 mt-1">Uptime</p>
-          </div> */}
+          </div>
         </div>
 
         {/* Quick Actions */}
-        {/* <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4">การจัดการด่วน</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all">
@@ -105,10 +105,10 @@ function AdminDashboard() {
               </div>
             </button>
           </div>
-        </div> */}
+        </div>
 
         {/* Recent Activity */}
-        {/* <div className="bg-white rounded-2xl shadow-md p-6">
+        <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">กิจกรรมล่าสุด</h2>
           <div className="space-y-4">
             <div className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
@@ -147,7 +147,7 @@ function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div> */}
+        </div>
       </main>
     </div>
   )
