@@ -132,7 +132,11 @@ export const LeaveProvider = ({ children }) => {
     };
 
     // Format period string
-    const formatPeriod = (startDate, endDate) => {
+    const formatPeriod = (startDate, endDate, startTime, endTime) => {
+        if (startTime && endTime) {
+            // Hourly leave format
+            return `${startDate} (${startTime} - ${endTime})`;
+        }
         if (startDate === endDate) {
             return startDate;
         }
@@ -141,15 +145,37 @@ export const LeaveProvider = ({ children }) => {
 
     // Add new leave request
     const addLeave = (leaveData) => {
-        const days = calculateDays(leaveData.startDate, leaveData.endDate);
+        let days, period;
+        
+        if (leaveData.leaveMode === 'hourly') {
+            // Hourly leave
+            const [startHour, startMin] = leaveData.startTime.split(':').map(Number);
+            const [endHour, endMin] = leaveData.endTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+            const diffMinutes = endMinutes - startMinutes;
+            const hours = Math.floor(diffMinutes / 60);
+            const minutes = diffMinutes % 60;
+            
+            days = minutes > 0 ? `${hours} ชม. ${minutes} นาที` : `${hours} ชั่วโมง`;
+            period = formatPeriod(leaveData.startDate, leaveData.endDate, leaveData.startTime, leaveData.endTime);
+        } else {
+            // Full day leave
+            days = `${calculateDays(leaveData.startDate, leaveData.endDate)} วัน`;
+            period = formatPeriod(leaveData.startDate, leaveData.endDate);
+        }
+        
         const newLeave = {
             id: Date.now(),
             leaveType: leaveData.leaveType,
-            days: `${days} วัน`,
+            days: days,
             category: leaveData.leaveType,
-            period: formatPeriod(leaveData.startDate, leaveData.endDate),
+            period: period,
             startDate: leaveData.startDate,
             endDate: leaveData.endDate,
+            startTime: leaveData.startTime || null,
+            endTime: leaveData.endTime || null,
+            leaveMode: leaveData.leaveMode || 'fullday',
             reason: leaveData.reason,
             status: 'รออนุมัติ',
             statusColor: 'yellow',
