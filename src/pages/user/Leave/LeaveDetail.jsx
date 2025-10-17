@@ -1,12 +1,18 @@
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLeave } from '../../../contexts/LeaveContext'
+import ConfirmDialog from '../../../components/common/ConfirmDialog'
+import SuccessDialog from '../../../components/common/SuccessDialog'
 
 function LeaveDetail() {
     const navigate = useNavigate()
     const location = useLocation()
     const { cancelLeave } = useLeave()
+    
+    // Dialog states
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+    const [showSuccess, setShowSuccess] = useState(false)
     
     // Get leave data from navigation state or use default
     const leaveData = location.state?.leaveData || {
@@ -21,14 +27,13 @@ function LeaveDetail() {
     }
     
     const handleCancelLeave = () => {
-        if (window.confirm('คุณต้องการยกเลิกการลานี้หรือไม่?')) {
-            const success = cancelLeave(leaveData.id)
-            if (success) {
-                alert('ยกเลิกการลาเรียบร้อยแล้ว')
+        const success = cancelLeave(leaveData.id)
+        if (success) {
+            setShowSuccess(true)
+            // Navigate back after success dialog closes
+            setTimeout(() => {
                 navigate(-1)
-            } else {
-                alert('ไม่สามารถยกเลิกการลานี้ได้')
-            }
+            }, 2500)
         }
     }
 
@@ -172,7 +177,7 @@ function LeaveDetail() {
             {leaveData.status === 'รออนุมัติ' && (
                 <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 bg-gradient-to-t from-white via-white to-transparent backdrop-blur-sm">
                     <button 
-                        onClick={handleCancelLeave}
+                        onClick={() => setShowCancelConfirm(true)}
                         className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -182,6 +187,28 @@ function LeaveDetail() {
                     </button>
                 </div>
             )}
+
+            {/* Confirm Cancel Dialog */}
+            <ConfirmDialog
+                isOpen={showCancelConfirm}
+                onClose={() => setShowCancelConfirm(false)}
+                onConfirm={handleCancelLeave}
+                title="ยกเลิกการลา"
+                message="คุณต้องการยกเลิกการลานี้หรือไม่?"
+                confirmText="ตกลง"
+                cancelText="ยกเลิก"
+                type="danger"
+            />
+
+            {/* Success Dialog */}
+            <SuccessDialog
+                isOpen={showSuccess}
+                onClose={() => setShowSuccess(false)}
+                title="สำเร็จ!"
+                message="ยกเลิกการลาเรียบร้อยแล้ว"
+                autoClose={true}
+                autoCloseDelay={2000}
+            />
         </div>
     )
 }

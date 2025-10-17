@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTeam } from '../../../contexts/useTeam';
 import { useLoading } from '../../../contexts/useLoading';
+import ConfirmDialog from '../../../components/common/ConfirmDialog';
+import SuccessDialog from '../../../components/common/SuccessDialog';
 
 function LeaveApproval() {
   const { pendingLeaves, approveLeave, rejectLeave } = useTeam();
@@ -9,6 +11,12 @@ function LeaveApproval() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
+  
+  // Dialog states
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [showApproveSuccess, setShowApproveSuccess] = useState(false);
+  const [showRejectSuccess, setShowRejectSuccess] = useState(false);
+  const [leaveToApprove, setLeaveToApprove] = useState(null);
   
   // Calendar states
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -64,11 +72,14 @@ function LeaveApproval() {
   }, [pendingLeaves, selectedStartDate, selectedEndDate]);
 
   // ฟังก์ชันอนุมัติ
-  const handleApprove = (leaveId) => {
-    if (window.confirm('ต้องการอนุมัติใบลานี้หรือไม่?')) {
-      approveLeave(leaveId);
-      alert('อนุมัติใบลาเรียบร้อยแล้ว');
-    }
+  const handleApprove = (leave) => {
+    setLeaveToApprove(leave);
+    setShowApproveConfirm(true);
+  };
+
+  const confirmApprove = () => {
+    approveLeave(leaveToApprove.id);
+    setShowApproveSuccess(true);
   };
 
   // ฟังก์ชันไม่อนุมัติ
@@ -86,7 +97,7 @@ function LeaveApproval() {
     setShowRejectModal(false);
     setRejectReason('');
     setSelectedLeave(null);
-    alert('ไม่อนุมัติใบลาเรียบร้อยแล้ว');
+    setShowRejectSuccess(true);
   };
 
   // สีของแท็กประเภทการลา
@@ -290,7 +301,7 @@ function LeaveApproval() {
                 {/* Actions */}
                 <div className="flex gap-3">
                   <button
-                    onClick={() => handleApprove(leave.id)}
+                    onClick={() => handleApprove(leave)}
                     className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg"
                   >
                     ✓ อนุมัติ
@@ -475,6 +486,41 @@ function LeaveApproval() {
           </div>
         </div>
       )}
+
+      {/* Approve Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showApproveConfirm}
+        onClose={() => {
+          setShowApproveConfirm(false);
+          setLeaveToApprove(null);
+        }}
+        onConfirm={confirmApprove}
+        title="อนุมัติใบลา"
+        message={`ต้องการอนุมัติใบลาของ ${leaveToApprove?.employeeName} หรือไม่?`}
+        confirmText="ตกลง"
+        cancelText="ยกเลิก"
+        type="success"
+      />
+
+      {/* Approve Success Dialog */}
+      <SuccessDialog
+        isOpen={showApproveSuccess}
+        onClose={() => setShowApproveSuccess(false)}
+        title="สำเร็จ!"
+        message="อนุมัติใบลาเรียบร้อยแล้ว"
+        autoClose={true}
+        autoCloseDelay={2000}
+      />
+
+      {/* Reject Success Dialog */}
+      <SuccessDialog
+        isOpen={showRejectSuccess}
+        onClose={() => setShowRejectSuccess(false)}
+        title="สำเร็จ!"
+        message="ไม่อนุมัติใบลาเรียบร้อยแล้ว"
+        autoClose={true}
+        autoCloseDelay={2000}
+      />
     </div>
   );
 }
