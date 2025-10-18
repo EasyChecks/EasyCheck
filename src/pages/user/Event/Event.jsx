@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import EventData from "./EventData";
+import { eventsData as EventData } from "../../../data/usersData"; // ย้ายข้อมูลมาจาก usersData แล้ว
 
 export default function Event() {
   const navigate = useNavigate();
