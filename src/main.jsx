@@ -71,11 +71,12 @@ const router = createBrowserRouter([
         path: 'download',
         element: <Suspense fallback={<PageLoader />}><DownloadData /></Suspense>
       },
+      {
         path: 'attendance',
         element: <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
       }
     ]
-  },
+  },  
   {
     path: '/superadmin',
     element: <Navigate to="/admin" replace />
