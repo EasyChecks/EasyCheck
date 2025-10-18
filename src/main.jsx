@@ -7,6 +7,8 @@ import { AuthProvider } from "./contexts/AuthProvider.jsx";
 import { LeaveProvider } from "./contexts/LeaveContext.jsx";
 import { TeamProvider } from "./contexts/TeamContext.jsx";
 import { LoadingProvider } from "./contexts/LoadingContext.jsx";
+import { LocationProvider } from "./contexts/LocationContext.jsx";
+import { EventProvider } from "./contexts/EventContext.jsx";
 import PuffLoader from "./components/common/PuffLoader.jsx";
 
 // Import Auth และ Layout แบบปกติเพื่อความเร็ว (ใช้บ่อย)
@@ -20,13 +22,14 @@ import Attendance from "./pages/admin/Attendance/Attendance.jsx";
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
 const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
 const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
+const Mapping = lazy(() => import("./pages/admin/Mapping.jsx"));
+const EventManagement = lazy(() => import("./pages/admin/EventManagement.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
 const ListLeave = lazy(() => import("./pages/user/Leave/ListLeave.jsx"));
 const CalendarScreen = lazy(() => import("./pages/user/Calendar/CalendarScreen.jsx"));
-const Event = lazy(() => import("./pages/user/Event/Event.jsx"));
-const EventDetails = lazy(() => import("./pages/user/Event/EventDetails.jsx"));
+const EventRouter = lazy(() => import("./pages/user/Event/EventRouter.jsx"));
 const ProfileScreen = lazy(() => import("./pages/user/Profile/ProfileScreen.jsx"));
 const SettingsScreen = lazy(() => import("./pages/user/Settings/SettingsScreen.jsx"));
 const TeamAttendance = lazy(() => import("./pages/user/Team/TeamAttendance.jsx"));
@@ -72,6 +75,14 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<PageLoader />}><DownloadData /></Suspense>
       },
       {
+        path: 'mapping',
+        element: <Suspense fallback={<PageLoader />}><Mapping /></Suspense>
+      },
+      {
+        path: 'event-management',
+        element: <Suspense fallback={<PageLoader />}><EventManagement /></Suspense>
+      },
+      {
         path: 'attendance',
         element: <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
       }
@@ -114,12 +125,8 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<PageLoader />}><CalendarScreen /></Suspense>
       },
       {
-        path: 'event',
-        element: <Suspense fallback={<PageLoader />}><Event /></Suspense>
-      },
-      {
-        path: 'event/:id',
-        element: <Suspense fallback={<PageLoader />}><EventDetails /></Suspense>
+        path: 'event/*',
+        element: <Suspense fallback={<PageLoader />}><EventRouter /></Suspense>
       },
       {
         path: 'profile',
@@ -171,7 +178,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <TeamProvider>
           <LeaveProvider>
-            <RouterProvider router={router} />
+            <LocationProvider>
+              <EventProvider>
+                <RouterProvider router={router} />
+              </EventProvider>
+            </LocationProvider>
           </LeaveProvider>
         </TeamProvider>
       </AuthProvider>
