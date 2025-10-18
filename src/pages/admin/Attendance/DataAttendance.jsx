@@ -2,7 +2,7 @@ export const sampleSchedules = [
   {
     id: 1,
     team: 'ทีม A: งานติดตั้ง',
-    date: '3/2/10/2568',
+    date: '32/10/2568',
     location: 'โบเทค บางนา Hall 101',
     members: 'อภิสิทธิ์, พรหมพิริยะ, ธนกร',
     type: 'ติดตั้งระบบไฟฟ้า',
