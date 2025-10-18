@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import { useTeam } from '../../contexts/useTeam'
 import { useLoading } from '../../contexts/useLoading'
-import userData from '../../data/userData'
-import { validateBuddy } from '../../data/buddyData'
+import { validateBuddy } from '../../data/usersData' // Updated: merged from buddyData.js
 
 function UserDashboard() {
-  const { attendance } = useAuth()
+  const { attendance, user } = useAuth() // เพิ่ม user จาก useAuth
   const { getTeamStats, getUnreadNotifications } = useTeam()
   const { hideLoading } = useLoading()
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -19,8 +18,8 @@ function UserDashboard() {
   const [buddyError, setBuddyError] = useState('')
   const [buddySuccess, setBuddySuccess] = useState(false)
 
-  // ตรวจสอบว่าเป็นหัวหน้าหรือไม่
-  const isManager = useMemo(() => userData.role === 'manager', [])
+  // ตรวจสอบว่าเป็นหัวหน้าหรือไม่ - ใช้ user จาก context แทน userData
+  const isManager = useMemo(() => user?.role === 'manager', [user])
   const teamStats = useMemo(() => isManager ? getTeamStats() : null, [isManager, getTeamStats])
   const notifications = useMemo(() => isManager ? getUnreadNotifications() : null, [isManager, getUnreadNotifications])
 
@@ -49,13 +48,13 @@ function UserDashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  // Mock data - ใช้ข้อมูลจาก userData.js
+  // Mock data - ใช้ข้อมูลจาก user context
   const mockData = {
     user: {
-      name: userData.name,
-      employeeId: userData.workInfo.employeeId,
-      department: userData.department,
-      position: userData.position
+      name: user?.name || '',
+      employeeId: user?.employeeId || user?.username || '',
+      department: user?.department || '',
+      position: user?.position || ''
     },
     leave: {
       remaining: 10,

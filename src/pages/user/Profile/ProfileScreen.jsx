@@ -1,11 +1,108 @@
 import React, { useState, useRef, useEffect } from 'react';
-import userData from '../../../data/userData';
+import { useAuth } from '../../../contexts/useAuth';
+
+// ฟังก์ชันแปลงวันที่ ISO เป็น DD/MM/YYYY (พ.ศ.)
+const convertToThaiDate = (isoDate) => {
+  if (!isoDate) return '';
+  
+  try {
+    const date = new Date(isoDate);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const yearBE = date.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
+    
+    return `${day}/${month}/${yearBE}`;
+  } catch {
+    return isoDate;
+  }
+};
 
 function ProfileScreen() {
+  const { user } = useAuth(); // ดึงข้อมูล user จาก context
+  
   // State สำหรับเก็บข้อมูลที่แก้ไขได้
   const [profileData, setProfileData] = useState(() => {
-    const saved = localStorage.getItem('userProfileData');
-    return saved ? JSON.parse(saved) : userData;
+    // Clear old data และใช้ข้อมูลจาก user ที่ login
+    localStorage.removeItem('userProfileData'); // Clear old cache
+    
+    // แปลง workHistory array เป็น string
+    const workHistoryText = user?.workHistory && Array.isArray(user.workHistory) 
+      ? user.workHistory.map(w => `${w.period}: ${w.position} ที่ ${w.company}`).join('\n')
+      : '';
+    
+    // แปลง skills array เป็น string
+    const skillsText = user?.skills && Array.isArray(user.skills)
+      ? user.skills.join(', ')
+      : '';
+    
+    // แปลง education array เป็น string
+    const educationText = user?.education && Array.isArray(user.education)
+      ? user.education.join(', ')
+      : 'ปริญญาตรี';
+    
+    // แปลง certifications array เป็น string
+    const certificationsText = user?.certifications && Array.isArray(user.certifications)
+      ? user.certifications.join(', ')
+      : '';
+    
+    // จัดการข้อมูล timeSummary
+    const timeSummary = user?.timeSummary || {};
+    const attendanceText = timeSummary.totalWorkDays 
+      ? `ทำงาน ${timeSummary.totalWorkDays} วัน (ตรงเวลา ${timeSummary.onTime} วัน, สาย ${timeSummary.late} วัน, ลา ${timeSummary.leave} วัน, ขาด ${timeSummary.absent} วัน)`
+      : 'ไม่มีข้อมูล';
+    
+    return {
+      id: user?.id || 1,
+      name: user?.name || '',
+      position: user?.position || '',
+      department: user?.department || '',
+      profilePic: user?.profileImage || 'https://i.pravatar.cc/200?u=default',
+      status: user?.status || 'ปฏิบัติงาน',
+      role: user?.role || 'user',
+      personalInfo: {
+        birthDate: convertToThaiDate(user?.birthDate) || '',
+        age: user?.age || '',
+        address: user?.address || '',
+        phone: user?.phone || '',
+        email: user?.email || '',
+        maritalStatus: 'โสด',
+        idCard: user?.nationalId || '',
+        emergencyContact: user?.emergencyContact ? `${user.emergencyContact.name} (${user.emergencyContact.relation}) - ${user.emergencyContact.phone}` : ''
+      },
+      workInfo: {
+        position: user?.position || '',
+        workplace: user?.department || '',
+        employeeId: user?.employeeId || user?.username || '',
+        department: user?.department || '',
+        startDate: convertToThaiDate(user?.startDate) || '',
+        workPeriod: user?.workPeriod || '',
+        education: educationText,
+        workHistory: workHistoryText,
+        skills: skillsText,
+        certifications: certificationsText,
+        benefits: 'ประกันสังคม'
+      },
+      healthInfo: {
+        medicalHistory: 'ปกติ',
+        bloodType: user?.bloodType || '',
+        socialSecurity: user?.socialSecurityNumber || '',
+        salary: user?.salary ? `${Number(user.salary).toLocaleString()} บาท` : ''
+      },
+      additionalInfo: {
+        attendance: attendanceText,
+        performance: 'ไม่มีข้อมูล',
+        disciplinary: 'ไม่เคยมีประวัติการลงโทษ',
+        totalHours: timeSummary.totalHours || '',
+        avgCheckIn: timeSummary.avgCheckIn || '',
+        avgCheckOut: timeSummary.avgCheckOut || ''
+      },
+      companyInfo: {
+        name: 'GGS Co., Ltd.',
+        address: '88 อาคาร ชั้น 15',
+        callCenter: '02-456-7890',
+        email: 'contact@ggs.com'
+      }
+    };
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -190,6 +287,12 @@ function ProfileScreen() {
               <span className="text-gray-500 w-32 flex-shrink-0">เลขบัตรประชาชน :</span>
               <span className="text-gray-800 font-medium">{profileData.personalInfo.idCard}</span>
             </div>
+            {profileData.personalInfo.emergencyContact && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-32 flex-shrink-0">ผู้ติดต่อฉุกเฉิน :</span>
+                <span className="text-gray-800 font-medium">{profileData.personalInfo.emergencyContact}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -217,21 +320,33 @@ function ProfileScreen() {
               <span className="text-gray-800 font-medium">{profileData.workInfo.department}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">วันเริ่มงาน / วันสร้าง :</span>
+              <span className="text-gray-500 w-32 flex-shrink-0">วันเริ่มงาน :</span>
               <span className="text-gray-800 font-medium">{profileData.workInfo.startDate}</span>
             </div>
+            {profileData.workInfo.workPeriod && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-32 flex-shrink-0">ระยะเวลาทำงาน :</span>
+                <span className="text-gray-800 font-medium">{profileData.workInfo.workPeriod}</span>
+              </div>
+            )}
             <div className="flex items-start">
               <span className="text-gray-500 w-32 flex-shrink-0">ประวัติการศึกษา :</span>
               <span className="text-gray-800 font-medium">{profileData.workInfo.education}</span>
             </div>
             <div className="flex items-start">
               <span className="text-gray-500 w-32 flex-shrink-0">ประวัติการทำงาน :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.workHistory}</span>
+              <span className="text-gray-800 font-medium whitespace-pre-line">{profileData.workInfo.workHistory}</span>
             </div>
             <div className="flex items-start">
               <span className="text-gray-500 w-32 flex-shrink-0">ทักษะทางงาน :</span>
               <span className="text-gray-800 font-medium">{profileData.workInfo.skills}</span>
             </div>
+            {profileData.workInfo.certifications && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-32 flex-shrink-0">ใบรับรอง/ประกาศนียบัตร :</span>
+                <span className="text-gray-800 font-medium">{profileData.workInfo.certifications}</span>
+              </div>
+            )}
             <div className="flex items-start">
               <span className="text-gray-500 w-32 flex-shrink-0">ข้อมูลสวัสดิการ :</span>
               <span className="text-gray-800 font-medium">{profileData.workInfo.benefits}</span>
@@ -273,15 +388,33 @@ function ProfileScreen() {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">สถิติการลา :</span>
+              <span className="text-gray-500 w-40 flex-shrink-0">สถิติการลา :</span>
               <span className="text-gray-800 font-medium">{profileData.additionalInfo.attendance}</span>
             </div>
+            {profileData.additionalInfo.totalHours && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0">ชั่วโมงทำงานรวม :</span>
+                <span className="text-gray-800 font-medium">{profileData.additionalInfo.totalHours}</span>
+              </div>
+            )}
+            {profileData.additionalInfo.avgCheckIn && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0">เวลาเข้างานเฉลี่ย :</span>
+                <span className="text-gray-800 font-medium">{profileData.additionalInfo.avgCheckIn}</span>
+              </div>
+            )}
+            {profileData.additionalInfo.avgCheckOut && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0">เวลาออกงานเฉลี่ย :</span>
+                <span className="text-gray-800 font-medium">{profileData.additionalInfo.avgCheckOut}</span>
+              </div>
+            )}
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ผลการประเมินงาน :</span>
+              <span className="text-gray-500 w-40 flex-shrink-0">ผลการประเมินงาน :</span>
               <span className="text-gray-800 font-medium">{profileData.additionalInfo.performance}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ประวัติการลงโทษ :</span>
+              <span className="text-gray-500 w-40 flex-shrink-0">ประวัติการลงโทษ :</span>
               <span className="text-gray-800 font-medium">{profileData.additionalInfo.disciplinary}</span>
             </div>
           </div>
