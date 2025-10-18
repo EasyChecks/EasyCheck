@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Nav from '../../../components/user/nav/Nav'
 import { useAuth } from '../../../contexts/useAuth'
-import userData from '../../../data/userData'
+import { getLegacyUserData } from '../../../data/usersData' // Updated: merged from userData.js
 
 function Layout() {
   const navigate = useNavigate()
@@ -10,7 +10,7 @@ function Layout() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [profileData, setProfileData] = useState(() => {
     const saved = localStorage.getItem('userProfileData')
-    return saved ? JSON.parse(saved) : userData
+    return saved ? JSON.parse(saved) : getLegacyUserData()
   })
 
   // อัพเดตข้อมูลเมื่อ localStorage เปลี่ยน

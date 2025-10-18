@@ -12,6 +12,7 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+import { eventsData as EventData } from "../../../data/usersData"; // ย้ายข้อมูลมาจาก usersData แล้ว
 
 export default function EventDetails() {
   const { id } = useParams();
