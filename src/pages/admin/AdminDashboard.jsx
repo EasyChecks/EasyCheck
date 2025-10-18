@@ -1,150 +1,388 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Circle, LayersControl, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+import { useLocations } from '../../contexts/LocationContext'
+import { useEvents } from '../../contexts/EventContext'
+
+// Fix for default marker icon issue in Leaflet with webpack
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+
+// Component to auto-fit bounds to show all markers
+function FitBoundsToMarkers({ locations }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (locations && locations.length > 0) {
+      // Create bounds from all location coordinates
+      const bounds = L.latLngBounds(
+        locations.map(loc => [loc.latitude, loc.longitude])
+      )
+      
+      // Fit map to bounds with padding
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 17,
+        animate: true,
+        duration: 0.5
+      })
+    }
+  }, [locations, map])
+
+  return null
+}
 
 function AdminDashboard() {
+  // Use Location Context (for Mapping locations)
+  const { locations } = useLocations()
+  // Use Event Context (for Event locations)
+  const { events } = useEvents()
+  
+  const [chartPeriod, setChartPeriod] = useState('week') // week, month, year
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
+
+  // Mock data for demonstration
+  const stats = {
+    totalWeekly: 100,
+    totalToday: 95,
+    lateCount: 2,
+    leaveCount: 3,
+    absentCount: 3
+  }
+
+  // Combine locations from both Mapping and Events
+  const mappingLocations = locations.map((loc, index) => ({
+    ...loc,
+    type: 'mapping',
+    team: loc.team || ['ทีมพัฒนา', 'ทีมการตลาด', 'ทีมปฏิบัติการ'][index % 3],
+    time: loc.time || ['09:15 น.', '09:32 น.', '08:45 น.'][index % 3],
+    checkInStatus: loc.checkInStatus || (index % 3 === 1 ? 'นอกพื้นที่ 100 ม.' : 'ในพื้นที่'),
+    statusColor: loc.statusColor || (index % 3 === 1 ? 'text-red-600' : 'text-green-600')
+  }))
+
+  const eventLocations = events.map((evt, index) => ({
+    id: `event-${evt.id}`,
+    name: evt.locationName,
+    description: `งาน: ${evt.name}`,
+    latitude: evt.latitude,
+    longitude: evt.longitude,
+    radius: evt.radius,
+    status: evt.status,
+    type: 'event',
+    team: evt.teams ? evt.teams.join(', ') : 'ไม่ระบุ',
+    time: evt.startTime || 'ไม่ระบุ',
+    checkInStatus: 'พื้นที่กิจกรรม',
+    statusColor: 'text-blue-600'
+  }))
+
+  // Combine all locations
+  const locationsWithStatus = [...mappingLocations, ...eventLocations]
+
+  
+  const defaultCenter = [13.7606, 100.5034]
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF]">
+    <div className="min-h-screen bg-[#F5F7FA]">
+      {/* Page Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 className="text-2xl font-bold text-gray-800">ภาพรวมการปฏิบัติงานทั้งหมด</h1>
+        <p className="text-sm text-gray-600 mt-1">ข้อมูลเรียลไทม์ของระบบตรวจสอบการเข้างาน การลางาน และพื้นที่อนุญาต</p>
+      </div>
+
       {/* Main Content */}
-      <main className="px-4 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Users */}
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#9333EA">
-                  <path d="M40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm720 0v-120q0-44-24.5-84.5T666-434q51 6 96 20.5t84 35.5q36 20 55 44.5t19 53.5v120H760ZM360-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm400-160q0 66-47 113t-113 47q-11 0-28-2.5t-28-5.5q27-32 41.5-71t14.5-81q0-42-14.5-81T544-792q14-5 28-6.5t28-1.5q66 0 113 47t47 113Z"/>
-                </svg>
+      <main className="px-6 py-8 max-w-7xl mx-auto">
+        {/* Section 1: Attendance Stats */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">สถิติการเข้างาน</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Total Weekly */}
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-md p-6 text-white">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                    <path d="M40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm720 0v-120q0-44-24.5-84.5T666-434q51 6 96 20.5t84 35.5q36 20 55 44.5t19 53.5v120H760ZM360-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm400-160q0 66-47 113t-113 47q-11 0-28-2.5t-28-5.5q27-32 41.5-71t14.5-81q0-42-14.5-81T544-792q14-5 28-6.5t28-1.5q66 0 113 47t47 113Z" />
+                  </svg>
+                </div>
               </div>
+              <h3 className="text-white/90 text-sm mb-1">จำนวนพนักงานทั้งหมดในสัปดาร์นี้</h3>
+              <p className="text-4xl font-bold">{stats.totalWeekly}</p>
+              <p className="text-xs text-white/80 mt-2">จากทีมทั้งหมดรวมถึงเจ้าหน้าที่</p>
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">ผู้ใช้ทั้งหมด</h3>
-            <p className="text-3xl font-bold text-gray-800">1,234</p>
-            <p className="text-xs text-green-600 mt-1">+12% จากเดือนที่แล้ว</p>
-          </div>
 
-          {/* Active Sessions */}
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#3B82F6">
-                  <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-82v-78q-33 0-56.5-23.5T360-320v-40L168-552q-3 18-5.5 36t-2.5 36q0 121 79.5 212T440-162Zm276-102q20-22 36-47.5t26.5-53q10.5-27.5 16-56.5t5.5-59q0-98-54.5-179T600-776v16q0 33-23.5 56.5T520-680h-80v80q0 17-11.5 28.5T400-560h-80v80h240q17 0 28.5 11.5T600-440v120h40q26 0 47 15.5t29 40.5Z"/>
-                </svg>
+            {/* Total Today */}
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-md p-6 text-white">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                    <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                  </svg>
+                </div>
               </div>
+              <h3 className="text-white/90 text-sm mb-1">เข้างานสำเร็จวันนี้</h3>
+              <p className="text-4xl font-bold">{stats.totalToday}</p>
+              <p className="text-xs text-white/80 mt-2">95% check on-time</p>
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">เซสชันที่ใช้งาน</h3>
-            <p className="text-3xl font-bold text-gray-800">856</p>
-            <p className="text-xs text-blue-600 mt-1">ออนไลน์ตอนนี้</p>
-          </div>
 
-          {/* Total Organizations */}
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#22C55E">
-                  <path d="M120-120v-80l80-80v160h-80Zm160 0v-240l80-80v320h-80Zm160 0v-320l80 81v239h-80Zm160 0v-239l80-80v319h-80Zm160 0v-400l80-80v480h-80ZM120-327v-113l280-280 160 160 280-280v113L560-447 400-607 120-327Z"/>
-                </svg>
+            {/* Late Count */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-md p-6 text-white">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                    <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                  </svg>
+                </div>
               </div>
+              <h3 className="text-white/90 text-sm mb-1">มาสาย / ลางาน</h3>
+              <p className="text-4xl font-bold">{stats.lateCount + stats.leaveCount}</p>
+              <p className="text-xs text-white/80 mt-2">2 คนมาสาย, 3 ลางาน</p>
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">องค์กรทั้งหมด</h3>
-            <p className="text-3xl font-bold text-gray-800">45</p>
-            <p className="text-xs text-green-600 mt-1">+3 องค์กรใหม่</p>
-          </div>
-
-          {/* System Health */}
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F97316">
-                  <path d="m438-338 226-226-57-57-169 169-84-84-57 57 141 141Zm42 258q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Z"/>
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-gray-600 text-sm mb-1">สถานะระบบ</h3>
-            <p className="text-3xl font-bold text-green-600">99.9%</p>
-            <p className="text-xs text-gray-500 mt-1">Uptime</p>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">การจัดการด่วน</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all">
-              <div className="flex flex-col items-center space-y-2">
-                <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#9333EA">
-                  <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-                </svg>
-                <span className="font-semibold text-sm">เพิ่มองค์กร</span>
-              </div>
-            </button>
+        {/* Section 2: Weekly Attendance Trends Chart */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-md p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-white">Weekly Attendance Trends</h2>
+          </div>
 
-            <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
-              <div className="flex flex-col items-center space-y-2">
-                <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#3B82F6">
-                  <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Z"/>
-                </svg>
-                <span className="font-semibold text-sm">รายงานระบบ</span>
-              </div>
-            </button>
+          {/* Chart Area - Using SVG for simple line chart */}
+          <div className="relative h-80 bg-white rounded-xl p-6 border border-blue-100">
+            <svg className="w-full h-full" viewBox="0 0 800 300" preserveAspectRatio="none">
+              {/* Grid lines */}
+              <line x1="0" y1="60" x2="800" y2="60" stroke="#E5E7EB" strokeWidth="1" />
+              <line x1="0" y1="120" x2="800" y2="120" stroke="#E5E7EB" strokeWidth="1" />
+              <line x1="0" y1="180" x2="800" y2="180" stroke="#E5E7EB" strokeWidth="1" />
+              <line x1="0" y1="240" x2="800" y2="240" stroke="#E5E7EB" strokeWidth="1" />
 
-            <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all">
-              <div className="flex flex-col items-center space-y-2">
-                <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#22C55E">
-                  <path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Z"/>
-                </svg>
-                <span className="font-semibold text-sm">ตั้งค่าระบบ</span>
-              </div>
-            </button>
+              {/* Attendance line chart */}
+              <polyline
+                points="0,250 100,180 200,90 300,120 400,60 500,200 600,80 700,110 800,280"
+                fill="none"
+                stroke="#3B82F6"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
 
-            <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-orange-500 hover:bg-orange-50 transition-all">
-              <div className="flex flex-col items-center space-y-2">
-                <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#F97316">
-                  <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
-                </svg>
-                <span className="font-semibold text-sm">ดู Logs</span>
-              </div>
-            </button>
+              {/* Area under the curve */}
+              <polyline
+                points="0,250 100,180 200,90 300,120 400,60 500,200 600,80 700,110 800,280 800,300 0,300"
+                fill="url(#gradient)"
+                opacity="0.3"
+              />
+
+              {/* Data points */}
+              <circle cx="100" cy="180" r="5" fill="#3B82F6" />
+              <circle cx="200" cy="90" r="5" fill="#3B82F6" />
+              <circle cx="300" cy="120" r="5" fill="#3B82F6" />
+              <circle cx="400" cy="60" r="5" fill="#3B82F6" />
+              <circle cx="500" cy="200" r="5" fill="#3B82F6" />
+              <circle cx="600" cy="80" r="5" fill="#3B82F6" />
+              <circle cx="700" cy="110" r="5" fill="#3B82F6" />
+
+              {/* Gradient definition */}
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* X-axis labels */}
+            <div className="flex justify-between text-xs text-gray-600 mt-2">
+              {chartPeriod === 'week' && (
+                <>
+                  <span>จันทร์</span>
+                  <span>อังคาร</span>
+                  <span>พุธ</span>
+                  <span>พฤหัส</span>
+                  <span>ศุกร์</span>
+                  <span>เสาร์</span>
+                  <span>อาทิตย์</span>
+                </>
+              )}
+              {chartPeriod === 'month' && (
+                <>
+                  <span>สัปดาห์ 1</span>
+                  <span>สัปดาห์ 2</span>
+                  <span>สัปดาห์ 3</span>
+                  <span>สัปดาห์ 4</span>
+                </>
+              )}
+              {chartPeriod === 'year' && (
+                <>
+                  <span>ม.ค.</span>
+                  <span>ก.พ.</span>
+                  <span>มี.ค.</span>
+                  <span>เม.ย.</span>
+                  <span>พ.ค.</span>
+                  <span>มิ.ย.</span>
+                  <span>ก.ค.</span>
+                  <span>ส.ค.</span>
+                  <span>ก.ย.</span>
+                  <span>ต.ค.</span>
+                  <span>พ.ย.</span>
+                  <span>ธ.ค.</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">กิจกรรมล่าสุด</h2>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#3B82F6">
-                  <path d="M40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Z"/>
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-800">ผู้ใช้ใหม่ลงทะเบียน</p>
-                <p className="text-sm text-gray-600">องค์กร ABC Company - 5 นาทีที่แล้ว</p>
+        {/* Section 3: Permitted Area */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-md p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Permitted Work Area</h2>
+              <p className="text-sm text-white mt-1">พื้นที่อนุญาต</p>
+            </div>
+            <div className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+              {locationsWithStatus.length} สถานที่
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-1 gap-6">
+            {/* Map Area - Leaflet */}
+            <div className="relative bg-white rounded-xl overflow-hidden border-2 border-blue-300 shadow-inner h-[500px]">
+              <MapContainer
+                center={defaultCenter}
+                zoom={13}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
+              >
+                <LayersControl position="topright">
+                  <LayersControl.BaseLayer checked name="แผนที่ปกติ">
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                      url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    />
+                  </LayersControl.BaseLayer>
+                </LayersControl>
+
+                {/* Auto-fit bounds to show all markers */}
+                <FitBoundsToMarkers locations={locationsWithStatus} />
+
+                {locationsWithStatus.map((location) => (
+                  <React.Fragment key={location.id}>
+                    <Marker position={[location.latitude, location.longitude]} />
+                    <Circle
+                      center={[location.latitude, location.longitude]}
+                      radius={location.radius}
+                      pathOptions={{ 
+                        color: location.type === 'event' ? '#EAB308' : (location.status === 'active' ? 'green' : 'red'),
+                        fillColor: location.type === 'event' ? '#EAB308' : (location.status === 'active' ? 'green' : 'red'),
+                        fillOpacity: 0.2 
+                      }}
+                    />
+                  </React.Fragment>
+                ))}
+              </MapContainer>
+
+              {/* Map legend */}
+              <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg z-[1000]">
+                <h3 className="text-xs font-semibold text-gray-700 mb-2">สถานะ</h3>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-gray-600">พื้นที่อนุญาต</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="text-xs text-gray-600">กิจกรรม</span>
+                  </div>                 
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#22C55E">
-                  <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-800">อัพเดทระบบสำเร็จ</p>
-                <p className="text-sm text-gray-600">Version 2.5.0 - 30 นาทีที่แล้ว</p>
-              </div>
-            </div>
+            {/* Location Details List */}
+            <div className="space-y-4">
+              {locationsWithStatus.map((location) => (
+                <div
+                  key={location.id}
+                  className={`bg-gradient-to-r ${
+                    location.type === 'event' 
+                      ? 'from-yellow-50 to-yellow-100 border-yellow-300' 
+                      : location.checkInStatus === 'ในพื้นที่'
+                        ? 'from-green-50 to-green-100 border-green-200'
+                        : 'from-red-50 to-red-100 border-red-200'
+                    } border-2 rounded-xl p-5 hover:shadow-lg transition-all cursor-pointer`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-12 h-12 ${
+                          location.type === 'event'
+                            ? 'bg-yellow-500'
+                            : location.checkInStatus === 'ในพื้นที่' ? 'bg-green-500' : 'bg-red-500'
+                          } rounded-full flex items-center justify-center text-white font-bold shadow-md`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-800">{location.name}</h3>
+                        <p className={`text-sm font-medium ${location.type === 'event' ? 'text-yellow-700' : location.statusColor}`}>
+                          {location.checkInStatus}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 พื้นที่อนุญาต'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#F97316">
-                  <path d="m40-120 440-760 440 760H40Z"/>
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-800">แจ้งเตือนการใช้งาน</p>
-                <p className="text-sm text-gray-600">CPU Usage 85% - 1 ชั่วโมงที่แล้ว</p>
-              </div>
+                  <div className="bg-white/60 rounded-lg p-3 mb-3">
+                    <p className="text-xs text-gray-600 mb-1">รายละเอียด</p>
+                    <p className="font-semibold text-gray-800 text-sm">{location.description}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/60 rounded-lg p-3">
+                      <p className="text-xs text-gray-600 mb-1">ทีม / หน่วยงาน</p>
+                      <p className="font-semibold text-gray-800 text-sm">{location.team}</p>
+                    </div>
+                    <div className="bg-white/60 rounded-lg p-3">
+                      <p className="text-xs text-gray-600 mb-1">เวลาเช็คอิน</p>
+                      <p className="font-semibold text-gray-800 text-sm">{location.time}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="bg-white/60 rounded-lg p-3">
+                      <p className="text-xs text-gray-600 mb-1">รัศมี</p>
+                      <p className="font-semibold text-gray-800 text-sm">{location.radius} เมตร</p>
+                    </div>
+                    <div className="bg-white/60 rounded-lg p-3">
+                      <p className="text-xs text-gray-600 mb-1">พิกัด</p>
+                      <div className="flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="14px"
+                          viewBox="0 -960 960 960"
+                          width="14px"
+                          fill="#6B7280"
+                        >
+                          <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
+                        </svg>
+                        <p className="font-mono text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
