@@ -18,6 +18,8 @@ import Attendance from "./pages/admin/Attendance/Attendance.jsx";
 
 // Lazy load หน้าที่ใช้น้อย
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
+const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
+const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
@@ -62,6 +64,13 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
       },
       {
+        path: 'manage-users',
+        element: <Suspense fallback={<PageLoader />}><AdminManageUser /></Suspense>
+      },
+      {
+        path: 'download',
+        element: <Suspense fallback={<PageLoader />}><DownloadData /></Suspense>
+      },
         path: 'attendance',
         element: <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
       }

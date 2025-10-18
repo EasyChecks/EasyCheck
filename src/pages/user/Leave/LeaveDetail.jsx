@@ -157,13 +157,16 @@ function LeaveDetail() {
                                     เอกสารเพิ่มเติม
                                 </h3>
                             </div>
-                            {leaveData.documents.length === 0 ? (
+                            {!leaveData.documents || leaveData.documents.length === 0 ? (
                                 <p className="text-gray-500 text-xs sm:text-sm ml-8 sm:ml-10 lg:ml-12 italic">ไม่มีเอกสารแนบ</p>
                             ) : (
                                 <div className="ml-8 sm:ml-10 lg:ml-12 space-y-2">
                                     {leaveData.documents.map((doc, index) => (
-                                        <div key={index} className="text-gray-700 text-sm sm:text-base font-medium">
-                                            {doc}
+                                        <div key={index} className="flex items-center gap-2 text-gray-700 text-sm sm:text-base font-medium bg-white rounded-lg p-2 border border-emerald-200">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <span className="truncate">{doc}</span>
                                         </div>
                                     ))}
                                 </div>
