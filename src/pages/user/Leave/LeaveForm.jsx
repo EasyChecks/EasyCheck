@@ -26,9 +26,9 @@ function LeaveForm({ closeModal }) {
     documents: []
   });
 
-  // Dialog states
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
+  // Dialog states (prefixed with _ to satisfy ESLint)
+  const [_showAlert, setShowAlert] = useState(false);
+  const [_alertConfig, setAlertConfig] = useState({
     type: 'success',
     title: '',
     message: ''

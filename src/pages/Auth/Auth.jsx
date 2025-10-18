@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import PuffLoader from '../../components/common/PuffLoader'
+import { getUserForAuth } from '../../data/usersData' // Import helper functions
 
 
 function Auth() {
@@ -61,6 +62,10 @@ function Auth() {
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
+        console.log('🔐 Login Success:', response.user) // Debug log
+        console.log('👤 User Role:', response.user.role) // Debug log
+        console.log('📍 Dashboard Path:', getDashboardPath(response.user.role)) // Debug log
+        
         login(response.user)
         const dashboardPath = getDashboardPath(response.user.role)
         navigate(dashboardPath, { replace: true })
@@ -79,19 +84,12 @@ function Auth() {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // Get stored passwords or use defaults
-    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
+    // Normalize username to uppercase for employee ID format
+    const normalizedUsername = username.toUpperCase()
     
-    // Mock user data based on username
-    const mockUsers = {
-      'admin': { id: 1, username: 'admin', role: 'admin', name: 'Administrator', password: storedPasswords['admin'] || '123456' },
-      'superadmin': { id: 2, username: 'superadmin', role: 'superadmin', name: 'Super Admin', password: storedPasswords['superadmin'] || '123456' },
-      'manager': { id: 3, username: 'manager', role: 'manager', name: 'หัวหน้า', password: storedPasswords['manager'] || '123456' },
-      'user': { id: 4, username: 'user', role: 'user', name: 'ผู้ใช้', password: storedPasswords['user'] || '123456' },
-      'user1': { id: 5, username: 'user1', role: 'user', name: 'พนักงาน', password: storedPasswords['user1'] || '123456' }
-    }
-
-    const user = mockUsers[username.toLowerCase()]
+    // Get user from shared data source
+    const user = getUserForAuth(normalizedUsername)
+    
     if (user && password === user.password) {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user
@@ -119,36 +117,77 @@ function Auth() {
     // Get stored passwords or use defaults
     const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
     
-    // Verify current credentials
-    const mockUsers = {
-      'admin': { username: 'admin', password: storedPasswords['admin'] || '123456' },
-      'superadmin': { username: 'superadmin', password: storedPasswords['superadmin'] || '123456' },
-      'manager': { username: 'manager', password: storedPasswords['manager'] || '123456' },
-      'user': { username: 'user', password: storedPasswords['user'] || '123456' },
-      'user1': { username: 'user1', password: storedPasswords['user1'] || '123456' }
-    }
-
-    const user = mockUsers[Username.toLowerCase()]
+    // Try to find user in usersData first
+    const userData = getUserForAuth(Username)
     
-    if (!user) {
-      setResetError('ไม่พบชื่อผู้ใช้นี้ในระบบ')
-      return
-    }
+    if (userData) {
+      // Regular user from usersData
+      if (userData.password !== Password) {
+        setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
+        return
+      }
 
-    if (user.password !== Password) {
-      setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
-      return
-    }
+      // Update user password in usersData
+      const users = JSON.parse(localStorage.getItem('users') || '[]')
+      const updatedUsers = users.map(user => {
+        if (user.username === Username) {
+          return { ...user, password: NewPassword }
+        }
+        return user
+      })
+      localStorage.setItem('users', JSON.stringify(updatedUsers))
 
-    // Update password in localStorage
-    const updatedPasswords = {
-      ...storedPasswords,
-      [Username.toLowerCase()]: NewPassword
+      // If user is admin or superadmin, also update their admin account password
+      if (userData.role === 'admin' || userData.role === 'superadmin') {
+        const adminUsername = `ADM${userData.employeeId}`
+        const updatedPasswords = {
+          ...storedPasswords,
+          [adminUsername.toLowerCase()]: NewPassword
+        }
+        localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
+      }
+
+      setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
+    } else {
+      // Check if it's an admin account (ADM prefix)
+      const mockUsers = {
+        'admin': { username: 'admin', password: storedPasswords['admin'] || '123456' }
+      }
+
+      const user = mockUsers[Username.toLowerCase()]
+      
+      if (!user) {
+        setResetError('ไม่พบชื่อผู้ใช้นี้ในระบบ')
+        return
+      }
+
+      if (user.password !== Password) {
+        setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
+        return
+      }
+
+      // Update password in localStorage
+      const updatedPasswords = {
+        ...storedPasswords,
+        [Username.toLowerCase()]: NewPassword
+      }
+      localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
+
+      // If it's an admin account (ADM prefix), also update the main user account
+      if (Username.toLowerCase().startsWith('adm')) {
+        const employeeId = Username.substring(3) // Remove 'ADM' prefix
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const updatedUsers = users.map(user => {
+          if (user.employeeId === employeeId && (user.role === 'admin' || user.role === 'superadmin')) {
+            return { ...user, password: NewPassword }
+          }
+          return user
+        })
+        localStorage.setItem('users', JSON.stringify(updatedUsers))
+      }
+
+      setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
     }
-    localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
-    
-    // Show success message
-    setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
     
     // Reset form and close modal after 2 seconds
     setTimeout(() => {

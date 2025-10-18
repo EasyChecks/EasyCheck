@@ -23,8 +23,10 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = (userData) => {
+    console.log('💾 Saving user to context:', userData) // Debug log
     setUser(userData)
     localStorage.setItem('user', JSON.stringify(userData))
+    console.log('✅ User saved to localStorage') // Debug log
   }
 
   const logout = () => {
