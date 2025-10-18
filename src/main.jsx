@@ -14,6 +14,7 @@ import Auth from "./pages/Auth/Auth.jsx";
 import Layout from "./pages/user/layout/Layout.jsx";
 import AdminLayout from "./pages/admin/layout/layout.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
+import Attendance from "./pages/admin/Attendance/Attendance.jsx";
 
 // Lazy load หน้าที่ใช้น้อย
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
+      },
+      {
+        path: 'attendance',
+        element: <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
       }
     ]
   },
