@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { calendarEvents, attendanceData } from '../../../data/usersData'; // Import from centralized data
 
 function CalendarScreen() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -7,22 +8,11 @@ function CalendarScreen() {
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear())
   const [expanded, setExpanded] = useState(false)
 
-  // Mock events data - รอทีมทำ API
-  const mockEvents = [
-    { id: 1, date: '2025-11-23', title: 'เตรียมตัวนำเสนอโปรเจค', type: 'meeting', status: 'normal' },
-    { id: 2, date: '2025-11-24', title: 'นำเสนอโปรเจค', type: 'meeting', status: 'normal' },
-    { id: 3, date: '2025-11-25', title: 'นำเสนอโปรเจค', type: 'meeting', status: 'normal' },
-  ]
+  // Events data from centralized source
+  const mockEvents = calendarEvents;
 
-  // Mock attendance data - ข้อมูลการลงเวลา
-  const mockAttendance = [
-    { date: '2025-10-03', status: 'late' },
-    { date: '2025-10-04', status: 'absent' },
-    { date: '2025-10-08', status: 'late' },
-    { date: '2025-10-11', status: 'leave' },
-    { date: '2025-10-17', status: 'late' },
-    { date: '2025-10-18', status: 'absent' },
-  ]
+  // Attendance data from centralized source
+  const mockAttendance = attendanceData;
 
   // Custom styles for select dropdown
   const selectStyles = `
