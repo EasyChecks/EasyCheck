@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/useAuth'
 import { useTeam } from '../../contexts/useTeam'
 import { useLoading } from '../../contexts/useLoading'
 import { validateBuddy } from '../../data/usersData' // Updated: merged from buddyData.js
+import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 
 function UserDashboard() {
   const { attendance, user } = useAuth() // เพิ่ม user จาก useAuth
@@ -187,6 +188,11 @@ function UserDashboard() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Attendance Statistics - แสดงสถิติการลงเวลาจริง */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <AttendanceStatsRow />
       </div>
 
       {/* Manager Section - แสดงเฉพาะหัวหน้า */}
