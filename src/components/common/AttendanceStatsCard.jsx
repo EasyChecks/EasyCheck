@@ -1,5 +1,6 @@
 import React from 'react';
-import { useAuth } from '../contexts/useAuth';
+import { useAuth } from '../../contexts/useAuth';
+
 
 /**
  * AttendanceStatsCard - แสดงสถิติการลงเวลาแบบ real-time
