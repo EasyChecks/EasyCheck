@@ -26,7 +26,7 @@ function FitBoundsToMarkers({ locations }) {
       
       // Fit map to bounds with padding
       map.fitBounds(bounds, {
-        padding: [50, 50],
+        padding: [30, 30],
         maxZoom: 17,
         animate: true,
         duration: 0.5
@@ -61,8 +61,8 @@ function AdminDashboard() {
     type: 'mapping',
     team: loc.team || ['ทีมพัฒนา', 'ทีมการตลาด', 'ทีมปฏิบัติการ'][index % 3],
     time: loc.time || ['09:15 น.', '09:32 น.', '08:45 น.'][index % 3],
-    checkInStatus: loc.checkInStatus || (index % 3 === 1 ? 'นอกพื้นที่ 100 ม.' : 'ในพื้นที่'),
-    statusColor: loc.statusColor || (index % 3 === 1 ? 'text-red-600' : 'text-green-600')
+    checkInStatus: 'พื้นที่อนุญาต',
+    statusColor: 'text-green-600'
   }))
 
   const eventLocations = events.map((evt, index) => ({
@@ -95,7 +95,7 @@ function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-7xl mx-auto">
+      <main className="px-6 py-8 max-w-8xl mx-auto">
         {/* Section 1: Attendance Stats */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">สถิติการเข้างาน</h2>
@@ -314,18 +314,14 @@ function AdminDashboard() {
                   className={`bg-gradient-to-r ${
                     location.type === 'event' 
                       ? 'from-yellow-50 to-yellow-100 border-yellow-300' 
-                      : location.checkInStatus === 'ในพื้นที่'
-                        ? 'from-green-50 to-green-100 border-green-200'
-                        : 'from-red-50 to-red-100 border-red-200'
+                      : 'from-green-50 to-green-100 border-green-200'
                     } border-2 rounded-xl p-5 hover:shadow-lg transition-all cursor-pointer`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-12 h-12 ${
-                          location.type === 'event'
-                            ? 'bg-yellow-500'
-                            : location.checkInStatus === 'ในพื้นที่' ? 'bg-green-500' : 'bg-red-500'
+                          location.type === 'event' ? 'bg-yellow-500' : 'bg-green-500'
                           } rounded-full flex items-center justify-center text-white font-bold shadow-md`}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
@@ -338,7 +334,7 @@ function AdminDashboard() {
                           {location.checkInStatus}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 พื้นที่อนุญาต'}
+                          {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 จากตั้งค่าแผนที่'}
                         </p>
                       </div>
                     </div>
@@ -377,7 +373,7 @@ function AdminDashboard() {
                         >
                           <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
                         </svg>
-                        <p className="font-mono text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
+                        <p className="text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
                       </div>
                     </div>
                   </div>

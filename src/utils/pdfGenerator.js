@@ -9,11 +9,11 @@ export const generateUserPDF = async (user, getStatusBadge) => {
   element.style.width = '210mm';
   element.style.padding = '20px';
   element.style.backgroundColor = '#ffffff';
-  element.style.fontFamily = 'Arial, sans-serif';
+  element.style.fontFamily = 'Prompt, sans-serif';
   
   // สร้างเนื้อหา HTML
   element.innerHTML = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div style="font-family: 'Prompt', sans-serif;">
       <!-- Header -->
       <div style="background: linear-gradient(to right, #0ea5e9, #06b6d4); padding: 30px 20px; margin: -20px -20px 20px -20px; color: white; border-radius: 10px 10px 0 0;">
         <h1 style="margin: 0 0 10px 0; font-size: 32px; font-weight: bold;">ข้อมูลพนักงาน</h1>
