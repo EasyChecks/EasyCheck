@@ -1,13 +1,26 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import EventData from "./EventData";
+import { useEvents } from "../../../contexts/EventContext";
+import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icon issue in Leaflet with webpack
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+import { eventsData as EventData } from "../../../data/usersData"; // ย้ายข้อมูลมาจาก usersData แล้ว
 
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { events } = useEvents();
   const [isJoined, setIsJoined] = useState(false);
 
-  const event = EventData.find((e) => e.id === parseInt(id));
+  const event = events.find((e) => e.id === parseInt(id));
 
   const handleJoinEvent = () => {
     setIsJoined(true);
@@ -54,7 +67,7 @@ export default function EventDetails() {
       </div>
 
       {/* Event Header */}
-      <div className="bg-white text-gray-800 px-6 py-8 rounded-3xl shadow-lg mx-4">
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
         <div className="flex items-start space-x-3">
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,9 +75,14 @@ export default function EventDetails() {
             </svg>
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
-            <div className="inline-block bg-white/20 px-3 py-1 rounded-full text-sm">
-              Event ID: #{event.id}
+            <h1 className="text-2xl font-bold mb-2">{event.name}</h1>
+            <p className="text-blue-100 text-sm mb-2">{event.date}</p>
+            <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+              event.status === 'ongoing' 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-gray-100 text-gray-700'
+            }`}>
+              {event.status === 'ongoing' ? 'เริ่มงานแล้ว' : 'เสร็จสิ้น'}
             </div>
           </div>
         </div>
@@ -99,29 +117,88 @@ export default function EventDetails() {
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">สถานที่</h3>
-                <p className="text-gray-800 font-medium">{event.location}</p>
+                <p className="text-gray-800 font-medium mb-2">{event.locationName}</p>
+                <p className="text-sm text-gray-600">
+                  📍 พิกัด: {event.latitude.toFixed(6)}, {event.longitude.toFixed(6)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  🔵 รัศมี: {event.radius} เมตร
+                </p>
               </div>
+            </div>
+          </div>
+
+          {/* Map Section */}
+          <div className="p-6 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">แผนที่สถานที่</h3>
+            <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-200">
+              <MapContainer
+                center={[event.latitude, event.longitude]}
+                zoom={16}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={false}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={[event.latitude, event.longitude]} />
+                <Circle
+                  center={[event.latitude, event.longitude]}
+                  radius={event.radius}
+                  pathOptions={{ 
+                    color: event.status === 'ongoing' ? '#22C55E' : '#6B7280',
+                    fillColor: event.status === 'ongoing' ? '#22C55E' : '#6B7280',
+                    fillOpacity: 0.2 
+                  }}
+                />
+              </MapContainer>
             </div>
           </div>
 
           {/* Time Section */}
-          <div className="p-6">
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">เวลา</h3>
-                <p className="text-gray-800 font-medium">{event.time}</p>
+          {event.startTime && event.endTime && (
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">เวลา</h3>
+                  <p className="text-gray-800 font-medium">{event.startTime} - {event.endTime} น.</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Teams Section */}
+          {event.teams && event.teams.length > 0 && (
+            <div className="p-6">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">ทีมที่เข้าร่วม</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {event.teams.map((team, idx) => (
+                      <span key={idx} className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+                        {team}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 space-y-3 pb-6">
           <button 
             onClick={handleJoinEvent}
             disabled={isJoined}
