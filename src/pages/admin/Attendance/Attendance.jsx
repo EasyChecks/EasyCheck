@@ -156,71 +156,73 @@ function Attendance() {
     setShowCreate(false)
   }
 
-      return (
-        <div className="bg-gray-50 h-screen" style={{ height: '100vh', overflowY: 'auto', scrollbarGutter: 'stable' }}>
-      <div className="w-full px-4 md:px-8 lg:px-12 py-8">
-        <div
-          className="w-full mx-auto bg-white rounded-2xl p-6 shadow-xl border border-gray-200 max-w-screen-2xl"
-          style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)' }}
-        >
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-[#0b2b57]">จัดตารางงาน</h2>
-            <p className="text-sm text-gray-600 mt-1">ตรวจสอบและปรับตารางให้เหมาะสมกับจำนวนพนักงานและพื้นที่</p>
-          </div>
+    return (
+      <div className="w-full bg-gray-50 min-h-screen " 
+      style={{overflowY: 'auto', scrollbarGutter: 'stable' }}
+      >
+        <div className="w-full pl-3 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-6">
+          <div
+            className="w-full mx-auto bg-white rounded-2xl p-6 shadow-xl border border-gray-200"
+            style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)'}}
+          >
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-[#0b2b57]">จัดตารางงาน</h2>
+              <p className="text-sm text-gray-600 mt-1">ตรวจสอบและปรับตารางให้เหมาะสมกับจำนวนพนักงานและพื้นที่</p>
+            </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <button 
-              onClick={() => setShowCreate(true)} 
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
-            >
-              สร้างตารางใหม่
-            </button>
-
-            {!selectMode ? (
-              // ปกติ: แสดงปุ่มเข้าสู่โหมดลบ
+            <div className="flex items-center gap-3 flex-wrap">
               <button 
-                onClick={toggleSelectMode} 
-                className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#f59e0b] to-[#d97706] text-white rounded-full shadow-md hover:shadow-lg hover:from-[#d97706] hover:to-[#b45309] transition-all duration-200 font-medium text-sm"
+                onClick={() => setShowCreate(true)} 
+                className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
               >
-
-                ลบตาราง
+                สร้างตารางใหม่
               </button>
-            ) : (
-              // ในโหมดเลือก: แสดงปุ่มลบทั้งหมด, ลบที่เลือก, ยกเลิก
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => setShowDeleteAllConfirm(true)}
-                  disabled={schedules.length === 0}
-                  className={`inline-flex items-center justify-center px-5 py-2.5 rounded-full transition-all duration-200 font-medium text-sm ${
-                    schedules.length === 0 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
-                  }`}
-                >
-                  ลบทั้งหมด
-                </button>
 
-                <button
-                  onClick={confirmDelete}
-                  disabled={selectedIds.length === 0}
-                  className={`inline-flex items-center justify-center px-5 py-2.5 rounded-full transition-all duration-200 font-medium text-sm ${
-                    selectedIds.length === 0 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
-                  }`}
-                >
-                  ลบที่เลือก ({selectedIds.length})
-                </button>
-
+              {!selectMode ? (
+                // ปกติ: แสดงปุ่มเข้าสู่โหมดลบ
                 <button 
                   onClick={toggleSelectMode} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white rounded-lg shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-all duration-200 font-medium text-sm"
                 >
-                  ยกเลิก
+
+                  ลบตาราง
                 </button>
-              </div>
-            )}
+              ) : (
+                // ในโหมดเลือก: แสดงปุ่มลบทั้งหมด, ลบที่เลือก, ยกเลิก
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => setShowDeleteAllConfirm(true)}
+                    disabled={schedules.length === 0}
+                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm ${
+                      schedules.length === 0 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
+                    }`}
+                  >
+                    ลบทั้งหมด
+                  </button>
+
+                  <button
+                    onClick={confirmDelete}
+                    disabled={selectedIds.length === 0}
+                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm ${
+                      selectedIds.length === 0 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
+                    }`}
+                  >
+                    ลบที่เลือก ({selectedIds.length})
+                  </button>
+
+                  <button 
+                    onClick={toggleSelectMode} 
+                    className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              )}
           </div>
         </div>
 
@@ -265,14 +267,66 @@ function Attendance() {
                     </div>
 
                     <div className="mt-6 mb-2 flex items-center gap-2 flex-wrap">
-                      <button onClick={() => { setEditingItem(item); setShowEdit(true); }} className="inline-flex items-center justify-center px-5 py-2 bg-gradient-to-b from-[#06b6d4] to-[#0891b2] text-white rounded-full text-base font-semibold shadow-md hover:shadow-lg hover:from-[#0891b2] hover:to-[#0e7490] transition-all duration-200">
+                      {/* Primary button - unified size */}
+                      <button
+                        onClick={() => { setEditingItem(item); setShowEdit(true); }}
+                        className="inline-flex items-center justify-center text-base font-semibold rounded-xl shadow-md transition-all duration-200"
+                        style={{
+                          background: 'linear-gradient(to bottom, #06b6d4, #0891b2)',
+                          color: 'white',
+                          minWidth: 120,
+                          height: 40,
+                          padding: '0 20px',
+                          lineHeight: '1',
+                          boxSizing: 'border-box',
+                          boxShadow: '0 6px 18px rgba(11,43,87,0.12)'
+                        }}
+                      >
                         ปรับตาราง
                       </button>
+
+                      {/* Secondary toggle - unified size */}
                       <button
                         onClick={() => toggleDetails(item.id)}
-                        className="inline-flex items-center justify-center px-5 py-2 bg-white text-[#0b2b57] rounded-full text-base font-semibold border-2 border-white/50 hover:bg-white/90 transition-all duration-200 shadow-sm"
+                        aria-expanded={isOpen}
+                        className="relative inline-flex items-center justify-center text-base font-semibold rounded-xl shadow-md transition-all duration-200 overflow-hidden"
+                        style={{
+                          background: 'white',
+                          color: '#0b2b57',
+                          border: '2px solid rgba(255,255,255,0.5)',
+                          minWidth: 120,
+                          height: 40,
+                          padding: '0 20px',
+                          lineHeight: '1',
+                          boxSizing: 'border-box',
+                          boxShadow: '0 6px 18px rgba(11,43,87,0.12)'
+                        }}
                       >
-                        {isOpen ? 'ซ่อนรายละเอียด' : 'รายละเอียด'}
+                        <span
+                          aria-hidden={isOpen}
+                          style={{
+                            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            opacity: isOpen ? 0 : 1,
+                            transition: 'opacity 220ms ease',
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          รายละเอียด
+                        </span>
+
+                        <span
+                          aria-hidden={!isOpen}
+                          style={{
+                            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            opacity: isOpen ? 1 : 0,
+                            transition: 'opacity 220ms ease',
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          ซ่อนรายละเอียด
+                        </span>
+
+                        <span className="sr-only">{isOpen ? 'ซ่อนรายละเอียด' : 'รายละเอียด'}</span>
                       </button>
                     </div>
 
