@@ -131,7 +131,7 @@ export default function EventDetails() {
           {/* Map Section */}
           <div className="p-6 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">แผนที่สถานที่</h3>
-            <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-200">
+            <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-200 z-10">
               <MapContainer
                 center={[event.latitude, event.longitude]}
                 zoom={16}

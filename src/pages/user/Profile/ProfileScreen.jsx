@@ -438,7 +438,7 @@ function ProfileScreen() {
       {/* Edit Modal */}
       {isEditing && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
