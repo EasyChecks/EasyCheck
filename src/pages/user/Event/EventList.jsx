@@ -5,7 +5,7 @@ import { useEvents } from "../../../contexts/EventContext";
 const EventCard = React.memo(({ event }) => (
   <Link to={`/user/event/${event.id}`} className="block">
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-200 overflow-hidden group">
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="text-xl font-bold text-white mb-2">{event.name}</h3>
