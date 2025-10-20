@@ -586,7 +586,7 @@ function EventManagement() {
       </div>
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-7xl mx-auto">
+      <main className="px-6 py-8 max-w-8xl mx-auto">
         {/* Action Button */}
         <div className="mb-8">
           <button

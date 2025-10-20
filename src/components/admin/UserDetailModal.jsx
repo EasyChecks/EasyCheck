@@ -374,7 +374,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-600">Password</span>
-                    <span className="font-mono font-medium text-gray-800">{user.password || '••••••••'}</span>
+                    <span className="font-medium text-gray-800">{user.password || '••••••••'}</span>
                   </div>
                   <div className="flex justify-between py-2">
                     <span className="text-gray-600">บทบาท</span>
