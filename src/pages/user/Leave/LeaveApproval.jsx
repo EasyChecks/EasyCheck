@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useTeam } from '../../../contexts/useTeam';
+import { useLeave } from '../../../contexts/LeaveContext';
+import { usersData } from '../../../data/usersData';
 import { useLoading } from '../../../contexts/useLoading';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
 import SuccessDialog from '../../../components/common/SuccessDialog';
 
 function LeaveApproval() {
-  const { pendingLeaves, approveLeave, rejectLeave } = useTeam();
+  const { leaveList, updateLeaveStatus } = useLeave();
   const { hideLoading } = useLoading();
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -42,9 +43,51 @@ function LeaveApproval() {
     };
   }, [showRejectModal, showCalendar]);
 
-  // กรองเฉพาะใบลาที่รออนุมัติ
+  // กรองเฉพาะใบลาที่รออนุมัติ - ดึงจาก LeaveContext
   const activePendingLeaves = useMemo(() => {
-    let filtered = pendingLeaves.filter(leave => leave.status === 'pending');
+    // แปลงข้อมูลจาก leaveList ให้เป็นรูปแบบที่ LeaveApproval ใช้
+    let filtered = leaveList
+      .filter(leave => leave.status === 'รออนุมัติ')
+      .map(leave => {
+        // ดึงข้อมูล user ที่เป็นเจ้าของใบลา
+        const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+        const user = usersData.find(u => u.username === currentUserData.username) || usersData[0];
+        
+        // แปลงวันที่จาก dd/mm/yyyy เป็น Date object เพื่อหา submittedDate
+        const submittedDate = new Date(leave.id).toLocaleDateString('th-TH', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+        
+        // คำนวณจำนวนวัน
+        let totalDays = 0;
+        if (leave.leaveMode === 'fullday') {
+          const [startDay, startMonth, startYear] = leave.startDate.split('/');
+          const [endDay, endMonth, endYear] = leave.endDate.split('/');
+          const start = new Date(startYear, startMonth - 1, startDay);
+          const end = new Date(endYear, endMonth - 1, endDay);
+          totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        } else {
+          // สำหรับการลารายชั่วโมง แสดงเป็นข้อความ
+          totalDays = leave.days; // เช่น "2 ชม." หรือ "2 ชั่วโมง"
+        }
+        
+        return {
+          id: leave.id,
+          employeeName: user.name || 'พนักงาน',
+          leaveType: leave.leaveType,
+          startDate: leave.startDate,
+          endDate: leave.endDate,
+          totalDays: totalDays,
+          reason: leave.reason,
+          status: 'pending',
+          submittedDate: submittedDate,
+          leaveMode: leave.leaveMode,
+          startTime: leave.startTime,
+          endTime: leave.endTime
+        };
+      });
     
     // กรองตามช่วงวันที่ส่งใบลา ถ้ามีการเลือก
     if (selectedStartDate && selectedEndDate) {
@@ -69,7 +112,7 @@ function LeaveApproval() {
     }
     
     return filtered;
-  }, [pendingLeaves, selectedStartDate, selectedEndDate]);
+  }, [leaveList, selectedStartDate, selectedEndDate]);
 
   // ฟังก์ชันอนุมัติ
   const handleApprove = (leave) => {
@@ -78,8 +121,10 @@ function LeaveApproval() {
   };
 
   const confirmApprove = () => {
-    approveLeave(leaveToApprove.id);
+    // อัพเดทสถานะเป็น "อนุมัติ" ใน LeaveContext
+    updateLeaveStatus(leaveToApprove.id, 'อนุมัติ');
     setShowApproveSuccess(true);
+    setLeaveToApprove(null);
   };
 
   // ฟังก์ชันไม่อนุมัติ
@@ -93,7 +138,8 @@ function LeaveApproval() {
       alert('กรุณาระบุเหตุผลที่ไม่อนุมัติ');
       return;
     }
-    rejectLeave(selectedLeave.id, rejectReason);
+    // อัพเดทสถานะเป็น "ไม่อนุมัติ" ใน LeaveContext
+    updateLeaveStatus(selectedLeave.id, 'ไม่อนุมัติ');
     setShowRejectModal(false);
     setRejectReason('');
     setSelectedLeave(null);
@@ -288,7 +334,12 @@ function LeaveApproval() {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">จำนวนวัน</p>
-                    <p className="font-semibold text-gray-800">{leave.totalDays} วัน</p>
+                    <p className="font-semibold text-gray-800">
+                      {leave.leaveMode === 'hourly' 
+                        ? leave.totalDays 
+                        : `${leave.totalDays} วัน`
+                      }
+                    </p>
                   </div>
                 </div>
 

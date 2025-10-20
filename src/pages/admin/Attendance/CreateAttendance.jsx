@@ -1,6 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+import { useLocations } from '../../../contexts/LocationContext'
+
+// Fix Leaflet default icon
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+
+// Component to handle map clicks
+function MapClickHandler({ onMapClick, isActive }) {
+  useMapEvents({
+    click: (e) => {
+      if (isActive) {
+        onMapClick(e.latlng)
+      }
+    },
+  })
+  return null
+}
 
 export default function CreateAttendance({ onClose, onCreate, initialData, onUpdate }) {
+  const { locations, addLocation } = useLocations()
   const [team, setTeam] = useState('')
   const [date, setDate] = useState('')
   const [timeStart, setTimeStart] = useState('')
@@ -12,6 +37,23 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [preparations, setPreparations] = useState('')
   const [tasks, setTasks] = useState('')
   const [goals, setGoals] = useState('')
+  const [showMapModal, setShowMapModal] = useState(false)
+  const [showWarningPopup, setShowWarningPopup] = useState(false)
+  const [showErrorPopup, setShowErrorPopup] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  // New location form for map modal
+  const [newLocationForm, setNewLocationForm] = useState({
+    name: '',
+    description: '',
+    radius: '100',
+    latitude: '',
+    longitude: ''
+  })
+  const [mapClickEnabled, setMapClickEnabled] = useState(false)
+  const [showNewLocationForm, setShowNewLocationForm] = useState(false)
+  const [showTimeStartPicker, setShowTimeStartPicker] = useState(false)
+  const [showTimeEndPicker, setShowTimeEndPicker] = useState(false)
 
   // If initialData provided, prefill fields (support editing)
   useEffect(() => {
@@ -49,6 +91,114 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const dateRef = useRef(null)
   const timeStartRef = useRef(null)
   const timeEndRef = useRef(null)
+  const timeStartPickerRef = useRef(null)
+  const timeEndPickerRef = useRef(null)
+
+  // Close time pickers when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (timeStartPickerRef.current && !timeStartPickerRef.current.contains(event.target)) {
+        setShowTimeStartPicker(false)
+      }
+      if (timeEndPickerRef.current && !timeEndPickerRef.current.contains(event.target)) {
+        setShowTimeEndPicker(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Default map center (Bangkok)
+  const defaultCenter = [13.7606, 100.5034]
+  const defaultZoom = 12
+
+  // Handle map click to create new location
+  const handleMapClick = (latlng) => {
+    if (mapClickEnabled) {
+      setNewLocationForm(prev => ({
+        ...prev,
+        latitude: latlng.lat.toFixed(6),
+        longitude: latlng.lng.toFixed(6)
+      }))
+      setShowNewLocationForm(true)
+      setMapClickEnabled(false)
+    }
+  }
+
+  // Handle select existing location from map
+  const handleSelectLocation = (locationName) => {
+    setLocation(locationName)
+    setShowMapModal(false)
+  }
+
+  // Handle create new location from map
+  const handleCreateNewLocation = () => {
+    if (!newLocationForm.name || !newLocationForm.radius || !newLocationForm.latitude || !newLocationForm.longitude) {
+      setErrorMessage('กรุณากรอกข้อมูลให้ครบถ้วน')
+      setShowErrorPopup(true)
+      setTimeout(() => {
+        setShowErrorPopup(false)
+      }, 3000)
+      return
+    }
+
+    const maxId = locations.length > 0 ? Math.max(...locations.map(loc => loc.id)) : 0
+    const newLocation = {
+      id: maxId + 1,
+      name: newLocationForm.name.trim(),
+      description: newLocationForm.description.trim() || '',
+      radius: parseFloat(newLocationForm.radius),
+      latitude: parseFloat(newLocationForm.latitude),
+      longitude: parseFloat(newLocationForm.longitude),
+      status: 'active'
+    }
+
+    // Add to locations context
+    addLocation(newLocation)
+    
+    // Set as selected location
+    setLocation(newLocation.name)
+    
+    // Reset form
+    setNewLocationForm({
+      name: '',
+      description: '',
+      radius: '100',
+      latitude: '',
+      longitude: ''
+    })
+    setShowNewLocationForm(false)
+    setShowMapModal(false)
+  }
+
+  // Cancel new location form
+  const handleCancelNewLocation = () => {
+    setNewLocationForm({
+      name: '',
+      description: '',
+      radius: '100',
+      latitude: '',
+      longitude: ''
+    })
+    setShowNewLocationForm(false)
+    setMapClickEnabled(false)
+  }
+
+  // Handle map modal open with validation
+  const handleOpenMapModal = () => {
+    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง
+    if (!team || !date) {
+      setShowWarningPopup(true)
+      setTimeout(() => {
+        setShowWarningPopup(false)
+      }, 3000)
+      return
+    }
+    setShowMapModal(true)
+  }
 
   // helpers to normalize user input
   const pad = (n) => n.toString().padStart(2, '0')
@@ -120,6 +270,22 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     } catch (e) {
       // some browsers don't support showPicker
       ref.current && ref.current.click()
+    }
+  }
+
+  // Generate hours for 24-hour format (00-23)
+  const hours24 = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
+  // Generate minutes (00-59)
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
+
+  const handleTimeSelect = (hour, minute, isStart) => {
+    const timeValue = `${hour}:${minute}`
+    if (isStart) {
+      setTimeStart(timeValue)
+      setShowTimeStartPicker(false)
+    } else {
+      setTimeEnd(timeValue)
+      setShowTimeEndPicker(false)
     }
   }
 
@@ -204,70 +370,170 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">เวลาเริ่ม</label>
-                <div className="relative w-full">
+                <label className="block text-sm text-gray-700 mb-1">เวลาเริ่ม (24 ชม.)</label>
+                <div className="relative w-full" ref={timeStartPickerRef}>
+                  <input
+                    type="text"
+                    value={timeStart}
+                    onChange={(e) => setTimeStart(e.target.value)}
+                    onBlur={(e) => setTimeStart(prev => normalizeTime(prev))}
+                    onFocus={() => setShowTimeStartPicker(true)}
+                    placeholder="เช่น 09:00"
+                    className="w-full border rounded px-3 py-2 pr-10 hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors"
+                  />
+                  
                   <button
                     type="button"
-                    onClick={() => openNativePicker(timeStartRef)}
-                    aria-label="เปิดตัวเลือกเวลาเริ่ม"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() => {
+                      setShowTimeStartPicker(!showTimeStartPicker)
+                      setShowTimeEndPicker(false)
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors"
                   >
-                    {/* clock icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
                       <path d="M12 7v6l4 2" strokeWidth="1.5" />
                     </svg>
                   </button>
 
-                  <input
-                    type="text"
-                    placeholder="HH:MM"
-                    value={timeStart}
-                    onChange={e => setTimeStart(e.target.value)}
-                    onBlur={e => setTimeStart(prev => normalizeTime(prev))}
-                    className="w-full border rounded px-3 py-2 pr-10"
-                  />
-
-                  <input
-                    ref={timeStartRef}
-                    type="time"
-                    className="sr-only"
-                    onChange={e => setTimeStart(e.target.value)}
-                  />
+                  {/* Custom Time Picker Dropdown */}
+                  {showTimeStartPicker && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-blue-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                      <div className="flex">
+                        {/* Hours Column */}
+                        <div className="flex-1 border-r border-gray-200">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                            ชั่วโมง
+                          </div>
+                          <div className="overflow-y-auto max-h-56">
+                            {hours24.map((hour) => (
+                              <button
+                                key={hour}
+                                type="button"
+                                onClick={() => {
+                                  const currentMinute = timeStart?.split(':')[1] || '00'
+                                  handleTimeSelect(hour, currentMinute, true)
+                                }}
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeStart?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                }`}
+                              >
+                                {hour}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Minutes Column */}
+                        <div className="flex-1">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                            นาที
+                          </div>
+                          <div className="overflow-y-auto max-h-56">
+                            {minutes.map((minute) => (
+                              <button
+                                key={minute}
+                                type="button"
+                                onClick={() => {
+                                  const currentHour = timeStart?.split(':')[0] || '00'
+                                  handleTimeSelect(currentHour, minute, true)
+                                }}
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeStart?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                }`}
+                              >
+                                {minute}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm text-gray-700 mb-1">เวลาสิ้นสุด</label>
-                <div className="relative w-full">
+                <label className="block text-sm text-gray-700 mb-1">เวลาสิ้นสุด (24 ชม.)</label>
+                <div className="relative w-full" ref={timeEndPickerRef}>
+                  <input
+                    type="text"
+                    value={timeEnd}
+                    onChange={(e) => setTimeEnd(e.target.value)}
+                    onBlur={(e) => setTimeEnd(prev => normalizeTime(prev))}
+                    onFocus={() => setShowTimeEndPicker(true)}
+                    placeholder="เช่น 17:00"
+                    className="w-full border rounded px-3 py-2 pr-10 hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors"
+                  />
+                  
                   <button
                     type="button"
-                    onClick={() => openNativePicker(timeEndRef)}
-                    aria-label="เปิดตัวเลือกเวลาสิ้นสุด"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() => {
+                      setShowTimeEndPicker(!showTimeEndPicker)
+                      setShowTimeStartPicker(false)
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors"
                   >
-                    {/* clock icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
                       <path d="M12 7v6l4 2" strokeWidth="1.5" />
                     </svg>
                   </button>
 
-                  <input
-                    type="text"
-                    placeholder="HH:MM"
-                    value={timeEnd}
-                    onChange={e => setTimeEnd(e.target.value)}
-                    onBlur={e => setTimeEnd(prev => normalizeTime(prev))}
-                    className="w-full border rounded px-3 py-2 pr-10"
-                  />
-
-                  <input
-                    ref={timeEndRef}
-                    type="time"
-                    className="sr-only"
-                    onChange={e => setTimeEnd(e.target.value)}
-                  />
+                  {/* Custom Time Picker Dropdown */}
+                  {showTimeEndPicker && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-blue-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                      <div className="flex">
+                        {/* Hours Column */}
+                        <div className="flex-1 border-r border-gray-200">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                            ชั่วโมง
+                          </div>
+                          <div className="overflow-y-auto max-h-56">
+                            {hours24.map((hour) => (
+                              <button
+                                key={hour}
+                                type="button"
+                                onClick={() => {
+                                  const currentMinute = timeEnd?.split(':')[1] || '00'
+                                  handleTimeSelect(hour, currentMinute, false)
+                                }}
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeEnd?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                }`}
+                              >
+                                {hour}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Minutes Column */}
+                        <div className="flex-1">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                            นาที
+                          </div>
+                          <div className="overflow-y-auto max-h-56">
+                            {minutes.map((minute) => (
+                              <button
+                                key={minute}
+                                type="button"
+                                onClick={() => {
+                                  const currentHour = timeEnd?.split(':')[0] || '00'
+                                  handleTimeSelect(currentHour, minute, false)
+                                }}
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeEnd?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                }`}
+                              >
+                                {minute}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -275,7 +541,26 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
           <div>
             <label className="block text-sm text-gray-700 mb-1">สถานที่</label>
-            <input value={location} onChange={e => setLocation(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="สถานที่" />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleOpenMapModal}
+                aria-label="เปิดแผนที่เลือกสถานที่"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700 z-10"
+              >
+                {/* Map icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </button>
+
+              <input 
+                value={location} 
+                onChange={e => setLocation(e.target.value)} 
+                className="w-full border rounded px-3 py-2 pr-12" 
+                placeholder="พิมพ์หรือเลือกจากแผนที่" 
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -321,6 +606,299 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           </div>
         </form>
       </div>
+
+      {/* Map Modal */}
+      {showMapModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMapModal(false)} />
+          
+          <div className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden" style={{ maxHeight: '90vh' }}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">เลือกสถานที่จากแผนที่</h3>
+                <p className="text-sm text-blue-100 mt-1">คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่</p>
+              </div>
+              <button
+                onClick={() => setShowMapModal(false)}
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col lg:flex-row" style={{ height: 'calc(90vh - 80px)' }}>
+              {/* Map Section */}
+              <div className="flex-1 relative">
+                <MapContainer
+                  center={defaultCenter}
+                  zoom={defaultZoom}
+                  style={{ height: '100%', width: '100%' }}
+                  scrollWheelZoom={true}
+                >
+                  <LayersControl position="topright">
+                    <LayersControl.BaseLayer checked name="แผนที่ปกติ">
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                      />
+                    </LayersControl.BaseLayer>
+                  </LayersControl>
+
+                  <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
+
+                  {/* Show existing locations */}
+                  {locations.map((loc) => (
+                    <React.Fragment key={loc.id}>
+                      <Marker 
+                        position={[loc.latitude, loc.longitude]}
+                        eventHandlers={{
+                          click: () => handleSelectLocation(loc.name)
+                        }}
+                      />
+                      <Circle
+                        center={[loc.latitude, loc.longitude]}
+                        radius={loc.radius}
+                        pathOptions={{ 
+                          color: 'green',
+                          fillColor: 'green',
+                          fillOpacity: 0.2 
+                        }}
+                      />
+                    </React.Fragment>
+                  ))}
+
+                  {/* Show new location preview */}
+                  {newLocationForm.latitude && newLocationForm.longitude && (
+                    <>
+                      <Marker position={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]} />
+                      {newLocationForm.radius && (
+                        <Circle
+                          center={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}
+                          radius={parseFloat(newLocationForm.radius)}
+                          pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }}
+                        />
+                      )}
+                    </>
+                  )}
+                </MapContainer>
+
+                {/* Enable Click Mode Button */}
+                {!mapClickEnabled && !showNewLocationForm && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000]">
+                    <button
+                      onClick={() => setMapClickEnabled(true)}
+                      className="bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      สร้างพื้นที่ใหม่
+                    </button>
+                  </div>
+                )}
+
+                {mapClickEnabled && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg z-[1000] pointer-events-none">
+                    คลิกบนแผนที่เพื่อเลือกตำแหน่ง
+                  </div>
+                )}
+              </div>
+
+              {/* Sidebar - Location List or New Location Form */}
+              <div className="lg:w-96 bg-gray-50 overflow-y-auto border-l border-gray-200">
+                {showNewLocationForm ? (
+                  // New Location Form
+                  <div className="p-6">
+                    <h4 className="text-lg font-bold text-gray-800 mb-4">สร้างพื้นที่ใหม่</h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          ชื่อสถานที่ <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newLocationForm.name}
+                          onChange={(e) => setNewLocationForm(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="เช่น สำนักใหญ่ TGS"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          รายละเอียด
+                        </label>
+                        <input
+                          type="text"
+                          value={newLocationForm.description}
+                          onChange={(e) => setNewLocationForm(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="เช่น ศูนย์การประชุมหลัก"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          รัศมี (เมตร) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={newLocationForm.radius}
+                          onChange={(e) => setNewLocationForm(prev => ({ ...prev, radius: e.target.value }))}
+                          placeholder="100"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          พิกัด (Latitude)
+                        </label>
+                        <input
+                          type="text"
+                          value={newLocationForm.latitude}
+                          readOnly
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          พิกัด (Longitude)
+                        </label>
+                        <input
+                          type="text"
+                          value={newLocationForm.longitude}
+                          readOnly
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-100"
+                        />
+                      </div>
+
+                      <div className="flex gap-3 pt-4">
+                        <button
+                          onClick={handleCreateNewLocation}
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                        >
+                          สร้างและเลือก
+                        </button>
+                        <button
+                          onClick={handleCancelNewLocation}
+                          className="flex-1 bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                        >
+                          ยกเลิก
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Location List
+                  <div className="p-6">
+                    <h4 className="text-lg font-bold text-gray-800 mb-4">พื้นที่ที่มีอยู่ ({locations.length})</h4>
+                    
+                    {locations.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>ยังไม่มีพื้นที่</p>
+                        <p className="text-sm mt-2">คลิก "สร้างพื้นที่ใหม่" เพื่อเริ่มต้น</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {locations.map((loc) => (
+                          <button
+                            key={loc.id}
+                            onClick={() => handleSelectLocation(loc.name)}
+                            className="w-full text-left bg-white border-2 border-gray-200 hover:border-blue-400 rounded-lg p-4 transition-all hover:shadow-md"
+                          >
+                            <div className="flex items-start gap-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                              <div className="flex-1">
+                                <div className="font-semibold text-gray-800">{loc.name}</div>
+                                {loc.description && (
+                                  <div className="text-sm text-gray-500 mt-1">{loc.description}</div>
+                                )}
+                                <div className="text-xs text-gray-400 mt-2">
+                                  รัศมี: {loc.radius} เมตร
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning Popup - กรอกข้อมูลก่อนเปิดแผนที่ */}
+      {showWarningPopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto animate-bounce-in">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-800">กรุณากรอกข้อมูลก่อน!</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">วันที่</span> ก่อนเลือกสถานที่
+                </p>
+              </div>
+              <button
+                onClick={() => setShowWarningPopup(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Popup - กรอกข้อมูลไม่ครบในแผนที่ */}
+      {showErrorPopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-[10000] pointer-events-none">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto animate-bounce-in">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-800">ข้อมูลไม่ครบ!</h3>
+                <p className="text-sm text-gray-600 mt-1">{errorMessage}</p>
+              </div>
+              <button
+                onClick={() => setShowErrorPopup(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
