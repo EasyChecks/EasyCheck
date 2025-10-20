@@ -18,7 +18,20 @@ import { generateUserPDF } from '../../utils/userPDFGenerator';
 
 function AdminManageUser() {
   const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState(importedUsersData);
+  
+  // Initialize users from localStorage if available, otherwise use imported data
+  const [users, setUsers] = useState(() => {
+    try {
+      const storedUsers = localStorage.getItem('usersData');
+      if (storedUsers) {
+        return JSON.parse(storedUsers);
+      }
+    } catch (e) {
+      console.warn('Failed to load users from localStorage:', e);
+    }
+    return importedUsersData;
+  });
+  
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -194,6 +207,9 @@ function AdminManageUser() {
     });
 
     setUsers(updatedUsers);
+    
+    // Save updated users to localStorage for persistence across login
+    localStorage.setItem('usersData', JSON.stringify(updatedUsers));
     
     // Update selectedUser if it's the one being edited
     if (selectedUser && selectedUser.id === editingUser.id) {
