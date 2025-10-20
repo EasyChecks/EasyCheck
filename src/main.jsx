@@ -85,12 +85,7 @@ const router = createBrowserRouter([
       {
         path: 'attendance',
         element: <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
-      }
-      ,
-      {
-        path: 'access',
-        element: <Suspense fallback={<PageLoader />}><AccessControl /></Suspense>
-      }
+      },
     ]
   },  
   {

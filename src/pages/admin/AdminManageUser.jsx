@@ -200,6 +200,17 @@ function AdminManageUser() {
       setSelectedUser({ ...selectedUser, ...updatedUserData });
     }
 
+    // Sync with logged-in user in localStorage if editing current user
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      if (parsedUser.id === editingUser.id) {
+        // Update the logged-in user's data in localStorage
+        const updatedLoggedInUser = { ...parsedUser, ...updatedUserData };
+        localStorage.setItem('user', JSON.stringify(updatedLoggedInUser));
+      }
+    }
+
     // Sync password to admin account if user is admin/superadmin and password was changed
     if (editForm.password && editForm.password !== editingUser.password) {
       if (editingUser.role === 'admin' || editingUser.role === 'superadmin') {
