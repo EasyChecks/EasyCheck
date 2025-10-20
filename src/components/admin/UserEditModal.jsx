@@ -315,22 +315,30 @@ const UserEditModal = React.memo(function UserEditModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     บทบาท
                   </label>
-                  <select
-                    value={editForm.role || editingUser.role || ''}
-                    onChange={(e) => onChange({ ...editForm, role: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                    disabled={currentUser?.role === 'admin' && editingUser?.role === 'superadmin'}
-                  >
-                    <option value="">เลือกบทบาท</option>
-                    <option value="user">User</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    {currentUser?.role === 'superadmin' && (
-                      <option value="superadmin">Super Admin</option>
-                    )}
-                  </select>
-                  {currentUser?.role === 'admin' && editingUser?.role === 'superadmin' && (
-                    <p className="text-xs text-red-500 mt-1">Admin ไม่สามารถปรับ Role ของ Super Admin ได้ (แต่แก้ข้อมูลอื่นได้)</p>
+                  {currentUser?.role === 'admin' && editingUser?.role === 'superadmin' ? (
+                    <div>
+                      <input
+                        type="text"
+                        value="Super Admin"
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600 font-medium"
+                      />
+                      <p className="text-xs text-red-500 mt-1">Admin ไม่สามารถปรับ Role ของ Super Admin ได้ (แต่แก้ข้อมูลอื่นได้)</p>
+                    </div>
+                  ) : (
+                    <select
+                      value={editForm.role || editingUser.role || ''}
+                      onChange={(e) => onChange({ ...editForm, role: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    >
+                      <option value="">เลือกบทบาท</option>
+                      <option value="user">User</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                      {currentUser?.role === 'superadmin' && (
+                        <option value="superadmin">Super Admin</option>
+                      )}
+                    </select>
                   )}
                 </div>
 
