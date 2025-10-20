@@ -245,7 +245,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.password || editingUser.password || ''}
                     onChange={(e) => onChange({ ...editForm, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent font-mono"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                     placeholder="เลขบัตรประชาชน 13 หลัก"
                   />
                   <p className="text-xs text-gray-500 mt-1">แสดงแบบไม่เข้ารหัส</p>

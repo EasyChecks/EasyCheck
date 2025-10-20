@@ -567,7 +567,7 @@ function Mapping() {
       </div>
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-7xl mx-auto">
+      <main className="px-6 py-8 max-w-8xl mx-auto">
         {/* Section 1: Action Buttons */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 mb-8">
           <h2 className="text-xl font-bold text-white mb-4">จัดการสถานที่</h2>
@@ -1028,7 +1028,7 @@ function Mapping() {
                                     <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#6B7280">
                                       <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z"/>
                                     </svg>
-                                    <p className="font-mono text-sm text-gray-700">
+                                    <p className="text-sm text-gray-700">
                                       {location.latitude}, {location.longitude}
                                     </p>
                                   </div>

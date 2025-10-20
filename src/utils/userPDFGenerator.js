@@ -89,7 +89,7 @@ const createPlaceholderAvatar = (name) => {
   
   // เขียนตัวอักษรสีขาว
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 80px Arial';
+  ctx.font = 'bold 80px Prompt';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
@@ -115,7 +115,7 @@ const getStatusInfo = (status) => {
 // ฟังก์ชันสร้าง HTML สำหรับหน้า 1
 const createPage1HTML = (user, profileImageBase64, statusInfo) => {
   return `
-    <div style="font-family: Arial, sans-serif; width: 800px; background: white; color: #000;">
+    <div style="font-family: 'Prompt', sans-serif; width: 800px; background: white; color: #000;">
       <!-- Header -->
       <div style="background: #0ea5e9; padding: 30px; margin: -40px -40px 30px -40px; color: white;">
         <h1 style="margin: 0 0 8px 0; font-size: 32px; font-weight: bold;">ข้อมูลพนักงาน</h1>
@@ -265,7 +265,7 @@ const createPage2HTML = (user) => {
   const hasSkills = user.skills && user.skills.length > 0;
 
   return `
-    <div style="font-family: Arial, sans-serif; width: 800px; background: white; color: #000;">
+    <div style="font-family: 'Prompt', sans-serif; width: 800px; background: white; color: #000;">
       <!-- Header หน้า 2 -->
       <div style="background: #0ea5e9; padding: 25px; margin: -40px -40px 30px -40px; color: white;">
         <h2 style="margin: 0; font-size: 28px; font-weight: bold;">ข้อมูลเพิ่มเติม</h2>
@@ -363,7 +363,7 @@ const htmlToCanvas = async (htmlString, width = 800) => {
     width: ${width}px;
     background: white;
     padding: 40px;
-    font-family: Arial, sans-serif;
+    font-family: 'Prompt', sans-serif;
   `;
   container.innerHTML = htmlString;
   document.body.appendChild(container);

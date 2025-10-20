@@ -188,7 +188,7 @@ function ProfileScreen() {
   };
 
   return (
-    <div className="font-sans relative">
+    <div className="relative">
       {/* Header with Profile Picture */}
       <div className="relative bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-t-2xl overflow-hidden">
         {/* Background Pattern */}
