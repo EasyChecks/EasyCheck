@@ -330,7 +330,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     )}
                   </select>
                   {currentUser?.role === 'admin' && editingUser?.role === 'superadmin' && (
-                    <p className="text-xs text-red-500 mt-1">Admin ไม่สามารถแก้ไข Role ของ Super Admin ได้</p>
+                    <p className="text-xs text-red-500 mt-1">Admin ไม่สามารถปรับ Role ของ Super Admin ได้ (แต่แก้ข้อมูลอื่นได้)</p>
                   )}
                 </div>
 
