@@ -209,7 +209,7 @@ function UserDashboard() {
                 ดูทั้งหมด →
               </Link>
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <div className="bg-[#48CBFF] rounded-xl p-4 text-center text-white">
                 <p className="text-2xl font-bold">{teamStats.total}</p>
                 <p className="text-sm mt-1">ทั้งหมด</p>

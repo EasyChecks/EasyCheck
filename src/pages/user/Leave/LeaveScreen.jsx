@@ -12,16 +12,14 @@ function LeaveScreen() {
   const userLeaveData = getLeaveSummary();
 
   return (
-    <div className="-mx-4 -my-6 font-prompt">
+    <div className="space-y-6 pb-6">
       {/* Floating Header Card */}
-      <div className="pt-4 sm:pt-5 lg:pt-6 px-3 sm:px-4 lg:px-6">
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-5 lg:p-6">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">การลา</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">ดูสิทธิ์การลา</p>
-        </div>
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h1 class="text-2xl font-bold text-gray-800">การลา</h1>
+        <p class="text-gray-600 mt-1">ดูสิทธิ์การลา</p>
       </div>
 
-      <main className="pt-4 sm:pt-5 lg:pt-6 pb-28 sm:pb-32 relative z-0 px-3 sm:px-4 lg:px-6">
+      <main className="sm:pt-5 lg:pt-6 pb-28 sm:pb-32 relative z-0 sm:px-4 lg:px-6">
         <LeaveList leaveItems={userLeaveData} />
       </main>
 
