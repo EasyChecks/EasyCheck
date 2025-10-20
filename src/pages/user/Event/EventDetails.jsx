@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEvents } from "../../../contexts/EventContext";
 import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
@@ -17,14 +17,49 @@ import { eventsData as EventData } from "../../../data/usersData"; // ย้า�
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { events } = useEvents();
+  const { events, canJoinEvent, getTimeRemainingToJoin } = useEvents();
   const [isJoined, setIsJoined] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(null);
 
   const event = events.find((e) => e.id === parseInt(id));
 
-  const handleJoinEvent = () => {
-    setIsJoined(true);
+  // Update time remaining every minute
+  useEffect(() => {
+    if (event && !isJoined) {
+      const updateTimeRemaining = () => {
+        const remaining = getTimeRemainingToJoin(event);
+        setTimeRemaining(remaining);
+      };
+      
+      updateTimeRemaining();
+      const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
+      
+      return () => clearInterval(interval);
+    }
+  }, [event, isJoined, getTimeRemainingToJoin]);
+
+  // Helper function to format time display
+  const formatTimeRemaining = (timeObj) => {
+    if (!timeObj) return null;
+    
+    if (timeObj.hours === 0 && timeObj.minutes === 0) {
+      return "หมดเวลาแล้ว";
+    }
+    
+    if (timeObj.hours === 0) {
+      return `${timeObj.minutes} นาที`;
+    }
+    
+    return `${timeObj.hours} ชั่วโมง ${timeObj.minutes} นาที`;
   };
+
+  const handleJoinEvent = () => {
+    if (canJoinEvent(event)) {
+      setIsJoined(true);
+    }
+  };
+
+  const canUserJoin = event ? canJoinEvent(event) : false;
 
   if (!event) {
     return (
@@ -119,10 +154,10 @@ export default function EventDetails() {
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">สถานที่</h3>
                 <p className="text-gray-800 font-medium mb-2">{event.locationName}</p>
                 <p className="text-sm text-gray-600">
-                  📍 พิกัด: {event.latitude.toFixed(6)}, {event.longitude.toFixed(6)}
+                  พิกัด: {event.latitude.toFixed(6)}, {event.longitude.toFixed(6)}
                 </p>
                 <p className="text-sm text-gray-600">
-                  🔵 รัศมี: {event.radius} เมตร
+                  รัศมี: {event.radius} เมตร
                 </p>
               </div>
             </div>
@@ -199,16 +234,54 @@ export default function EventDetails() {
 
         {/* Action Buttons */}
         <div className="mt-6 space-y-3 pb-6">
+          {!canUserJoin && !isJoined && timeRemaining !== null && timeRemaining.total <= 0 && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-3">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-red-800 mb-1">เกินเวลาเข้าร่วม</h4>
+                  <p className="text-xs text-red-700">
+                    ไม่สามารถเข้าร่วมกิจกรรมได้ เนื่องจากเลยเวลาที่กำหนด (30 นาทีหลังเริ่มกิจกรรม)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!isJoined && canUserJoin && timeRemaining !== null && timeRemaining.total > 0 && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-3">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-1">เวลาเหลือในการเข้าร่วม</h4>
+                  <p className="text-sm text-blue-700">
+                    คุณสามารถเข้าร่วมได้อีก <span className="font-bold text-md">{formatTimeRemaining(timeRemaining)}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <button 
             onClick={handleJoinEvent}
-            disabled={isJoined}
+            disabled={isJoined || !canUserJoin}
             className={`w-full py-4 rounded-xl font-semibold transition-all duration-200 ${
               isJoined 
                 ? 'bg-gray-400 text-white cursor-not-allowed' 
+                : !canUserJoin
+                ? 'bg-red-400 text-white cursor-not-allowed'
                 : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-lg transform hover:scale-[1.02]'
             }`}
           >
-            {isJoined ? '✓ เข้าร่วมแล้ว' : 'เข้าร่วมกิจกรรม'}
+            {isJoined ? '✓ เข้าร่วมแล้ว' : !canUserJoin ? '⏰ เกินเวลาเข้าร่วม' : 'เข้าร่วมกิจกรรม'}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useEvents } from "../../../contexts/EventContext";
+import { useAuth } from "../../../contexts/useAuth";
 
 const EventCard = React.memo(({ event }) => (
   <Link to={`/user/event/${event.id}`} className="block">
@@ -29,8 +30,8 @@ const EventCard = React.memo(({ event }) => (
           <div className="flex-1">
             <h4 className="text-sm font-semibold text-gray-500 mb-1">สถานที่</h4>
             <p className="text-gray-800 font-medium">{event.locationName}</p>
-            <p className="text-xs text-gray-500 mt-1">��� {event.latitude.toFixed(4)}, {event.longitude.toFixed(4)}</p>
-            <p className="text-xs text-gray-500">��� รัศมี {event.radius} เมตร</p>
+            <p className="text-xs text-gray-500 mt-1"> {event.latitude.toFixed(4)}, {event.longitude.toFixed(4)}</p>
+            <p className="text-xs text-gray-500"> รัศมี {event.radius} เมตร</p>
           </div>
         </div>
 
@@ -82,22 +83,38 @@ const EventCard = React.memo(({ event }) => (
 EventCard.displayName = 'EventCard';
 
 function EventList() {
-  const { events } = useEvents();
+  const { getEventsForUser } = useEvents();
+  const { user } = useAuth();
 
+  // Get user's department and position
+  const userDepartment = user?.department || '';
+  const userPosition = user?.position || '';
+
+  // Get filtered events for this user
+  const userEvents = useMemo(() => {
+    return getEventsForUser(userDepartment, userPosition);
+  }, [getEventsForUser, userDepartment, userPosition]);
+
+  // Sort events (ongoing first)
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => {
+    return [...userEvents].sort((a, b) => {
       if (a.status === 'ongoing' && b.status !== 'ongoing') return -1;
       if (a.status !== 'ongoing' && b.status === 'ongoing') return 1;
       return 0;
     });
-  }, [events]);
+  }, [userEvents]);
 
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">��� รายการกิจกรรม</h1>
-          <p className="text-gray-600">กิจกรรมและอีเวนท์ทั้งหมดที่คุณสามารถเข้าร่วมได้</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">รายการกิจกรรม</h1>
+          <p className="text-gray-600">กิจกรรมและอีเวนท์ที่เกี่ยวข้องกับแผนก {userDepartment} {userPosition && `- ${userPosition}`}</p>
+          {sortedEvents.length > 0 && (
+            <div className="mt-3 text-sm text-gray-500">
+              พบ {sortedEvents.length} กิจกรรม
+            </div>
+          )}
         </div>
 
         {sortedEvents.length === 0 ? (
@@ -107,8 +124,8 @@ function EventList() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มีกิจกรรม</h3>
-            <p className="text-gray-500">ไม่มีกิจกรรมที่กำลังจะมาถึงในขณะนี้</p>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีกิจกรรมสำหรับคุณ</h3>
+            <p className="text-gray-500">ไม่มีกิจกรรมที่เกี่ยวข้องกับแผนก {userDepartment} {userPosition && `(${userPosition})`} ในขณะนี้</p>
           </div>
         ) : (
           <div className="space-y-4">
