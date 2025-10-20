@@ -149,16 +149,19 @@ function AdminManageUser() {
       return;
     }
 
-    // Check if admin trying to edit superadmin role
+    // Guard: Admin cannot change the role of a SuperAdmin
     if (currentUser?.role === 'admin' && editingUser.role === 'superadmin') {
-      setAlertDialog({
-        isOpen: true,
-        type: 'error',
-        title: 'ไม่มีสิทธิ์',
-        message: 'Admin ไม่สามารถแก้ไขข้อมูล Super Admin ได้',
-        autoClose: true
-      });
-      return;
+      const attemptedRole = editForm.role ?? editingUser.role
+      if (attemptedRole !== editingUser.role) {
+        setAlertDialog({
+          isOpen: true,
+          type: 'error',
+          title: 'ไม่มีสิทธิ์',
+          message: 'Admin ไม่สามารถปรับ Role ของ Super Admin ได้',
+          autoClose: true
+        })
+        return
+      }
     }
 
     // Prepare updated user data
@@ -180,11 +183,15 @@ function AdminManageUser() {
     delete updatedUserData.emergencyContactPhone;
     delete updatedUserData.emergencyContactRelation;
 
-    const updatedUsers = users.map(user => 
-      user.id === editingUser.id 
-        ? { ...user, ...updatedUserData }
-        : user
-    );
+    const updatedUsers = users.map(user => {
+      if (user.id !== editingUser.id) return user
+      // If editing target is SuperAdmin and current user is admin, freeze role
+      if (currentUser?.role === 'admin' && editingUser.role === 'superadmin') {
+        const { role: _ignoredRole, ...rest } = updatedUserData
+        return { ...user, ...rest, role: user.role }
+      }
+      return { ...user, ...updatedUserData }
+    });
 
     setUsers(updatedUsers);
     

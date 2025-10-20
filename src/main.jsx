@@ -24,7 +24,6 @@ const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
 const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
 const Mapping = lazy(() => import("./pages/admin/Mapping.jsx"));
 const EventManagement = lazy(() => import("./pages/admin/EventManagement.jsx"));
-const AccessControl = lazy(() => import("./pages/admin/Access/AccessControl.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
