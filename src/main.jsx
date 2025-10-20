@@ -85,7 +85,7 @@ const router = createBrowserRouter([
       {
         path: 'attendance',
         element: <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
-      }
+      },
     ]
   },  
   {
