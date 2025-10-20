@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Circle, LayersControl, useMap } from 'react-leaflet'
+import React, { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Marker, Circle, LayersControl, useMap, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { useLocations } from '../../contexts/LocationContext'
 import { useEvents } from '../../contexts/EventContext'
 
@@ -26,7 +27,7 @@ function FitBoundsToMarkers({ locations }) {
       
       // Fit map to bounds with padding
       map.fitBounds(bounds, {
-        padding: [50, 50],
+        padding: [30, 30],
         maxZoom: 17,
         animate: true,
         duration: 0.5
@@ -44,15 +45,93 @@ function AdminDashboard() {
   const { events } = useEvents()
   
   const [chartPeriod, setChartPeriod] = useState('week') // week, month, year
-  const [isMapExpanded, setIsMapExpanded] = useState(false)
+  const [statsType, setStatsType] = useState('attendance') // attendance, event
+  const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
+  const locationRefs = useRef({}) // Refs for scrolling to location cards
 
-  // Mock data for demonstration
-  const stats = {
-    totalWeekly: 100,
+  // Mock data for demonstration - Attendance Stats
+  const attendanceStats = {
+    totalemployees: 500,
+    totalWeekly: 290,
     totalToday: 95,
     lateCount: 2,
     leaveCount: 3,
     absentCount: 3
+  }
+
+  // Calculate real event stats from EventContext
+  const eventStats = {
+    totalEvents: events.length,
+    activeEvents: events.filter(e => e.status === 'ongoing').length,
+    todayEvents: events.filter(e => {
+      const today = new Date()
+      const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
+      return e.date === todayStr
+    }).length,
+    completedEvents: events.filter(e => e.status === 'completed').length,
+    // Mock participants data (can be extended to track real participants in the future)
+    totalParticipants: events.reduce((sum, e) => sum + (e.teams?.length || 0) * 15, 0), // Estimate 15 people per team
+    todayParticipants: events.filter(e => {
+      const today = new Date()
+      const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
+      return e.date === todayStr
+    }).reduce((sum, e) => sum + (e.teams?.length || 0) * 15, 0)
+  }
+
+  // Get current stats based on selected type
+  const stats = statsType === 'attendance' ? attendanceStats : eventStats
+
+  // Generate chart data based on selected period
+  const getChartData = () => {
+    switch (chartPeriod) {
+      case 'week':
+        return [
+          { name: 'จันทร์', value: 275 },
+          { name: 'อังคาร', value: 292 },
+          { name: 'พุธ', value: 268 },
+          { name: 'พฤหัส', value: 290 },
+          { name: 'ศุกร์', value: 295 },
+          { name: 'เสาร์', value: 150 },
+          { name: 'อาทิตย์', value: 120 }
+        ]
+      case 'month':
+        return [
+          { name: 'สัปดาห์ 1', value: 285 },
+          { name: 'สัปดาห์ 2', value: 290 },
+          { name: 'สัปดาห์ 3', value: 282 },
+          { name: 'สัปดาห์ 4', value: 295 }
+        ]
+      case 'year':
+        return [
+          { name: 'ม.ค.', value: 280 },
+          { name: 'ก.พ.', value: 285 },
+          { name: 'มี.ค.', value: 290 },
+          { name: 'เม.ย.', value: 275 },
+          { name: 'พ.ค.', value: 292 },
+          { name: 'มิ.ย.', value: 288 },
+          { name: 'ก.ค.', value: 295 },
+          { name: 'ส.ค.', value: 290 },
+          { name: 'ก.ย.', value: 287 },
+          { name: 'ต.ค.', value: 293 },
+          { name: 'พ.ย.', value: 285 },
+          { name: 'ธ.ค.', value: 280 }
+        ]
+      default:
+        return []
+    }
+  }
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 text-white px-4 py-3 rounded-lg shadow-xl border border-gray-700">
+          <p className="text-sm font-medium text-gray-300">{payload[0].payload.name}</p>
+          <p className="text-xl font-bold text-blue-400">{payload[0].value} คน</p>
+        </div>
+      )
+    }
+    return null
   }
 
   // Combine locations from both Mapping and Events
@@ -61,8 +140,8 @@ function AdminDashboard() {
     type: 'mapping',
     team: loc.team || ['ทีมพัฒนา', 'ทีมการตลาด', 'ทีมปฏิบัติการ'][index % 3],
     time: loc.time || ['09:15 น.', '09:32 น.', '08:45 น.'][index % 3],
-    checkInStatus: loc.checkInStatus || (index % 3 === 1 ? 'นอกพื้นที่ 100 ม.' : 'ในพื้นที่'),
-    statusColor: loc.statusColor || (index % 3 === 1 ? 'text-red-600' : 'text-green-600')
+    checkInStatus: 'พื้นที่อนุญาต',
+    statusColor: 'text-green-600'
   }))
 
   const eventLocations = events.map((evt, index) => ({
@@ -83,6 +162,69 @@ function AdminDashboard() {
   // Combine all locations
   const locationsWithStatus = [...mappingLocations, ...eventLocations]
 
+  // Toggle location details
+  const toggleLocationDetails = (locationId) => {
+    const wasExpanded = expandedLocationIds.includes(locationId)
+    
+    setExpandedLocationIds(prev => 
+      prev.includes(locationId) 
+        ? prev.filter(id => id !== locationId)
+        : [...prev, locationId]
+    )
+    
+    // If expanding, scroll to show the element at the top
+    if (!wasExpanded) {
+      setTimeout(() => {
+        const element = locationRefs.current[locationId]
+        if (element) {
+          const scrollContainer = element.parentElement
+          
+          if (scrollContainer) {
+            const elementTop = element.offsetTop
+            
+            scrollContainer.scrollTo({
+              top: elementTop - 10,
+              behavior: 'smooth'
+            })
+          }
+        }
+      }, 50) // Small delay to let the state update
+    }
+  }
+
+  // Handle view details button click - scroll to location card and expand it
+  const handleViewDetails = (locationId) => {
+    // Expand the location if not already expanded
+    if (!expandedLocationIds.includes(locationId)) {
+      setExpandedLocationIds(prev => [...prev, locationId])
+    }
+    
+    // Scroll to the location card - wait for expansion animation
+    setTimeout(() => {
+      const element = locationRefs.current[locationId]
+      if (element) {
+        // Get the scrollable container
+        const scrollContainer = element.parentElement
+        
+        if (scrollContainer) {
+          // Calculate the position to scroll to (element's offset from container top)
+          const elementTop = element.offsetTop
+          
+          // Scroll the container so the element is at the top with some padding
+          scrollContainer.scrollTo({
+            top: elementTop - 10, // 10px padding from top
+            behavior: 'smooth'
+          })
+        }
+        
+        // Add highlight effect
+        element.classList.add('ring-4', 'ring-blue-400')
+        setTimeout(() => {
+          element.classList.remove('ring-4', 'ring-blue-400')
+        }, 2000)
+      }
+    }, 350) // Wait for expansion animation (300ms) + small buffer
+  }
   
   const defaultCenter = [13.7606, 100.5034]
 
@@ -95,143 +237,227 @@ function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-7xl mx-auto">
-        {/* Section 1: Attendance Stats */}
+      <main className="px-6 py-8 max-w-8xl mx-auto">
+        {/* Section 1: Stats with Selector */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">สถิติการเข้างาน</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">
+              {statsType === 'attendance' ? 'สถิติการเข้างาน' : 'สถิติการเข้าร่วมกิจกรรม'}
+            </h2>
+            <div className="flex gap-2 bg-gray-200 rounded-lg p-1">
+              <button
+                onClick={() => setStatsType('attendance')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                  statsType === 'attendance'
+                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
+                    : 'text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                การเข้างาน
+              </button>
+              <button
+                onClick={() => setStatsType('event')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                  statsType === 'event'
+                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
+                    : 'text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                กิจกรรม
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Total Weekly */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-md p-6 text-white">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="M40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm720 0v-120q0-44-24.5-84.5T666-434q51 6 96 20.5t84 35.5q36 20 55 44.5t19 53.5v120H760ZM360-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm400-160q0 66-47 113t-113 47q-11 0-28-2.5t-28-5.5q27-32 41.5-71t14.5-81q0-42-14.5-81T544-792q14-5 28-6.5t28-1.5q66 0 113 47t47 113Z" />
-                  </svg>
+            {statsType === 'attendance' ? (
+              <>
+                {/* Total Weekly - Attendance */}
+                <div className="bg-[#085EC5] rounded-2xl shadow-md p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                        <path d="M40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm720 0v-120q0-44-24.5-84.5T666-434q51 6 96 20.5t84 35.5q36 20 55 44.5t19 53.5v120H760ZM360-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm400-160q0 66-47 113t-113 47q-11 0-28-2.5t-28-5.5q27-32 41.5-71t14.5-81q0-42-14.5-81T544-792q14-5 28-6.5t28-1.5q66 0 113 47t47 113Z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-white/90 text-sm mb-1">จำนวนพนักงานทั้งหมดในสัปดาห์นี้</h3>
+                  <p className="text-4xl font-bold">{attendanceStats.totalWeekly}</p>
+                  <p className="text-xs text-white/80 mt-2">จากทั้งหมด {attendanceStats.totalemployees} คน</p>
                 </div>
-              </div>
-              <h3 className="text-white/90 text-sm mb-1">จำนวนพนักงานทั้งหมดในสัปดาร์นี้</h3>
-              <p className="text-4xl font-bold">{stats.totalWeekly}</p>
-              <p className="text-xs text-white/80 mt-2">จากทีมทั้งหมดรวมถึงเจ้าหน้าที่</p>
-            </div>
 
-            {/* Total Today */}
-            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-md p-6 text-white">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
-                  </svg>
+                {/* Total Today - Attendance */}
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-md p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-white/90 text-sm mb-1">เข้างานสำเร็จวันนี้</h3>
+                  <p className="text-4xl font-bold">{attendanceStats.totalToday}</p>
+                  <p className="text-xs text-white/80 mt-2">95% check on-time</p>
                 </div>
-              </div>
-              <h3 className="text-white/90 text-sm mb-1">เข้างานสำเร็จวันนี้</h3>
-              <p className="text-4xl font-bold">{stats.totalToday}</p>
-              <p className="text-xs text-white/80 mt-2">95% check on-time</p>
-            </div>
 
-            {/* Late Count */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-md p-6 text-white">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                  </svg>
+                {/* Late Count - Attendance */}
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-md p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                        <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-white/90 text-sm mb-1">มาสาย / ลางาน</h3>
+                  <p className="text-4xl font-bold">{attendanceStats.lateCount + attendanceStats.leaveCount}</p>
+                  <p className="text-xs text-white/80 mt-2">{attendanceStats.lateCount} คนมาสาย, {attendanceStats.leaveCount} ลางาน</p>
                 </div>
-              </div>
-              <h3 className="text-white/90 text-sm mb-1">มาสาย / ลางาน</h3>
-              <p className="text-4xl font-bold">{stats.lateCount + stats.leaveCount}</p>
-              <p className="text-xs text-white/80 mt-2">2 คนมาสาย, 3 ลางาน</p>
-            </div>
+              </>
+            ) : (
+              <>
+                {/* Total Participants - LEFT */}
+                <div className="bg-[#085EC5] rounded-2xl shadow-md p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                        <path d="M0-240v-63q0-43 44-70t116-27q13 0 25 .5t23 2.5q-14 21-21 44t-7 48v65H0Zm240 0v-65q0-32 17.5-58.5T307-410q32-20 76.5-30t96.5-10q53 0 97.5 10t76.5 30q32 20 49 46.5t17 58.5v65H240Zm540 0v-65q0-26-6.5-49T754-397q11-2 22.5-2.5t23.5-.5q72 0 116 26.5t44 70.5v63H780ZM160-440q-33 0-56.5-23.5T80-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T160-440Zm640 0q-33 0-56.5-23.5T720-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T800-440Zm-320-40q-50 0-85-35t-35-85q0-51 35-85.5t85-34.5q51 0 85.5 34.5T600-600q0 50-34.5 85T480-480Z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-white/90 text-sm mb-1">ผู้เข้าร่วมทั้งหมด</h3>
+                  <p className="text-4xl font-bold">{eventStats.totalParticipants}</p>
+                  <p className="text-xs text-white/80 mt-2">จาก {eventStats.totalEvents} กิจกรรม</p>
+                </div>
+
+                {/* Active Events - CENTER */}
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-md p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-white/90 text-sm mb-1">กิจกรรมที่กำลังดำเนินการ</h3>
+                  <p className="text-4xl font-bold">{eventStats.activeEvents}</p>
+                  <p className="text-xs text-white/80 mt-2">จากทั้งหมด {eventStats.totalEvents} กิจกรรม</p>
+                </div>
+
+                {/* Today Events - RIGHT */}
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-md p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                        <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-white/90 text-sm mb-1">กิจกรรมวันนี้</h3>
+                  <p className="text-4xl font-bold">{eventStats.todayEvents}</p>
+                  <p className="text-xs text-white/80 mt-2">เสร็จสิ้น {eventStats.completedEvents} กิจกรรม</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Section 2: Weekly Attendance Trends Chart */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-md p-6 mb-8">
+        {/* Section 2: Attendance Trends Chart */}
+        <div className="bg-[#085EC5] rounded-2xl shadow-md p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Weekly Attendance Trends</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Attendance Trends</h2>
+              <p className="text-sm text-white/80 mt-1">แนวโน้มการเข้างาน</p>
+            </div>
+            <div className="flex gap-2 bg-white/20 rounded-lg p-1">
+              <button
+                onClick={() => setChartPeriod('week')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                  chartPeriod === 'week'
+                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                สัปดาห์
+              </button>
+              <button
+                onClick={() => setChartPeriod('month')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                  chartPeriod === 'month'
+                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                เดือน
+              </button>
+              <button
+                onClick={() => setChartPeriod('year')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                  chartPeriod === 'year'
+                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                ปี
+              </button>
+            </div>
           </div>
 
-          {/* Chart Area - Using SVG for simple line chart */}
-          <div className="relative h-80 bg-white rounded-xl p-6 border border-blue-100">
-            <svg className="w-full h-full" viewBox="0 0 800 300" preserveAspectRatio="none">
-              {/* Grid lines */}
-              <line x1="0" y1="60" x2="800" y2="60" stroke="#E5E7EB" strokeWidth="1" />
-              <line x1="0" y1="120" x2="800" y2="120" stroke="#E5E7EB" strokeWidth="1" />
-              <line x1="0" y1="180" x2="800" y2="180" stroke="#E5E7EB" strokeWidth="1" />
-              <line x1="0" y1="240" x2="800" y2="240" stroke="#E5E7EB" strokeWidth="1" />
-
-              {/* Attendance line chart */}
-              <polyline
-                points="0,250 100,180 200,90 300,120 400,60 500,200 600,80 700,110 800,280"
-                fill="none"
-                stroke="#3B82F6"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Area under the curve */}
-              <polyline
-                points="0,250 100,180 200,90 300,120 400,60 500,200 600,80 700,110 800,280 800,300 0,300"
-                fill="url(#gradient)"
-                opacity="0.3"
-              />
-
-              {/* Data points */}
-              <circle cx="100" cy="180" r="5" fill="#3B82F6" />
-              <circle cx="200" cy="90" r="5" fill="#3B82F6" />
-              <circle cx="300" cy="120" r="5" fill="#3B82F6" />
-              <circle cx="400" cy="60" r="5" fill="#3B82F6" />
-              <circle cx="500" cy="200" r="5" fill="#3B82F6" />
-              <circle cx="600" cy="80" r="5" fill="#3B82F6" />
-              <circle cx="700" cy="110" r="5" fill="#3B82F6" />
-
-              {/* Gradient definition */}
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-            </svg>
-
-            {/* X-axis labels */}
-            <div className="flex justify-between text-xs text-gray-600 mt-2">
-              {chartPeriod === 'week' && (
-                <>
-                  <span>จันทร์</span>
-                  <span>อังคาร</span>
-                  <span>พุธ</span>
-                  <span>พฤหัส</span>
-                  <span>ศุกร์</span>
-                  <span>เสาร์</span>
-                  <span>อาทิตย์</span>
-                </>
-              )}
-              {chartPeriod === 'month' && (
-                <>
-                  <span>สัปดาห์ 1</span>
-                  <span>สัปดาห์ 2</span>
-                  <span>สัปดาห์ 3</span>
-                  <span>สัปดาห์ 4</span>
-                </>
-              )}
-              {chartPeriod === 'year' && (
-                <>
-                  <span>ม.ค.</span>
-                  <span>ก.พ.</span>
-                  <span>มี.ค.</span>
-                  <span>เม.ย.</span>
-                  <span>พ.ค.</span>
-                  <span>มิ.ย.</span>
-                  <span>ก.ค.</span>
-                  <span>ส.ค.</span>
-                  <span>ก.ย.</span>
-                  <span>ต.ค.</span>
-                  <span>พ.ย.</span>
-                  <span>ธ.ค.</span>
-                </>
-              )}
-            </div>
+          {/* Chart Area - Using Recharts */}
+          <div className="relative h-96 bg-white rounded-xl p-6 border border-blue-100 shadow-inner">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={getChartData()}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#6B7280"
+                  style={{ fontSize: '13px', fontFamily: 'Prompt', fontWeight: '500' }}
+                  tick={{ fill: '#6B7280' }}
+                />
+                <YAxis 
+                  stroke="#6B7280"
+                  style={{ fontSize: '12px', fontFamily: 'Prompt' }}
+                  tick={{ fill: '#6B7280' }}
+                  label={{ 
+                    value: 'จำนวนพนักงาน (คน)', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { fontSize: '13px', fontFamily: 'Prompt', fontWeight: '600', fill: '#374151' }
+                  }}
+                  domain={[0, stats.totalemployees]}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#3B82F6" 
+                  strokeWidth={3}
+                  fill="url(#colorValue)"
+                  animationBegin={0}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                  dot={{ 
+                    fill: '#3B82F6', 
+                    strokeWidth: 2, 
+                    r: 5,
+                    stroke: '#fff'
+                  }}
+                  activeDot={{ 
+                    r: 8, 
+                    stroke: '#3B82F6',
+                    strokeWidth: 3,
+                    fill: '#fff'
+                  }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -276,7 +502,38 @@ function AdminDashboard() {
 
                 {locationsWithStatus.map((location) => (
                   <React.Fragment key={location.id}>
-                    <Marker position={[location.latitude, location.longitude]} />
+                    <Marker 
+                      position={[location.latitude, location.longitude]}
+                    >
+                      <Popup>
+                        <div className="p-2 min-w-[200px]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-3 h-3 rounded-full ${location.type === 'event' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                            <h3 className="font-bold text-gray-800">{location.name}</h3>
+                          </div>
+                          <p className={`text-xs font-medium mb-2 ${location.type === 'event' ? 'text-yellow-700' : 'text-green-600'}`}>
+                            {location.checkInStatus}
+                          </p>
+                          <p className="text-xs text-gray-600 mb-2">{location.description}</p>
+                          <div className="text-xs text-gray-500 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <span>📍</span>
+                              <span>{location.type === 'event' ? 'จากกิจกรรม' : 'จากตั้งค่าแผนที่'}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span>🎯</span>
+                              <span>รัศมี: {location.radius} เมตร</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleViewDetails(location.id)}
+                            className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors"
+                          >
+                            ดูรายละเอียด
+                          </button>
+                        </div>
+                      </Popup>
+                    </Marker>
                     <Circle
                       center={[location.latitude, location.longitude]}
                       radius={location.radius}
@@ -307,82 +564,139 @@ function AdminDashboard() {
             </div>
 
             {/* Location Details List */}
-            <div className="space-y-4">
-              {locationsWithStatus.map((location) => (
-                <div
-                  key={location.id}
-                  className={`bg-gradient-to-r ${
-                    location.type === 'event' 
-                      ? 'from-yellow-50 to-yellow-100 border-yellow-300' 
-                      : location.checkInStatus === 'ในพื้นที่'
-                        ? 'from-green-50 to-green-100 border-green-200'
-                        : 'from-red-50 to-red-100 border-red-200'
-                    } border-2 rounded-xl p-5 hover:shadow-lg transition-all cursor-pointer`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-12 h-12 ${
-                          location.type === 'event'
-                            ? 'bg-yellow-500'
-                            : location.checkInStatus === 'ในพื้นที่' ? 'bg-green-500' : 'bg-red-500'
-                          } rounded-full flex items-center justify-center text-white font-bold shadow-md`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
-                        </svg>
+            <div className="relative">
+              {/* Scroll indicator at top (shows when scrolled down) */}
+              <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-gray-100 to-transparent pointer-events-none z-10 opacity-0 transition-opacity" id="scroll-top-indicator"></div>
+              
+              {/* Scrollable container */}
+              <div 
+                className="space-y-4 max-h-[380px] overflow-y-auto pr-2 scroll-smooth"
+                onScroll={(e) => {
+                  const target = e.currentTarget
+                  const topIndicator = document.getElementById('scroll-top-indicator')
+                  const bottomIndicator = document.getElementById('scroll-bottom-indicator')
+                  
+                  // Show top indicator when scrolled down
+                  if (topIndicator) {
+                    topIndicator.style.opacity = target.scrollTop > 20 ? '1' : '0'
+                  }
+                  
+                  // Show bottom indicator when not at bottom
+                  if (bottomIndicator) {
+                    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 20
+                    bottomIndicator.style.opacity = isAtBottom ? '0' : '1'
+                  }
+                }}
+              >
+              {locationsWithStatus.map((location) => {
+                const isExpanded = expandedLocationIds.includes(location.id)
+                
+                return (
+                  <div
+                    key={location.id}
+                    ref={(el) => (locationRefs.current[location.id] = el)}
+                    className={`bg-gradient-to-r ${
+                      location.type === 'event' 
+                        ? 'from-yellow-50 to-yellow-100 border-yellow-300' 
+                        : 'from-green-50 to-green-100 border-green-200'
+                      } border-2 rounded-xl overflow-hidden transition-all`}
+                  >
+                    {/* Header - Always Visible (Clickable) */}
+                    <div 
+                      className="p-5 cursor-pointer hover:bg-white/30 transition-colors"
+                      onClick={() => toggleLocationDetails(location.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div
+                            className={`w-12 h-12 ${
+                              location.type === 'event' ? 'bg-yellow-500' : 'bg-green-500'
+                              } rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0`}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                              <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-gray-800 text-lg">{location.name}</h3>
+                            <p className={`text-sm font-medium ${location.type === 'event' ? 'text-yellow-700' : location.statusColor}`}>
+                              {location.checkInStatus}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 จากตั้งค่าแผนที่'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Dropdown Arrow */}
+                        <div className="ml-4">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            height="24px" 
+                            viewBox="0 -960 960 960" 
+                            width="24px" 
+                            fill="currentColor"
+                            className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} text-gray-600`}
+                          >
+                            <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
+                          </svg>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-gray-800">{location.name}</h3>
-                        <p className={`text-sm font-medium ${location.type === 'event' ? 'text-yellow-700' : location.statusColor}`}>
-                          {location.checkInStatus}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 พื้นที่อนุญาต'}
-                        </p>
+                    </div>
+
+                    {/* Details - Expandable */}
+                    <div 
+                      className={`transition-all duration-300 ease-in-out ${
+                        isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                      } overflow-hidden`}
+                    >
+                      <div className="px-5 pb-5 space-y-3">
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <p className="text-xs text-gray-600 mb-1">รายละเอียด</p>
+                          <p className="font-semibold text-gray-800 text-sm">{location.description}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">ทีม / หน่วยงาน</p>
+                            <p className="font-semibold text-gray-800 text-sm">{location.team}</p>
+                          </div>
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">เวลาเช็คอิน</p>
+                            <p className="font-semibold text-gray-800 text-sm">{location.time}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">รัศมี</p>
+                            <p className="font-semibold text-gray-800 text-sm">{location.radius} เมตร</p>
+                          </div>
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">พิกัด</p>
+                            <div className="flex items-center gap-1">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                height="14px"
+                                viewBox="0 -960 960 960"
+                                width="14px"
+                                fill="#6B7280"
+                              >
+                                <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
+                              </svg>
+                              <p className="text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <div className="bg-white/60 rounded-lg p-3 mb-3">
-                    <p className="text-xs text-gray-600 mb-1">รายละเอียด</p>
-                    <p className="font-semibold text-gray-800 text-sm">{location.description}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white/60 rounded-lg p-3">
-                      <p className="text-xs text-gray-600 mb-1">ทีม / หน่วยงาน</p>
-                      <p className="font-semibold text-gray-800 text-sm">{location.team}</p>
-                    </div>
-                    <div className="bg-white/60 rounded-lg p-3">
-                      <p className="text-xs text-gray-600 mb-1">เวลาเช็คอิน</p>
-                      <p className="font-semibold text-gray-800 text-sm">{location.time}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-3">
-                    <div className="bg-white/60 rounded-lg p-3">
-                      <p className="text-xs text-gray-600 mb-1">รัศมี</p>
-                      <p className="font-semibold text-gray-800 text-sm">{location.radius} เมตร</p>
-                    </div>
-                    <div className="bg-white/60 rounded-lg p-3">
-                      <p className="text-xs text-gray-600 mb-1">พิกัด</p>
-                      <div className="flex items-center gap-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          height="14px"
-                          viewBox="0 -960 960 960"
-                          width="14px"
-                          fill="#6B7280"
-                        >
-                          <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
-                        </svg>
-                        <p className="font-mono text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
+              </div>
+              
+              {/* Scroll indicator at bottom (shows when not scrolled to bottom) */}
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-100 to-transparent pointer-events-none z-10 transition-opacity" id="scroll-bottom-indicator"></div>
             </div>
           </div>
         </div>

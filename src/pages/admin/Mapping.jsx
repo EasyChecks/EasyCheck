@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl, useMap, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../contexts/LocationContext'
@@ -60,11 +60,11 @@ function FitBoundsToMarkers({ locations }) {
       const bounds = L.latLngBounds(
         locations.map(loc => [loc.latitude, loc.longitude])
       )
-      
+
       // Fit map to bounds with padding
       map.fitBounds(bounds, {
         padding: [50, 50], // Add padding around bounds
-        maxZoom: 17, // Don't zoom in too close even if markers are very close
+        maxZoom: 16,
         animate: true,
         duration: 0.5
       })
@@ -77,14 +77,14 @@ function FitBoundsToMarkers({ locations }) {
 // Custom Success Dialog
 function SuccessDialog({ isOpen, message, onClose }) {
   if (!isOpen) return null
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#22C55E">
-              <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+              <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">สำเร็จ!</h3>
@@ -104,14 +104,14 @@ function SuccessDialog({ isOpen, message, onClose }) {
 // Custom Confirm Dialog
 function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
   if (!isOpen) return null
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#EF4444">
-              <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
+              <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
@@ -139,14 +139,14 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
 // Custom Error Dialog
 function ErrorDialog({ isOpen, message, onClose }) {
   if (!isOpen) return null
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#F97316">
-              <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
+              <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">ข้อผิดพลาด</h3>
@@ -168,22 +168,23 @@ function Mapping() {
   const { locations, addLocation, updateLocation, deleteLocation, deleteLocations } = useLocations()
   // Use Event Context (to check for duplicates)
   const { events } = useEvents()
-  
+
   const [isAddingLocation, setIsAddingLocation] = useState(false)
   const [isMultiDeleteMode, setIsMultiDeleteMode] = useState(false)
   const [selectedLocations, setSelectedLocations] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [mapClickEnabled, setMapClickEnabled] = useState(false)
   const mapRef = useRef(null)
+  const locationRefs = useRef({}) // Refs for scrolling to location cards
 
   // Dialog states
   const [successDialog, setSuccessDialog] = useState({ isOpen: false, message: '' })
   const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: '' })
-  const [confirmDialog, setConfirmDialog] = useState({ 
-    isOpen: false, 
-    title: '', 
-    message: '', 
-    onConfirm: () => {} 
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { }
   })
 
   // Form state for adding new location
@@ -224,7 +225,7 @@ function Mapping() {
           setSelectedLocations([])
         }
       }
-      
+
       // Handle Enter key
       if (e.key === 'Enter' && !e.shiftKey) {
         if (confirmDialog.isOpen && confirmDialog.onConfirm) {
@@ -314,7 +315,7 @@ function Mapping() {
     const newLng = parseFloat(formData.longitude)
 
     // Check for duplicate name in mapping
-    const duplicateName = locations.find(loc => 
+    const duplicateName = locations.find(loc =>
       loc.name.toLowerCase() === trimmedName.toLowerCase()
     )
     if (duplicateName) {
@@ -326,7 +327,7 @@ function Mapping() {
     }
 
     // Check for duplicate name in events
-    const duplicateNameInEvents = events.find(evt => 
+    const duplicateNameInEvents = events.find(evt =>
       evt.locationName.toLowerCase() === trimmedName.toLowerCase()
     )
     if (duplicateNameInEvents) {
@@ -338,8 +339,8 @@ function Mapping() {
     }
 
     // Check for duplicate coordinates in mapping (within 0.0001 degrees ~11 meters)
-    const duplicateCoords = locations.find(loc => 
-      Math.abs(loc.latitude - newLat) < 0.0001 && 
+    const duplicateCoords = locations.find(loc =>
+      Math.abs(loc.latitude - newLat) < 0.0001 &&
       Math.abs(loc.longitude - newLng) < 0.0001
     )
     if (duplicateCoords) {
@@ -351,8 +352,8 @@ function Mapping() {
     }
 
     // Check for duplicate coordinates in events
-    const duplicateCoordsInEvents = events.find(evt => 
-      Math.abs(evt.latitude - newLat) < 0.0001 && 
+    const duplicateCoordsInEvents = events.find(evt =>
+      Math.abs(evt.latitude - newLat) < 0.0001 &&
       Math.abs(evt.longitude - newLng) < 0.0001
     )
     if (duplicateCoordsInEvents) {
@@ -377,7 +378,7 @@ function Mapping() {
 
     // Add to locations array using Context
     addLocation(newLocation)
-    
+
     // Reset form
     setIsAddingLocation(false)
     setMapClickEnabled(false)
@@ -425,7 +426,7 @@ function Mapping() {
     const updatedLng = parseFloat(editFormData.longitude)
 
     // Check for duplicate name (excluding current location)
-    const duplicateName = locations.find(loc => 
+    const duplicateName = locations.find(loc =>
       loc.id !== editingId && loc.name.toLowerCase() === updatedName.toLowerCase()
     )
     if (duplicateName) {
@@ -437,9 +438,9 @@ function Mapping() {
     }
 
     // Check for duplicate coordinates (excluding current location)
-    const duplicateCoords = locations.find(loc => 
+    const duplicateCoords = locations.find(loc =>
       loc.id !== editingId &&
-      Math.abs(loc.latitude - updatedLat) < 0.0001 && 
+      Math.abs(loc.latitude - updatedLat) < 0.0001 &&
       Math.abs(loc.longitude - updatedLng) < 0.0001
     )
     if (duplicateCoords) {
@@ -519,8 +520,8 @@ function Mapping() {
 
   // Handle checkbox selection
   const handleCheckboxChange = (id) => {
-    setSelectedLocations(prev => 
-      prev.includes(id) 
+    setSelectedLocations(prev =>
+      prev.includes(id)
         ? prev.filter(locId => locId !== id)
         : [...prev, id]
     )
@@ -556,6 +557,24 @@ function Mapping() {
     })
   }
 
+  // Handle view details button click - scroll to location card
+  const handleViewDetails = (locationId) => {
+    setTimeout(() => {
+      const element = locationRefs.current[locationId]
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+        // Add highlight effect
+        element.classList.add('ring-4', 'ring-blue-400')
+        setTimeout(() => {
+          element.classList.remove('ring-4', 'ring-blue-400')
+        }, 2000)
+      }
+    }, 100)
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
       {/* Page Header */}
@@ -567,202 +586,9 @@ function Mapping() {
       </div>
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-7xl mx-auto">
-        {/* Section 1: Action Buttons */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-4">จัดการสถานที่</h2>
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={handleAddLocation}
-              className="flex items-center gap-3 bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-              </svg>
-              เพิ่มพื้นที่ใหม่
-            </button>
+      <main className="px-6 py-8 max-w-8xl mx-auto">
 
-            {!isMultiDeleteMode ? (
-              <button
-                onClick={handleToggleMultiDelete}
-                className="flex items-center gap-3 bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 hover:shadow-xl transition-all hover:scale-105"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                  <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z"/>
-                </svg>
-                ลบพื้นที่ที่เลือก
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={handleDeleteSelected}
-                  className="flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 hover:shadow-xl transition-all hover:scale-105"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                    <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z"/>
-                  </svg>
-                  ลบที่เลือก ({selectedLocations.length})
-                </button>
-                <button
-                  onClick={handleToggleMultiDelete}
-                  className="flex items-center gap-3 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-xl transition-all hover:scale-105"
-                >
-                  ยกเลิก
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Add Location Form */}
-        {isAddingLocation && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-blue-300">
-            <h3 className="text-xl font-bold text-gray-800 mb-6">เพิ่มพื้นที่ใหม่</h3>
-            
-            {/* Form Fields */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  ชื่อสถานที่ <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="เช่น สำนักใหญ่ TGS"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  รายละเอียดสถานที่
-                </label>
-                <input
-                  type="text"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="เช่น ศูนย์การประชุมหลักของหัสรักดี"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  รัศมี (เมตร) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="radius"
-                  value={formData.radius}
-                  onChange={handleInputChange}
-                  placeholder="เช่น 200"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  พิกัด (Latitude) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.000001"
-                  name="latitude"
-                  value={formData.latitude}
-                  onChange={handleInputChange}
-                  placeholder="เช่น 13.7563"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  พิกัด (Longitude) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.000001"
-                  name="longitude"
-                  value={formData.longitude}
-                  onChange={handleInputChange}
-                  placeholder="เช่น 100.5018"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Map for selecting location */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                คลิกบนแผนที่เพื่อเลือกตำแหน่ง {mapClickEnabled && <span className="text-green-600">(✓ เปิดใช้งาน)</span>}
-              </label>
-              <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-gray-300">
-                <MapContainer
-                  center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : defaultCenter}
-                  zoom={17}
-                  style={{ height: '100%', width: '100%' }}
-                  scrollWheelZoom={true}
-                >
-                  <LayersControl position="topright">
-                    <LayersControl.BaseLayer checked name="แผนที่ปกติ">
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                    </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                      />
-                    </LayersControl.BaseLayer>
-                  </LayersControl>
-                  
-                  <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
-                  
-                  {formData.latitude && formData.longitude && (
-                    <>
-                      <Marker position={[parseFloat(formData.latitude), parseFloat(formData.longitude)]} />
-                      {formData.radius && (
-                        <Circle
-                          center={[parseFloat(formData.latitude), parseFloat(formData.longitude)]}
-                          radius={parseFloat(formData.radius)}
-                          pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }}
-                        />
-                      )}
-                    </>
-                  )}
-                </MapContainer>
-                {mapClickEnabled && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg z-[1000] pointer-events-none">
-                    คลิกบนแผนที่เพื่อเลือกตำแหน่ง
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex gap-4">
-              <button
-                onClick={handleSubmitLocation}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
-              >
-                ยืนยัน
-              </button>
-              <button
-                onClick={handleCancelForm}
-                className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Section 2: Map with all locations */}
+        {/* Section 1: Map with all locations */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -800,14 +626,48 @@ function Mapping() {
 
               {locations.map((location) => (
                 <React.Fragment key={location.id}>
-                  <Marker position={[location.latitude, location.longitude]} />
+                  <Marker
+                    position={[location.latitude, location.longitude]}
+                    eventHandlers={{
+                      click: () => handleMarkerClick(location.id)
+                    }}
+                  >
+                    <Popup>
+                      <div className="p-2 min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`w-3 h-3 rounded-full ${location.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          <h3 className="font-bold text-gray-800">{location.name}</h3>
+                        </div>
+                        <p className={`text-xs font-medium mb-2 ${location.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
+                          {location.status === 'active' ? 'กำลังใช้งาน' : 'ไม่ได้ใช้งาน'}
+                        </p>
+                        <p className="text-xs text-gray-600 mb-2">{location.description}</p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex items-center gap-1">
+                            <span>📍</span>
+                            <span>พื้นที่อนุญาต</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span>🎯</span>
+                            <span>รัศมี: {location.radius} เมตร</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleViewDetails(location.id)}
+                          className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors"
+                        >
+                          ดูรายละเอียด
+                        </button>
+                      </div>
+                    </Popup>
+                  </Marker>
                   <Circle
                     center={[location.latitude, location.longitude]}
                     radius={location.radius}
-                    pathOptions={{ 
+                    pathOptions={{
                       color: location.status === 'active' ? 'green' : 'red',
                       fillColor: location.status === 'active' ? 'green' : 'red',
-                      fillOpacity: 0.2 
+                      fillOpacity: 0.2
                     }}
                   />
                 </React.Fragment>
@@ -816,21 +676,186 @@ function Mapping() {
           </div>
         </div>
 
-        {/* Section 3: Location List */}
+        {/* Section 2: Location List */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-800">รายการสถานที่ทั้งหมด</h2>
-            {isMultiDeleteMode && (
-              <div className="text-sm text-red-600 font-semibold">
-                โหมดเลือกลบ - เลือกพื้นที่ที่ต้องการลบ
+            {/* Action Buttons */}
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-white">จัดการสถานที่</h2>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={handleAddLocation}
+                  className="flex items-center gap-3 bg-[#085EC5] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                    <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+                  </svg>
+                  เพิ่มพื้นที่ใหม่
+                </button>
+
+                {!isMultiDeleteMode ? (
+                  <button
+                    onClick={handleToggleMultiDelete}
+                    className="flex items-center gap-3 bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 hover:shadow-xl transition-all hover:scale-105"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                      <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z" />
+                    </svg>
+                    ลบพื้นที่ที่เลือก
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 hover:shadow-xl transition-all hover:scale-105"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                        <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z" />
+                      </svg>
+                      ลบที่เลือก ({selectedLocations.length})
+                    </button>
+                    <button
+                      onClick={handleToggleMultiDelete}
+                      className="flex items-center gap-3 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-xl transition-all hover:scale-105"
+                    >
+                      ยกเลิก
+                    </button>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
+
+          {/* Add Location Form */}
+        {isAddingLocation && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-blue-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-800">เพิ่มพื้นที่ใหม่</h3>
+              <button
+                onClick={handleCancelForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Fields */}
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  ชื่อสถานที่ <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="เช่น สำนักใหญ่ TGS"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  รัศมี (เมตร) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="radius"
+                  value={formData.radius}
+                  onChange={handleInputChange}
+                  placeholder="เช่น 200"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  รายละเอียดสถานที่
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="เช่น ศูนย์การประชุมหลักของหัสรักดี"
+                  rows="3"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              {/* Map for selecting location in form */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  เลือกตำแหน่งบนแผนที่ <span className="text-red-500">*</span>
+                </label>
+                <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300">
+                  <MapContainer
+                    center={formData.latitude && formData.longitude
+                      ? [parseFloat(formData.latitude), parseFloat(formData.longitude)]
+                      : defaultCenter
+                    }
+                    zoom={15}
+                    style={{ height: '100%', width: '100%' }}
+                    scrollWheelZoom={true}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <MapClickHandler onMapClick={handleMapClick} isActive={true} />
+
+                    {formData.latitude && formData.longitude && (
+                      <>
+                        <Marker position={[parseFloat(formData.latitude), parseFloat(formData.longitude)]} />
+                        {formData.radius && (
+                          <Circle
+                            center={[parseFloat(formData.latitude), parseFloat(formData.longitude)]}
+                            radius={parseFloat(formData.radius) || 100}
+                            pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.3 }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </MapContainer>
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg z-[1000] pointer-events-none">
+                    คลิกบนแผนที่เพื่อเลือกตำแหน่ง
+                  </div>
+                </div>
+                {formData.latitude && formData.longitude && (
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      <span className="font-semibold">พิกัดที่เลือก:</span> {parseFloat(formData.latitude).toFixed(6)}, {parseFloat(formData.longitude).toFixed(6)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleSubmitLocation}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+              >
+                ยืนยัน
+              </button>
+              <button
+                onClick={handleCancelForm}
+                className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )}
 
           {locations.length === 0 ? (
             <div className="text-center py-12">
               <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#D1D5DB" className="mx-auto mb-4">
-                <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
               </svg>
               <p className="text-gray-500 text-lg">ยังไม่มีพื้นที่อนุญาต</p>
               <p className="text-gray-400 text-sm mt-2">คลิก "เพิ่มพื้นที่ใหม่" เพื่อเริ่มต้น</p>
@@ -844,11 +869,11 @@ function Mapping() {
                 return (
                   <div
                     key={location.id}
-                    className={`rounded-xl p-5 transition-all ${
-                      isEditing 
-                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 shadow-xl' 
+                    ref={(el) => (locationRefs.current[location.id] = el)}
+                    className={`rounded-xl p-5 transition-all ${isEditing
+                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 shadow-xl'
                         : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 hover:shadow-lg'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
@@ -865,13 +890,12 @@ function Mapping() {
                         )}
 
                         {/* Location Icon */}
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${
-                          isEditing 
-                            ? 'bg-gradient-to-br from-green-500 to-green-600' 
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isEditing
+                            ? 'bg-gradient-to-br from-green-500 to-green-600'
                             : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                        }`}>
+                          }`}>
                           <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="white">
-                            <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                            <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
                           </svg>
                         </div>
 
@@ -975,9 +999,9 @@ function Mapping() {
                                         />
                                       </LayersControl.BaseLayer>
                                     </LayersControl>
-                                    
+
                                     <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
-                                    
+
                                     <Marker position={[parseFloat(currentFormData.latitude), parseFloat(currentFormData.longitude)]} />
                                     {currentFormData.radius && (
                                       <Circle
@@ -1016,7 +1040,7 @@ function Mapping() {
                             <>
                               <h3 className="text-lg font-bold text-gray-800 mb-1">{location.name}</h3>
                               <p className="text-sm text-gray-600 mb-3">{location.description}</p>
-                              
+
                               <div className="grid md:grid-cols-3 gap-3">
                                 <div className="bg-white rounded-lg p-3">
                                   <p className="text-xs text-gray-600 mb-1">รัศมี</p>
@@ -1026,9 +1050,9 @@ function Mapping() {
                                   <p className="text-xs text-gray-600 mb-1">พิกัด</p>
                                   <div className="flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#6B7280">
-                                      <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z"/>
+                                      <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
                                     </svg>
-                                    <p className="font-mono text-sm text-gray-700">
+                                    <p className="text-sm text-gray-700">
                                       {location.latitude}, {location.longitude}
                                     </p>
                                   </div>
@@ -1048,7 +1072,7 @@ function Mapping() {
                             title="แก้ไข"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-                              <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+                              <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                             </svg>
                           </button>
                           <button
@@ -1057,7 +1081,7 @@ function Mapping() {
                             title="ลบ"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-                              <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
+                              <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
                             </svg>
                           </button>
                         </div>
@@ -1077,14 +1101,14 @@ function Mapping() {
         message={successDialog.message}
         onClose={() => setSuccessDialog({ isOpen: false, message: '' })}
       />
-      
+
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         message={confirmDialog.message}
         onConfirm={confirmDialog.onConfirm}
         onCancel={confirmDialog.onCancel}
       />
-      
+
       <ErrorDialog
         isOpen={errorDialog.isOpen}
         message={errorDialog.message}

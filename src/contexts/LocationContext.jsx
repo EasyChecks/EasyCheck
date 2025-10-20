@@ -9,7 +9,7 @@ const initialLocations = [
     id: 1,
     name: 'สำนักใหญ่ TGS',
     description: 'ศูนย์การประชุมหลัก',
-    radius: 200,
+    radius: 150,
     latitude: 13.7596,
     longitude: 100.5008,
     status: 'active'

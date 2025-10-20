@@ -17,7 +17,7 @@ function AdminLayout() {
   const menuItems = [
     {
       path: '/admin/dashboard',
-      label: 'Dashboard',
+      label: 'ภาพรวม',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
           <path d="M520-600v-240h320v240H520ZM120-440v-400h320v400H120Zm400 320v-400h320v400H520Zm-400 0v-240h320v240H120Z"/>
@@ -52,15 +52,6 @@ function AdminLayout() {
       )
     },
     {
-      path: '/admin/access',
-      label: 'สิทธิ์การเข้าถึง',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-            <path d="M480-720q-33 0-56.5-23.5T400-800q0-33 23.5-56.5T480-880q33 0 56.5 23.5T560-800q0 33-23.5 56.5T480-720ZM360-80v-520q-60-5-122-15t-118-25l20-80q78 21 166 30.5t174 9.5q86 0 174-9.5T820-720l20 80q-56 15-118 25t-122 15v520h-80v-240h-80v240h-80Z"/>
-        </svg>
-      )
-    },
-    {
       path: '/admin/mapping',
       label: 'ต้ังค่าเเผนที่',
       icon: (
@@ -71,7 +62,7 @@ function AdminLayout() {
     },
     {
       path: '/admin/notifications',
-      label: 'แจ้งเตือนกลุ่ม',
+      label: 'ส่งแจ้งเตือนแบบกลุ่ม',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
           <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160ZM480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Z"/>
@@ -89,7 +80,7 @@ function AdminLayout() {
     },
     {
       path: '/admin/warning',
-      label: 'การแจ้งเตือน',
+      label: 'รับการแจ้งเตือน',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
           <path d="m40-120 440-760 440 760H40Zm138-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm-40-120h80v-200h-80v200Z"/>

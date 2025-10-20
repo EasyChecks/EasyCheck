@@ -21,6 +21,7 @@ import Warning from "./pages/admin/Warning/Warning.jsx";
 
 // Lazy load หน้าที่ใช้น้อย
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
+const GroupNotificationScreen = lazy(() => import("./pages/admin/GroupNotification/GroupNotificationScreen.jsx"));
 const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
 const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
 const Mapping = lazy(() => import("./pages/admin/Mapping.jsx"));
@@ -79,6 +80,12 @@ const router = createBrowserRouter([
         path: 'mapping',
         element: <Suspense fallback={<PageLoader />}><Mapping /></Suspense>
       },
+      
+      {
+        path: 'notifications',
+        element: <Suspense fallback={<PageLoader />}><GroupNotificationScreen /></Suspense>
+      }
+      ,
       {
         path: 'event-management',
         element: <Suspense fallback={<PageLoader />}><EventManagement /></Suspense>

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 *  {
-  font-family: 'prompt', sans-serif;
+  font-family: 'Prompt', sans-serif;
 }
 
 @layer base {
