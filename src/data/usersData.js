@@ -373,7 +373,19 @@ export const usersData = [
 
 // Helper function: แปลง usersData เป็น format สำหรับ Auth.jsx
 export const getUserForAuth = (employeeId) => {
-  const user = usersData.find(u => u.username === employeeId || u.adminAccount === employeeId);
+  // Try to get updated users from localStorage first (for role changes made by admin)
+  let usersList = usersData;
+  try {
+    const storedUsers = localStorage.getItem('usersData');
+    if (storedUsers) {
+      usersList = JSON.parse(storedUsers);
+    }
+  } catch (e) {
+    // If localStorage fails, use default usersData
+    console.warn('Failed to read users from localStorage:', e);
+  }
+
+  const user = usersList.find(u => u.username === employeeId || u.adminAccount === employeeId);
   if (!user) return null;
 
   // ถ้าเป็นบัญชี Admin (ADMBKK...)

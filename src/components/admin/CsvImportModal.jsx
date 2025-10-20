@@ -76,7 +76,7 @@ const CsvImportModal = memo(function CsvImportModal({
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="border border-gray-300 px-2 py-2 text-center">{index + 1}</td>
                       <td className="border border-gray-300 px-2 py-2">
-                        <span className="font-mono font-semibold text-blue-600">{previewEmployeeId}</span>
+                        <span className="font-semibold text-blue-600">{previewEmployeeId}</span>
                       </td>
                       <td className="border border-gray-300 px-2 py-2">{row.name || ''}</td>
                       <td className="border border-gray-300 px-2 py-2 text-xs">{row.email || ''}</td>
@@ -106,7 +106,7 @@ const CsvImportModal = memo(function CsvImportModal({
           {/* CSV Format Example */}
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold text-gray-700 mb-2">📄 ตัวอย่างรูปแบบไฟล์ CSV:</h3>
-            <div className="bg-white border border-gray-300 rounded p-3 font-mono text-xs overflow-x-auto">
+            <div className="bg-white border border-gray-300 rounded p-3 text-xs overflow-x-auto">
               <code className="text-gray-800">
                 name,email,provinceCode,branchCode,role,department,position,nationalId,phone,skills<br/>
                 นายสมชาย ใจดี,somchai@email.com,BKK,101,user,IT,Developer,1234567890123,081-234-5678,"JavaScript|React"<br/>
