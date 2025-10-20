@@ -7,45 +7,73 @@ const EventContext = createContext()
 const defaultEvents = [
   {
     id: 1,
-    name: 'คุยงานกับลูกค้า',
-    date: '23/09/2025 → 24/09/2025',
-    description: 'เก็บ requirement ของลูกค้า',
-    locationName: 'โซนเมกะบางนา',
-    latitude: 13.6671,
-    longitude: 100.6221,
-    radius: 200,
-    status: 'completed',
-    startTime: '09:00',
-    endTime: '11:00',
-    teams: ['ทีมขาย', 'ทีมพัฒนา']
+    name: 'ประชุมทีมขาย ประจำเดือน',
+    date: '20/10/2025', // Today's date
+    description: 'ประชุมวางแผนการขายและทบทวนผลการดำเนินงาน',
+    locationName: 'ห้องประชุมชั้น 3',
+    latitude: 13.7563,
+    longitude: 100.5018,
+    radius: 100,
+    status: 'ongoing',
+    startTime: '14:00',
+    endTime: '16:00',
+    teams: ['ทีมขาย', 'Marketing', 'การตลาด']
   },
   {
     id: 2,
-    name: 'ลงตรวจ site งาน',
-    date: '25/09/2025',
-    description: 'ตรวจความเรียบร้อยของโครงการ',
-    locationName: 'คลองเตย',
-    latitude: 13.7218,
-    longitude: 100.5856,
+    name: 'Workshop การพัฒนาระบบ',
+    date: '21/10/2025',
+    description: 'อบรมเชิงปฏิบัติการเทคโนโลยีใหม่สำหรับทีม IT',
+    locationName: 'ศูนย์ฝึกอบรม อาคาร A',
+    latitude: 13.7606,
+    longitude: 100.5034,
     radius: 150,
-    status: 'completed',
-    startTime: '10:00',
-    endTime: '12:00',
-    teams: ['ทีมก่อสร้าง', 'ทีมควบคุมคุณภาพ']
+    status: 'ongoing',
+    startTime: '09:00',
+    endTime: '17:00',
+    teams: ['IT', 'ทีมพัฒนา', 'Software Engineer']
   },
   {
     id: 3,
-    name: 'ติดตั้งสินค้าที่บ้านลูกค้า',
-    date: '27/09/2025',
-    description: 'ติดตั้งระบบให้ลูกค้ารายใหม่',
-    locationName: 'ลาดพร้าว 71',
-    latitude: 13.8021,
-    longitude: 100.6048,
+    name: 'ตรวจสอบคุณภาพงานก่อสร้าง',
+    date: '22/10/2025',
+    description: 'ตรวจสอบความก้าวหน้าและคุณภาพของโครงการก่อสร้าง',
+    locationName: 'ไซต์งานบางนา',
+    latitude: 13.6671,
+    longitude: 100.6221,
+    radius: 200,
+    status: 'ongoing',
+    startTime: '10:00',
+    endTime: '14:00',
+    teams: ['ทีมก่อสร้าง', 'ทีมควบคุมคุณภาพ', 'วิศวกร']
+  },
+  {
+    id: 4,
+    name: 'ฝึกอบรม HR Management',
+    date: '23/10/2025',
+    description: 'อบรมระบบการจัดการทรัพยากรบุคคลสำหรับผู้บริหาร',
+    locationName: 'โรงแรม Grand Hyatt',
+    latitude: 13.7435,
+    longitude: 100.5448,
     radius: 100,
-    status: 'completed',
+    status: 'ongoing',
+    startTime: '08:30',
+    endTime: '16:30',
+    teams: ['HR', 'ทรัพยากรบุคคล', 'Admin']
+  },
+  {
+    id: 5,
+    name: 'Customer Service Excellence',
+    date: '24/10/2025',
+    description: 'พัฒนาทักษะการบริการลูกค้าระดับมืออาชีพ',
+    locationName: 'ศูนย์การค้า Central World',
+    latitude: 13.7469,
+    longitude: 100.5397,
+    radius: 150,
+    status: 'ongoing',
     startTime: '13:00',
-    endTime: '15:00',
-    teams: ['ทีมติดตั้ง', 'ทีมบริการลูกค้า']
+    endTime: '17:00',
+    teams: ['ทีมบริการลูกค้า', 'Customer Service', 'ฝ่ายบริการ']
   }
 ]
 
@@ -100,13 +128,102 @@ export function EventProvider({ children }) {
     return events.find(evt => evt.id === id)
   }
 
+  // Filter events by user's department/team
+  const getEventsForUser = (userDepartment, userPosition) => {
+    // Convert user info to comparable format
+    const userTeams = [userDepartment, userPosition].filter(Boolean).map(t => t.toLowerCase())
+    
+    return events.filter(event => {
+      // If event has no teams specified, it's visible to all
+      if (!event.teams || event.teams.length === 0) {
+        return true
+      }
+      
+      // Check if user's department or position matches any of the event teams
+      return event.teams.some(eventTeam => 
+        userTeams.some(userTeam => 
+          eventTeam.toLowerCase().includes(userTeam) || 
+          userTeam.includes(eventTeam.toLowerCase())
+        )
+      )
+    })
+  }
+
+  // Check if user can join event (within 30 minutes after start time)
+  const canJoinEvent = (event) => {
+    if (!event.startTime || !event.date) {
+      return true // If no time specified, allow joining
+    }
+
+    try {
+      // Parse date (format: DD/MM/YYYY)
+      const [day, month, year] = event.date.split('/')
+      // Parse time (format: HH:MM)
+      const [hours, minutes] = event.startTime.split(':')
+      
+      // Create event start time
+      const eventStartTime = new Date(year, month - 1, day, hours, minutes)
+      
+      // Add 30 minutes grace period
+      const joinDeadline = new Date(eventStartTime.getTime() + 30 * 60 * 1000)
+      
+      // Get current time
+      const now = new Date()
+      
+      // Can join if current time is before deadline
+      return now <= joinDeadline
+    } catch (error) {
+      console.error('Error parsing event date/time:', error)
+      return true // In case of error, allow joining
+    }
+  }
+
+  // Get time remaining to join event (returns object with hours and minutes)
+  const getTimeRemainingToJoin = (event) => {
+    if (!event.startTime || !event.date) {
+      return null
+    }
+
+    try {
+      const [day, month, year] = event.date.split('/')
+      const [hours, minutes] = event.startTime.split(':')
+      
+      const eventStartTime = new Date(year, month - 1, day, hours, minutes)
+      const joinDeadline = new Date(eventStartTime.getTime() + 30 * 60 * 1000)
+      const now = new Date()
+      
+      const diff = joinDeadline - now
+      const totalMinutes = Math.floor(diff / (1000 * 60))
+      
+      if (totalMinutes <= 0) {
+        return { hours: 0, minutes: 0, total: 0 }
+      }
+      
+      const hoursRemaining = Math.floor(totalMinutes / 60)
+      const minutesRemaining = totalMinutes % 60
+      
+      return {
+        hours: hoursRemaining,
+        minutes: minutesRemaining,
+        total: totalMinutes,
+        formatted: `${hoursRemaining}:${minutesRemaining.toString().padStart(2, '0')}`
+      }
+    } catch (error) {
+      console.error('Error calculating time remaining:', error)
+      return null
+    }
+  }
+
   const value = {
     events,
     setEvents,
     addEvent,
     updateEvent,
     deleteEvent,
-    getEvent
+    getEvent,
+    getEventsForUser,
+    canJoinEvent,
+    getTimeRemainingToJoin
   }
 
   return (
