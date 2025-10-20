@@ -1,8 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { sampleSchedules } from './DataAttendance.jsx'
 import CreateAttendance from './CreateAttendance.jsx'
+import { useLocations } from '../../../contexts/LocationContext'
+import { MapContainer, TileLayer, Marker, Circle, LayersControl } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Fix Leaflet default icon
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
 
 function Attendance() {
+  const { locations } = useLocations()
   const [schedules, setSchedules] = useState(sampleSchedules)
   const [openIds, setOpenIds] = useState([])
   const [selectMode, setSelectMode] = useState(false)
@@ -11,6 +24,9 @@ function Attendance() {
   const [showEdit, setShowEdit] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
+  const [showDeleteSelectedConfirm, setShowDeleteSelectedConfirm] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
   const wrapperRefs = useRef({})
   const innerRefs = useRef({})
   const endListenersRef = useRef({}) // เก็บ listener ปัจจุบันต่อรายการ
@@ -139,6 +155,16 @@ function Attendance() {
     setSelectedIds([])
     setSelectMode(false)
     setOpenIds([])
+    setShowDeleteSelectedConfirm(false)
+    
+    // แสดง popup สำเร็จ
+    setSuccessMessage(`ลบตารางงานที่เลือกเรียบร้อย!`)
+    setShowSuccessPopup(true)
+    
+    // ปิด popup อัตโนมัติหลัง 3 วินาที
+    setTimeout(() => {
+      setShowSuccessPopup(false)
+    }, 3000)
   }
 
   // ลบทั้งหมด (ทำงานจริงเมื่อผู้ใช้ยืนยันจาก modal)
@@ -149,21 +175,54 @@ function Attendance() {
     setSelectMode(false)
     setOpenIds([])
     setShowDeleteAllConfirm(false)
+    
+    // แสดง popup สำเร็จ
+    setSuccessMessage('ลบตารางงานทั้งหมดเรียบร้อย!')
+    setShowSuccessPopup(true)
+    
+    // ปิด popup อัตโนมัติหลัง 3 วินาที
+    setTimeout(() => {
+      setShowSuccessPopup(false)
+    }, 3000)
   }
 
   const handleCreate = (newItem) => {
     setSchedules(prev => [newItem, ...prev])
     setShowCreate(false)
+    
+    // แสดง popup สำเร็จ
+    setSuccessMessage('สร้างตารางงานเรียบร้อย!')
+    setShowSuccessPopup(true)
+    
+    // ปิด popup อัตโนมัติหลัง 3 วินาที
+    setTimeout(() => {
+      setShowSuccessPopup(false)
+    }, 3000)
+  }
+
+  const handleUpdate = (updated) => {
+    setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s))
+    setShowEdit(false)
+    setEditingItem(null)
+    
+    // แสดง popup สำเร็จ
+    setSuccessMessage('ปรับตารางงานเรียบร้อย!')
+    setShowSuccessPopup(true)
+    
+    // ปิด popup อัตโนมัติหลัง 3 วินาที
+    setTimeout(() => {
+      setShowSuccessPopup(false)
+    }, 3000)
   }
 
     return (
-      <div className="w-full bg-gray-50 min-h-screen " 
-      style={{overflowY: 'auto', scrollbarGutter: 'stable' }}
+      <div className="w-full bg-gray-50 min-h-screen overflow-y-auto" 
+      style={{ scrollbarGutter: 'stable' }}
       >
         <div className="w-full pl-3 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-6">
           <div
             className="w-full mx-auto bg-white rounded-2xl p-6 shadow-xl border border-gray-200"
-            style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)'}}
+            style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)' }}
           >
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -174,7 +233,7 @@ function Attendance() {
             <div className="flex items-center gap-3 flex-wrap">
               <button 
                 onClick={() => setShowCreate(true)} 
-                className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                className="inline-flex items-center justify-center text-base font-semibold bg-gradient-to-br from-sky-500 to-blue-500 text-white min-w-[120px] h-10 px-5 leading-none hover:from-sky-600 hover:to-cyan-600 rounded-xl shadow-md transition-all duration-200"
               >
                 สร้างตารางใหม่
               </button>
@@ -204,7 +263,7 @@ function Attendance() {
                   </button>
 
                   <button
-                    onClick={confirmDelete}
+                    onClick={() => setShowDeleteSelectedConfirm(true)}
                     disabled={selectedIds.length === 0}
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm ${
                       selectedIds.length === 0 
@@ -238,7 +297,7 @@ function Attendance() {
             return (
               <div
                 key={item.id}
-                className="relative bg-[#2b78d3] rounded-2xl p-5 pb-4 text-white shadow-lg min-h-[120px] mb-6"
+                className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 pb-4 text-white shadow-lg min-h-[120px] mb-6"
               >
                 {/* top-right: checkbox (in select mode) + time pill (always shown) */}
                 <div className="absolute top-4 right-4 flex items-center space-x-3">
@@ -270,17 +329,8 @@ function Attendance() {
                       {/* Primary button - unified size */}
                       <button
                         onClick={() => { setEditingItem(item); setShowEdit(true); }}
-                        className="inline-flex items-center justify-center text-base font-semibold rounded-xl shadow-md transition-all duration-200"
-                        style={{
-                          background: 'linear-gradient(to bottom, #06b6d4, #0891b2)',
-                          color: 'white',
-                          minWidth: 120,
-                          height: 40,
-                          padding: '0 20px',
-                          lineHeight: '1',
-                          boxSizing: 'border-box',
-                          boxShadow: '0 6px 18px rgba(11,43,87,0.12)'
-                        }}
+                        className="inline-flex items-center justify-center text-base font-semibold bg-gradient-to-br from-sky-400 to-blue-500 text-white min-w-[120px] h-10 px-5 leading-none hover:from-sky-600 hover:to-cyan-700 rounded-xl shadow-md transition-all duration-200"
+                        style={{ boxShadow: '0 6px 18px rgba(11,43,87,0.12)' }}
                       >
                         ปรับตาราง
                       </button>
@@ -289,39 +339,19 @@ function Attendance() {
                       <button
                         onClick={() => toggleDetails(item.id)}
                         aria-expanded={isOpen}
-                        className="relative inline-flex items-center justify-center text-base font-semibold rounded-xl shadow-md transition-all duration-200 overflow-hidden"
-                        style={{
-                          background: 'white',
-                          color: '#0b2b57',
-                          border: '2px solid rgba(255,255,255,0.5)',
-                          minWidth: 120,
-                          height: 40,
-                          padding: '0 20px',
-                          lineHeight: '1',
-                          boxSizing: 'border-box',
-                          boxShadow: '0 6px 18px rgba(11,43,87,0.12)'
-                        }}
+                        className="relative inline-flex items-center justify-center text-base font-semibold rounded-xl shadow-md transition-all duration-200 overflow-hidden bg-white text-[#0b2b57] border-2 border-white/50 min-w-[120px] h-10 px-5 leading-none hover:bg-gray-50"
+                        style={{ boxShadow: '0 6px 18px rgba(11,43,87,0.12)' }}
                       >
                         <span
                           aria-hidden={isOpen}
-                          style={{
-                            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            opacity: isOpen ? 0 : 1,
-                            transition: 'opacity 220ms ease',
-                            pointerEvents: 'none'
-                          }}
+                          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-[220ms] ease-in-out pointer-events-none ${isOpen ? 'opacity-0' : 'opacity-100'}`}
                         >
                           รายละเอียด
                         </span>
 
                         <span
                           aria-hidden={!isOpen}
-                          style={{
-                            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            opacity: isOpen ? 1 : 0,
-                            transition: 'opacity 220ms ease',
-                            pointerEvents: 'none'
-                          }}
+                          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-[220ms] ease-in-out pointer-events-none ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                         >
                           ซ่อนรายละเอียด
                         </span>
@@ -357,26 +387,88 @@ function Attendance() {
                         }}
                         className="bg-white text-gray-800 rounded-md p-4 border border-gray-200"
                       >
-                        <div className="mb-3">
-                          <h4 className="font-semibold mb-2 text-base">ภารกิจหลัก:</h4>
-                          <ul className="list-disc pl-5 text-sm space-y-1">
-                            {item.tasks?.map((t, idx) => <li key={idx}>{t}</li>)}
-                          </ul>
-                        </div>
+                        {/* Layout: Left side (Info) + Right side (Map) */}
+                        {(() => {
+                          const locationData = locations.find(loc => loc.name === item.location)
+                          
+                          return (
+                            <div className="flex flex-col lg:flex-row gap-6">
+                              {/* Left Side - Information */}
+                              <div className="flex-1 space-y-4">
+                                <div className="mb-3">
+                                  <h4 className="font-semibold mb-2 text-base">ภารกิจหลัก:</h4>
+                                  <ul className="list-disc pl-5 text-sm space-y-1">
+                                    {item.tasks?.map((t, idx) => <li key={idx}>{t}</li>)}
+                                  </ul>
+                                </div>
 
-                        <div className="mb-3">
-                          <h4 className="font-semibold mb-2 text-base">สิ่งที่ต้องเตรียม:</h4>
-                          <ul className="list-disc pl-5 text-sm space-y-1">
-                            {item.preparations?.map((p, idx) => <li key={idx}>{p}</li>)}
-                          </ul>
-                        </div>
+                                <div className="mb-3">
+                                  <h4 className="font-semibold mb-2 text-base">สิ่งที่ต้องเตรียม:</h4>
+                                  <ul className="list-disc pl-5 text-sm space-y-1">
+                                    {item.preparations?.map((p, idx) => <li key={idx}>{p}</li>)}
+                                  </ul>
+                                </div>
 
-                        <div>
-                          <h4 className="font-semibold mb-2 text-base">เป้าหมาย:</h4>
-                          <ul className="list-disc pl-5 text-sm space-y-1">
-                            {item.goals?.map((g, idx) => <li key={idx}>{g}</li>)}
-                          </ul>
-                        </div>
+                                <div>
+                                  <h4 className="font-semibold mb-2 text-base">เป้าหมาย:</h4>
+                                  <ul className="list-disc pl-5 text-sm space-y-1">
+                                    {item.goals?.map((g, idx) => <li key={idx}>{g}</li>)}
+                                  </ul>
+                                </div>
+                              </div>
+
+                              {/* Right Side - Map */}
+                              {locationData && (
+                                <div className="lg:w-[400px] flex-shrink-0">
+                                  <h4 className="font-semibold mb-3 text-base flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/>
+                                    </svg>
+                                    แผนที่ตำแหน่ง
+                                  </h4>
+                                  <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-blue-200 shadow-lg">
+                                    <MapContainer
+                                      center={[locationData.latitude, locationData.longitude]}
+                                      zoom={16}
+                                      style={{ height: '100%', width: '100%' }}
+                                      scrollWheelZoom={true}
+                                      zoomControl={true}
+                                    >
+                                      <LayersControl position="topright">
+                                        <LayersControl.BaseLayer checked name="แผนที่ปกติ">
+                                          <TileLayer
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                          />
+                                        </LayersControl.BaseLayer>
+                                        <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
+                                          <TileLayer
+                                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                          />
+                                        </LayersControl.BaseLayer>
+                                      </LayersControl>
+                                      
+                                      <Marker position={[locationData.latitude, locationData.longitude]} />
+                                      <Circle
+                                        center={[locationData.latitude, locationData.longitude]}
+                                        radius={locationData.radius}
+                                        pathOptions={{ 
+                                          color: 'green',
+                                          fillColor: 'green',
+                                          fillOpacity: 0.2 
+                                        }}
+                                      />
+                                    </MapContainer>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-2 text-center">
+                                    วงกลมสีเขียวแสดงพื้นที่ที่สามารถเช็คอินได้
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </div>
                     </div>
 
@@ -399,33 +491,55 @@ function Attendance() {
         {showEdit && editingItem && (
           <CreateAttendance
             onClose={() => { setShowEdit(false); setEditingItem(null) }}
-            onUpdate={(updated) => {
-              setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s))
-              setShowEdit(false)
-              setEditingItem(null)
-            }}
+            onUpdate={handleUpdate}
             initialData={editingItem}
           />
         )}
 
+        {/* Success Popup */}
+        {showSuccessPopup && (
+          <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-green-400 pointer-events-auto animate-bounce-in">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-800">{successMessage}</h3>
+                  <p className="text-sm text-gray-600 mt-1">ระบบได้บันทึกข้อมูลเรียบร้อยแล้ว</p>
+                </div>
+                <button
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Delete All Confirmation Modal */}
         {showDeleteAllConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9998 }} role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-[9998]" role="dialog" aria-modal="true">
             {/* Backdrop with blur and dim */}
             <div
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
               onClick={() => setShowDeleteAllConfirm(false)}
-              style={{ zIndex: 9998 }}
             />
 
             {/* Modal content card with border, ring and elevated shadow */}
             <div
-              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-2xl"
-              style={{ zIndex: 9999, boxShadow: '0 10px 30px rgba(11,43,87,0.18)' }}
+              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-2xl z-[9999]"
+              style={{ boxShadow: '0 10px 30px rgba(11,43,87,0.18)' }}
               role="document"
             >
               <h3 className="text-lg font-semibold text-gray-800">ยืนยันการลบทั้งหมด</h3>
-              <p className="text-sm text-gray-600 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบตารางทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+              <p className="text-sm text-gray-600 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบตารางทั้งหมด ({schedules.length} รายการ)? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
 
               <div className="mt-4 flex justify-end items-center gap-3">
                 <button 
@@ -441,6 +555,44 @@ function Attendance() {
                   className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-all duration-200 font-medium text-sm"
                 >
                   ลบทั้งหมด
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Selected Confirmation Modal */}
+        {showDeleteSelectedConfirm && (
+          <div className="fixed inset-0 flex items-center justify-center z-[9998]" role="dialog" aria-modal="true">
+            {/* Backdrop with blur and dim */}
+            <div
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+              onClick={() => setShowDeleteSelectedConfirm(false)}
+            />
+
+            {/* Modal content card with border, ring and elevated shadow */}
+            <div
+              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-2xl z-[9999]"
+              style={{ boxShadow: '0 10px 30px rgba(11,43,87,0.18)' }}
+              role="document"
+            >
+              <h3 className="text-lg font-semibold text-gray-800">ยืนยันการลบที่เลือก</h3>
+              <p className="text-sm text-gray-600 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบตารางที่เลือก ({selectedIds.length} รายการ)? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+
+              <div className="mt-4 flex justify-end items-center gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setShowDeleteSelectedConfirm(false)} 
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  type="button" 
+                  onClick={confirmDelete} 
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-all duration-200 font-medium text-sm"
+                >
+                  ลบที่เลือก
                 </button>
               </div>
             </div>

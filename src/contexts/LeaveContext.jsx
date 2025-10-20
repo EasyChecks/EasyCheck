@@ -155,22 +155,30 @@ export const LeaveProvider = ({ children }) => {
 
     // ฟังก์ชันสำหรับ Manager - เปลี่ยนสถานะลาโดยตรง
     const updateLeaveStatus = (id, newStatus) => {
+        console.log('LeaveContext - Updating leave status:', { id, newStatus })
+        
         const statusColors = {
             'รออนุมัติ': 'yellow',
             'อนุมัติ': 'green',
             'ไม่อนุมัติ': 'red'
         };
         
-        setLeaveList(prev => prev.map(leave => {
-            if (leave.id === id) {
-                return {
-                    ...leave,
-                    status: newStatus,
-                    statusColor: statusColors[newStatus] || 'yellow'
-                };
-            }
-            return leave;
-        }));
+        setLeaveList(prev => {
+            const updated = prev.map(leave => {
+                if (leave.id === id) {
+                    const updatedLeave = {
+                        ...leave,
+                        status: newStatus,
+                        statusColor: statusColors[newStatus] || 'yellow'
+                    };
+                    console.log('Updated leave:', updatedLeave)
+                    return updatedLeave;
+                }
+                return leave;
+            });
+            console.log('All leaves after update:', updated)
+            return updated;
+        });
     };
 
     const value = {
