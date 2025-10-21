@@ -794,7 +794,7 @@ function GroupNotificationScreen() {
                     {/* ประวัติการแจ้งเตือน */}
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 sticky top-6">
-                            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 text-white">
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white">
                                 <h2 className="text-lg font-bold flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

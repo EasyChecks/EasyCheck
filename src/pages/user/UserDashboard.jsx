@@ -3,13 +3,19 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import { useTeam } from '../../contexts/useTeam'
 import { useLoading } from '../../contexts/useLoading'
-import { validateBuddy } from '../../data/usersData' // Updated: merged from buddyData.js
+import { useLocations } from '../../contexts/LocationContext'
+import { useLeave } from '../../contexts/LeaveContext'
+import { useEvents } from '../../contexts/EventContext'
+import { validateBuddy } from '../../data/usersData'
 import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 
 function UserDashboard() {
-  const { attendance, user } = useAuth() // เพิ่ม user จาก useAuth
+  const { attendance, user } = useAuth()
   const { getTeamStats, getUnreadNotifications } = useTeam()
   const { hideLoading } = useLoading()
+  const { locations } = useLocations()
+  const { leaveList, getUsedDays, leaveQuota } = useLeave()
+  const { getEventsForUser } = useEvents()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showBuddyCheckIn, setShowBuddyCheckIn] = useState(false)
   const [buddyData, setBuddyData] = useState({
@@ -18,11 +24,219 @@ function UserDashboard() {
   })
   const [buddyError, setBuddyError] = useState('')
   const [buddySuccess, setBuddySuccess] = useState(false)
+  const [currentLocation, setCurrentLocation] = useState(null)
+  const [isWithinAllowedArea, setIsWithinAllowedArea] = useState(false)
+  const [checkingLocation, setCheckingLocation] = useState(true)
 
-  // ตรวจสอบว่าเป็นหัวหน้าหรือไม่ - ใช้ user จาก context แทน userData
+  // ตรวจสอบว่าเป็นหัวหน้าหรือไม่
   const isManager = useMemo(() => user?.role === 'manager', [user])
   const teamStats = useMemo(() => isManager ? getTeamStats() : null, [isManager, getTeamStats])
   const notifications = useMemo(() => isManager ? getUnreadNotifications() : null, [isManager, getUnreadNotifications])
+
+  // คำนวณวันลาคงเหลือของผู้ใช้
+  const leaveBalance = useMemo(() => {
+    const sickDaysUsed = getUsedDays('ลาป่วย')
+    const personalDaysUsed = getUsedDays('ลากิจ')
+    const vacationDaysUsed = getUsedDays('ลาพักร้อน')
+    const maternityDaysUsed = getUsedDays('ลาคลอด')
+
+    const sickDaysRemaining = leaveQuota['ลาป่วย'].totalDays - sickDaysUsed
+    const personalDaysRemaining = leaveQuota['ลากิจ'].totalDays - personalDaysUsed
+    const vacationDaysRemaining = leaveQuota['ลาพักร้อน'].totalDays - vacationDaysUsed
+    const maternityDaysRemaining = leaveQuota['ลาคลอด'].totalDays - maternityDaysUsed
+
+    const totalRemaining = sickDaysRemaining + personalDaysRemaining + vacationDaysRemaining + maternityDaysRemaining
+    const totalQuota = leaveQuota['ลาป่วย'].totalDays + leaveQuota['ลากิจ'].totalDays + 
+                       leaveQuota['ลาพักร้อน'].totalDays + leaveQuota['ลาคลอด'].totalDays
+
+    return {
+      total: totalRemaining,
+      quota: totalQuota,
+      breakdown: {
+        sick: { used: sickDaysUsed, remaining: sickDaysRemaining, total: leaveQuota['ลาป่วย'].totalDays },
+        personal: { used: personalDaysUsed, remaining: personalDaysRemaining, total: leaveQuota['ลากิจ'].totalDays },
+        vacation: { used: vacationDaysUsed, remaining: vacationDaysRemaining, total: leaveQuota['ลาพักร้อน'].totalDays },
+        maternity: { used: maternityDaysUsed, remaining: maternityDaysRemaining, total: leaveQuota['ลาคลอด'].totalDays }
+      }
+    }
+  }, [getUsedDays, leaveQuota])
+
+  // กิจกรรมที่เกี่ยวข้องกับผู้ใช้
+  const userEvents = useMemo(() => {
+    const events = getEventsForUser(user?.department, user?.position)
+    return events.filter(event => event.status === 'ongoing')
+  }, [getEventsForUser, user])
+
+  // สร้างการแจ้งเตือนจากหลายแหล่ง
+  const userNotifications = useMemo(() => {
+    const notifs = []
+
+    // 1. การแจ้งเตือนเกี่ยวกับการลา
+    const recentLeaves = leaveList
+      .filter(leave => leave.id)
+      .sort((a, b) => b.id - a.id)
+      .slice(0, 3)
+
+    recentLeaves.forEach(leave => {
+      if (leave.status === 'อนุมัติ') {
+        notifs.push({
+          id: `leave-approved-${leave.id}`,
+          title: `✅ การลา${leave.leaveType}ของคุณได้รับการอนุมัติ`,
+          description: `ช่วงเวลา: ${leave.period}`,
+          date: new Date(leave.id).toLocaleDateString('th-TH'),
+          type: 'success',
+          category: 'leave'
+        })
+      } else if (leave.status === 'ไม่อนุมัติ') {
+        notifs.push({
+          id: `leave-rejected-${leave.id}`,
+          title: `❌ การลา${leave.leaveType}ของคุณไม่ได้รับการอนุมัติ`,
+          description: `ช่วงเวลา: ${leave.period}`,
+          date: new Date(leave.id).toLocaleDateString('th-TH'),
+          type: 'error',
+          category: 'leave'
+        })
+      } else if (leave.status === 'รออนุมัติ') {
+        notifs.push({
+          id: `leave-pending-${leave.id}`,
+          title: `⏳ การลา${leave.leaveType}กำลังรออนุมัติ`,
+          description: `ช่วงเวลา: ${leave.period}`,
+          date: new Date(leave.id).toLocaleDateString('th-TH'),
+          type: 'info',
+          category: 'leave'
+        })
+      }
+    })
+
+    // 2. การแจ้งเตือนกิจกรรมใหม่
+    const upcomingEvents = userEvents
+      .sort((a, b) => {
+        const dateA = a.date.split('/').reverse().join('')
+        const dateB = b.date.split('/').reverse().join('')
+        return dateA.localeCompare(dateB)
+      })
+      .slice(0, 3)
+
+    upcomingEvents.forEach(event => {
+      notifs.push({
+        id: `event-${event.id}`,
+        title: `🎯 กิจกรรมใหม่: ${event.name}`,
+        description: `${event.date} เวลา ${event.startTime} - ${event.endTime}`,
+        date: event.date,
+        type: 'info',
+        category: 'event'
+      })
+    })
+
+    // 3. เตือนวันลาใกล้หมด
+    if (leaveBalance.breakdown.vacation.remaining <= 3 && leaveBalance.breakdown.vacation.remaining > 0) {
+      notifs.push({
+        id: 'leave-warning-vacation',
+        title: '⚠️ วันลาพักร้อนเหลือน้อย',
+        description: `คุณมีวันลาพักร้อนเหลือเพียง ${leaveBalance.breakdown.vacation.remaining} วัน`,
+        date: new Date().toLocaleDateString('th-TH'),
+        type: 'warning',
+        category: 'system'
+      })
+    }
+
+    // 4. เตือนการเข้างานสาย (ถ้ามี)
+    if (attendance.status === 'late') {
+      notifs.push({
+        id: 'attendance-late-warning',
+        title: '⏰ คุณเข้างานสายในวันนี้',
+        description: 'กรุณาตรวจสอบเวลาการเข้างานของคุณ',
+        date: new Date().toLocaleDateString('th-TH'),
+        type: 'warning',
+        category: 'attendance'
+      })
+    }
+
+    // 5. แจ้งเตือนทั่วไป
+    notifs.push({
+      id: 'system-reminder',
+      title: '💡 อย่าลืมเช็คอินเข้างานทุกวัน',
+      description: 'การเช็คอินเข้างานต้องอยู่ในพื้นที่อนุญาตเท่านั้น',
+      date: new Date().toLocaleDateString('th-TH'),
+      type: 'info',
+      category: 'system'
+    })
+
+    // เรียงตามวันที่ล่าสุด
+    return notifs.sort((a, b) => {
+      // Convert Thai date string to comparable format
+      const parseDate = (dateStr) => {
+        if (dateStr.includes('/')) {
+          const [day, month, year] = dateStr.split('/')
+          return new Date(year, month - 1, day).getTime()
+        }
+        return new Date(dateStr).getTime()
+      }
+      return parseDate(b.date) - parseDate(a.date)
+    }).slice(0, 8) // แสดงสูงสุด 8 รายการ
+  }, [leaveList, userEvents, leaveBalance, attendance])
+
+  // ฟังก์ชันคำนวณระยะทาง (Haversine formula)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3 // รัศมีโลกเป็นเมตร
+    const φ1 = lat1 * Math.PI / 180
+    const φ2 = lat2 * Math.PI / 180
+    const Δφ = (lat2 - lat1) * Math.PI / 180
+    const Δλ = (lon2 - lon1) * Math.PI / 180
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+    return R * c // ระยะทางเป็นเมตร
+  }
+
+  // ตรวจสอบตำแหน่งปัจจุบัน
+  useEffect(() => {
+    if (navigator.geolocation) {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const userLat = position.coords.latitude
+          const userLon = position.coords.longitude
+          
+          setCurrentLocation({ lat: userLat, lon: userLon })
+
+          // ตรวจสอบว่าอยู่ในพื้นที่อนุญาตหรือไม่
+          const isInside = locations.some(location => {
+            if (location.status !== 'active') return false
+            
+            const distance = calculateDistance(
+              userLat,
+              userLon,
+              location.latitude,
+              location.longitude
+            )
+            
+            return distance <= location.radius
+          })
+          
+          setIsWithinAllowedArea(isInside)
+          setCheckingLocation(false)
+        },
+        (error) => {
+          setCheckingLocation(false)
+          // ในกรณี error ให้อนุญาตใช้งานได้ (เพื่อไม่ให้บล็อกการใช้งาน)
+          setIsWithinAllowedArea(true)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 5000
+        }
+      )
+
+      return () => navigator.geolocation.clearWatch(watchId)
+    } else {
+      setCheckingLocation(false)
+      setIsWithinAllowedArea(true)
+    }
+  }, [locations])
 
   // Hide loading เมื่อ component พร้อม render
   useEffect(() => {
@@ -56,19 +270,7 @@ function UserDashboard() {
       employeeId: user?.employeeId || user?.username || '',
       department: user?.department || '',
       position: user?.position || ''
-    },
-    leave: {
-      remaining: 10,
-      used: 2,
-      total: 12
-    },
-    notifications: [
-      { id: 1, title: 'การลาได้รับการอนุมัติ', date: '2024-01-15', type: 'success' },
-      { id: 2, title: 'มีกิจกรรมใหม่', date: '2024-01-14', type: 'info' },
-      { id: 3, title: 'ระบบจะปิดปรับปรุงในวันอาทิตย์', date: '2024-01-10', type: 'info' },
-      { id: 4, title: 'อย่าลืมเช็คอินเข้างานทุกวัน', date: '2024-01-09', type: 'info' },
-      { id: 5, title: 'ประกาศวันหยุดพิเศษ', date: '2024-01-08', type: 'success' }
-    ]
+    }
   }
 
   // ใช้ attendance จาก context แทน mock data
@@ -78,6 +280,9 @@ function UserDashboard() {
     : 'bg-white hover:shadow-xl'
   const buttonTextColor = isCheckedIn ? 'text-white' : 'text-[#48CBFF]'
   const buttonText = isCheckedIn ? 'ออกงาน' : 'เข้างาน'
+  
+  // ปิดการใช้งานปุ่มถ้าไม่ได้อยู่ในพื้นที่อนุญาต
+  const isButtonDisabled = !isWithinAllowedArea && !checkingLocation
 
   const formatDate = (date) => {
     return date.toLocaleDateString('th-TH', {
@@ -158,6 +363,29 @@ function UserDashboard() {
       {/* Check In/Out Card */}
       <div className="bg-gradient-to-br from-[#48CBFF] to-[#3AB4E8] rounded-2xl shadow-lg p-6 text-white">
         <h3 className="text-xl font-bold mb-4">บันทึกเวลา</h3>
+        
+        {/* Location Status Banner */}
+        {checkingLocation ? (
+          <div className="mb-4 bg-white/20 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span className="text-sm">กำลังตรวจสอบตำแหน่งของคุณ...</span>
+          </div>
+        ) : !isWithinAllowedArea ? (
+          <div className="mb-4 bg-red-500/30 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 border border-red-300/50">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span className="text-sm">⚠️ คุณอยู่นอกพื้นที่อนุญาต - ไม่สามารถเช็คอินได้</span>
+          </div>
+        ) : (
+          <div className="mb-4 bg-green-500/30 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 border border-green-300/50">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm">✅ คุณอยู่ในพื้นที่อนุญาต - สามารถเช็คอินได้</span>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -175,14 +403,31 @@ function UserDashboard() {
           </div>
           <div className="flex flex-col gap-2">
             <Link 
-              to="/user/take-photo"
-              className={`${buttonColor} ${buttonTextColor} px-8 py-3 rounded-full font-bold shadow-lg transform hover:scale-105 transition-all inline-block text-center`}
+              to={isButtonDisabled ? "#" : "/user/take-photo"}
+              onClick={(e) => {
+                if (isButtonDisabled) {
+                  e.preventDefault()
+                  alert('❌ คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้')
+                }
+              }}
+              className={`${buttonColor} ${buttonTextColor} px-8 py-3 rounded-full font-bold shadow-lg transform transition-all inline-block text-center ${
+                isButtonDisabled ? 'opacity-50 cursor-not-allowed hover:scale-100' : 'hover:scale-105'
+              }`}
             >
               {buttonText}
             </Link>
             <button
-              onClick={() => setShowBuddyCheckIn(true)}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-white/30 transition-all border border-white/30"
+              onClick={() => {
+                if (isButtonDisabled) {
+                  alert('❌ คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คชื่อแทนเพื่อนได้')
+                } else {
+                  setShowBuddyCheckIn(true)
+                }
+              }}
+              disabled={isButtonDisabled}
+              className={`bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-full text-sm font-semibold border border-white/30 transition-all ${
+                isButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/30'
+              }`}
             >
               เช็คชื่อแทนเพื่อน
             </button>
@@ -268,8 +513,24 @@ function UserDashboard() {
             </div>
           </div>
           <h3 className="text-gray-600 text-sm mb-1">วันลาคงเหลือ</h3>
-          <p className="text-3xl font-bold text-gray-800">{mockData.leave.remaining}</p>
-          <p className="text-xs text-gray-500 mt-1">จาก {mockData.leave.total} วัน</p>
+          <p className="text-3xl font-bold text-gray-800">{leaveBalance.total}</p>
+          <p className="text-xs text-gray-500 mt-1">จาก {leaveBalance.quota} วัน</p>
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-600">ลาป่วย:</span>
+                <span className="font-semibold text-blue-600">{leaveBalance.breakdown.sick.remaining}/{leaveBalance.breakdown.sick.total}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">ลากิจ:</span>
+                <span className="font-semibold text-green-600">{leaveBalance.breakdown.personal.remaining}/{leaveBalance.breakdown.personal.total}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">ลาพักร้อน:</span>
+                <span className="font-semibold text-orange-600">{leaveBalance.breakdown.vacation.remaining}/{leaveBalance.breakdown.vacation.total}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Events */}
@@ -282,8 +543,21 @@ function UserDashboard() {
             </div>
           </div>
           <h3 className="text-gray-600 text-sm mb-1">กิจกรรม</h3>
-          <p className="text-3xl font-bold text-gray-800">5</p>
-          <p className="text-xs text-gray-500 mt-1">กิจกรรมที่กำลังจะมาถึง</p>
+          <p className="text-3xl font-bold text-gray-800">{userEvents.length}</p>
+          <p className="text-xs text-gray-500 mt-1">กิจกรรมที่เกี่ยวข้อง</p>
+          {userEvents.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <Link 
+                to="/user/event" 
+                className="text-xs text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+              >
+                ดูกิจกรรมทั้งหมด
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -292,26 +566,45 @@ function UserDashboard() {
         <h3 className="text-lg font-bold text-gray-800 mb-4">การแจ้งเตือนล่าสุด</h3>
         <div 
           className={`space-y-3 ${
-            mockData.notifications.length > 3 
+            userNotifications.length > 3 
               ? 'max-h-[300px] overflow-y-auto pr-2' 
               : ''
           }`}
-          style={mockData.notifications.length > 3 ? {
+          style={userNotifications.length > 3 ? {
             scrollbarWidth: 'thin',
             scrollbarColor: '#CBD5E1 #F1F5F9'
           } : {}}
         >
-          {mockData.notifications.length === 0 ? (
+          {userNotifications.length === 0 ? (
             <p className="text-gray-500 text-center py-4">ไม่มีการแจ้งเตือน</p>
           ) : (
-            mockData.notifications.map(notification => (
+            userNotifications.map(notification => (
               <div key={notification.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                  notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+                  notification.type === 'success' ? 'bg-green-500' : 
+                  notification.type === 'error' ? 'bg-red-500' :
+                  notification.type === 'warning' ? 'bg-orange-500' :
+                  'bg-blue-500'
                 }`} />
-                <div className="flex-1">
-                  <p className="text-gray-800 font-medium">{notification.title}</p>
-                  <p className="text-xs text-gray-500">{notification.date}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-800 font-medium text-sm leading-snug">{notification.title}</p>
+                  {notification.description && (
+                    <p className="text-xs text-gray-600 mt-1">{notification.description}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs text-gray-500">{notification.date}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      notification.category === 'leave' ? 'bg-blue-100 text-blue-700' :
+                      notification.category === 'event' ? 'bg-orange-100 text-orange-700' :
+                      notification.category === 'attendance' ? 'bg-purple-100 text-purple-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {notification.category === 'leave' ? 'การลา' :
+                       notification.category === 'event' ? 'กิจกรรม' :
+                       notification.category === 'attendance' ? 'เข้างาน' :
+                       'ระบบ'}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))
