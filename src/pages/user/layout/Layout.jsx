@@ -162,7 +162,7 @@ function Layout() {
       {/* Click outside to close dropdown */}
       {showProfileMenu && (
         <div 
-          className="fixed inset-0 z-30" 
+          className="fixed inset-0 z-60" 
           onClick={() => setShowProfileMenu(false)}
         />
       )}
