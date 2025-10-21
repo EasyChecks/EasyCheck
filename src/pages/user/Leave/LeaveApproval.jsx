@@ -4,6 +4,7 @@ import { usersData } from '../../../data/usersData';
 import { useLoading } from '../../../contexts/useLoading';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
 import SuccessDialog from '../../../components/common/SuccessDialog';
+import { createPortal } from 'react-dom';
 
 function LeaveApproval() {
   const { leaveList, updateLeaveStatus } = useLeave();
@@ -42,6 +43,31 @@ function LeaveApproval() {
       document.body.style.overflow = 'unset';
     };
   }, [showRejectModal, showCalendar]);
+
+  // Small PageModal helper to ensure blur/dim covers entire app
+  const PageModal = ({ children, onClose }) => {
+    const handleBackdropClick = (e) => {
+      if (e.target === e.currentTarget) onClose?.();
+    };
+
+    useEffect(() => {
+      const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+      document.addEventListener('keydown', onKey);
+      return () => document.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    const node = (
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+        onClick={handleBackdropClick}
+      >
+        {children}
+      </div>
+    );
+
+    if (typeof document !== 'undefined') return createPortal(node, document.body);
+    return node;
+  };
 
   // กรองเฉพาะใบลาที่รออนุมัติ - ดึงจาก LeaveContext
   const activePendingLeaves = useMemo(() => {
@@ -372,15 +398,7 @@ function LeaveApproval() {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowRejectModal(false);
-              setRejectReason('');
-            }
-          }}
-        >
+        <PageModal onClose={() => { setShowRejectModal(false); setRejectReason(''); }}>
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
             <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white p-6 rounded-t-2xl">
               <h2 className="text-xl font-bold">ไม่อนุมัติใบลา</h2>
@@ -418,19 +436,12 @@ function LeaveApproval() {
               </button>
             </div>
           </div>
-        </div>
+        </PageModal>
       )}
 
       {/* Calendar Modal */}
       {showCalendar && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowCalendar(false);
-            }
-          }}
-        >
+        <PageModal onClose={() => setShowCalendar(false)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
             <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white p-6">
               <div className="flex items-center justify-between mb-2">
@@ -535,7 +546,7 @@ function LeaveApproval() {
               </button>
             </div>
           </div>
-        </div>
+        </PageModal>
       )}
 
       {/* Approve Confirm Dialog */}
