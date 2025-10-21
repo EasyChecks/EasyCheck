@@ -788,9 +788,46 @@ function Mapping() {
 
               {/* Map for selecting location in form */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  เลือกตำแหน่งบนแผนที่ <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    เลือกตำแหน่งบนแผนที่ <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (position) => {
+                            const lat = position.coords.latitude.toFixed(6)
+                            const lon = position.coords.longitude.toFixed(6)
+                            setFormData(prev => ({
+                              ...prev,
+                              latitude: lat,
+                              longitude: lon
+                            }))
+                            alert(`✅ ใช้ตำแหน่งปัจจุบัน:\nLat: ${lat}\nLon: ${lon}`)
+                          },
+                          (error) => {
+                            alert(`❌ ไม่สามารถดึงตำแหน่งได้: ${error.message}`)
+                          },
+                          {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                          }
+                        )
+                      } else {
+                        alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
+                      }
+                    }}
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+                      <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
+                    </svg>
+                    ใช้ตำแหน่งปัจจุบัน
+                  </button>
+                </div>
                 <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300">
                   <MapContainer
                     center={formData.latitude && formData.longitude
@@ -975,9 +1012,46 @@ function Mapping() {
 
                               {/* Inline Map for Editing */}
                               <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                  คลิกบนแผนที่เพื่อเลือกตำแหน่งใหม่ {mapClickEnabled && <span className="text-green-600">(✓ เปิดใช้งาน)</span>}
-                                </label>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="block text-sm font-semibold text-gray-700">
+                                    คลิกบนแผนที่เพื่อเลือกตำแหน่งใหม่ {mapClickEnabled && <span className="text-green-600">(✓ เปิดใช้งาน)</span>}
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (navigator.geolocation) {
+                                        navigator.geolocation.getCurrentPosition(
+                                          (position) => {
+                                            const lat = position.coords.latitude.toFixed(6)
+                                            const lon = position.coords.longitude.toFixed(6)
+                                            setEditFormData(prev => ({
+                                              ...prev,
+                                              latitude: lat,
+                                              longitude: lon
+                                            }))
+                                            alert(`✅ ใช้ตำแหน่งปัจจุบัน:\nLat: ${lat}\nLon: ${lon}`)
+                                          },
+                                          (error) => {
+                                            alert(`❌ ไม่สามารถดึงตำแหน่งได้: ${error.message}`)
+                                          },
+                                          {
+                                            enableHighAccuracy: true,
+                                            timeout: 10000,
+                                            maximumAge: 0
+                                          }
+                                        )
+                                      } else {
+                                        alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
+                                      }
+                                    }}
+                                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+                                      <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
+                                    </svg>
+                                    ใช้ตำแหน่งปัจจุบัน
+                                  </button>
+                                </div>
                                 <div className="relative h-[400px] rounded-lg overflow-hidden border-2 border-green-300">
                                   <MapContainer
                                     center={[parseFloat(currentFormData.latitude), parseFloat(currentFormData.longitude)]}
