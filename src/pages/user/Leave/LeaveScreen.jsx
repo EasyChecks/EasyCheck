@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import LeaveForm from './LeaveForm';
+import LeaveRequestModal from './LeaveRequestModal';
 import Nav from '../../../components/user/nav/Nav';
 import LeaveList from '../../../components/user/Leave/LeaveList';
 import { useLeave } from '../../../contexts/LeaveContext';
@@ -37,7 +37,7 @@ function LeaveScreen() {
 
       <Nav />
       
-      {isModalOpen && <LeaveForm closeModal={() => setIsModalOpen(false)} />}
+      {isModalOpen && <LeaveRequestModal closeModal={() => setIsModalOpen(false)} />}
     </div>
   );
 }
