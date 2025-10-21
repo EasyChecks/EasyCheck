@@ -3,8 +3,8 @@ import { useLeave } from '../../../contexts/LeaveContext';
 import AlertDialog from '../../../components/common/AlertDialog';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
 
-function LeaveForm({ closeModal }) {
-  const { addLeave, calculateDays } = useLeave();
+function LeaveRequestModal({ closeModal }) {
+  const { addLeave, calculateDays, validateLeaveRequest, getLeaveRules } = useLeave();
 
   // Get today's date in yyyy-mm-dd format
   const getTodayDate = () => {
@@ -26,6 +26,12 @@ function LeaveForm({ closeModal }) {
     documents: []
   });
 
+  // Display dates in dd/mm/yyyy format
+  const [displayDates, setDisplayDates] = useState({
+    startDate: '',
+    endDate: ''
+  });
+
   // Dialog states (prefixed with _ to satisfy ESLint)
   const [_showAlert, setShowAlert] = useState(false);
   const [_alertConfig, setAlertConfig] = useState({
@@ -36,8 +42,22 @@ function LeaveForm({ closeModal }) {
 
   // Convert date format from yyyy-mm-dd to dd/mm/yyyy
   const convertDateFormat = (dateStr) => {
+    if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
+  };
+
+  // Convert dd/mm/yyyy to yyyy-mm-dd
+  const convertToISOFormat = (dateStr) => {
+    if (!dateStr) return '';
+    const [day, month, year] = dateStr.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Format date for display (dd/mm/yyyy)
+  const formatDateForDisplay = (isoDate) => {
+    if (!isoDate) return '';
+    return convertDateFormat(isoDate);
   };
 
   // Calculate total days
@@ -73,6 +93,31 @@ function LeaveForm({ closeModal }) {
   // Handle file upload
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+    
+    // Check file types
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+    
+    const invalidFiles = files.filter(file => {
+      const isValidType = allowedTypes.includes(file.type);
+      const hasValidExtension = allowedExtensions.some(ext => 
+        file.name.toLowerCase().endsWith(ext)
+      );
+      return !isValidType && !hasValidExtension;
+    });
+
+    if (invalidFiles.length > 0) {
+      const invalidNames = invalidFiles.map(f => f.name).join(', ');
+      showAlertDialog(
+        'error', 
+        'ไฟล์ไม่ถูกต้อง', 
+        `ไฟล์ต่อไปนี้ไม่รองรับ: ${invalidNames}\n\nรองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .pdf เท่านั้น`
+      );
+      // Clear the input
+      e.target.value = '';
+      return;
+    }
+
     const fileNames = files.map(file => file.name);
     setFormData({ ...formData, documents: fileNames });
   };
@@ -134,6 +179,15 @@ function LeaveForm({ closeModal }) {
       };
     }
 
+    // Validate against leave rules
+    const validation = validateLeaveRequest(leaveData);
+    if (!validation.isValid) {
+      // Show validation errors
+      const errorMessage = validation.errors.join('\n');
+      showAlertDialog('error', 'ไม่สามารถส่งคำขอลาได้', errorMessage);
+      return;
+    }
+
     addLeave(leaveData);
     showAlertDialog('success', 'สำเร็จ!', 'ส่งคำขอลาเรียบร้อยแล้ว');
 
@@ -148,9 +202,22 @@ function LeaveForm({ closeModal }) {
       <style>{`
         input[type="date"]::-webkit-calendar-picker-indicator {
           cursor: pointer;
+          position: absolute;
+          right: 12px;
+          z-index: 1;
         }
         input[type="date"] {
           position: relative;
+          color: transparent;
+        }
+        input[type="date"]:focus {
+          color: transparent;
+        }
+        input[type="date"]::-webkit-datetime-edit {
+          color: transparent;
+        }
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+          color: transparent;
         }
       `}</style>
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl my-auto">
@@ -188,6 +255,28 @@ function LeaveForm({ closeModal }) {
               <option value="ลาพักร้อน">ลาพักร้อน</option>
               <option value="ลาคลอด">ลาคลอด</option>
             </select>
+
+            {/* Show leave rules when type is selected */}
+            {formData.leaveType && (
+              <div className="mt-3 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 sm:p-4">
+                <div className="flex items-start gap-2 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-amber-800 text-sm sm:text-base mb-2">เงื่อนไขการลา{formData.leaveType}</h4>
+                    <ul className="space-y-1.5">
+                      {getLeaveRules(formData.leaveType).map((rule, index) => (
+                        <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-amber-900">
+                          <span className="text-amber-600 mt-0.5">•</span>
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Leave Mode Selection */}
@@ -227,13 +316,24 @@ function LeaveForm({ closeModal }) {
                 <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
                   วันที่เริ่มต้น <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => {
+                      setFormData({ ...formData, startDate: e.target.value });
+                      setDisplayDates({ ...displayDates, startDate: formatDateForDisplay(e.target.value) });
+                    }}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
+                    required
+                    style={{ colorScheme: 'light' }}
+                  />
+                  {displayDates.startDate && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-sm sm:text-base text-gray-700 bg-white pr-2">
+                      {displayDates.startDate}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* End Date */}
@@ -241,27 +341,38 @@ function LeaveForm({ closeModal }) {
                 <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
                   วันที่สิ้นสุด <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => {
+                      setFormData({ ...formData, endDate: e.target.value });
+                      setDisplayDates({ ...displayDates, endDate: formatDateForDisplay(e.target.value) });
+                    }}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
+                    required
+                    style={{ colorScheme: 'light' }}
+                  />
+                  {displayDates.endDate && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-sm sm:text-base text-gray-700 bg-white pr-2">
+                      {displayDates.endDate}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
             /* Hourly Mode - Date and Time */
             <div className="space-y-3 sm:space-y-4">
-              {/* Date - Locked to Today */}
+              {/* Date - Display Today in dd/mm/yyyy */}
               <div>
                 <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
                   วันที่ลา <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
-                    type="date"
-                    value={getTodayDate()}
+                    type="text"
+                    value={formatDateForDisplay(getTodayDate())}
                     readOnly
                     className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
                     required
@@ -370,14 +481,39 @@ function LeaveForm({ closeModal }) {
           {/* Document Upload */}
           <div>
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
-              เอกสารแนบ (ถ้ามี)
+              เอกสารแนบ 
+              {formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday' && getTotalDays() >= 3 && (
+                <span className="text-red-500"> * (จำเป็นสำหรับลาป่วย 3 วันขึ้นไป)</span>
+              )}
             </label>
+
+            {/* Warning for sick leave 3+ days */}
+            {formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday' && getTotalDays() >= 3 && (
+              <div className="mb-2 bg-red-50 border-2 border-red-200 rounded-lg p-2 sm:p-3">
+                <div className="flex items-start gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <p className="text-xs sm:text-sm text-red-800 font-medium">
+                    การลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องแนบใบรับรองแพทย์
+                  </p>
+                </div>
+              </div>
+            )}
+
             <input
               type="file"
               multiple
+              accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
               onChange={handleFileChange}
               className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 file:cursor-pointer file:font-medium"
             />
+            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              รองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .pdf เท่านั้น
+            </p>
             {formData.documents.length > 0 && (
               <div className="mt-2 space-y-1">
                 {formData.documents.map((doc, index) => (
@@ -414,4 +550,4 @@ function LeaveForm({ closeModal }) {
   );
 }
 
-export default LeaveForm;
+export default LeaveRequestModal;
