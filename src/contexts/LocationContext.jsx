@@ -36,7 +36,27 @@ const initialLocations = [
 
 // Provider Component
 export function LocationProvider({ children }) {
-  const [locations, setLocations] = useState(initialLocations)
+  // อ่านข้อมูลจาก localStorage หรือใช้ค่าเริ่มต้นถ้าไม่มี
+  const [locations, setLocations] = useState(() => {
+    try {
+      const savedLocations = localStorage.getItem('locations')
+      if (savedLocations) {
+        return JSON.parse(savedLocations)
+      }
+    } catch (error) {
+      console.error('Error loading locations from localStorage:', error)
+    }
+    return initialLocations
+  })
+
+  // บันทึกลง localStorage ทุกครั้งที่มีการเปลี่ยนแปลง
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('locations', JSON.stringify(locations))
+    } catch (error) {
+      console.error('Error saving locations to localStorage:', error)
+    }
+  }, [locations])
 
   // Add new location
   const addLocation = (location) => {
