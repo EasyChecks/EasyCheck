@@ -3,6 +3,54 @@ import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } 
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../../contexts/LocationContext'
+import PageModal from '../../../components/common/PageModal'
+
+// Inline styles for animations
+const styles = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes bounceIn {
+    from {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+`
+
+// Inject styles into document
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style')
+  styleSheet.textContent = styles
+  if (!document.head.querySelector('style[data-createattendance-styles]')) {
+    styleSheet.setAttribute('data-createattendance-styles', 'true')
+    document.head.appendChild(styleSheet)
+  }
+}
 
 // Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl
@@ -326,7 +374,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-auto pr-2">
           <div>
-            <label className="block text-sm text-gray-700 mb-1">กับ (ทีม)</label>
+            <label className="block text-sm text-gray-700 mb-1">ชื่อทีม</label>
             <input value={team} onChange={e => setTeam(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="ทีม" />
           </div>
 
@@ -609,9 +657,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
       {/* Map Modal */}
       {showMapModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMapModal(false)} />
-          
+        <PageModal onClose={() => setShowMapModal(false)}>
           <div className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden" style={{ maxHeight: '90vh' }}>
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
@@ -841,7 +887,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               </div>
             </div>
           </div>
-        </div>
+        </PageModal>
       )}
 
       {/* Warning Popup - กรอกข้อมูลก่อนเปิดแผนที่ */}

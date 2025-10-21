@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const ConfirmDialog = ({ 
   isOpen, 
@@ -69,9 +70,18 @@ const ConfirmDialog = ({
     }
   };
 
-  return (
+  // close on Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const dialog = (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn"
       onClick={handleBackdropClick}
     >
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full transform transition-all animate-scaleIn">
@@ -113,6 +123,13 @@ const ConfirmDialog = ({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(dialog, document.body);
+  }
+
+  return dialog;
+
 };
 
 export default ConfirmDialog;
