@@ -9,17 +9,17 @@ const Toast = ({ message, type, onClose }) => {
 
     const icons = {
         error: (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         ),
         warning: (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
         ),
         success: (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         )
@@ -45,13 +45,13 @@ const Toast = ({ message, type, onClose }) => {
                         {icons[type]}
                     </div>
                     <div className="flex-1">
-                        <p className="font-semibold text-sm leading-relaxed">{message}</p>
+                        <p className="text-sm font-semibold leading-relaxed">{message}</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="absolute text-gray-400 transition-colors top-3 right-3 hover:text-gray-600"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -89,19 +89,19 @@ const HistoryDetailModal = ({ notification, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-scaleIn">
+            <div className="w-full max-w-3xl overflow-hidden bg-white shadow-2xl rounded-2xl animate-scaleIn">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+                <div className="p-6 text-white bg-gradient-to-r from-blue-600 to-blue-700">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold">รายละเอียดการแจ้งเตือน</h2>
-                            <p className="text-blue-100 text-sm mt-1">{notification.timestamp}</p>
+                            <p className="mt-1 text-sm text-blue-100">{notification.timestamp}</p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                            className="flex items-center justify-center w-10 h-10 transition-colors rounded-full bg-white/20 hover:bg-white/30"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -111,21 +111,21 @@ const HistoryDetailModal = ({ notification, onClose }) => {
                 {/* Content */}
                 <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
                     {/* Title */}
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                        <p className="text-sm font-semibold text-gray-600 mb-2">หัวข้อ</p>
-                        <p className="text-gray-800 font-semibold text-lg">{notification.title}</p>
+                    <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
+                        <p className="mb-2 text-sm font-semibold text-gray-600">หัวข้อ</p>
+                        <p className="text-lg font-semibold text-gray-800">{notification.title}</p>
                     </div>
 
                     {/* Recipients */}
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                        <p className="text-sm font-semibold text-gray-600 mb-2">ผู้รับ</p>
+                    <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
+                        <p className="mb-2 text-sm font-semibold text-gray-600">ผู้รับ</p>
                         <p className="text-gray-800">{getRecipientText()}</p>
-                        <p className="text-sm text-gray-500 mt-1">จำนวน {notification.recipientCount} คน</p>
+                        <p className="mt-1 text-sm text-gray-500">จำนวน {notification.recipientCount} คน</p>
                     </div>
 
                     {/* Channels */}
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                        <p className="text-sm font-semibold text-gray-600 mb-3">ช่องทางการส่ง</p>
+                    <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
+                        <p className="mb-3 text-sm font-semibold text-gray-600">ช่องทางการส่ง</p>
                         <div className="flex flex-wrap gap-2">
                             {getChannelIcons().map((channel, index) => (
                                 <div key={index} className={`${channel.color} text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium`}>
@@ -137,27 +137,27 @@ const HistoryDetailModal = ({ notification, onClose }) => {
                     </div>
 
                     {/* Message */}
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                        <p className="text-sm font-semibold text-gray-600 mb-2">ข้อความ</p>
-                        <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{notification.message}</p>
+                    <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
+                        <p className="mb-2 text-sm font-semibold text-gray-600">ข้อความ</p>
+                        <p className="leading-relaxed text-gray-800 whitespace-pre-wrap">{notification.message}</p>
                     </div>
 
                     {/* Status */}
-                    <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                    <div className="p-4 border border-green-200 bg-green-50 rounded-xl">
                         <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <p className="text-green-800 font-semibold">ส่งสำเร็จ</p>
+                            <p className="font-semibold text-green-800">ส่งสำเร็จ</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <div className="p-4 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-colors"
+                        className="w-full py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
                     >
                         ปิด
                     </button>
@@ -195,35 +195,35 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-white">
+            <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+                <div className="p-6 text-white bg-gradient-to-r from-blue-500 to-blue-600">
                     <h3 className="text-xl font-bold">ยืนยันการส่งแจ้งเตือน</h3>
                 </div>
                 <div className="p-6 space-y-4">
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
                         <div className="flex items-start gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
-                                <p className="font-semibold text-orange-800">คุณกำลังจะส่งแจ้งเตือนไปยัง</p>
-                                <p className="text-orange-700 mt-1"><strong>{getRecipientText()}</strong></p>
-                                <p className="text-sm text-orange-600 mt-2">ผ่านช่องทาง: <strong>{getSelectedChannels().join(', ')}</strong></p>
+                                <p className="font-semibold text-blue-800">คุณกำลังจะส่งแจ้งเตือนไปยัง</p>
+                                <p className="mt-1 text-blue-700"><strong>{getRecipientText()}</strong></p>
+                                <p className="mt-2 text-sm text-blue-600">ผ่านช่องทาง: <strong>{getSelectedChannels().join(', ')}</strong></p>
                             </div>
                         </div>
                     </div>
-                    <p className="text-gray-600 text-sm">การแจ้งเตือนจะถูกส่งไปยังผู้รับทุกคนในกลุ่มที่เลือกทันที</p>
+                    <p className="text-sm text-gray-600">การแจ้งเตือนจะถูกส่งไปยังผู้รับทุกคนในกลุ่มที่เลือกทันที</p>
                 </div>
-                <div className="p-4 bg-gray-50 border-t border-gray-200 flex gap-3">
+                <div className="flex gap-3 p-4 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-colors"
+                        className="flex-1 py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
                     >
                         ยกเลิก
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all shadow-lg"
+                        className="flex-1 py-3 font-semibold text-white transition-all shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl"
                     >
                         ยืนยันและส่ง
                     </button>
@@ -242,13 +242,13 @@ const SuccessModal = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-full max-w-sm p-8 text-center bg-white shadow-2xl rounded-2xl">
+                <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">ส่งสำเร็จ!</h3>
+                <h3 className="mb-2 text-2xl font-bold text-gray-800">ส่งสำเร็จ!</h3>
                 <p className="text-gray-600">แจ้งเตือนถูกส่งเรียบร้อยแล้ว</p>
             </div>
         </div>
@@ -268,24 +268,24 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
     return (
         <div
             onClick={onClick}
-            className="bg-white rounded-xl p-5 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer group"
+            className="p-5 transition-all bg-white border border-gray-200 cursor-pointer rounded-xl hover:border-blue-300 hover:shadow-lg group"
         >
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                    <h3 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">
+                    <h3 className="font-bold text-gray-800 transition-colors group-hover:text-blue-600 line-clamp-1">
                         {notification.title}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">{notification.timestamp}</p>
+                    <p className="mt-1 text-sm text-gray-500">{notification.timestamp}</p>
                 </div>
                 <div className="text-2xl">{getChannelIcons()}</div>
             </div>
-            <p className="text-gray-600 text-sm line-clamp-2 mb-3">{notification.message}</p>
+            <p className="mb-3 text-sm text-gray-600 line-clamp-2">{notification.message}</p>
             <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-500">
                     ส่งถึง {notification.recipientCount} คน
                 </span>
-                <span className="text-green-600 text-xs font-semibold flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     ส่งแล้ว
@@ -520,37 +520,37 @@ function GroupNotificationScreen() {
                 {/* Header */}
                 <header className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="text-white h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold text-gray-800">การแจ้งเตือนแบบกลุ่ม</h1>
-                            <p className="text-gray-600 mt-1">ส่งข้อความแจ้งเตือนไปยังกลุ่มเป้าหมายผ่าน LINE, SMS และ Email</p>
+                            <p className="mt-1 text-gray-600">ส่งข้อความแจ้งเตือนไปยังกลุ่มเป้าหมายผ่าน LINE, SMS และ Email</p>
                         </div>
                     </div>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {/* ฟอร์มส่งแจ้งเตือน */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="space-y-6 lg:col-span-2">
                         {/* Card หลัก */}
-                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
-                                <h2 className="text-xl font-bold flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+                            <div className="p-6 text-white bg-gradient-to-r from-blue-600 to-blue-700">
+                                <h2 className="flex items-center gap-2 text-xl font-bold">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                                     </svg>
                                     สร้างข้อความแจ้งเตือน
                                 </h2>
-                                <p className="text-blue-100 text-sm mt-1">กรอกข้อมูลและเลือกกลุ่มเป้าหมาย</p>
+                                <p className="mt-1 text-sm text-blue-100">กรอกข้อมูลและเลือกกลุ่มเป้าหมาย</p>
                             </div>
 
                             <div className="p-6 space-y-5">
                                 {/* หัวข้อ */}
                                 <div>
-                                    <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label htmlFor="title" className="block mb-2 text-sm font-semibold text-gray-700">
                                         หัวข้อ <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -569,8 +569,8 @@ function GroupNotificationScreen() {
                                         }`}
                                     />
                                     {fieldErrors.title && (
-                                        <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <p className="flex items-center gap-1 mt-1 text-xs text-red-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             กรุณากรอกหัวข้อ
@@ -580,7 +580,7 @@ function GroupNotificationScreen() {
 
                                 {/* เลือกผู้รับ */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label className="block mb-2 text-sm font-semibold text-gray-700">
                                         เลือกผู้รับ <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative" ref={dropdownRef}>
@@ -606,19 +606,19 @@ function GroupNotificationScreen() {
                                             </svg>
                                         </button>
                                         {fieldErrors.recipients && (
-                                            <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <p className="flex items-center gap-1 mt-1 text-xs text-red-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 กรุณาเลือกผู้รับ
                                             </p>
                                         )}
                                         {isDropdownOpen && (
-                                            <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl">
-                                                <ul className="p-2 space-y-1 max-h-64 overflow-y-auto">
+                                            <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 shadow-xl rounded-xl">
+                                                <ul className="p-2 space-y-1 overflow-y-auto max-h-64">
                                                     {recipientOptions.map(option => (
                                                         <li key={option.value}>
-                                                            <label className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors group">
+                                                            <label className="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer hover:bg-blue-50 group">
                                                                 <div className="flex items-center">
                                                                     <input
                                                                         type="checkbox"
@@ -629,11 +629,11 @@ function GroupNotificationScreen() {
                                                                         }}
                                                                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                                     />
-                                                                    <span className="ml-3 text-gray-800 font-medium group-hover:text-blue-600">
+                                                                    <span className="ml-3 font-medium text-gray-800 group-hover:text-blue-600">
                                                                         {option.label}
                                                                     </span>
                                                                 </div>
-                                                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                                                <span className="px-2 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
                                                                     {option.count} คน
                                                                 </span>
                                                             </label>
@@ -647,7 +647,7 @@ function GroupNotificationScreen() {
 
                                 {/* ข้อความ */}
                                 <div>
-                                    <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label htmlFor="message" className="block mb-2 text-sm font-semibold text-gray-700">
                                         ข้อความแจ้งเตือน <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
@@ -668,15 +668,15 @@ function GroupNotificationScreen() {
                                     <div className="flex items-center justify-between mt-1">
                                         <div>
                                             {fieldErrors.message && (
-                                                <p className="text-red-600 text-xs flex items-center gap-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <p className="flex items-center gap-1 text-xs text-red-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     กรุณากรอกข้อความ
                                                 </p>
                                             )}
                                         </div>
-                                        <p className={`text-sm ${message.length < 10 && message.length > 0 ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>
+                                        <p className={`text-sm ${message.length < 10 && message.length > 0 ? 'text-blue-500 font-semibold' : 'text-gray-500'}`}>
                                             {message.length} ตัวอักษร
                                             {message.length > 0 && message.length < 10 && ' (ต้องการอย่างน้อย 10)'}
                                         </p>
@@ -685,18 +685,18 @@ function GroupNotificationScreen() {
 
                                 {/* เลือกช่องทางการส่ง */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                    <label className="block mb-3 text-sm font-semibold text-gray-700">
                                         เลือกช่องทางการส่ง <span className="text-red-500">*</span>
                                     </label>
                                     {fieldErrors.channels && (
-                                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm shake">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <div className="flex items-center gap-2 p-3 mb-3 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50 shake">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             กรุณาเลือกช่องทางการส่งอย่างน้อย 1 ช่องทาง
                                         </div>
                                     )}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -714,8 +714,8 @@ function GroupNotificationScreen() {
                                                 LINE
                                             </span>
                                             {sendChannels.line && (
-                                                <div className="flex items-center gap-1 text-green-600 text-xs">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <div className="flex items-center gap-1 text-xs text-green-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
                                                     เลือกแล้ว
@@ -740,8 +740,8 @@ function GroupNotificationScreen() {
                                                 SMS
                                             </span>
                                             {sendChannels.sms && (
-                                                <div className="flex items-center gap-1 text-blue-600 text-xs">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <div className="flex items-center gap-1 text-xs text-blue-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
                                                     เลือกแล้ว
@@ -766,8 +766,8 @@ function GroupNotificationScreen() {
                                                 Email
                                             </span>
                                             {sendChannels.email && (
-                                                <div className="flex items-center gap-1 text-red-600 text-xs">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <div className="flex items-center gap-1 text-xs text-red-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
                                                     เลือกแล้ว
@@ -780,9 +780,9 @@ function GroupNotificationScreen() {
                                 {/* ปุ่มส่ง */}
                                 <button
                                     onClick={handleSubmit}
-                                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                                    className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl hover:shadow-xl"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                     </svg>
                                     ส่งแจ้งเตือน
@@ -793,10 +793,10 @@ function GroupNotificationScreen() {
 
                     {/* ประวัติการแจ้งเตือน */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 sticky top-6">
-                            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 text-white">
-                                <h2 className="text-lg font-bold flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="sticky overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl top-6">
+                            <div className="p-5 text-white bg-gradient-to-r from-indigo-600 to-indigo-700">
+                                <h2 className="flex items-center gap-2 text-lg font-bold">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     ประวัติการส่ง
@@ -805,13 +805,13 @@ function GroupNotificationScreen() {
 
                             <div className="p-4 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
                                 {notificationHistory.length === 0 ? (
-                                    <div className="text-center py-12">
-                                        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="py-12 text-center">
+                                        <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                             </svg>
                                         </div>
-                                        <p className="text-gray-500 text-sm">ยังไม่มีประวัติการส่ง</p>
+                                        <p className="text-sm text-gray-500">ยังไม่มีประวัติการส่ง</p>
                                     </div>
                                 ) : (
                                     notificationHistory.map((notification) => (
