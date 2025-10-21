@@ -24,7 +24,7 @@ function FitBoundsToMarkers({ locations }) {
       const bounds = L.latLngBounds(
         locations.map(loc => [loc.latitude, loc.longitude])
       )
-      
+
       // Fit map to bounds with padding
       map.fitBounds(bounds, {
         padding: [30, 30],
@@ -43,7 +43,7 @@ function AdminDashboard() {
   const { locations } = useLocations()
   // Use Event Context (for Event locations)
   const { events } = useEvents()
-  
+
   const [chartPeriod, setChartPeriod] = useState('week') // week, month, year
   const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
@@ -81,53 +81,67 @@ function AdminDashboard() {
   // Get current stats based on selected type
   const stats = statsType === 'attendance' ? attendanceStats : eventStats
 
-  // Generate chart data based on selected period
+  // Generate chart data based on selected period and type
   const getChartData = () => {
-    switch (chartPeriod) {
-      case 'week':
-        return [
-          { name: 'จันทร์', value: 275 },
-          { name: 'อังคาร', value: 292 },
-          { name: 'พุธ', value: 268 },
-          { name: 'พฤหัส', value: 290 },
-          { name: 'ศุกร์', value: 295 },
-          { name: 'เสาร์', value: 150 },
-          { name: 'อาทิตย์', value: 120 }
-        ]
-      case 'month':
-        return [
-          { name: 'สัปดาห์ 1', value: 285 },
-          { name: 'สัปดาห์ 2', value: 290 },
-          { name: 'สัปดาห์ 3', value: 282 },
-          { name: 'สัปดาห์ 4', value: 295 }
-        ]
-      case 'year':
-        return [
-          { name: 'ม.ค.', value: 280 },
-          { name: 'ก.พ.', value: 285 },
-          { name: 'มี.ค.', value: 290 },
-          { name: 'เม.ย.', value: 275 },
-          { name: 'พ.ค.', value: 292 },
-          { name: 'มิ.ย.', value: 288 },
-          { name: 'ก.ค.', value: 295 },
-          { name: 'ส.ค.', value: 290 },
-          { name: 'ก.ย.', value: 287 },
-          { name: 'ต.ค.', value: 293 },
-          { name: 'พ.ย.', value: 285 },
-          { name: 'ธ.ค.', value: 280 }
-        ]
-      default:
-        return []
+    const baseData = {
+      week: [
+        { name: 'จันทร์', attendance: 275, event: 45 },
+        { name: 'อังคาร', attendance: 292, event: 52 },
+        { name: 'พุธ', attendance: 268, event: 38 },
+        { name: 'พฤหัส', attendance: 290, event: 48 },
+        { name: 'ศุกร์', attendance: 295, event: 55 },
+        { name: 'เสาร์', attendance: 150, event: 85 },
+        { name: 'อาทิตย์', attendance: 120, event: 72 }
+      ],
+      month: [
+        { name: 'สัปดาห์ 1', attendance: 285, event: 180 },
+        { name: 'สัปดาห์ 2', attendance: 290, event: 195 },
+        { name: 'สัปดาห์ 3', attendance: 282, event: 165 },
+        { name: 'สัปดาห์ 4', attendance: 295, event: 210 }
+      ],
+      year: [
+        { name: 'ม.ค.', attendance: 280, event: 420 },
+        { name: 'ก.พ.', attendance: 285, event: 380 },
+        { name: 'มี.ค.', attendance: 290, event: 450 },
+        { name: 'เม.ย.', attendance: 275, event: 520 },
+        { name: 'พ.ค.', attendance: 292, event: 480 },
+        { name: 'มิ.ย.', attendance: 288, event: 510 },
+        { name: 'ก.ค.', attendance: 295, event: 490 },
+        { name: 'ส.ค.', attendance: 290, event: 460 },
+        { name: 'ก.ย.', attendance: 287, event: 500 },
+        { name: 'ต.ค.', attendance: 293, event: 540 },
+        { name: 'พ.ย.', attendance: 285, event: 470 },
+        { name: 'ธ.ค.', attendance: 280, event: 550 }
+      ]
     }
+
+    return baseData[chartPeriod] || []
   }
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-800 text-white px-4 py-3 rounded-lg shadow-xl border border-gray-700">
-          <p className="text-sm font-medium text-gray-300">{payload[0].payload.name}</p>
-          <p className="text-xl font-bold text-blue-400">{payload[0].value} คน</p>
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-2xl p-4 min-w-[200px]">
+          <p className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-200 pb-2">{label}</p>
+          <div className="space-y-2">
+            {payload.map((entry, index) => (
+              <div key={index} className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="text-sm text-gray-600">
+                    {entry.name === 'attendance' ? 'การเข้างาน' : 'กิจกรรม'}
+                  </span>
+                </div>
+                <span className="text-lg font-bold" style={{ color: entry.color }}>
+                  {entry.value} คน
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )
     }
@@ -165,23 +179,23 @@ function AdminDashboard() {
   // Toggle location details
   const toggleLocationDetails = (locationId) => {
     const wasExpanded = expandedLocationIds.includes(locationId)
-    
-    setExpandedLocationIds(prev => 
-      prev.includes(locationId) 
+
+    setExpandedLocationIds(prev =>
+      prev.includes(locationId)
         ? prev.filter(id => id !== locationId)
         : [...prev, locationId]
     )
-    
+
     // If expanding, scroll to show the element at the top
     if (!wasExpanded) {
       setTimeout(() => {
         const element = locationRefs.current[locationId]
         if (element) {
           const scrollContainer = element.parentElement
-          
+
           if (scrollContainer) {
             const elementTop = element.offsetTop
-            
+
             scrollContainer.scrollTo({
               top: elementTop - 10,
               behavior: 'smooth'
@@ -198,25 +212,25 @@ function AdminDashboard() {
     if (!expandedLocationIds.includes(locationId)) {
       setExpandedLocationIds(prev => [...prev, locationId])
     }
-    
+
     // Scroll to the location card - wait for expansion animation
     setTimeout(() => {
       const element = locationRefs.current[locationId]
       if (element) {
         // Get the scrollable container
         const scrollContainer = element.parentElement
-        
+
         if (scrollContainer) {
           // Calculate the position to scroll to (element's offset from container top)
           const elementTop = element.offsetTop
-          
+
           // Scroll the container so the element is at the top with some padding
           scrollContainer.scrollTo({
             top: elementTop - 10, // 10px padding from top
             behavior: 'smooth'
           })
         }
-        
+
         // Add highlight effect
         element.classList.add('ring-4', 'ring-blue-400')
         setTimeout(() => {
@@ -225,7 +239,7 @@ function AdminDashboard() {
       }
     }, 350) // Wait for expansion animation (300ms) + small buffer
   }
-  
+
   const defaultCenter = [13.7606, 100.5034]
 
   return (
@@ -247,21 +261,19 @@ function AdminDashboard() {
             <div className="flex gap-2 bg-gray-200 rounded-lg p-1">
               <button
                 onClick={() => setStatsType('attendance')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                  statsType === 'attendance'
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${statsType === 'attendance'
                     ? 'bg-white text-blue-600 shadow-md transform scale-105'
                     : 'text-gray-600 hover:bg-gray-300'
-                }`}
+                  }`}
               >
                 การเข้างาน
               </button>
               <button
                 onClick={() => setStatsType('event')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                  statsType === 'event'
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${statsType === 'event'
                     ? 'bg-white text-blue-600 shadow-md transform scale-105'
                     : 'text-gray-600 hover:bg-gray-300'
-                }`}
+                  }`}
               >
                 กิจกรรม
               </button>
@@ -319,7 +331,7 @@ function AdminDashboard() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                        <path d="M0-240v-63q0-43 44-70t116-27q13 0 25 .5t23 2.5q-14 21-21 44t-7 48v65H0Zm240 0v-65q0-32 17.5-58.5T307-410q32-20 76.5-30t96.5-10q53 0 97.5 10t76.5 30q32 20 49 46.5t17 58.5v65H240Zm540 0v-65q0-26-6.5-49T754-397q11-2 22.5-2.5t23.5-.5q72 0 116 26.5t44 70.5v63H780ZM160-440q-33 0-56.5-23.5T80-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T160-440Zm640 0q-33 0-56.5-23.5T720-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T800-440Zm-320-40q-50 0-85-35t-35-85q0-51 35-85.5t85-34.5q51 0 85.5 34.5T600-600q0 50-34.5 85T480-480Z"/>
+                        <path d="M0-240v-63q0-43 44-70t116-27q13 0 25 .5t23 2.5q-14 21-21 44t-7 48v65H0Zm240 0v-65q0-32 17.5-58.5T307-410q32-20 76.5-30t96.5-10q53 0 97.5 10t76.5 30q32 20 49 46.5t17 58.5v65H240Zm540 0v-65q0-26-6.5-49T754-397q11-2 22.5-2.5t23.5-.5q72 0 116 26.5t44 70.5v63H780ZM160-440q-33 0-56.5-23.5T80-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T160-440Zm640 0q-33 0-56.5-23.5T720-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T800-440Zm-320-40q-50 0-85-35t-35-85q0-51 35-85.5t85-34.5q51 0 85.5 34.5T600-600q0 50-34.5 85T480-480Z" />
                       </svg>
                     </div>
                   </div>
@@ -333,7 +345,7 @@ function AdminDashboard() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z"/>
+                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
                       </svg>
                     </div>
                   </div>
@@ -343,11 +355,11 @@ function AdminDashboard() {
                 </div>
 
                 {/* Today Events - RIGHT */}
-                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-md p-6 text-white">
+                <div className="bg-yellow-500 rounded-2xl shadow-md p-6 text-white">
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                        <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                        <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
                       </svg>
                     </div>
                   </div>
@@ -361,100 +373,137 @@ function AdminDashboard() {
         </div>
 
         {/* Section 2: Attendance Trends Chart */}
-        <div className="bg-[#085EC5] rounded-2xl shadow-md p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-white">Attendance Trends</h2>
-              <p className="text-sm text-white/80 mt-1">แนวโน้มการเข้างาน</p>
+              <h2 className="text-xl font-bold text-gray-800">แนวโน้มข้อมูล</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {statsType === 'attendance' ? 'แนวโน้มการเข้างานของพนักงาน' : 'แนวโน้มการเข้าร่วมกิจกรรม'}
+              </p>
             </div>
-            <div className="flex gap-2 bg-white/20 rounded-lg p-1">
-              <button
-                onClick={() => setChartPeriod('week')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                  chartPeriod === 'week'
-                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                สัปดาห์
-              </button>
-              <button
-                onClick={() => setChartPeriod('month')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                  chartPeriod === 'month'
-                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                เดือน
-              </button>
-              <button
-                onClick={() => setChartPeriod('year')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                  chartPeriod === 'year'
-                    ? 'bg-white text-blue-600 shadow-md transform scale-105'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                ปี
-              </button>
+
+            {/* Control Panel */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Period Selector */}
+              <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setChartPeriod('week')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${chartPeriod === 'week'
+                      ? 'bg-white text-gray-800 shadow-md transform scale-105'
+                      : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                  สัปดาห์
+                </button>
+                <button
+                  onClick={() => setChartPeriod('month')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${chartPeriod === 'month'
+                      ? 'bg-white text-gray-800 shadow-md transform scale-105'
+                      : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                  เดือน
+                </button>
+                <button
+                  onClick={() => setChartPeriod('year')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${chartPeriod === 'year'
+                      ? 'bg-white text-gray-800 shadow-md transform scale-105'
+                      : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                  ปี
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Chart Area - Using Recharts */}
-          <div className="relative h-96 bg-white rounded-xl p-6 border border-blue-100 shadow-inner">
+          {/* Chart Area - Using Recharts with dual data */}
+          <div className="relative h-96 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border-2 border-blue-100 shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={getChartData()}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
               >
                 <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                  <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1} />
+                  </linearGradient>
+                  <linearGradient id="colorEvent" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#eab308" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#eab308" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   stroke="#6B7280"
                   style={{ fontSize: '13px', fontFamily: 'Prompt', fontWeight: '500' }}
                   tick={{ fill: '#6B7280' }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6B7280"
                   style={{ fontSize: '12px', fontFamily: 'Prompt' }}
                   tick={{ fill: '#6B7280' }}
-                  label={{ 
-                    value: 'จำนวนพนักงาน (คน)', 
-                    angle: -90, 
+                  label={{
+                    value: 'จำนวน (คน)',
+                    angle: -90,
                     position: 'insideLeft',
                     style: { fontSize: '13px', fontFamily: 'Prompt', fontWeight: '600', fill: '#374151' }
                   }}
-                  domain={[0, stats.totalemployees]}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#3B82F6" 
-                  strokeWidth={3}
-                  fill="url(#colorValue)"
+
+                {/* Show both lines or selected one based on statsType */}
+                <Area
+                  type="monotone"
+                  dataKey="attendance"
+                  name="attendance"
+                  stroke="#3B82F6"
+                  strokeWidth={statsType === 'attendance' ? 3 : 2}
+                  fill="url(#colorAttendance)"
+                  fillOpacity={statsType === 'attendance' ? 1 : 0.3}
                   animationBegin={0}
                   animationDuration={1500}
                   animationEasing="ease-in-out"
-                  dot={{ 
-                    fill: '#3B82F6', 
-                    strokeWidth: 2, 
-                    r: 5,
+                  dot={{
+                    fill: '#3B82F6',
+                    strokeWidth: 2,
+                    r: statsType === 'attendance' ? 5 : 3,
                     stroke: '#fff'
                   }}
-                  activeDot={{ 
-                    r: 8, 
+                  activeDot={{
+                    r: 8,
                     stroke: '#3B82F6',
                     strokeWidth: 3,
                     fill: '#fff'
                   }}
+                  hide={statsType === 'event'}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="event"
+                  name="event"
+                  stroke="#eab308"
+                  strokeWidth={statsType === 'event' ? 3 : 2}
+                  fill="url(#colorEvent)"
+                  fillOpacity={statsType === 'event' ? 1 : 0.3}
+                  animationBegin={0}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                  dot={{
+                    fill: '#eab308',
+                    strokeWidth: 2,
+                    r: statsType === 'event' ? 5 : 3,
+                    stroke: '#fff'
+                  }}
+                  activeDot={{
+                    r: 8,
+                    stroke: '#eab308',
+                    strokeWidth: 3,
+                    fill: '#fff'
+                  }}
+                  hide={statsType === 'attendance'}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -502,7 +551,7 @@ function AdminDashboard() {
 
                 {locationsWithStatus.map((location) => (
                   <React.Fragment key={location.id}>
-                    <Marker 
+                    <Marker
                       position={[location.latitude, location.longitude]}
                     >
                       <Popup>
@@ -537,10 +586,10 @@ function AdminDashboard() {
                     <Circle
                       center={[location.latitude, location.longitude]}
                       radius={location.radius}
-                      pathOptions={{ 
+                      pathOptions={{
                         color: location.type === 'event' ? '#EAB308' : (location.status === 'active' ? 'green' : 'red'),
                         fillColor: location.type === 'event' ? '#EAB308' : (location.status === 'active' ? 'green' : 'red'),
-                        fillOpacity: 0.2 
+                        fillOpacity: 0.2
                       }}
                     />
                   </React.Fragment>
@@ -558,7 +607,7 @@ function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <span className="text-xs text-gray-600">กิจกรรม</span>
-                  </div>                 
+                  </div>
                 </div>
               </div>
             </div>
@@ -567,20 +616,20 @@ function AdminDashboard() {
             <div className="relative">
               {/* Scroll indicator at top (shows when scrolled down) */}
               <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-gray-100 to-transparent pointer-events-none z-10 opacity-0 transition-opacity" id="scroll-top-indicator"></div>
-              
+
               {/* Scrollable container */}
-              <div 
+              <div
                 className="space-y-4 max-h-[380px] overflow-y-auto pr-2 scroll-smooth"
                 onScroll={(e) => {
                   const target = e.currentTarget
                   const topIndicator = document.getElementById('scroll-top-indicator')
                   const bottomIndicator = document.getElementById('scroll-bottom-indicator')
-                  
+
                   // Show top indicator when scrolled down
                   if (topIndicator) {
                     topIndicator.style.opacity = target.scrollTop > 20 ? '1' : '0'
                   }
-                  
+
                   // Show bottom indicator when not at bottom
                   if (bottomIndicator) {
                     const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 20
@@ -588,113 +637,110 @@ function AdminDashboard() {
                   }
                 }}
               >
-              {locationsWithStatus.map((location) => {
-                const isExpanded = expandedLocationIds.includes(location.id)
-                
-                return (
-                  <div
-                    key={location.id}
-                    ref={(el) => (locationRefs.current[location.id] = el)}
-                    className={`bg-gradient-to-r ${
-                      location.type === 'event' 
-                        ? 'from-yellow-50 to-yellow-100 border-yellow-300' 
-                        : 'from-green-50 to-green-100 border-green-200'
-                      } border-2 rounded-xl overflow-hidden transition-all`}
-                  >
-                    {/* Header - Always Visible (Clickable) */}
-                    <div 
-                      className="p-5 cursor-pointer hover:bg-white/30 transition-colors"
-                      onClick={() => toggleLocationDetails(location.id)}
+                {locationsWithStatus.map((location) => {
+                  const isExpanded = expandedLocationIds.includes(location.id)
+
+                  return (
+                    <div
+                      key={location.id}
+                      ref={(el) => (locationRefs.current[location.id] = el)}
+                      className={`bg-gradient-to-r ${location.type === 'event'
+                          ? 'from-yellow-50 to-yellow-100 border-yellow-300'
+                          : 'from-green-50 to-green-100 border-green-200'
+                        } border-2 rounded-xl overflow-hidden transition-all`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div
-                            className={`w-12 h-12 ${
-                              location.type === 'event' ? 'bg-yellow-500' : 'bg-green-500'
-                              } rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                              <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z"/>
+                      {/* Header - Always Visible (Clickable) */}
+                      <div
+                        className="p-5 cursor-pointer hover:bg-white/30 transition-colors"
+                        onClick={() => toggleLocationDetails(location.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div
+                              className={`w-12 h-12 ${location.type === 'event' ? 'bg-yellow-500' : 'bg-green-500'
+                                } rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0`}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                                <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-gray-800 text-lg">{location.name}</h3>
+                              <p className={`text-sm font-medium ${location.type === 'event' ? 'text-yellow-700' : location.statusColor}`}>
+                                {location.checkInStatus}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 จากตั้งค่าแผนที่'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Dropdown Arrow */}
+                          <div className="ml-4">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              height="24px"
+                              viewBox="0 -960 960 960"
+                              width="24px"
+                              fill="currentColor"
+                              className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} text-gray-600`}
+                            >
+                              <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
                             </svg>
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-gray-800 text-lg">{location.name}</h3>
-                            <p className={`text-sm font-medium ${location.type === 'event' ? 'text-yellow-700' : location.statusColor}`}>
-                              {location.checkInStatus}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 จากตั้งค่าแผนที่'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Dropdown Arrow */}
-                        <div className="ml-4">
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            height="24px" 
-                            viewBox="0 -960 960 960" 
-                            width="24px" 
-                            fill="currentColor"
-                            className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} text-gray-600`}
-                          >
-                            <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
-                          </svg>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Details - Expandable */}
-                    <div 
-                      className={`transition-all duration-300 ease-in-out ${
-                        isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-                      } overflow-hidden`}
-                    >
-                      <div className="px-5 pb-5 space-y-3">
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <p className="text-xs text-gray-600 mb-1">รายละเอียด</p>
-                          <p className="font-semibold text-gray-800 text-sm">{location.description}</p>
-                        </div>
+                      {/* Details - Expandable */}
+                      <div
+                        className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                          } overflow-hidden`}
+                      >
+                        <div className="px-5 pb-5 space-y-3">
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <p className="text-xs text-gray-600 mb-1">รายละเอียด</p>
+                            <p className="font-semibold text-gray-800 text-sm">{location.description}</p>
+                          </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">ทีม / หน่วยงาน</p>
-                            <p className="font-semibold text-gray-800 text-sm">{location.team}</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white/60 rounded-lg p-3">
+                              <p className="text-xs text-gray-600 mb-1">ทีม / หน่วยงาน</p>
+                              <p className="font-semibold text-gray-800 text-sm">{location.team}</p>
+                            </div>
+                            <div className="bg-white/60 rounded-lg p-3">
+                              <p className="text-xs text-gray-600 mb-1">เวลาเช็คอิน</p>
+                              <p className="font-semibold text-gray-800 text-sm">{location.time}</p>
+                            </div>
                           </div>
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">เวลาเช็คอิน</p>
-                            <p className="font-semibold text-gray-800 text-sm">{location.time}</p>
-                          </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">รัศมี</p>
-                            <p className="font-semibold text-gray-800 text-sm">{location.radius} เมตร</p>
-                          </div>
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">พิกัด</p>
-                            <div className="flex items-center gap-1">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                height="14px"
-                                viewBox="0 -960 960 960"
-                                width="14px"
-                                fill="#6B7280"
-                              >
-                                <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
-                              </svg>
-                              <p className="text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white/60 rounded-lg p-3">
+                              <p className="text-xs text-gray-600 mb-1">รัศมี</p>
+                              <p className="font-semibold text-gray-800 text-sm">{location.radius} เมตร</p>
+                            </div>
+                            <div className="bg-white/60 rounded-lg p-3">
+                              <p className="text-xs text-gray-600 mb-1">พิกัด</p>
+                              <div className="flex items-center gap-1">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  height="14px"
+                                  viewBox="0 -960 960 960"
+                                  width="14px"
+                                  fill="#6B7280"
+                                >
+                                  <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
+                                </svg>
+                                <p className="text-xs text-gray-700">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
               </div>
-              
+
               {/* Scroll indicator at bottom (shows when not scrolled to bottom) */}
               <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-100 to-transparent pointer-events-none z-10 transition-opacity" id="scroll-bottom-indicator"></div>
             </div>

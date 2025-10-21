@@ -20,9 +20,9 @@ export const LeaveProvider = ({ children }) => {
 
     // Leave quota data
     const [leaveQuota] = useState({
-        'ลาป่วย': { totalDays: 100 },
-        'ลากิจ': { totalDays: 5 },
-        'ลาพักร้อน': { totalDays: 6 },
+        'ลาป่วย': { totalDays: 60 },
+        'ลากิจ': { totalDays: 45 },
+        'ลาพักร้อน': { totalDays: 10 },
         'ลาคลอด': { totalDays: 90 }
     });
 
@@ -132,19 +132,52 @@ export const LeaveProvider = ({ children }) => {
             title: type,
             description: getLeaveDescription(type),
             daysUsed: getUsedDays(type),
-            totalDays: leaveQuota[type].totalDays
+            totalDays: leaveQuota[type].totalDays,
+            rules: getLeaveRules(type)
         }));
     };
 
     // Get leave description
     const getLeaveDescription = (type) => {
         const descriptions = {
-            'ลาป่วย': 'ต้องยื่นใบลาในวันที่ลา...',
-            'ลากิจ': 'ต้องลาล่วงหน้าไม่น้อยกว่า 3 วัน...',
-            'ลาพักร้อน': 'สามารถลาพักร้อนได้ปีละ 6 วัน...',
-            'ลาคลอด': 'สำหรับพนักงานหญิงที่มีบุตร...'
+            'ลาป่วย': 'ลาป่วยไม่เกิน 60 วัน/ปี กรณีลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องมีใบรับรองแพทย์',
+            'ลากิจ': 'ปีแรกลาได้ไม่เกิน 15 วัน/ปี ปีถัดไปลาได้ไม่เกิน 45 วัน/ปี ต้องได้รับอนุมัติก่อน',
+            'ลาพักร้อน': 'ลาได้ไม่เกิน 10 วัน/ปี สะสมได้ไม่เกิน 20 วัน หรือ 30 วัน (ถ้ารับราชการมากกว่า 10 ปี)',
+            'ลาคลอด': 'ลาคลอดบุตรได้ไม่เกิน 90 วัน ไม่จำเป็นต้องมีใบรับรองแพทย์'
         };
         return descriptions[type] || '';
+    };
+
+    // Get leave rules
+    const getLeaveRules = (type) => {
+        const rules = {
+            'ลาป่วย': [
+                'ลาป่วยได้ไม่เกิน 60 วัน/ปี',
+                'กรณีลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องมีใบรับรองแพทย์',
+                'ยื่นใบลาป่วยทันทีที่กลับมาทำงานวันแรก',
+                'กรณีแพทย์นัดล่วงหน้า ให้ยื่นใบลาป่วยก่อนถึงวันนัดหมาย'
+            ],
+            'ลากิจ': [
+                'สำหรับปีแรกที่เข้ารับราชการ ลากิจได้ไม่เกิน 15 วัน/ปี',
+                'ในปีถัดๆ ไป ลากิจได้ไม่เกิน 45 วัน/ปี',
+                'ในกรณีลาเพื่อเลี้ยงบุตร สามารถใช้สิทธิต่อจากการลาคลอดบุตร ได้ไม่เกิน 150 วัน',
+                'จำเป็นต้องได้รับการอนุมัติจากผู้บังคับบัญชาก่อน จึงจะสามารถใช้วันลากิจส่วนตัวได้',
+                'กรณีงานมีเหตุฉุกเฉิน สามารถเรียกตัวกลับได้ทุกเมื่อ'
+            ],
+            'ลาพักร้อน': [
+                'ลาได้ไม่เกิน 10 วัน/ปี หากบรรจุเป็นราชการไม่ครบ 6 เดือน ไม่ได้รับสิทธิ์ลาพักผ่อน',
+                'สะสมวันลาได้ไม่เกิน 20 วัน',
+                'กรณีรับราชการมากกว่า 10 ปีขึ้นไป สามารถสะสมวันลาได้ไม่เกิน 30 วัน',
+                'จำเป็นต้องได้รับการอนุมัติจากผู้บังคับบัญชาก่อน จึงจะสามารถใช้วันลาพักผ่อนได้',
+                'กรณีงานมีเหตุฉุกเฉิน สามารถเรียกตัวกลับได้ทุกเมื่อ'
+            ],
+            'ลาคลอด': [
+                'ลาคลอดบุตรได้ไม่เกิน 90 วัน',
+                'ไม่จำเป็นต้องมีใบรับรองแพทย์',
+                'ยื่นใบลาคลอดบุตรล่วงหน้า หรือในวันลา เพื่อเสนอต่อผู้บังคับบัญชาให้ทำการอนุมัติตามลำดับ'
+            ]
+        };
+        return rules[type] || [];
     };
 
     // Get leaves by type
@@ -181,6 +214,74 @@ export const LeaveProvider = ({ children }) => {
         });
     };
 
+    // Validate leave request against rules
+    const validateLeaveRequest = (leaveData) => {
+        const { leaveType, startDate, endDate, documents, leaveMode } = leaveData;
+        const errors = [];
+
+        // Calculate days for validation
+        let totalDays = 0;
+        if (leaveMode === 'fullday') {
+            totalDays = calculateDays(startDate, endDate);
+        }
+
+        switch (leaveType) {
+            case 'ลาป่วย':
+                // ลาป่วยตั้งแต่ 3 วันขึ้นไป ต้องมีใบรับรองแพทย์
+                if (totalDays >= 3 && (!documents || documents.length === 0)) {
+                    errors.push('กรณีลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องแนบใบรับรองแพทย์');
+                }
+                
+                // ตรวจสอบวันลาที่เหลือ
+                const sickDaysUsed = getUsedDays('ลาป่วย');
+                const sickDaysAvailable = leaveQuota['ลาป่วย'].totalDays - sickDaysUsed;
+                if (totalDays > sickDaysAvailable) {
+                    errors.push(`คุณมีสิทธิ์ลาป่วยเหลืออีก ${sickDaysAvailable} วัน (ลาได้ไม่เกิน 60 วัน/ปี)`);
+                }
+                break;
+
+            case 'ลากิจ':
+                // ลากิจต้องได้รับการอนุมัติก่อน (เตือนผู้ใช้)
+                // Note: การตรวจสอบนี้เป็นแค่การแจ้งเตือน ไม่บล็อก
+                
+                // ตรวจสอบวันลาที่เหลือ
+                const personalDaysUsed = getUsedDays('ลากิจ');
+                const personalDaysAvailable = leaveQuota['ลากิจ'].totalDays - personalDaysUsed;
+                if (totalDays > personalDaysAvailable) {
+                    errors.push(`คุณมีสิทธิ์ลากิจเหลืออีก ${personalDaysAvailable} วัน`);
+                }
+                break;
+
+            case 'ลาพักร้อน':
+                // ลาพักร้อนต้องได้รับการอนุมัติก่อน (เตือนผู้ใช้)
+                
+                // ตรวจสอบวันลาที่เหลือ
+                const vacationDaysUsed = getUsedDays('ลาพักร้อน');
+                const vacationDaysAvailable = leaveQuota['ลาพักร้อน'].totalDays - vacationDaysUsed;
+                if (totalDays > vacationDaysAvailable) {
+                    errors.push(`คุณมีสิทธิ์ลาพักร้อนเหลืออีก ${vacationDaysAvailable} วัน (ลาได้ไม่เกิน 10 วัน/ปี)`);
+                }
+                break;
+
+            case 'ลาคลอด':
+                // ตรวจสอบวันลาที่เหลือ
+                const maternityDaysUsed = getUsedDays('ลาคลอด');
+                const maternityDaysAvailable = leaveQuota['ลาคลอด'].totalDays - maternityDaysUsed;
+                if (totalDays > maternityDaysAvailable) {
+                    errors.push(`คุณมีสิทธิ์ลาคลอดเหลืออีก ${maternityDaysAvailable} วัน (ลาได้ไม่เกิน 90 วัน)`);
+                }
+                break;
+
+            default:
+                errors.push('ประเภทการลาไม่ถูกต้อง');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
+    };
+
     const value = {
         leaveList,
         leaveQuota,
@@ -192,7 +293,9 @@ export const LeaveProvider = ({ children }) => {
         getLeaveSummary,
         getLeavesByType,
         calculateDays,
-        updateLeaveStatus
+        updateLeaveStatus,
+        validateLeaveRequest,
+        getLeaveRules
     };
 
     return (

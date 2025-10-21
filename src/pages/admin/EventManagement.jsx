@@ -35,6 +35,26 @@ style.textContent = `
       transform: scale(1);
     }
   }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    position: absolute;
+    right: 12px;
+    z-index: 1;
+  }
+  input[type="date"] {
+    position: relative;
+    color: transparent;
+  }
+  input[type="date"]:focus {
+    color: transparent;
+  }
+  input[type="date"]::-webkit-datetime-edit {
+    color: transparent;
+  }
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: transparent;
+  }
 `
 document.head.appendChild(style)
 
@@ -256,8 +276,32 @@ function EventManagement() {
     status: 'ongoing'
   })
 
+  // Display dates in dd/mm/yyyy format
+  const [displayDates, setDisplayDates] = useState({
+    addDate: '',
+    editDate: ''
+  })
+
   // Edit form data
   const [editFormData, setEditFormData] = useState({})
+
+  // Date conversion functions
+  const convertDateFormat = (dateStr) => {
+    if (!dateStr) return ''
+    const [year, month, day] = dateStr.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  const convertToISOFormat = (dateStr) => {
+    if (!dateStr) return ''
+    const [day, month, year] = dateStr.split('/')
+    return `${year}-${month}-${day}`
+  }
+
+  const formatDateForDisplay = (isoDate) => {
+    if (!isoDate) return ''
+    return convertDateFormat(isoDate)
+  }
 
   // Map center for Bangkok
   const defaultCenter = [13.7606, 100.5034]
@@ -752,15 +796,25 @@ function EventManagement() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       วันที่จัดงาน (วัน/เดือน/ปี) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      placeholder="เช่น 20/10/2025"
-                      pattern="\d{2}/\d{2}/\d{4}"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type="date"
+                        name="date"
+                        value={formData.date}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, date: e.target.value }))
+                          setDisplayDates(prev => ({ ...prev, addDate: formatDateForDisplay(e.target.value) }))
+                        }}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        style={{ colorScheme: 'light' }}
+                        required
+                      />
+                      {displayDates.addDate && (
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-sm text-gray-700 bg-white pr-2">
+                          {displayDates.addDate}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">
@@ -968,13 +1022,24 @@ function EventManagement() {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               วันที่จัดงาน (วัน/เดือน/ปี) <span className="text-red-500">*</span>
                             </label>
-                            <input
-                              type="text"
-                              value={currentFormData.date}
-                              onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })}
-                              placeholder="เช่น 20/10/2025"
-                              pattern="\d{2}/\d{2}/\d{4}"
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"></input>
+                            <div className="relative">
+                              <input
+                                type="date"
+                                value={currentFormData.date || ''}
+                                onChange={(e) => {
+                                  setEditFormData({ ...editFormData, date: e.target.value })
+                                  setDisplayDates(prev => ({ ...prev, editDate: formatDateForDisplay(e.target.value) }))
+                                }}
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                style={{ colorScheme: 'light' }}
+                                required
+                              />
+                              {displayDates.editDate && (
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-sm text-gray-700 bg-white pr-2">
+                                  {displayDates.editDate}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div className="md:col-span-2">
