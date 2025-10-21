@@ -42,6 +42,7 @@ export default function Warning() {
   const wrapperRefs = useRef({})
   const innerRefs = useRef({})
   const endListenersRef = useRef({})
+  const animatingIds = useRef(new Set()) // ✅ เพิ่ม: ติดตาม animation ที่กำลังทำงาน
   
   // Dialog states
   const [showApproveConfirm, setShowApproveConfirm] = useState(false)
@@ -105,20 +106,25 @@ export default function Warning() {
       w.style.overflow = 'hidden'
       w.style.maxHeight = '0px'
       w.style.opacity = '0'
-      w.style.transition = 'max-height 320ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease'
+      w.style.transition = 'max-height 400ms cubic-bezier(.2,.8,.2,1), opacity 300ms ease'
       w.style.willChange = 'max-height, opacity'
     })
     Object.values(innerRefs.current).forEach(i => {
       if (!i) return
       i.style.transform = 'translateY(-8px)'
       i.style.opacity = '0'
-      i.style.transition = 'transform 260ms cubic-bezier(.2,.85,.2,1), opacity 220ms ease'
+      i.style.transition = 'transform 350ms cubic-bezier(.2,.85,.2,1), opacity 300ms ease'
       i.style.willChange = 'transform, opacity'
       i.style.transformOrigin = 'top center'
     })
   }, [])
 
   const handleToggle = (id) => {
+    // ✅ ป้องกันการกดซ้ำขณะที่ animation กำลังทำงาน
+    if (animatingIds.current.has(id)) {
+      return
+    }
+
     const wrapper = wrapperRefs.current[id]
     const inner = innerRefs.current[id]
     const isOpen = expandedIds.includes(id)
@@ -127,6 +133,9 @@ export default function Warning() {
       setExpandedIds(prev => (isOpen ? prev.filter(x => x !== id) : [...prev, id]))
       return
     }
+
+    // ✅ เพิ่ม id เข้า animating set
+    animatingIds.current.add(id)
 
     if (!isOpen) {
       if (endListenersRef.current[id]) {
@@ -145,7 +154,7 @@ export default function Warning() {
 
       requestAnimationFrame(() => {
         const h = inner.scrollHeight
-        wrapper.style.transition = 'max-height 320ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease'
+        wrapper.style.transition = 'max-height 400ms cubic-bezier(.2,.8,.2,1), opacity 300ms ease'
         wrapper.style.maxHeight = `${h}px`
         wrapper.style.opacity = '1'
         inner.style.transform = 'translateY(0)'
@@ -156,6 +165,8 @@ export default function Warning() {
             wrapper.style.maxHeight = 'none'
             wrapper.removeEventListener('transitionend', onEnd)
             if (endListenersRef.current[id] === onEnd) delete endListenersRef.current[id]
+            // ✅ ลบ id ออกจาก animating set
+            animatingIds.current.delete(id)
           }
         }
         endListenersRef.current[id] = onEnd
@@ -175,7 +186,7 @@ export default function Warning() {
       void wrapper.offsetHeight
 
       requestAnimationFrame(() => {
-        wrapper.style.transition = 'max-height 260ms cubic-bezier(.2,.85,.2,1), opacity 200ms ease'
+        wrapper.style.transition = 'max-height 350ms cubic-bezier(.2,.85,.2,1), opacity 250ms ease'
         wrapper.style.maxHeight = '0px'
         wrapper.style.opacity = '0'
       })
@@ -185,6 +196,8 @@ export default function Warning() {
           wrapper.removeEventListener('transitionend', onEndClose)
           if (endListenersRef.current[id] === onEndClose) delete endListenersRef.current[id]
           setExpandedIds(prev => prev.filter(x => x !== id))
+          // ✅ ลบ id ออกจาก animating set
+          animatingIds.current.delete(id)
         }
       }
       endListenersRef.current[id] = onEndClose
@@ -465,7 +478,7 @@ export default function Warning() {
       {/* Reject Modal with Reason */}
       {showRejectModal && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowRejectModal(false)
@@ -474,22 +487,24 @@ export default function Warning() {
             }
           }}
         >
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white p-6 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full animate-pop-up">
+            <div className="bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white p-6 rounded-t-2xl shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-all duration-200">
               <h2 className="text-xl font-bold">ไม่อนุมัติใบลา</h2>
+              <p className="text-sm text-white/90 mt-1">กรุณาระบุเหตุผล</p>
             </div>
             
             <div className="p-6">
               <p className="text-gray-700 mb-4">
-                กรุณาระบุเหตุผลที่ไม่อนุมัติใบลาของ <strong>{selectedItem?.name}</strong>
+                ใบลาของ <strong className="text-red-600">{selectedItem?.name}</strong>
               </p>
               
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="ระบุเหตุผล..."
+                placeholder="ระบุเหตุผลที่ไม่อนุมัติ..."
                 rows="4"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none resize-none"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors"
+                autoFocus
               />
             </div>
 
@@ -506,7 +521,7 @@ export default function Warning() {
               </button>
               <button
                 onClick={confirmReject}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-semibold"
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-semibold shadow-md hover:shadow-lg"
               >
                 ยืนยันไม่อนุมัติ
               </button>
@@ -567,7 +582,7 @@ function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapp
               onClick={() => onReject?.(item)}
               className="inline-flex items-center justify-center px-5 py-2 bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white rounded-xl text-base font-semibold shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-all duration-200"
             >
-              ปฏิเสธ
+              ไม่อนุมัติ
             </button>
             <button
               onClick={() => onToggle(item.id)}

@@ -68,7 +68,7 @@ function Nav() {
     <>
       <div 
           className='fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-200
-          font-prompt shadow-lg z-50 max-w-7xl mx-auto'>
+          font-prompt shadow-lg z-20 max-w-7xl mx-auto'>
         <div className='flex justify-around items-center'>
           {items.map(item => (
             <NavLink
