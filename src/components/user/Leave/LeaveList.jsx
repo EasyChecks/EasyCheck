@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 
-const LeaveCard = ({ title, description, daysUsed, totalDays, onClick }) => {
-  const handleClick = (e) => {
+const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRules }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  const handleViewHistory = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Card clicked:', title);
-    onClick();
+    console.log('View history clicked:', title);
+    navigate('/user/leave/list', { state: { leaveType: title } });
+  };
+
+  const toggleExpand = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
   };
 
   // Calculate percentage
@@ -22,10 +31,21 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick }) => {
 
   return (
     <div 
-      onClick={handleClick}
-      className="p-4 sm:p-5 lg:p-6 mb-3 sm:mb-4 bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition-all duration-300 relative z-10 active:scale-[0.98] border border-white/50"
+      className="p-4 sm:p-5 lg:p-6 mb-3 sm:mb-4 bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 relative z-10 border border-white/50"
     >
-      <h3 className="font-bold text-gray-800 text-base sm:text-lg lg:text-xl mb-1.5 sm:mb-2">{title}</h3>
+      <div className="flex items-start justify-between mb-1.5 sm:mb-2">
+        <h3 className="font-bold text-gray-800 text-base sm:text-lg lg:text-xl">{title}</h3>
+        <button
+          onClick={handleViewHistory}
+          className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs sm:text-sm rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span className="hidden sm:inline">ดูประวัติ</span>
+        </button>
+      </div>
+      
       <p className="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed mb-3 sm:mb-4 line-clamp-2">{description}</p>
       
       {/* Days Used Info */}
@@ -34,12 +54,57 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick }) => {
       </p>
 
       {/* Progress Bar */}
-      <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
+      <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden mb-3">
         <div 
           className={`${getProgressColor()} h-full rounded-full transition-all duration-500 ease-out`}
           style={{ width: `${percentage}%` }}
         />
       </div>
+
+      {/* Expandable Rules Section */}
+      {leaveRules && (
+        <div className="border-t border-gray-200 pt-3">
+          <button
+            onClick={toggleExpand}
+            className="flex items-center justify-between w-full text-left text-xs sm:text-sm font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
+          >
+            <span>ดูเงื่อนไขและรายละเอียดการลา</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Expanded Content */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              isExpanded ? 'max-h-[500px] opacity-100 mt-3' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg p-3 sm:p-4 space-y-2">
+              {leaveRules.map((rule, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-cyan-600 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{rule}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -62,6 +127,7 @@ function LeaveList({ leaveItems }) {
           description={leave.description}
           daysUsed={leave.daysUsed}
           totalDays={leave.totalDays}
+          leaveRules={leave.rules}
           onClick={() => handleLeaveClick(leave)}
         />
       ))}
