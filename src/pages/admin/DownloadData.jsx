@@ -12,6 +12,7 @@ function DownloadData() {
     gpsTracking: false,
     photoAttendance: false
   });
+  const [selectedFormat, setSelectedFormat] = useState('excel'); // excel, pdf, csv
   
   // Alert Dialog States
   const [alertDialog, setAlertDialog] = useState({
@@ -92,6 +93,118 @@ function DownloadData() {
     }));
   };
 
+  // Generate mock data based on selected options
+  const generateMockData = () => {
+    const data = [];
+    const selectedDataTypes = Object.keys(selectedOptions).filter(key => selectedOptions[key]);
+    
+    // Generate 10 mock records
+    for (let i = 1; i <= 10; i++) {
+      const record = {
+        'ลำดับ': i,
+        'รหัสพนักงาน': `EMP${String(i).padStart(4, '0')}`,
+        'ชื่อ-นามสกุล': `พนักงาน ${i}`,
+      };
+
+      if (selectedOptions.attendanceData) {
+        record['เวลาเข้างาน'] = '09:00';
+        record['เวลาออกงาน'] = '18:00';
+        record['สถานะ'] = i % 5 === 0 ? 'มาสาย' : 'ปกติ';
+      }
+
+      if (selectedOptions.personalData) {
+        record['แผนก'] = ['การเงิน', 'ไอที', 'การตลาด'][i % 3];
+        record['ตำแหน่ง'] = ['พนักงาน', 'หัวหน้าทีม', 'ผู้จัดการ'][i % 3];
+        record['อีเมล'] = `employee${i}@example.com`;
+      }
+
+      if (selectedOptions.gpsTracking) {
+        record['ละติจูด'] = (13.7 + Math.random() * 0.1).toFixed(6);
+        record['ลองจิจูด'] = (100.5 + Math.random() * 0.1).toFixed(6);
+      }
+
+      if (selectedOptions.photoAttendance) {
+        record['รูปภาพ Check-in'] = `photo_checkin_${i}.jpg`;
+        record['รูปภาพ Check-out'] = `photo_checkout_${i}.jpg`;
+      }
+
+      data.push(record);
+    }
+
+    return data;
+  };
+
+  // Download as Excel (CSV format)
+  const downloadExcel = (data) => {
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      '\uFEFF' + headers.join(','), // Add BOM for Thai characters
+      ...data.map(row => headers.map(header => {
+        const value = row[header] || '';
+        // Escape commas and quotes
+        return `"${String(value).replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `รายงาน_${startDate}_${endDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Download as PDF
+  const downloadPDF = (data) => {
+    // Create a simple text-based PDF content
+    let pdfContent = `รายงาน: ${selectedReport.title}\n`;
+    pdfContent += `วันที่: ${startDate} ถึง ${endDate}\n`;
+    pdfContent += `\n${'='.repeat(80)}\n\n`;
+
+    data.forEach((row, index) => {
+      pdfContent += `รายการที่ ${index + 1}\n`;
+      Object.entries(row).forEach(([key, value]) => {
+        pdfContent += `  ${key}: ${value}\n`;
+      });
+      pdfContent += `\n`;
+    });
+
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `รายงาน_${startDate}_${endDate}.txt`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Download as CSV (same as Excel but different extension)
+  const downloadCSV = (data) => {
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      '\uFEFF' + headers.join(','),
+      ...data.map(row => headers.map(header => {
+        const value = row[header] || '';
+        return `"${String(value).replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `รายงาน_${startDate}_${endDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleDownload = () => {
     const selectedCount = Object.values(selectedOptions).filter(Boolean).length;
     if (selectedCount === 0) {
@@ -99,19 +212,49 @@ function DownloadData() {
         isOpen: true,
         type: 'warning',
         title: 'กรุณาเลือกข้อมูล',
-        message: 'กรุณาเลือกข้อมูลที่ต้องการดาวน์โหลดอย่างน้อย 1 รายการ'
+        message: 'กรุณาเลือกข้อมูลที่ต้องการดาวน์โหลดอย่างน้อย 1 รายการ',
+        autoClose: true
       });
       return;
     }
-    
-    setAlertDialog({
-      isOpen: true,
-      type: 'success',
-      title: 'เริ่มดาวน์โหลด',
-      message: `กำลังดาวน์โหลด ${selectedReport.title}\nวันที่: ${startDate} ถึง ${endDate}\nจำนวนข้อมูล: ${selectedCount} รายการ`,
-      autoClose: true
-    });
-    closeModal();
+
+    // Generate mock data
+    const data = generateMockData();
+
+    // Download based on selected format
+    try {
+      switch (selectedFormat) {
+        case 'excel':
+          downloadExcel(data);
+          break;
+        case 'pdf':
+          downloadPDF(data);
+          break;
+        case 'csv':
+          downloadCSV(data);
+          break;
+        default:
+          downloadExcel(data);
+      }
+
+      setAlertDialog({
+        isOpen: true,
+        type: 'success',
+        title: 'ดาวน์โหลดสำเร็จ',
+        message: `ดาวน์โหลด ${selectedReport.title} ในรูปแบบ ${selectedFormat.toUpperCase()} เรียบร้อยแล้ว\nวันที่: ${startDate} ถึง ${endDate}\nจำนวนข้อมูล: ${selectedCount} รายการ`,
+        autoClose: true
+      });
+      
+      closeModal();
+    } catch (error) {
+      setAlertDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        message: 'ไม่สามารถดาวน์โหลดไฟล์ได้ กรุณาลองใหม่อีกครั้ง',
+        autoClose: true
+      });
+    }
   };
 
   const closeAlertDialog = () => {
@@ -254,7 +397,7 @@ function DownloadData() {
               </div>
 
               {/* Data Options */}
-              <div>
+              <div className="mb-6">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -288,6 +431,86 @@ function DownloadData() {
                   ))}
                 </div>
               </div>
+
+              {/* File Format Selection */}
+              <div>
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  รูปแบบไฟล์
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => setSelectedFormat('excel')}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                      selectedFormat === 'excel'
+                        ? 'bg-green-50 border-green-400 shadow-md'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${
+                        selectedFormat === 'excel' ? 'bg-green-100' : 'bg-gray-100'
+                      }`}>
+                        📊
+                      </div>
+                      <span className={`font-semibold text-sm ${
+                        selectedFormat === 'excel' ? 'text-green-700' : 'text-gray-700'
+                      }`}>
+                        Excel
+                      </span>
+                      <span className="text-xs text-gray-500">.xlsx</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedFormat('pdf')}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                      selectedFormat === 'pdf'
+                        ? 'bg-red-50 border-red-400 shadow-md'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${
+                        selectedFormat === 'pdf' ? 'bg-red-100' : 'bg-gray-100'
+                      }`}>
+                        📄
+                      </div>
+                      <span className={`font-semibold text-sm ${
+                        selectedFormat === 'pdf' ? 'text-red-700' : 'text-gray-700'
+                      }`}>
+                        PDF
+                      </span>
+                      <span className="text-xs text-gray-500">.pdf</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedFormat('csv')}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                      selectedFormat === 'csv'
+                        ? 'bg-blue-50 border-blue-400 shadow-md'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${
+                        selectedFormat === 'csv' ? 'bg-blue-100' : 'bg-gray-100'
+                      }`}>
+                        📋
+                      </div>
+                      <span className={`font-semibold text-sm ${
+                        selectedFormat === 'csv' ? 'text-blue-700' : 'text-gray-700'
+                      }`}>
+                        CSV
+                      </span>
+                      <span className="text-xs text-gray-500">.csv</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Modal Footer */}
@@ -306,7 +529,7 @@ function DownloadData() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                   </svg>
-                  ส่งคำขอ Excel และดาวน์โหลด
+                  ดาวน์โหลด {selectedFormat.toUpperCase()}
                 </button>
               </div>
             </div>

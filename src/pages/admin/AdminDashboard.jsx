@@ -51,7 +51,7 @@ function AdminDashboard() {
 
   // Mock data for demonstration - Attendance Stats
   const attendanceStats = {
-    totalemployees: 500,
+    totalemployees: 300,
     totalWeekly: 290,
     totalToday: 95,
     lateCount: 2,
@@ -83,40 +83,79 @@ function AdminDashboard() {
 
   // Generate chart data based on selected period and type
   const getChartData = () => {
-    const baseData = {
-      week: [
-        { name: 'จันทร์', attendance: 275, event: 45 },
-        { name: 'อังคาร', attendance: 292, event: 52 },
-        { name: 'พุธ', attendance: 268, event: 38 },
-        { name: 'พฤหัส', attendance: 290, event: 48 },
-        { name: 'ศุกร์', attendance: 295, event: 55 },
-        { name: 'เสาร์', attendance: 150, event: 85 },
-        { name: 'อาทิตย์', attendance: 120, event: 72 }
-      ],
-      month: [
-        { name: 'สัปดาห์ 1', attendance: 285, event: 180 },
-        { name: 'สัปดาห์ 2', attendance: 290, event: 195 },
-        { name: 'สัปดาห์ 3', attendance: 282, event: 165 },
-        { name: 'สัปดาห์ 4', attendance: 295, event: 210 }
-      ],
-      year: [
-        { name: 'ม.ค.', attendance: 280, event: 420 },
-        { name: 'ก.พ.', attendance: 285, event: 380 },
-        { name: 'มี.ค.', attendance: 290, event: 450 },
-        { name: 'เม.ย.', attendance: 275, event: 520 },
-        { name: 'พ.ค.', attendance: 292, event: 480 },
-        { name: 'มิ.ย.', attendance: 288, event: 510 },
-        { name: 'ก.ค.', attendance: 295, event: 490 },
-        { name: 'ส.ค.', attendance: 290, event: 460 },
-        { name: 'ก.ย.', attendance: 287, event: 500 },
-        { name: 'ต.ค.', attendance: 293, event: 540 },
-        { name: 'พ.ย.', attendance: 285, event: 470 },
-        { name: 'ธ.ค.', attendance: 280, event: 550 }
-      ]
-    }
+    if (statsType === 'attendance') {
+      // Attendance data based on attendanceStats
+      const baseData = {
+        week: [
+          { name: 'จันทร์', value: 285 },
+          { name: 'อังคาร', value: 292 },
+          { name: 'พุธ', value: 268 },
+          { name: 'พฤหัส', value: 290 },
+          { name: 'ศุกร์', value: 95 }, // Today's attendance
+          { name: 'เสาร์', value: 0 },
+          { name: 'อาทิตย์', value: 0 }
+        ],
+        month: [
+          { name: 'สัปดาห์ 1', value: 285 },
+          { name: 'สัปดาห์ 2', value: 290 },
+          { name: 'สัปดาห์ 3', value: 282 },
+          { name: 'สัปดาห์ 4', value: 290 }
+        ],
+        year: [
+          { name: 'ม.ค.', value: 280 },
+          { name: 'ก.พ.', value: 285 },
+          { name: 'มี.ค.', value: 290 },
+          { name: 'เม.ย.', value: 275 },
+          { name: 'พ.ค.', value: 292 },
+          { name: 'มิ.ย.', value: 288 },
+          { name: 'ก.ค.', value: 295 },
+          { name: 'ส.ค.', value: 290 },
+          { name: 'ก.ย.', value: 287 },
+          { name: 'ต.ค.', value: 290 }, // Weekly total
+          { name: 'พ.ย.', value: 0 },
+          { name: 'ธ.ค.', value: 0 }
+        ]
+      }
+      return baseData[chartPeriod] || []
+    } else {
+      // Event data: convert event counts to estimated participants
+      // Use average participants per event (fallback to 15) so chart values reflect participants
+      const avgParticipantsPerEvent = eventStats.totalEvents > 0
+        ? Math.max(1, Math.round(eventStats.totalParticipants / eventStats.totalEvents))
+        : 15
 
-    return baseData[chartPeriod] || []
+      // Template counts (events) per label - we'll convert to participants
+      const weekCounts = [2, 3, 1, 2, eventStats.todayEvents || 0, 0, 0]
+      const monthCounts = [4, 5, 3, eventStats.activeEvents || 0]
+      const yearCounts = [12, 10, 15, 18, 14, 16, 13, 11, 17, eventStats.totalEvents || 0, 0, 0]
+
+      const mapCountsToParticipants = (labels, counts) =>
+        labels.map((label, idx) => {
+          // For 'today' entry prefer using the accurate todayParticipants when available
+          if (label === 'ศุกร์' && eventStats.todayParticipants) return { name: label, value: eventStats.todayParticipants }
+          // Otherwise multiply event count by average participants
+          return { name: label, value: (counts[idx] || 0) * avgParticipantsPerEvent }
+        })
+
+      const baseData = {
+        week: mapCountsToParticipants(['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'], weekCounts),
+        month: mapCountsToParticipants(['สัปดาห์ 1', 'สัปดาห์ 2', 'สัปดาห์ 3', 'สัปดาห์ 4'], monthCounts),
+        year: mapCountsToParticipants(['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'], yearCounts)
+      }
+
+      // Ensure we never return an empty dataset (fallback to totalParticipants distributed)
+      const result = baseData[chartPeriod] || []
+      if (result.length === 0 && eventStats.totalParticipants) {
+        return [{ name: chartPeriod, value: eventStats.totalParticipants }]
+      }
+      return result
+    }
   }
+
+  // Compute chart data and dynamic Y axis max so chart doesn't hug the top
+  const chartData = getChartData()
+  const maxValue = chartData && chartData.length ? Math.max(...chartData.map(d => d.value || 0)) : (statsType === 'attendance' ? attendanceStats.totalWeekly : eventStats.totalParticipants)
+  const yAxisMax = Math.ceil(Math.max(1, maxValue) * 1.12) // 12% headroom
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }) => {
@@ -133,7 +172,7 @@ function AdminDashboard() {
                     style={{ backgroundColor: entry.color }}
                   />
                   <span className="text-sm text-gray-600">
-                    {entry.name === 'attendance' ? 'การเข้างาน' : 'กิจกรรม'}
+                    {entry.name}
                   </span>
                 </div>
                 <span className="text-lg font-bold" style={{ color: entry.color }}>
@@ -421,7 +460,7 @@ function AdminDashboard() {
           <div className="relative h-96 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border-2 border-blue-100 shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={getChartData()}
+                data={chartData}
                 margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
               >
                 <defs>
@@ -445,6 +484,7 @@ function AdminDashboard() {
                   stroke="#6B7280"
                   style={{ fontSize: '12px', fontFamily: 'Prompt' }}
                   tick={{ fill: '#6B7280' }}
+                  domain={[0, yAxisMax]}
                   label={{
                     value: 'จำนวน (คน)',
                     angle: -90,
@@ -454,56 +494,30 @@ function AdminDashboard() {
                 />
                 <Tooltip content={<CustomTooltip />} />
 
-                {/* Show both lines or selected one based on statsType */}
+                {/* Show single line based on statsType */}
                 <Area
                   type="monotone"
-                  dataKey="attendance"
-                  name="attendance"
-                  stroke="#3B82F6"
-                  strokeWidth={statsType === 'attendance' ? 3 : 2}
-                  fill="url(#colorAttendance)"
-                  fillOpacity={statsType === 'attendance' ? 1 : 0.3}
+                  dataKey="value"
+                  name={statsType === 'attendance' ? 'การเข้างาน' : 'กิจกรรม'}
+                  stroke={statsType === 'attendance' ? '#3B82F6' : '#eab308'}
+                  strokeWidth={3}
+                  fill={statsType === 'attendance' ? 'url(#colorAttendance)' : 'url(#colorEvent)'}
+                  fillOpacity={1}
                   animationBegin={0}
                   animationDuration={1500}
                   animationEasing="ease-in-out"
                   dot={{
-                    fill: '#3B82F6',
+                    fill: statsType === 'attendance' ? '#3B82F6' : '#eab308',
                     strokeWidth: 2,
-                    r: statsType === 'attendance' ? 5 : 3,
+                    r: 5,
                     stroke: '#fff'
                   }}
                   activeDot={{
                     r: 8,
-                    stroke: '#3B82F6',
+                    stroke: statsType === 'attendance' ? '#3B82F6' : '#eab308',
                     strokeWidth: 3,
                     fill: '#fff'
                   }}
-                  hide={statsType === 'event'}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="event"
-                  name="event"
-                  stroke="#eab308"
-                  strokeWidth={statsType === 'event' ? 3 : 2}
-                  fill="url(#colorEvent)"
-                  fillOpacity={statsType === 'event' ? 1 : 0.3}
-                  animationBegin={0}
-                  animationDuration={1500}
-                  animationEasing="ease-in-out"
-                  dot={{
-                    fill: '#eab308',
-                    strokeWidth: 2,
-                    r: statsType === 'event' ? 5 : 3,
-                    stroke: '#fff'
-                  }}
-                  activeDot={{
-                    r: 8,
-                    stroke: '#eab308',
-                    strokeWidth: 3,
-                    fill: '#fff'
-                  }}
-                  hide={statsType === 'attendance'}
                 />
               </AreaChart>
             </ResponsiveContainer>
