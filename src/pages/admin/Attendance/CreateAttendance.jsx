@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -30,6 +31,17 @@ const styles = `
     }
     to {
       transform: scale(1);
+    }
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 
@@ -184,8 +196,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
   // Handle create new location from map
   const handleCreateNewLocation = () => {
-    if (!newLocationForm.name || !newLocationForm.radius || !newLocationForm.latitude || !newLocationForm.longitude) {
-      setErrorMessage('กรุณากรอกข้อมูลให้ครบถ้วน')
+    console.log('Creating new location, current form:', newLocationForm)
+    
+    // ตรวจสอบว่ากรอกชื่อสถานที่แล้วหรือยัง
+    if (!newLocationForm.name || !newLocationForm.name.trim()) {
+      console.log('Error: No location name')
+      setErrorMessage('กรุณากรอกชื่อสถานที่')
       setShowErrorPopup(true)
       setTimeout(() => {
         setShowErrorPopup(false)
@@ -193,6 +209,29 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       return
     }
 
+    // ตรวจสอบว่ามีพิกัดแล้วหรือยัง
+    if (!newLocationForm.latitude || !newLocationForm.longitude) {
+      console.log('Error: No coordinates')
+      setErrorMessage('กรุณาคลิกบนแผนที่เพื่อเลือกตำแหน่ง')
+      setShowErrorPopup(true)
+      setTimeout(() => {
+        setShowErrorPopup(false)
+      }, 3000)
+      return
+    }
+
+    // ตรวจสอบรัศมี
+    if (!newLocationForm.radius || parseFloat(newLocationForm.radius) <= 0) {
+      console.log('Error: Invalid radius')
+      setErrorMessage('กรุณากรอกรัศมีที่ถูกต้อง (มากกว่า 0)')
+      setShowErrorPopup(true)
+      setTimeout(() => {
+        setShowErrorPopup(false)
+      }, 3000)
+      return
+    }
+
+    console.log('Validation passed, creating location...')
     const maxId = locations.length > 0 ? Math.max(...locations.map(loc => loc.id)) : 0
     const newLocation = {
       id: maxId + 1,
@@ -890,61 +929,137 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         </PageModal>
       )}
 
-      {/* Warning Popup - กรอกข้อมูลก่อนเปิดแผนที่ */}
-      {showWarningPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto animate-bounce-in">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+      {/* Warning Popup - กรอกข้อมูลก่อนเปิดแผนที่ (portal to body so it appears above map modal) */}
+      {showWarningPopup && (typeof document !== 'undefined' ? createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out"
+          style={{
+            animation: 'fadeIn 0.3s ease-out forwards',
+            pointerEvents: 'auto'
+          }}
+          // capture clicks so they don't fall through to underlying map/modal
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform"
+            style={{
+              animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-transparent animate-pulse"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-800">กรุณากรอกข้อมูลก่อน!</h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
                   กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">วันที่</span> ก่อนเลือกสถานที่
                 </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-orange-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                  </svg>
+                  <span>ข้อมูลเหล่านี้จำเป็นสำหรับการสร้างตาราง</span>
+                </div>
               </div>
               <button
                 onClick={() => setShowWarningPopup(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>, document.body) : (
+          <div className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto' }}>
+              <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-transparent animate-pulse"></div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">วันที่</span> ก่อนเลือกสถานที่</p>
+                </div>
+                <button onClick={() => setShowWarningPopup(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
 
-      {/* Error Popup - กรอกข้อมูลไม่ครบในแผนที่ */}
-      {showErrorPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-[10000] pointer-events-none">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto animate-bounce-in">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+      {/* Error Popup - กรอกข้อมูลไม่ครบในแผนที่ (portal to body so it appears above map modal) */}
+      {showErrorPopup && (typeof document !== 'undefined' ? createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out"
+          style={{
+            animation: 'fadeIn 0.3s ease-out forwards',
+            pointerEvents: 'auto'
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()} 
+            className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform"
+            style={{
+              animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-transparent animate-pulse"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-800">ข้อมูลไม่ครบ!</h3>
-                <p className="text-sm text-gray-600 mt-1">{errorMessage}</p>
+                <h3 className="text-lg font-bold text-gray-800 mb-1">ข้อมูลไม่ครบถ้วน!</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{errorMessage}</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-red-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  <span>กรุณาตรวจสอบข้อมูลและลองอีกครั้ง</span>
+                </div>
               </div>
               <button
                 onClick={() => setShowErrorPopup(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>, document.body) : (
+          <div className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto' }}>
+            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-transparent animate-pulse"></div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-800 mb-1">ข้อมูลไม่ครบถ้วน!</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{errorMessage}</p>
+                </div>
+                <button onClick={() => setShowErrorPopup(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
     </div>
   )
 }
