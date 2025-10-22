@@ -298,6 +298,7 @@ const UserCreateModal = memo(function UserCreateModal({
 
   // Handle close
   const handleClose = () => {
+    // Reset form data
     setFormData({
       name: '',
       email: '',
@@ -313,10 +314,25 @@ const UserCreateModal = memo(function UserCreateModal({
       bloodType: '',
       age: '',
       salary: '',
-      status: 'active'
+      status: 'active',
+      startDate: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      emergencyContactRelation: '',
+      workHistory: [],
+      education: [],
+      skills: []
     });
+    
+    // Reset dynamic field states
+    setCurrentWorkHistory({ position: '', company: '', period: '' });
+    setCurrentEducation('');
+    setCurrentSkill('');
+    
+    // Reset other states
     setErrors({});
     setPreviewEmployeeId('');
+    
     onClose();
   };
 
