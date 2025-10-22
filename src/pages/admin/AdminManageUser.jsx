@@ -211,9 +211,10 @@ function AdminManageUser() {
     // Save updated users to localStorage for persistence across login
     localStorage.setItem('usersData', JSON.stringify(updatedUsers));
     
-    // Update selectedUser if it's the one being edited
+    // Update selectedUser if it's the one being edited - find the updated user from updatedUsers
     if (selectedUser && selectedUser.id === editingUser.id) {
-      setSelectedUser({ ...selectedUser, ...updatedUserData });
+      const updatedUser = updatedUsers.find(u => u.id === editingUser.id);
+      setSelectedUser(updatedUser);
     }
 
     // Sync with logged-in user in localStorage if editing current user
