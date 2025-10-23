@@ -5,9 +5,11 @@ const UserDetailModal = React.memo(function UserDetailModal({
   showDetail,
   showAttendance,
   selectedDate,
+  currentUser,
   onClose, 
   onEdit, 
-  onDownloadPDF, 
+  onDownloadPDF,
+  onDelete,
   onToggleAttendance,
   getStatusBadge,
   // Attendance verification props
@@ -70,6 +72,23 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 </svg>
                 แก้ไขข้อมูล
               </button>
+              {onDelete && (
+                <button 
+                  onClick={() => onDelete(user)}
+                  disabled={currentUser?.role === 'admin' && user?.role === 'superadmin'}
+                  className={`px-4 py-2 rounded-xl transition-all duration-200 transform flex items-center gap-2 font-medium shadow-lg ${
+                    currentUser?.role === 'admin' && user?.role === 'superadmin'
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-red-500 hover:bg-red-600 text-white hover:scale-105'
+                  }`}
+                  title={currentUser?.role === 'admin' && user?.role === 'superadmin' ? 'ไม่สามารถลบ Super Admin ได้' : 'ลบผู้ใช้'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  ลบ
+                </button>
+              )}
               <button 
                 onClick={onDownloadPDF} 
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
@@ -369,17 +388,41 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Username</span>
+                    <span className="text-gray-600">Username (User)</span>
                     <span className="font-medium text-gray-800">{user.username}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-600">Password</span>
                     <span className="font-medium text-gray-800">{user.password || '••••••••'}</span>
                   </div>
-                  <div className="flex justify-between py-2">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-600">บทบาท</span>
                     <span className="font-medium text-gray-800 capitalize">{user.role}</span>
                   </div>
+                  
+                  {/* Show Admin Account if user is admin or superadmin */}
+                  {(user.role === 'admin' || user.role === 'superadmin') && user.adminAccount && (
+                    <>
+                      <div className="pt-3 border-t-2 border-blue-200">
+                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 mb-3">
+                          <p className="text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            บัญชี {user.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600">Username (Admin)</span>
+                        <span className="font-medium text-blue-600">{user.adminAccount}</span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">Password (Admin)</span>
+                        <span className="font-medium text-blue-600">{user.adminPassword || '••••••••'}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

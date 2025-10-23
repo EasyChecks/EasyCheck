@@ -249,6 +249,94 @@ function AdminManageUser() {
     closeEditUser();
   };
 
+  // Delete user function
+  const handleDeleteUser = (userToDelete) => {
+    // Prevent deleting superadmin if current user is admin
+    if (currentUser?.role === 'admin' && userToDelete.role === 'superadmin') {
+      setAlertDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'ไม่มีสิทธิ์',
+        message: 'Admin ไม่สามารถลบ Super Admin ได้',
+        autoClose: true
+      });
+      return;
+    }
+
+    // Confirm deletion
+    const confirmDelete = window.confirm(
+      `คุณแน่ใจหรือไม่ที่จะลบ "${userToDelete.name}"?\n\n` +
+      `การดำเนินการนี้จะลบข้อมูลต่อไปนี้:\n` +
+      `• ข้อมูลพนักงาน\n` +
+      `• บัญชีผู้ใช้งาน (${userToDelete.username})\n` +
+      (userToDelete.adminAccount ? `• บัญชี Admin (${userToDelete.adminAccount})\n` : '') +
+      `• ประวัติการเข้างาน\n` +
+      `• ข้อมูลการลา\n\n` +
+      `⚠️ การดำเนินการนี้ไม่สามารถย้อนกลับได้!`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      // 1. Remove from users array
+      const updatedUsers = users.filter(u => u.id !== userToDelete.id);
+      setUsers(updatedUsers);
+      
+      // 2. Update localStorage - usersData
+      localStorage.setItem('usersData', JSON.stringify(updatedUsers));
+      
+      // 3. Remove from logged-in user if it's the same user
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.id === userToDelete.id) {
+          localStorage.removeItem('user');
+        }
+      }
+
+      // 4. Remove admin password if user is admin/superadmin
+      if (userToDelete.role === 'admin' || userToDelete.role === 'superadmin') {
+        const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
+        const adminUsername = userToDelete.adminAccount;
+        if (adminUsername && storedPasswords[adminUsername.toLowerCase()]) {
+          delete storedPasswords[adminUsername.toLowerCase()];
+          localStorage.setItem('mockUserPasswords', JSON.stringify(storedPasswords));
+        }
+      }
+
+      // 5. Remove attendance records (if stored separately)
+      const attendanceKey = `attendanceRecords_${userToDelete.username}`;
+      localStorage.removeItem(attendanceKey);
+
+      // 6. Remove leave records (if stored separately)
+      const leaveKey = `leaveRecords_${userToDelete.username}`;
+      localStorage.removeItem(leaveKey);
+
+      // Close detail modal if it's open
+      if (selectedUser && selectedUser.id === userToDelete.id) {
+        closeDetail();
+      }
+
+      // Show success message
+      setAlertDialog({
+        isOpen: true,
+        type: 'success',
+        title: 'ลบสำเร็จ',
+        message: `ลบ ${userToDelete.name} และข้อมูลที่เกี่ยวข้องทั้งหมดเรียบร้อยแล้ว`,
+        autoClose: true
+      });
+
+    } catch (error) {
+      setAlertDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        message: `ไม่สามารถลบผู้ใช้ได้: ${error.message}`,
+        autoClose: true
+      });
+    }
+  };
+
   const getStatusBadge = (status) => {
     const badges = {
       'active': 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md',
@@ -586,9 +674,11 @@ function AdminManageUser() {
         showDetail={showDetail}
         showAttendance={showAttendance}
         selectedDate={selectedDate}
+        currentUser={currentUser}
         onClose={closeDetail}
         onEdit={openEditUser}
         onDownloadPDF={downloadPDF}
+        onDelete={handleDeleteUser}
         onToggleAttendance={() => setShowAttendance(!showAttendance)}
         getStatusBadge={getStatusBadge}
         getFilteredAttendanceRecords={getFilteredAttendanceRecords}
