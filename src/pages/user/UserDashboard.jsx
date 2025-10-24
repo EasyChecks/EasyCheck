@@ -8,6 +8,7 @@ import { useLeave } from '../../contexts/LeaveContext'
 import { useEvents } from '../../contexts/EventContext'
 import { validateBuddy } from '../../data/usersData'
 import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
+import { sampleSchedules } from '../admin/Attendance/DataAttendance'
 
 function UserDashboard() {
   const { attendance, user } = useAuth()
@@ -66,6 +67,22 @@ function UserDashboard() {
     const events = getEventsForUser(user?.department, user?.position)
     return events.filter(event => event.status === 'ongoing')
   }, [getEventsForUser, user])
+
+  // ตารางงานที่เกี่ยวข้องกับผู้ใช้ - กรองตาม department/position
+  const userSchedules = useMemo(() => {
+    if (!user?.department && !user?.position) return []
+    
+    return sampleSchedules.filter(schedule => {
+      // ถ้าไม่มี teams array หรือว่างเปล่า = แสดงให้ทุกคน
+      if (!schedule.teams || schedule.teams.length === 0) return true
+      
+      // ตรวจสอบว่า department หรือ position ของ user ตรงกับ teams array หรือไม่
+      return schedule.teams.some(team => 
+        team.toLowerCase() === user.department?.toLowerCase() || 
+        team.toLowerCase() === user.position?.toLowerCase()
+      )
+    })
+  }, [user])
 
   // สร้างการแจ้งเตือนจากหลายแหล่ง
   const userNotifications = useMemo(() => {
@@ -382,7 +399,7 @@ function UserDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm">✅ คุณอยู่ในพื้นที่อนุญาต - สามารถเช็คอินได้</span>
+            <span className="text-sm">คุณอยู่ในพื้นที่อนุญาต - สามารถเช็คอินได้</span>
           </div>
         )}
         
@@ -437,7 +454,70 @@ function UserDashboard() {
 
       {/* Attendance Statistics - แสดงสถิติการลงเวลาจริง */}
       <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">สรุปการทำงาน</h3>
         <AttendanceStatsRow />
+      </div>
+
+      {/* Work Schedule - ตารางงาน */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800">ตารางงานของคุณ</h3>
+          <span className="text-sm text-gray-500">วันนี้</span>
+        </div>
+        
+        {/* User's work schedules - กรองตาม department/position */}
+        {userSchedules.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p>ไม่มีตารางงานสำหรับวันนี้</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {userSchedules.map((schedule, index) => {
+              return (
+                <div key={schedule.id} className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-xl p-4 text-white">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-semibold text-lg">{schedule.team}</h4>
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-xs border border-white/30">
+                      {schedule.time}
+                    </span>
+                  </div>
+                  <div className="text-sm space-y-1 text-white/90 mb-3">
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>สถานที่: {schedule.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span>สมาชิก: {schedule.members}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <span>ประเภท: {schedule.type}</span>
+                    </div>
+                  </div>
+                  
+                  {/* ปุ่มดูรายละเอียด */}
+                  <Link
+                    to={`/user/schedule/${schedule.id}`}
+                    className="block w-full text-center bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-semibold border border-white/30 transition-all"
+                  >
+                    ดูรายละเอียด
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Manager Section - แสดงเฉพาะหัวหน้า */}
@@ -500,66 +580,6 @@ function UserDashboard() {
           )}
         </div>
       )}
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Leave Balance */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#48CBFF">
-                <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z"/>
-              </svg>
-            </div>
-          </div>
-          <h3 className="text-gray-600 text-sm mb-1">วันลาคงเหลือ</h3>
-          <p className="text-3xl font-bold text-gray-800">{leaveBalance.total}</p>
-          <p className="text-xs text-gray-500 mt-1">จาก {leaveBalance.quota} วัน</p>
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-600">ลาป่วย:</span>
-                <span className="font-semibold text-blue-600">{leaveBalance.breakdown.sick.remaining}/{leaveBalance.breakdown.sick.total}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">ลากิจ:</span>
-                <span className="font-semibold text-green-600">{leaveBalance.breakdown.personal.remaining}/{leaveBalance.breakdown.personal.total}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">ลาพักร้อน:</span>
-                <span className="font-semibold text-orange-600">{leaveBalance.breakdown.vacation.remaining}/{leaveBalance.breakdown.vacation.total}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Events */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FB923C">
-                <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160ZM480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Z"/>
-              </svg>
-            </div>
-          </div>
-          <h3 className="text-gray-600 text-sm mb-1">กิจกรรม</h3>
-          <p className="text-3xl font-bold text-gray-800">{userEvents.length}</p>
-          <p className="text-xs text-gray-500 mt-1">กิจกรรมที่เกี่ยวข้อง</p>
-          {userEvents.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <Link 
-                to="/user/event" 
-                className="text-xs text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-              >
-                ดูกิจกรรมทั้งหมด
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Recent Notifications */}
       <div className="bg-white rounded-2xl shadow-md p-6">

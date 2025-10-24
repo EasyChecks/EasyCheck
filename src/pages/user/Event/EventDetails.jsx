@@ -101,23 +101,17 @@ export default function EventDetails() {
       </div>
 
       {/* Event Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4 relative">
-        {/* Top-right: ตาราง label */}
-        <div className="absolute top-4 right-4">
-          <div className="bg-white/20 text-white px-3 py-1.5 rounded-full text-sm border border-white/30 shadow-sm backdrop-blur-sm font-medium">
-            ตาราง
-          </div>
-        </div>
-
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
         <div className="flex items-start space-x-3">
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <div className="flex-1 pr-24">
+          <div className="flex-1">
             <h1 className="text-2xl font-bold mb-2">{event.name}</h1>
             <p className="text-blue-100 text-sm mb-2">{event.date}</p>
+            {/* status badge removed as per UX request */}
           </div>
         </div>
       </div>
@@ -232,6 +226,41 @@ export default function EventDetails() {
         </div>
 
         {/* Action area removed as requested (time banners and join button) */}
+      </div>
+
+      {/* Time Remaining Banner */}
+      {timeRemaining && (
+        <div className="mx-4 mt-6 bg-blue-50 border border-blue-400 rounded-xl p-4">
+          <p className="text-sm text-blue-800 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-medium">เวลาเหลือในการเข้าร่วม</span>
+          </p>
+          <p className="text-center mt-2">
+            <span className="text-2xl font-bold text-blue-900">
+              คุณสามารถเข้าร่วมได้อีก {formatTimeRemaining(timeRemaining)}
+            </span>
+          </p>
+        </div>
+      )}
+
+      {/* Join Event Button */}
+      <div className="mx-4 mt-6">
+        <button
+          onClick={() => {
+            // Handle join event
+            alert('เข้าร่วมกิจกรรมสำเร็จ!');
+          }}
+          disabled={!canJoinEvent(event)}
+          className={`w-full py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+            canJoinEvent(event)
+              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-xl hover:from-green-600 hover:to-green-700'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          เข้าร่วมกิจกรรม
+        </button>
       </div>
 
       {/* Info Banner */}
