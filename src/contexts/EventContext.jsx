@@ -140,7 +140,7 @@ export function EventProvider({ children }) {
   // Filter events by user's department/team
   const getEventsForUser = (userDepartment, userPosition) => {
     // Convert user info to comparable format
-    const userTeams = [userDepartment, userPosition].filter(Boolean).map(t => t.toLowerCase())
+    const userTeams = [userDepartment, userPosition].filter(Boolean).map(t => t.toLowerCase().trim())
     
     return events.filter(event => {
       // If event has no teams specified, it's visible to all
@@ -149,12 +149,19 @@ export function EventProvider({ children }) {
       }
       
       // Check if user's department or position matches any of the event teams
-      return event.teams.some(eventTeam => 
-        userTeams.some(userTeam => 
-          eventTeam.toLowerCase().includes(userTeam) || 
-          userTeam.includes(eventTeam.toLowerCase())
-        )
-      )
+      return event.teams.some(eventTeam => {
+        const normalizedEventTeam = eventTeam.toLowerCase().trim()
+        
+        return userTeams.some(userTeam => {
+          // Check both ways: event team contains user team OR user team contains event team
+          // Also check exact match
+          return (
+            normalizedEventTeam === userTeam ||
+            normalizedEventTeam.includes(userTeam) || 
+            userTeam.includes(normalizedEventTeam)
+          )
+        })
+      })
     })
   }
 

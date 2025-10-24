@@ -256,19 +256,11 @@ function AdminDashboard() {
     setTimeout(() => {
       const element = locationRefs.current[locationId]
       if (element) {
-        // Get the scrollable container
-        const scrollContainer = element.parentElement
-
-        if (scrollContainer) {
-          // Calculate the position to scroll to (element's offset from container top)
-          const elementTop = element.offsetTop
-
-          // Scroll the container so the element is at the top with some padding
-          scrollContainer.scrollTo({
-            top: elementTop - 10, // 10px padding from top
-            behavior: 'smooth'
-          })
-        }
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        })
 
         // Add highlight effect
         element.classList.add('ring-4', 'ring-blue-400')
@@ -276,7 +268,7 @@ function AdminDashboard() {
           element.classList.remove('ring-4', 'ring-blue-400')
         }, 2000)
       }
-    }, 350) // Wait for expansion animation (300ms) + small buffer
+    }, 350)
   }
 
   const defaultCenter = [13.7606, 100.5034]

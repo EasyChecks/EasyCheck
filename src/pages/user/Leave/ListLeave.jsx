@@ -5,16 +5,25 @@ import { useLeave } from '../../../contexts/LeaveContext'
 function ListLeave() {
     const navigate = useNavigate()
     const location = useLocation()
-    const { leaveList: allLeaveList } = useLeave()
+    const { leaveList: allLeaveList, lateArrivalList } = useLeave()
     
     // Get selected leave type from navigation state
     const selectedLeaveType = location.state?.leaveType || null
+    const viewType = location.state?.viewType || 'leave' // 'leave' or 'lateArrival'
 
     // Filter leave list by selected type and sort by date (newest first)
     const leaveList = useMemo(() => {
-        let filteredList = selectedLeaveType 
-            ? allLeaveList.filter(leave => leave.leaveType === selectedLeaveType)
-            : allLeaveList;
+        let filteredList;
+        
+        if (viewType === 'lateArrival') {
+            // Show only late arrival requests
+            filteredList = lateArrivalList;
+        } else {
+            // Show only regular leave requests
+            filteredList = selectedLeaveType 
+                ? allLeaveList.filter(leave => leave.leaveType === selectedLeaveType)
+                : allLeaveList;
+        }
         
         // Sort by startDate in descending order (newest first)
         return filteredList.sort((a, b) => {
@@ -22,7 +31,7 @@ function ListLeave() {
             const dateB = b.startDate.split('/').reverse().join('');
             return dateB.localeCompare(dateA);
         });
-    }, [allLeaveList, selectedLeaveType])
+    }, [allLeaveList, lateArrivalList, selectedLeaveType, viewType])
 
     const getStatusColor = (color) => {
         switch(color) {
@@ -56,7 +65,11 @@ function ListLeave() {
                         </svg>
                     </button>
                     <h1 className="text-white text-base sm:text-lg lg:text-xl font-bold drop-shadow-md truncate px-2">
-                        {selectedLeaveType ? `รายการ${selectedLeaveType}` : 'รายการการลา'}
+                        {viewType === 'lateArrival' 
+                            ? 'รายการขอเข้างานสาย' 
+                            : selectedLeaveType 
+                                ? `รายการ${selectedLeaveType}` 
+                                : 'รายการการลา'}
                     </h1>
                     <div className="w-5 sm:w-6"></div>
                 </div>
@@ -70,7 +83,9 @@ function ListLeave() {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <p className="text-gray-400 text-lg">ไม่มีรายการการลา</p>
+                            <p className="text-gray-400 text-lg">
+                                {viewType === 'lateArrival' ? 'ไม่มีรายการขอเข้างานสาย' : 'ไม่มีรายการการลา'}
+                            </p>
                         </div>
                     </div>
                 ) : (
