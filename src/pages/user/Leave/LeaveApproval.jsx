@@ -398,24 +398,17 @@ function LeaveApproval() {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
-          style={{
-            animation: 'fadeIn 0.3s ease-out forwards'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowRejectModal(false);
-              setRejectReason('');
-              setSelectedLeave(null);
-            }
-          }}
-        >
+        <PageModal onClose={() => {
+          setShowRejectModal(false);
+          setRejectReason('');
+          setSelectedLeave(null);
+        }}>
           <div 
             className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform"
             style={{
               animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-br from-[#ef4444] via-[#dc2626] to-[#b91c1c] text-white p-6 rounded-t-2xl relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 transform -skew-x-12" 
@@ -481,7 +474,7 @@ function LeaveApproval() {
               </button>
             </div>
           </div>
-        </div>
+        </PageModal>
       )}
 
       <style>{`
