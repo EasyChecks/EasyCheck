@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { sampleSchedules } from './DataAttendance.jsx'
 import CreateAttendance from './CreateAttendance.jsx'
 import { useLocations } from '../../../contexts/LocationContext'
+import { useEvents } from '../../../contexts/EventContext'
 import { MapContainer, TileLayer, Marker, Circle, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -16,7 +17,53 @@ L.Icon.Default.mergeOptions({
 
 function Attendance() {
   const { locations } = useLocations()
-  const [schedules, setSchedules] = useState(sampleSchedules)
+  const { events, addEvent, updateEvent, deleteEvent } = useEvents()
+
+  // derive schedules: merge sampleSchedules with events from EventContext so
+  // creating a new event doesn't remove the prior sample entries. If an
+  // event has the same id as a sample, event will replace the sample.
+  const toDisplayDate = (d) => {
+    if (!d) return ''
+    // if already in DD/MM/YYYY return as-is
+    if (d.includes('/')) return d
+    // if ISO YYYY-MM-DD convert
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (m) return `${m[3]}/${m[2]}/${m[1]}`
+    return d
+  }
+
+  const splitFromDescription = (desc) => {
+    if (!desc) return []
+    // prefer semicolon delimiter (used by some creators), fallback to newlines
+    if (desc.includes(';')) return desc.split(';').map(s => s.trim()).filter(Boolean)
+    return desc.split('\n').map(s => s.trim()).filter(Boolean)
+  }
+
+  const mappedEvents = (events || []).map(evt => ({
+    id: evt.id,
+    team: (evt.teams && evt.teams[0]) || evt.name || '',
+    month: evt.date && evt.date.length >= 7 ? toDisplayDate(evt.date).slice(3,10) : '',
+    date: toDisplayDate(evt.date) || '',
+    time: evt.startTime && evt.endTime ? `${evt.startTime} - ${evt.endTime}` : (evt.startTime || evt.endTime || ''),
+    location: evt.locationName || evt.location || '',
+    // members: prefer explicit members field, then teams joined, otherwise empty
+    members: (evt.members && evt.members) || (evt.teams && evt.teams.join(', ')) || '',
+    type: evt.type || evt.category || '',
+    // tasks/preparations/goals: some flows store them as arrays, others as description text
+    preparations: Array.isArray(evt.preparations) ? evt.preparations : (evt.preparations ? splitFromDescription(evt.preparations) : []),
+    tasks: Array.isArray(evt.tasks) ? evt.tasks : (evt.tasks ? splitFromDescription(evt.tasks) : (evt.description ? splitFromDescription(evt.description) : [])),
+    goals: Array.isArray(evt.goals) ? evt.goals : (evt.goals ? splitFromDescription(evt.goals) : []),
+  }))
+
+  // Avoid duplicate ids: prefer events from context over sampleSchedules
+  const schedulesToShow = (() => {
+    if (!sampleSchedules || sampleSchedules.length === 0) return mappedEvents
+    if (!mappedEvents || mappedEvents.length === 0) return sampleSchedules
+
+    const eventIds = new Set(mappedEvents.map(e => e.id))
+    const filteredSamples = sampleSchedules.filter(s => !eventIds.has(s.id))
+    return [...filteredSamples, ...mappedEvents]
+  })()
   const [openIds, setOpenIds] = useState([])
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
@@ -149,9 +196,8 @@ function Attendance() {
   }
 
   const confirmDelete = () => {
-    if (selectedIds.length === 0) return
-    const remaining = schedules.filter(s => !selectedIds.includes(s.id))
-    setSchedules(remaining)
+  if (selectedIds.length === 0) return
+  // delete from EventContext; UI will update from events
     setSelectedIds([])
     setSelectMode(false)
     setOpenIds([])
@@ -165,12 +211,17 @@ function Attendance() {
     setTimeout(() => {
       setShowSuccessPopup(false)
     }, 3000)
+    try {
+      selectedIds.forEach(id => deleteEvent(id))
+    } catch (e) {
+      console.error('Failed to delete events from EventContext:', e)
+    }
   }
 
   // ลบทั้งหมด (ทำงานจริงเมื่อผู้ใช้ยืนยันจาก modal)
   const deleteAll = () => {
-    if (schedules.length === 0) return
-    setSchedules([])
+  if (schedulesToShow.length === 0) return
+  // remove all via EventContext
     setSelectedIds([])
     setSelectMode(false)
     setOpenIds([])
@@ -184,10 +235,14 @@ function Attendance() {
     setTimeout(() => {
       setShowSuccessPopup(false)
     }, 3000)
+    try {
+      schedulesToShow.forEach(s => deleteEvent(s.id))
+    } catch (e) {
+      console.error('Failed to delete all events from EventContext:', e)
+    }
   }
 
   const handleCreate = (newItem) => {
-    setSchedules(prev => [newItem, ...prev])
     setShowCreate(false)
     
     // แสดง popup สำเร็จ
@@ -198,10 +253,49 @@ function Attendance() {
     setTimeout(() => {
       setShowSuccessPopup(false)
     }, 3000)
+  // Add to global events so Users/Managers see it
+    try {
+      const locationData = locations.find(loc => loc.name === newItem.location)
+      const [startTime, endTime] = (newItem.time || '').split('-').map(s => s && s.trim())
+      const event = {
+        id: newItem.id,
+        name: newItem.team || `ตาราง ${newItem.team}`,
+        date: (() => {
+          // newItem.date may be ISO (YYYY-MM-DD) or other; convert to DD/MM/YYYY if possible
+          if (!newItem.date) return ''
+          const iso = newItem.date
+          // if already in DD/MM/YYYY format (contains '/') return as-is
+          if (iso.includes('/')) return iso
+          // try parse YYYY-MM-DD
+          const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+          if (m) return `${m[3]}/${m[2]}/${m[1]}`
+          return iso
+        })(),
+        description: (newItem.tasks || []).join('; '),
+        locationName: newItem.location || '',
+        latitude: locationData ? locationData.latitude : 13.7563,
+        longitude: locationData ? locationData.longitude : 100.5018,
+        radius: locationData ? locationData.radius : 100,
+        status: 'ongoing',
+        startTime: startTime || '',
+        endTime: endTime || '',
+        // Store arrays directly so they display in detail view
+        tasks: newItem.tasks || [],
+        preparations: newItem.preparations || [],
+        goals: newItem.goals || [],
+        members: newItem.members || '',
+        type: newItem.type || '',
+  // Make event visible to everyone by default. If you need team-restricted events, change this to use newItem.team
+  teams: []
+      }
+      console.debug('[Attendance] handleCreate - newItem:', newItem, 'event:', event)
+      addEvent(event)
+    } catch (e) {
+      console.error('Failed to add event to EventContext:', e)
+    }
   }
 
   const handleUpdate = (updated) => {
-    setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s))
     setShowEdit(false)
     setEditingItem(null)
     
@@ -213,6 +307,41 @@ function Attendance() {
     setTimeout(() => {
       setShowSuccessPopup(false)
     }, 3000)
+  // Update in EventContext
+    try {
+      const locationData = locations.find(loc => loc.name === updated.location)
+      const [startTime, endTime] = (updated.time || '').split('-').map(s => s && s.trim())
+      const eventUpdate = {
+        id: updated.id,
+        name: updated.team || `ตาราง ${updated.team}`,
+        date: (() => {
+          if (!updated.date) return ''
+          if (updated.date.includes('/')) return updated.date
+          const m = updated.date.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+          if (m) return `${m[3]}/${m[2]}/${m[1]}`
+          return updated.date
+        })(),
+        description: (updated.tasks || []).join('; '),
+        locationName: updated.location || '',
+        latitude: locationData ? locationData.latitude : 13.7563,
+        longitude: locationData ? locationData.longitude : 100.5018,
+        radius: locationData ? locationData.radius : 100,
+        status: 'ongoing',
+        startTime: startTime || '',
+        endTime: endTime || '',
+        // Store arrays directly so they display in detail view
+        tasks: updated.tasks || [],
+        preparations: updated.preparations || [],
+        goals: updated.goals || [],
+        members: updated.members || '',
+        type: updated.type || '',
+  // keep updated events visible to everyone by default
+  teams: []
+      }
+      updateEvent(updated.id, eventUpdate)
+    } catch (e) {
+      console.error('Failed to update event in EventContext:', e)
+    }
   }
 
     return (
@@ -252,9 +381,9 @@ function Attendance() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setShowDeleteAllConfirm(true)}
-                    disabled={schedules.length === 0}
+                    disabled={schedulesToShow.length === 0}
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm ${
-                      schedules.length === 0 
+                      schedulesToShow.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                         : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
                     }`}
@@ -286,11 +415,11 @@ function Attendance() {
         </div>
 
         <div className="space-y-6">
-          {schedules.length === 0 && (
+          {schedulesToShow.length === 0 && (
             <div className="text-center text-gray-600 py-8">ไม่มีตารางงาน</div>
           )}
 
-          {schedules.map(item => {
+          {schedulesToShow.map(item => {
             const isOpen = openIds.includes(item.id)
             const checked = selectedIds.includes(item.id)
 
@@ -539,7 +668,7 @@ function Attendance() {
               role="document"
             >
               <h3 className="text-lg font-semibold text-gray-800">ยืนยันการลบทั้งหมด</h3>
-              <p className="text-sm text-gray-600 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบตารางทั้งหมด ({schedules.length} รายการ)? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+              <p className="text-sm text-gray-600 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบตารางทั้งหมด ({schedulesToShow.length} รายการ)? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
 
               <div className="mt-4 flex justify-end items-center gap-3">
                 <button 

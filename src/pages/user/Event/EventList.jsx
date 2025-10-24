@@ -6,14 +6,18 @@ import { useAuth } from "../../../contexts/useAuth";
 const EventCard = React.memo(({ event }) => (
   <Link to={`/user/event/${event.id}`} className="block">
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-200 overflow-hidden group">
-      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
+      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6 relative">
+        {/* Top-right: ตาราง label */}
+        <div className="absolute top-4 right-4">
+          <div className="bg-white/20 text-white px-3 py-1.5 rounded-full text-sm border border-white/30 shadow-sm backdrop-blur-sm font-medium">
+            ตาราง
+          </div>
+        </div>
+
         <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
+          <div className="flex-1 pr-24">
             <h3 className="text-xl font-bold text-white mb-2">{event.name}</h3>
             <p className="text-blue-100 text-sm">{event.date}</p>
-          </div>
-          <div className={`px-4 py-2 rounded-full text-xs font-semibold ${event.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-            {event.status === 'ongoing' ? 'เริ่มงานแล้ว' : 'เสร็จสิ้น'}
           </div>
         </div>
         <p className="text-white/90 text-sm mb-4">{event.description}</p>
