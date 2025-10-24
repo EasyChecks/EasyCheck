@@ -363,7 +363,7 @@ function LeaveApproval() {
                     <p className="font-semibold text-gray-800">
                       {leave.leaveMode === 'hourly' 
                         ? leave.totalDays 
-                        : `${leave.totalDays} วัน`
+                        : `${leave.totalDays}`
                       }
                     </p>
                   </div>

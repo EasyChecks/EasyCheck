@@ -31,6 +31,33 @@ const initialLocations = [
     latitude: 13.7580,
     longitude: 100.5100,
     status: 'active'
+  },
+  {
+    id: 4,
+    name: 'โบเทค บางนา Hall 101',
+    description: 'ศูนย์แสดงสินค้าและนิทรรศการ บางนา',
+    radius: 200,
+    latitude: 13.6709,
+    longitude: 100.6311,
+    status: 'active'
+  },
+  {
+    id: 5,
+    name: 'CentralWorld ชั้น 3',
+    description: 'ศูนย์การค้า CentralWorld',
+    radius: 150,
+    latitude: 13.7469,
+    longitude: 100.5397,
+    status: 'active'
+  },
+  {
+    id: 6,
+    name: 'สำนักงานใหญ่ ชั้น 5',
+    description: 'สำนักงานใหญ่บริษัท',
+    radius: 100,
+    latitude: 13.7563,
+    longitude: 100.5018,
+    status: 'active'
   }
 ]
 
@@ -41,7 +68,11 @@ export function LocationProvider({ children }) {
     try {
       const savedLocations = localStorage.getItem('locations')
       if (savedLocations) {
-        return JSON.parse(savedLocations)
+        const parsed = JSON.parse(savedLocations)
+        // Merge: เพิ่ม locations ใหม่จาก initialLocations ที่ยังไม่มีใน localStorage
+        const existingNames = new Set(parsed.map(loc => loc.name))
+        const newLocations = initialLocations.filter(loc => !existingNames.has(loc.name))
+        return [...parsed, ...newLocations]
       }
     } catch (error) {
       console.error('Error loading locations from localStorage:', error)

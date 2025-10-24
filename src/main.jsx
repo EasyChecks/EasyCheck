@@ -29,12 +29,11 @@ const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
 const ListLeave = lazy(() => import("./pages/user/Leave/ListLeave.jsx"));
-const CalendarScreen = lazy(() => import("./pages/user/Calendar/CalendarScreen.jsx"));
 const EventRouter = lazy(() => import("./pages/user/Event/EventRouter.jsx"));
 const ProfileScreen = lazy(() => import("./pages/user/Profile/ProfileScreen.jsx"));
 const SettingsScreen = lazy(() => import("./pages/user/Settings/SettingsScreen.jsx"));
-const TeamAttendance = lazy(() => import("./pages/user/Team/TeamAttendance.jsx"));
 const LeaveApproval = lazy(() => import("./pages/user/Leave/LeaveApproval.jsx"));
+const ScheduleDetails = lazy(() => import("./pages/user/Schedule/ScheduleDetails.jsx"));
 
 // Loading Component - ใช้ PuffLoader
 const PageLoader = () => <PuffLoader text="กำลังโหลด..." />;
@@ -126,10 +125,6 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<PageLoader />}><LeaveScreen /></Suspense>
       },
       {
-        path: 'calendar',
-        element: <Suspense fallback={<PageLoader />}><CalendarScreen /></Suspense>
-      },
-      {
         path: 'event/*',
         element: <Suspense fallback={<PageLoader />}><EventRouter /></Suspense>
       },
@@ -142,12 +137,12 @@ const router = createBrowserRouter([
         element: <Suspense fallback={<PageLoader />}><SettingsScreen /></Suspense>
       },
       {
-        path: 'team-attendance',
-        element: <Suspense fallback={<PageLoader />}><TeamAttendance /></Suspense>
-      },
-      {
         path: 'leave-approval',
         element: <Suspense fallback={<PageLoader />}><LeaveApproval /></Suspense>
+      },
+      {
+        path: 'schedule/:id',
+        element: <Suspense fallback={<PageLoader />}><ScheduleDetails /></Suspense>
       }
     ]
   },
