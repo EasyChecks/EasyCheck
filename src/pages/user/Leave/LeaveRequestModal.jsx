@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLeave } from '../../../contexts/LeaveContext';
 import AlertDialog from '../../../components/common/AlertDialog';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
@@ -274,9 +275,34 @@ function LeaveRequestModal({ closeModal }) {
     }, 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4 font-prompt overflow-y-auto">
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 font-prompt overflow-y-auto"
+      style={{
+        animation: 'fadeIn 0.3s ease-out forwards'
+      }}
+    >
       <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes modalSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
         input[type="date"]::-webkit-calendar-picker-indicator {
           cursor: pointer;
           position: absolute;
@@ -297,7 +323,12 @@ function LeaveRequestModal({ closeModal }) {
           color: transparent;
         }
       `}</style>
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl my-auto">
+      <div 
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl my-auto"
+        style={{
+          animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+        }}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-4 sm:p-5 lg:p-6 rounded-t-2xl sm:rounded-t-3xl sticky top-0 z-10">
           <div className="flex items-center justify-between">
@@ -1105,7 +1136,8 @@ function LeaveRequestModal({ closeModal }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
