@@ -14,9 +14,9 @@ function LeaveScreen() {
   return (
     <div className="space-y-6 pb-6">
       {/* Floating Header Card */}
-      <div class="bg-white rounded-2xl shadow-md p-6">
-        <h1 class="text-2xl font-bold text-gray-800">การลา</h1>
-        <p class="text-gray-600 mt-1">ดูสิทธิ์การลา</p>
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h1 className="text-2xl font-bold text-gray-800">การลา/มาสาย</h1>
+        <p className="text-gray-600 mt-1">ดูสิทธิ์การลาและการมาสาย</p>
       </div>
 
       <main className="sm:pt-5 lg:pt-6 pb-28 sm:pb-32 relative z-0 sm:px-4 lg:px-6">

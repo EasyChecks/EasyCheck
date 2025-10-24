@@ -50,6 +50,9 @@ function LeaveDetail() {
         }
     }
 
+    // Check if this is a late arrival request
+    const isLateArrival = leaveData.category === 'ขอเข้างานสาย' || leaveData.leaveType === 'ขอเข้างานสาย';
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 font-prompt">
             {/* Header */}
@@ -103,7 +106,7 @@ function LeaveDetail() {
                                     </svg>
                                 </div>
                                 <h3 className="text-gray-800 font-bold text-sm sm:text-base">
-                                    ประเภทการลา
+                                    {isLateArrival ? 'ประเภทคำขอ' : 'ประเภทการลา'}
                                 </h3>
                             </div>
                             <p className="text-gray-700 text-sm sm:text-base ml-8 sm:ml-10 lg:ml-12 font-medium">
@@ -112,15 +115,15 @@ function LeaveDetail() {
                         </div>
 
                         {/* ช่วงเวลา */}
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-purple-100">
+                        <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-cyan-100">
                             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                                <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
                                 <h3 className="text-gray-800 font-bold text-sm sm:text-base">
-                                    ช่วงเวลา
+                                    {isLateArrival ? 'เวลา' : 'ช่วงเวลา'}
                                 </h3>
                             </div>
                             <p className="text-gray-700 text-sm sm:text-base ml-8 sm:ml-10 lg:ml-12 font-medium">
@@ -129,15 +132,15 @@ function LeaveDetail() {
                         </div>
 
                         {/* เหตุผลในการลา */}
-                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-amber-100">
+                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-blue-100">
                             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                                <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                                <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 </div>
                                 <h3 className="text-gray-800 font-bold text-sm sm:text-base">
-                                    เหตุผลในการลา
+                                    {isLateArrival ? 'เหตุผลที่เข้างานสาย' : 'เหตุผลในการลา'}
                                 </h3>
                             </div>
                             <p className="text-gray-700 text-sm sm:text-base ml-8 sm:ml-10 lg:ml-12 font-medium leading-relaxed">
