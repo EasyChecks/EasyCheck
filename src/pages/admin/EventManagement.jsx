@@ -241,7 +241,7 @@ function EventStatusBadge({ status }) {
   )
 }
 
-function EventManagement() {
+function EventManagement({ hideHeader = false, hideMap = false, scrollToId = null }) {
   // Use Event Context
   const { events, addEvent, updateEvent, deleteEvent } = useEvents()
   // Use Location Context (to check for duplicates)
@@ -250,6 +250,37 @@ function EventManagement() {
   const [isAddingEvent, setIsAddingEvent] = useState(false)
   const [editingEventId, setEditingEventId] = useState(null)
   const eventRefs = useRef({}) // Refs for scrolling to event cards
+
+  // Time picker states
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false)
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false)
+  const [showEditStartTimePicker, setShowEditStartTimePicker] = useState(false)
+  const [showEditEndTimePicker, setShowEditEndTimePicker] = useState(false)
+  const startTimeRef = useRef(null)
+  const endTimeRef = useRef(null)
+  const startTimePickerRef = useRef(null)
+  const endTimePickerRef = useRef(null)
+
+  // Handle scroll to event when scrollToId changes
+  useEffect(() => {
+    if (scrollToId && eventRefs.current[scrollToId]) {
+      setTimeout(() => {
+        const element = eventRefs.current[scrollToId]
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          })
+          
+          element.classList.add('ring-4', 'ring-green-400')
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-green-400')
+          }, 2000)
+        }
+      }, 400)
+    }
+  }, [scrollToId])
 
   // Dialog states
   const [successDialog, setSuccessDialog] = useState({ isOpen: false, message: '' })
@@ -305,6 +336,51 @@ function EventManagement() {
 
   // Map center for Bangkok
   const defaultCenter = [13.7606, 100.5034]
+
+  // Generate time options
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
+
+  // Handle time selection
+  const handleTimeSelect = (hour, minute, isStart, isEdit = false) => {
+    const time = `${hour}:${minute}`
+    if (isEdit) {
+      if (isStart) {
+        setEditFormData(prev => ({ ...prev, startTime: time }))
+        setShowEditStartTimePicker(false)
+      } else {
+        setEditFormData(prev => ({ ...prev, endTime: time }))
+        setShowEditEndTimePicker(false)
+      }
+    } else {
+      if (isStart) {
+        setFormData(prev => ({ ...prev, startTime: time }))
+        setShowStartTimePicker(false)
+      } else {
+        setFormData(prev => ({ ...prev, endTime: time }))
+        setShowEndTimePicker(false)
+      }
+    }
+  }
+
+  // Click outside handler for time pickers
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (startTimePickerRef.current && !startTimePickerRef.current.contains(event.target) &&
+          startTimeRef.current && !startTimeRef.current.contains(event.target)) {
+        setShowStartTimePicker(false)
+        setShowEditStartTimePicker(false)
+      }
+      if (endTimePickerRef.current && !endTimePickerRef.current.contains(event.target) &&
+          endTimeRef.current && !endTimeRef.current.contains(event.target)) {
+        setShowEndTimePicker(false)
+        setShowEditEndTimePicker(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Keyboard event handler
   useEffect(() => {
@@ -639,19 +715,22 @@ function EventManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className={hideHeader ? "" : "min-h-screen bg-[#F5F7FA]"}>
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <h1 className="text-2xl font-bold text-gray-800">จัดการงานอีเวนท์</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          กำหนดกิจกรรมและสถานที่ต่างๆที่คนทำงานและผู้เข้าร่วมงานต้องเช็คเข้างานตอนนั้น
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="bg-white border-b border-gray-200 px-6 py-5">
+          <h1 className="text-2xl font-bold text-gray-800">จัดการงานอีเวนท์</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            กำหนดกิจกรรมและสถานที่ต่างๆที่คนทำงานและผู้เข้าร่วมงานต้องเช็คเข้างานตอนนั้น
+          </p>
+        </div>
+      )}
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-8xl mx-auto">
+      <main className={hideHeader ? "" : "px-6 py-8 max-w-8xl mx-auto"}>
         {/* Section: All Event Locations Map */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        {!hideMap && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-800">พื้นที่กิจกรรมทั้งหมด</h2>
@@ -741,7 +820,8 @@ function EventManagement() {
               ))}
             </MapContainer>
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Section: Events List */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -863,30 +943,142 @@ function EventManagement() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       เวลาเริ่มต้น (24 ชั่วโมง)
                     </label>
-                    <input
-                      type="text"
-                      name="startTime"
-                      value={formData.startTime}
-                      onChange={handleInputChange}
-                      placeholder="เช่น 14:30"
-                      pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        ref={startTimeRef}
+                        type="text"
+                        value={formData.startTime || ''}
+                        onClick={() => setShowStartTimePicker(!showStartTimePicker)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                        placeholder="เลือกเวลา"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                        readOnly
+                      />
+                      {showStartTimePicker && (
+                        <div
+                          ref={startTimePickerRef}
+                          className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                        >
+                          <div className="grid grid-cols-2 gap-0 w-64">
+                            <div>
+                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                                ชั่วโมง
+                              </div>
+                              <div className="overflow-y-auto max-h-56">
+                                {hours.map((hour) => (
+                                  <button
+                                    key={hour}
+                                    type="button"
+                                    onClick={() => {
+                                      const currentMinute = formData.startTime?.split(':')[1] || '00'
+                                      handleTimeSelect(hour, currentMinute, true, false)
+                                    }}
+                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                      formData.startTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    }`}
+                                  >
+                                    {hour}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                                นาที
+                              </div>
+                              <div className="overflow-y-auto max-h-56">
+                                {minutes.map((minute) => (
+                                  <button
+                                    key={minute}
+                                    type="button"
+                                    onClick={() => {
+                                      const currentHour = formData.startTime?.split(':')[0] || '00'
+                                      handleTimeSelect(currentHour, minute, true, false)
+                                    }}
+                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                      formData.startTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    }`}
+                                  >
+                                    {minute}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       เวลาสิ้นสุด (24 ชั่วโมง)
                     </label>
-                    <input
-                      type="text"
-                      name="endTime"
-                      value={formData.endTime}
-                      onChange={handleInputChange}
-                      placeholder="เช่น 17:00"
-                      pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        ref={endTimeRef}
+                        type="text"
+                        value={formData.endTime || ''}
+                        onClick={() => setShowEndTimePicker(!showEndTimePicker)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                        placeholder="เลือกเวลา"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                        readOnly
+                      />
+                      {showEndTimePicker && (
+                        <div
+                          ref={endTimePickerRef}
+                          className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                        >
+                          <div className="grid grid-cols-2 gap-0 w-64">
+                            <div>
+                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                                ชั่วโมง
+                              </div>
+                              <div className="overflow-y-auto max-h-56">
+                                {hours.map((hour) => (
+                                  <button
+                                    key={hour}
+                                    type="button"
+                                    onClick={() => {
+                                      const currentMinute = formData.endTime?.split(':')[1] || '00'
+                                      handleTimeSelect(hour, currentMinute, false, false)
+                                    }}
+                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                      formData.endTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    }`}
+                                  >
+                                    {hour}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                                นาที
+                              </div>
+                              <div className="overflow-y-auto max-h-56">
+                                {minutes.map((minute) => (
+                                  <button
+                                    key={minute}
+                                    type="button"
+                                    onClick={() => {
+                                      const currentHour = formData.endTime?.split(':')[0] || '00'
+                                      handleTimeSelect(currentHour, minute, false, false)
+                                    }}
+                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                      formData.endTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    }`}
+                                  >
+                                    {minute}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">
@@ -908,7 +1100,7 @@ function EventManagement() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       เลือกตำแหน่งบนแผนที่ <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300">
+                    <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300 z-0">
                       <MapContainer
                         center={formData.latitude && formData.longitude
                           ? [parseFloat(formData.latitude), parseFloat(formData.longitude)]
@@ -969,14 +1161,15 @@ function EventManagement() {
               </div>
             )}
 
-          <div className="space-y-6">
+          {/* Event List - Show max 3 items, scrollable */}
+          <div className="max-h-[800px] overflow-y-auto space-y-6 pr-2">
             {events.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#D1D5DB" className="mx-auto mb-4">
                   <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Z" />
                 </svg>
                 <p className="text-gray-500 text-lg">ยังไม่มีกิจกรรม</p>
-                <p className="text-gray-400 text-sm mt-2">คลิก "เพิ่มงานใหม่" เพื่อเริ่มต้น</p>
+                <p className="text-gray-400 text-sm mt-2">คลิก "เพิ่มกิจกรรมใหม่" เพื่อเริ่มต้น</p>
               </div>
             ) : (
               events.map((event) => {
@@ -1082,28 +1275,142 @@ function EventManagement() {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               เวลาเริ่มต้น (24 ชั่วโมง)
                             </label>
-                            <input
-                              type="text"
-                              value={currentFormData.startTime}
-                              onChange={(e) => setEditFormData({ ...editFormData, startTime: e.target.value })}
-                              placeholder="เช่น 14:30"
-                              pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-                            />
+                            <div className="relative">
+                              <input
+                                ref={startTimeRef}
+                                type="text"
+                                value={currentFormData.startTime || ''}
+                                onClick={() => setShowEditStartTimePicker(!showEditStartTimePicker)}
+                                onChange={(e) => setEditFormData({ ...editFormData, startTime: e.target.value })}
+                                placeholder="เลือกเวลา"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none cursor-pointer"
+                                readOnly
+                              />
+                              {showEditStartTimePicker && (
+                                <div
+                                  ref={startTimePickerRef}
+                                  className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                                >
+                                  <div className="grid grid-cols-2 gap-0 w-64">
+                                    <div>
+                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                                        ชั่วโมง
+                                      </div>
+                                      <div className="overflow-y-auto max-h-56">
+                                        {hours.map((hour) => (
+                                          <button
+                                            key={hour}
+                                            type="button"
+                                            onClick={() => {
+                                              const currentMinute = currentFormData.startTime?.split(':')[1] || '00'
+                                              handleTimeSelect(hour, currentMinute, true, true)
+                                            }}
+                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                              currentFormData.startTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            }`}
+                                          >
+                                            {hour}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                                        นาที
+                                      </div>
+                                      <div className="overflow-y-auto max-h-56">
+                                        {minutes.map((minute) => (
+                                          <button
+                                            key={minute}
+                                            type="button"
+                                            onClick={() => {
+                                              const currentHour = currentFormData.startTime?.split(':')[0] || '00'
+                                              handleTimeSelect(currentHour, minute, true, true)
+                                            }}
+                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                              currentFormData.startTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            }`}
+                                          >
+                                            {minute}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               เวลาสิ้นสุด (24 ชั่วโมง)
                             </label>
-                            <input
-                              type="text"
-                              value={currentFormData.endTime}
-                              onChange={(e) => setEditFormData({ ...editFormData, endTime: e.target.value })}
-                              placeholder="เช่น 17:00"
-                              pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-                            />
+                            <div className="relative">
+                              <input
+                                ref={endTimeRef}
+                                type="text"
+                                value={currentFormData.endTime || ''}
+                                onClick={() => setShowEditEndTimePicker(!showEditEndTimePicker)}
+                                onChange={(e) => setEditFormData({ ...editFormData, endTime: e.target.value })}
+                                placeholder="เลือกเวลา"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none cursor-pointer"
+                                readOnly
+                              />
+                              {showEditEndTimePicker && (
+                                <div
+                                  ref={endTimePickerRef}
+                                  className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                                >
+                                  <div className="grid grid-cols-2 gap-0 w-64">
+                                    <div>
+                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                                        ชั่วโมง
+                                      </div>
+                                      <div className="overflow-y-auto max-h-56">
+                                        {hours.map((hour) => (
+                                          <button
+                                            key={hour}
+                                            type="button"
+                                            onClick={() => {
+                                              const currentMinute = currentFormData.endTime?.split(':')[1] || '00'
+                                              handleTimeSelect(hour, currentMinute, false, true)
+                                            }}
+                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                              currentFormData.endTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            }`}
+                                          >
+                                            {hour}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                                        นาที
+                                      </div>
+                                      <div className="overflow-y-auto max-h-56">
+                                        {minutes.map((minute) => (
+                                          <button
+                                            key={minute}
+                                            type="button"
+                                            onClick={() => {
+                                              const currentHour = currentFormData.endTime?.split(':')[0] || '00'
+                                              handleTimeSelect(currentHour, minute, false, true)
+                                            }}
+                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                              currentFormData.endTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            }`}
+                                          >
+                                            {minute}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div>
@@ -1138,7 +1445,7 @@ function EventManagement() {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               เลือกตำแหน่งบนแผนที่ <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300">
+                            <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300 z-0">
                               <MapContainer
                                 center={currentFormData.latitude && currentFormData.longitude
                                   ? [parseFloat(currentFormData.latitude), parseFloat(currentFormData.longitude)]

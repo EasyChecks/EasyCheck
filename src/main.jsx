@@ -24,8 +24,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
 const GroupNotificationScreen = lazy(() => import("./pages/admin/GroupNotification/GroupNotificationScreen.jsx"));
 const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
 const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
-const Mapping = lazy(() => import("./pages/admin/Mapping.jsx"));
-const EventManagement = lazy(() => import("./pages/admin/EventManagement.jsx"));
+const MappingAndEvents = lazy(() => import("./pages/admin/MappingAndEvents.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
@@ -78,17 +77,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'mapping',
-        element: <Suspense fallback={<PageLoader />}><Mapping /></Suspense>
+        element: <Suspense fallback={<PageLoader />}><MappingAndEvents /></Suspense>
       },
-      
       {
         path: 'notifications',
         element: <Suspense fallback={<PageLoader />}><GroupNotificationScreen /></Suspense>
-      }
-      ,
-      {
-        path: 'event-management',
-        element: <Suspense fallback={<PageLoader />}><EventManagement /></Suspense>
       },
       {
         path: 'attendance',

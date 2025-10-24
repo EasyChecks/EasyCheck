@@ -163,7 +163,7 @@ function ErrorDialog({ isOpen, message, onClose }) {
   )
 }
 
-function Mapping() {
+function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
   // Use Location Context
   const { locations, addLocation, updateLocation, deleteLocation, deleteLocations } = useLocations()
   // Use Event Context (to check for duplicates)
@@ -186,6 +186,27 @@ function Mapping() {
     message: '',
     onConfirm: () => { }
   })
+
+  // Handle scroll to location when scrollToId changes
+  useEffect(() => {
+    if (scrollToId && locationRefs.current[scrollToId]) {
+      setTimeout(() => {
+        const element = locationRefs.current[scrollToId]
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          })
+          
+          element.classList.add('ring-4', 'ring-green-400')
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-green-400')
+          }, 2000)
+        }
+      }, 400)
+    }
+  }, [scrollToId])
 
   // Form state for adding new location
   const [formData, setFormData] = useState({
@@ -576,20 +597,23 @@ function Mapping() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className={hideHeader ? "" : "min-h-screen bg-[#F5F7FA]"}>
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <h1 className="text-2xl font-bold text-gray-800">ตั้งค่าพื้นที่อนุญาต</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          กำหนดพื้นที่อนุญาตให้พนักงานเช็คเข้างานได้ พร้อมรัศมีและข้อมูลสถานที่แต่ละจุด
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="bg-white border-b border-gray-200 px-6 py-5">
+          <h1 className="text-2xl font-bold text-gray-800">ตั้งค่าพื้นที่อนุญาต</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            กำหนดพื้นที่อนุญาตให้พนักงานเช็คเข้างานได้ พร้อมรัศมีและข้อมูลสถานที่แต่ละจุด
+          </p>
+        </div>
+      )}
 
       {/* Main Content */}
-      <main className="px-6 py-8 max-w-8xl mx-auto">
+      <main className={hideHeader ? "" : "px-6 py-8 max-w-8xl mx-auto"}>
 
         {/* Section 1: Map with all locations */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        {!hideMap && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-800">พื้นที่อนุญาตทั้งหมด</h2>
@@ -674,7 +698,8 @@ function Mapping() {
               ))}
             </MapContainer>
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Section 2: Location List */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -889,6 +914,7 @@ function Mapping() {
           </div>
         )}
 
+          {/* Location List - Show max 3 items, scrollable */}
           {locations.length === 0 ? (
             <div className="text-center py-12">
               <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#D1D5DB" className="mx-auto mb-4">
@@ -898,7 +924,8 @@ function Mapping() {
               <p className="text-gray-400 text-sm mt-2">คลิก "เพิ่มพื้นที่ใหม่" เพื่อเริ่มต้น</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            /* Location List - Show max 3 items, scrollable */
+            <div className="max-h-[800px] overflow-y-auto space-y-4 pr-2">
               {locations.map((location) => {
                 const isEditing = editingId === location.id
                 const currentFormData = isEditing ? editFormData : location
