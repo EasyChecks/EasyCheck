@@ -94,6 +94,8 @@ export function EventProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem('easycheck_events', JSON.stringify(events))
+      // debug log to help trace persistence
+      console.debug('[EventContext] saved events to localStorage, count=', Array.isArray(events) ? events.length : 0)
     } catch (error) {
       console.error('Error saving events to localStorage:', error)
     }
@@ -102,8 +104,15 @@ export function EventProvider({ children }) {
   // Add new event
   const addEvent = (event) => {
     setEvents(prev => {
-      const newEvents = [...prev, event]
-      return newEvents
+      try {
+        const base = Array.isArray(prev) ? prev : []
+        const newEvents = [...base, event]
+        console.debug('[EventContext] addEvent - adding', event, 'new length', newEvents.length)
+        return newEvents
+      } catch (e) {
+        console.error('[EventContext] addEvent error:', e)
+        return prev
+      }
     })
   }
 

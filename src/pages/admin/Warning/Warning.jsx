@@ -478,7 +478,10 @@ export default function Warning() {
       {/* Reject Modal with Reason */}
       {showRejectModal && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
+          style={{
+            animation: 'fadeIn 0.3s ease-out forwards'
+          }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowRejectModal(false)
@@ -487,25 +490,55 @@ export default function Warning() {
             }
           }}
         >
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full animate-pop-up">
-            <div className="bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white p-6 rounded-t-2xl shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-all duration-200">
-              <h2 className="text-xl font-bold">ไม่อนุมัติใบลา</h2>
-              <p className="text-sm text-white/90 mt-1">กรุณาระบุเหตุผล</p>
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform"
+            style={{
+              animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            }}
+          >
+            <div className="bg-gradient-to-br from-[#ef4444] via-[#dc2626] to-[#b91c1c] text-white p-6 rounded-t-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 transform -skew-x-12" 
+                style={{ animation: 'shimmer 3s infinite' }}
+              />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold">ไม่อนุมัติใบลา</h2>
+                </div>
+                <p className="text-sm text-white/90 ml-13">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
+              </div>
             </div>
             
             <div className="p-6">
-              <p className="text-gray-700 mb-4">
-                ใบลาของ <strong className="text-red-600">{selectedItem?.name}</strong>
-              </p>
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-gray-600 mb-1">รายการที่จะไม่อนุมัติ:</p>
+                <p className="text-gray-800 font-semibold">
+                  <span className="text-red-600">{selectedItem?.name}</span>
+                  <span className="text-gray-500 text-sm ml-2">({selectedItem?.role})</span>
+                </p>
+              </div>
               
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                เหตุผล <span className="text-red-500">*</span>
+              </label>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="ระบุเหตุผลที่ไม่อนุมัติ..."
+                placeholder="เช่น: มีงานเร่งด่วนที่ต้องทำในช่วงเวลานี้, ไม่สามารถอนุมัติได้เนื่องจาก..."
                 rows="4"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none resize-none transition-all duration-200 text-sm"
+                style={{
+                  animation: 'fadeInUp 0.5s ease-out 0.1s both'
+                }}
                 autoFocus
               />
+              <p className="text-xs text-gray-500 mt-2">
+                ข้อความนี้จะถูกส่งไปยังผู้ขอลา
+              </p>
             </div>
 
             <div className="p-6 bg-gray-50 rounded-b-2xl flex gap-3">
@@ -515,13 +548,14 @@ export default function Warning() {
                   setRejectReason('')
                   setSelectedItem(null)
                 }}
-                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-semibold"
+                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 font-semibold transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={confirmReject}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-semibold shadow-md hover:shadow-lg"
+                disabled={!rejectReason.trim()}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 ยืนยันไม่อนุมัติ
               </button>
@@ -529,6 +563,48 @@ export default function Warning() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes modalSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes shimmer {
+          0%, 100% {
+            transform: translateX(-100%) skewX(-12deg);
+          }
+          50% {
+            transform: translateX(100%) skewX(-12deg);
+          }
+        }
+      `}</style>
 
       {/* Approve Success Dialog */}
       <SuccessDialog
