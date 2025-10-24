@@ -26,6 +26,17 @@ export const LeaveProvider = ({ children }) => {
         'ลาคลอด': { totalDays: 90 }
     });
 
+    // Late arrival list - separate from leave list
+    const [lateArrivalList, setLateArrivalList] = useState(() => {
+        const saved = localStorage.getItem('lateArrivalList');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Save late arrival list to localStorage
+    useEffect(() => {
+        localStorage.setItem('lateArrivalList', JSON.stringify(lateArrivalList));
+    }, [lateArrivalList]);
+
     // Save to localStorage whenever leaveList changes
     useEffect(() => {
         localStorage.setItem('leaveList', JSON.stringify(leaveList));
@@ -104,6 +115,39 @@ export const LeaveProvider = ({ children }) => {
         return newLeave;
     };
 
+    // Add late arrival request
+    const addLateArrival = (lateArrivalData) => {
+        const [startHour, startMin] = lateArrivalData.startTime.split(':').map(Number);
+        const [endHour, endMin] = lateArrivalData.endTime.split(':').map(Number);
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = endHour * 60 + endMin;
+        const diffMinutes = endMinutes - startMinutes;
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+        
+        const duration = minutes > 0 ? `${hours} ชม. ${minutes} นาที` : `${hours} ชั่วโมง`;
+        const period = formatPeriod(lateArrivalData.date, lateArrivalData.date, lateArrivalData.startTime, lateArrivalData.endTime);
+
+        const newLateArrival = {
+            id: Date.now(),
+            leaveType: 'ขอเข้างานสาย',
+            days: duration,
+            category: 'ขอเข้างานสาย',
+            period: period,
+            startDate: lateArrivalData.date,
+            endDate: lateArrivalData.date,
+            startTime: lateArrivalData.startTime,
+            endTime: lateArrivalData.endTime,
+            reason: lateArrivalData.reason,
+            status: 'รออนุมัติ',
+            statusColor: 'yellow',
+            documents: lateArrivalData.documents || []
+        };
+        
+        setLateArrivalList(prev => [newLateArrival, ...prev]);
+        return newLateArrival;
+    };
+
     // Update leave request
     const updateLeave = (id, updates) => {
         setLeaveList(prev => prev.map(leave => 
@@ -121,6 +165,12 @@ export const LeaveProvider = ({ children }) => {
         const leave = leaveList.find(l => l.id === id);
         if (leave && leave.status === 'รออนุมัติ') {
             deleteLeave(id);
+            return true;
+        }
+        // Also check in late arrival list
+        const lateArrival = lateArrivalList.find(l => l.id === id);
+        if (lateArrival && lateArrival.status === 'รออนุมัติ') {
+            setLateArrivalList(prev => prev.filter(item => item.id !== id));
             return true;
         }
         return false;
@@ -175,6 +225,13 @@ export const LeaveProvider = ({ children }) => {
                 'ลาคลอดบุตรได้ไม่เกิน 90 วัน',
                 'ไม่จำเป็นต้องมีใบรับรองแพทย์',
                 'ยื่นใบลาคลอดบุตรล่วงหน้า หรือในวันลา เพื่อเสนอต่อผู้บังคับบัญชาให้ทำการอนุมัติตามลำดับ'
+            ],
+            'ขอเข้างานสาย': [
+                'สามารถขอเข้างานสายได้เฉพาะกรณีเจอเหตุสุดวิสัยในระหว่างมาทำงาน',
+                'ต้องระบุเหตุผลที่ชัดเจนและสมเหตุสมผล',
+                'ควรแนบรูปภาพหลักฐานประกอบการพิจารณา (ถ้ามี)',
+                'วันที่ขอจะถูกล็อคเป็นวันปัจจุบันเท่านั้น',
+                'ต้องได้รับการอนุมัติจากผู้บังคับบัญชา'
             ]
         };
         return rules[type] || [];
@@ -284,8 +341,10 @@ export const LeaveProvider = ({ children }) => {
 
     const value = {
         leaveList,
+        lateArrivalList,
         leaveQuota,
         addLeave,
+        addLateArrival,
         updateLeave,
         deleteLeave,
         cancelLeave,

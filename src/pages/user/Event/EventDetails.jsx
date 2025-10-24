@@ -18,10 +18,60 @@ export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { events, canJoinEvent, getTimeRemainingToJoin } = useEvents();
-  const { attendance } = useAuth()
+  const { checkIn, attendance } = useAuth()
   const [timeRemaining, setTimeRemaining] = React.useState(null);
+  const [userLocation, setUserLocation] = React.useState(null);
+  const [isWithinRadius, setIsWithinRadius] = React.useState(false);
+  const [checkingLocation, setCheckingLocation] = React.useState(false);
 
   const event = events.find((e) => e.id === parseInt(id));
+
+  // Calculate distance between two points
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // Earth radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) *
+      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  };
+
+  // Check user location
+  useEffect(() => {
+    if (!event) return;
+    
+    setCheckingLocation(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLon = position.coords.longitude;
+          setUserLocation({ lat: userLat, lon: userLon });
+          
+          const distance = calculateDistance(
+            userLat,
+            userLon,
+            event.latitude,
+            event.longitude
+          );
+          
+          setIsWithinRadius(distance <= event.radius);
+          setCheckingLocation(false);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setCheckingLocation(false);
+        }
+      );
+    }
+  }, [event]);
 
   // Update time remaining every minute (only if event exists)
   useEffect(() => {
@@ -50,14 +100,13 @@ export default function EventDetails() {
     return `${timeObj.hours} ชั่วโมง ${timeObj.minutes} นาที`;
   };
 
-  const handleJoinEvent = () => {
-    if (canJoinEvent(event)) {
-      // Event 'join' action — UI-only here (attendance handled by checkIn)
-      // If you want joining to also call checkIn, call `checkIn` from useAuth here.
+  const handleJoinEvent = async () => {
+    if (canJoinEvent(event) && isWithinRadius) {
+      await checkIn();
     }
   };
 
-  const canUserJoin = event ? canJoinEvent(event) : false;
+  const canUserJoin = event ? canJoinEvent(event) && isWithinRadius : false;
   const isJoined = attendance?.status === 'checked_in'
 
   if (!event) {
@@ -231,7 +280,35 @@ export default function EventDetails() {
           )}
         </div>
 
-        {/* Action area removed as requested (time banners and join button) */}
+        {/* Action Buttons */}
+        <div className="p-6">
+          {checkingLocation ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">กำลังตรวจสอบตำแหน่ง...</p>
+            </div>
+          ) : !isWithinRadius ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <p className="text-red-700 font-medium mb-2">⚠️ คุณอยู่นอกพื้นที่กิจกรรม</p>
+              <p className="text-sm text-red-600">กรุณาเข้าใกล้สถานที่จัดกิจกรรมเพื่อเช็คอิน</p>
+            </div>
+          ) : isJoined ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-green-700 font-medium">✅ คุณเช็คอินแล้ว</p>
+            </div>
+          ) : canUserJoin ? (
+            <button
+              onClick={handleJoinEvent}
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+            >
+              เข้าร่วมกิจกรรม
+            </button>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+              <p className="text-gray-700 font-medium">⏰ หมดเวลาเข้าร่วม</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Info Banner */}
