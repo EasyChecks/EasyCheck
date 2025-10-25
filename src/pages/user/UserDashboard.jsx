@@ -11,7 +11,7 @@ import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 import { sampleSchedules } from '../admin/Attendance/DataAttendance'
 
 function UserDashboard() {
-  const { attendance, user } = useAuth()
+  const { attendance, user, attendanceRecords } = useAuth()
   const { getTeamStats, getUnreadNotifications } = useTeam()
   const { hideLoading } = useLoading()
   const { locations } = useLocations()
@@ -19,6 +19,7 @@ function UserDashboard() {
   const { getEventsForUser } = useEvents()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showBuddyCheckIn, setShowBuddyCheckIn] = useState(false)
+  const [showAttendanceHistory, setShowAttendanceHistory] = useState(false)
   const [buddyData, setBuddyData] = useState({
     employeeId: '',
     phone: ''
@@ -262,7 +263,7 @@ function UserDashboard() {
 
   // ล็อกการเลื่อนเมื่อ Modal เปิด
   useEffect(() => {
-    if (showBuddyCheckIn) {
+    if (showBuddyCheckIn || showAttendanceHistory) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
@@ -270,7 +271,7 @@ function UserDashboard() {
     return () => {
       document.body.style.overflow = 'unset'
     }
-  }, [showBuddyCheckIn])
+  }, [showBuddyCheckIn, showAttendanceHistory])
 
   // Update time every second
   useEffect(() => {
@@ -454,7 +455,18 @@ function UserDashboard() {
 
       {/* Attendance Statistics - แสดงสถิติการลงเวลาจริง */}
       <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">สรุปการทำงาน</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800">สรุปการทำงาน</h3>
+          <button
+            onClick={() => setShowAttendanceHistory(true)}
+            className="px-4 py-2 bg-[#48CBFF] hover:bg-[#3AB4E8] text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            ประวัติการลงเวลา
+          </button>
+        </div>
         <AttendanceStatsRow />
       </div>
 
@@ -631,6 +643,170 @@ function UserDashboard() {
           )}
         </div>
       </div>
+
+      {/* Attendance History Modal */}
+      {showAttendanceHistory && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowAttendanceHistory(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">ประวัติการลงเวลา</h2>
+                  <p className="text-white/90 text-sm mt-1">รายละเอียดการเข้า-ออกงานของคุณ</p>
+                </div>
+                <button
+                  onClick={() => setShowAttendanceHistory(false)}
+                  className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl flex items-center justify-center text-white transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              {!attendanceRecords || attendanceRecords.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500">ยังไม่มีประวัติการลงเวลา</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {attendanceRecords.map((record, index) => {
+                    const recordDate = new Date(record.date)
+                    const dateStr = recordDate.toLocaleDateString('th-TH', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                    
+                    // รองรับทั้งรูปแบบเก่า (checkIn/checkOut) และรูปแบบใหม่ (shifts)
+                    const shifts = record.shifts || [{
+                      checkIn: record.checkIn,
+                      checkOut: record.checkOut,
+                      status: record.status
+                    }]
+                    
+                    return (
+                      <div key={index} className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="font-bold text-gray-800">{dateStr}</h3>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {shifts.length} {shifts.length === 1 ? 'กะ' : 'กะ'}
+                            </p>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            shifts.some(s => s.status === 'late') ? 'bg-yellow-100 text-yellow-700' :
+                            shifts.some(s => s.status === 'on_time') ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {shifts.some(s => s.status === 'late') ? '⏰ มาสาย' :
+                             shifts.some(s => s.status === 'on_time') ? '✅ ตรงเวลา' :
+                             '📝 บันทึกแล้ว'}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {shifts.map((shift, shiftIndex) => (
+                            <div key={shiftIndex} className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-semibold text-gray-700">
+                                  {shifts.length > 1 ? `กะที่ ${shiftIndex + 1}` : 'เวลาทำงาน'}
+                                </span>
+                                {shift.status && (
+                                  <span className={`text-xs px-2 py-1 rounded-full ${
+                                    shift.status === 'late' ? 'bg-yellow-100 text-yellow-700' :
+                                    shift.status === 'on_time' ? 'bg-green-100 text-green-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {shift.status === 'late' ? 'สาย' :
+                                     shift.status === 'on_time' ? 'ตรงเวลา' :
+                                     shift.status}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-gray-500 mb-1">เข้างาน</p>
+                                    <p className="font-bold text-gray-800">
+                                      {shift.checkIn || '-'}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-gray-500 mb-1">ออกงาน</p>
+                                    <p className="font-bold text-gray-800">
+                                      {shift.checkOut || 'ยังไม่ออกงาน'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {shift.checkIn && shift.checkOut && (
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600">เวลาทำงาน</span>
+                                    <span className="font-semibold text-gray-800">
+                                      {(() => {
+                                        const [inHour, inMin] = shift.checkIn.split(':').map(Number)
+                                        const [outHour, outMin] = shift.checkOut.split(':').map(Number)
+                                        const totalMinutes = (outHour * 60 + outMin) - (inHour * 60 + inMin)
+                                        const hours = Math.floor(totalMinutes / 60)
+                                        const minutes = totalMinutes % 60
+                                        return `${hours} ชั่วโมง ${minutes} นาที`
+                                      })()}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 bg-gray-50 border-t border-gray-200">
+              <button
+                onClick={() => setShowAttendanceHistory(false)}
+                className="w-full bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Buddy Check-In Modal */}
       {showBuddyCheckIn && (
