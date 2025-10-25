@@ -23,6 +23,8 @@ function DownloadData() {
     eventStats: false
   });
   const [selectedFormat, setSelectedFormat] = useState('excel'); // excel, pdf, csv
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
   
   // Alert Dialog States
   const [alertDialog, setAlertDialog] = useState({
@@ -106,6 +108,8 @@ function DownloadData() {
     setShowModal(false);
     setSelectedReport(null);
     setSelectedBranches([]);
+    setShowPreview(false);
+    setPreviewData(null);
   };
 
   const handleOptionToggle = (optionId) => {
@@ -169,6 +173,43 @@ function DownloadData() {
     }
 
     return data;
+  };
+
+  // Handle Preview
+  const handlePreview = () => {
+    // Check validations first
+    if (isSuperAdmin && selectedBranches.length === 0) {
+      setAlertDialog({
+        isOpen: true,
+        type: 'warning',
+        title: 'กรุณาเลือกสาขา',
+        message: 'กรุณาเลือกสาขาที่ต้องการดูตัวอย่างข้อมูลอย่างน้อย 1 สาขา',
+        autoClose: true
+      });
+      return;
+    }
+
+    const selectedCount = Object.values(selectedOptions).filter(Boolean).length;
+    if (selectedCount === 0) {
+      setAlertDialog({
+        isOpen: true,
+        type: 'warning',
+        title: 'กรุณาเลือกข้อมูล',
+        message: 'กรุณาเลือกข้อมูลที่ต้องการดูตัวอย่างอย่างน้อย 1 รายการ',
+        autoClose: true
+      });
+      return;
+    }
+
+    // Generate preview data
+    const data = generateMockData();
+    setPreviewData(data);
+    setShowPreview(true);
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setPreviewData(null);
   };
 
   // Download as Excel (CSV format)
@@ -467,9 +508,9 @@ function DownloadData() {
       </div>
 
       {/* Modal */}
-      {showModal && selectedReport && (
+      {showModal && selectedReport && !showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden transform animate-slideUp max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden transform animate-slideUp max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
@@ -701,6 +742,16 @@ function DownloadData() {
                   ยกเลิก
                 </button>
                 <button
+                  onClick={handlePreview}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  ดูตัวอย่าง
+                </button>
+                <button
                   onClick={handleDownload}
                   className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
                 >
@@ -708,6 +759,114 @@ function DownloadData() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                   </svg>
                   ดาวน์โหลด {selectedFormat.toUpperCase()}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreview && previewData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            {/* Preview Header */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    ตัวอย่างข้อมูล - {selectedFormat.toUpperCase()}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    แสดง {previewData.length} รายการ • {startDate} ถึง {endDate}
+                  </p>
+                </div>
+                <button
+                  onClick={closePreview}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Preview Body - Table View */}
+            <div className="flex-1 overflow-auto p-6">
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {Object.keys(previewData[0]).map((header, index) => (
+                        <th
+                          key={index}
+                          className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap"
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {previewData.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="hover:bg-gray-50">
+                        {Object.values(row).map((value, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                          >
+                            {value}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Format-specific preview info */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                      รูปแบบไฟล์: {selectedFormat.toUpperCase()}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      {selectedFormat === 'excel' && 'ไฟล์ Excel (.xlsx) สามารถเปิดด้วย Microsoft Excel, Google Sheets หรือโปรแกรมแผ่นงานอื่นๆ'}
+                      {selectedFormat === 'pdf' && 'ไฟล์ PDF (.pdf) เหมาะสำหรับการพิมพ์และแชร์ สามารถเปิดด้วย Adobe Reader หรือโปรแกรมอ่าน PDF อื่นๆ'}
+                      {selectedFormat === 'csv' && 'ไฟล์ CSV (.csv) เป็นรูปแบบข้อมูลธรรมดา สามารถนำเข้าระบบอื่นได้ง่าย'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview Footer */}
+            <div className="p-6 bg-gray-50 border-t border-gray-200">
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={closePreview}
+                  className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg font-medium border border-gray-300 transition-colors text-sm"
+                >
+                  ปิด
+                </button>
+                <button
+                  onClick={() => {
+                    closePreview();
+                    handleDownload();
+                  }}
+                  className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors text-sm flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  ดาวน์โหลดเลย
                 </button>
               </div>
             </div>

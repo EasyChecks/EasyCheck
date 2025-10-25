@@ -37,6 +37,52 @@ export const AuthProvider = ({ children }) => {
       // คำนวณสถิติจากข้อมูลที่โหลดมา
       const stats = calculateAttendanceStats(records)
       setAttendanceStats(stats)
+    } else {
+      // ถ้าไม่มีข้อมูล ให้สร้าง mock data สำหรับ demo
+      const mockRecords = [
+        {
+          date: new Date().toISOString().split('T')[0], // วันนี้
+          shifts: [
+            {
+              checkIn: '08:00',
+              checkOut: '12:00',
+              status: 'on_time'
+            },
+            {
+              checkIn: '13:00',
+              checkOut: '17:00',
+              status: 'on_time'
+            }
+          ]
+        },
+        {
+          date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // เมื่อวาน
+          shifts: [
+            {
+              checkIn: '08:15',
+              checkOut: '17:30',
+              status: 'late'
+            }
+          ]
+        },
+        {
+          date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 วันที่แล้ว
+          shifts: [
+            {
+              checkIn: '07:45',
+              checkOut: '12:00',
+              status: 'on_time'
+            },
+            {
+              checkIn: '18:00',
+              checkOut: '22:00',
+              status: 'on_time'
+            }
+          ]
+        }
+      ]
+      setAttendanceRecords(mockRecords)
+      localStorage.setItem('attendanceRecords', JSON.stringify(mockRecords))
     }
     setLoading(false)
   }, [])
@@ -70,29 +116,49 @@ export const AuthProvider = ({ children }) => {
     const newAttendance = {
       ...attendance,
       checkOutTime: time,
-      status: 'not_checked_in', // รีเซ็ตกลับเป็น not_checked_in เพื่อพร้อมสำหรับวันใหม่
+      status: 'not_checked_in', // รีเซ็ตกลับเป็น not_checked_in เพื่อพร้อมสำหรับวันใหม่หรือกะถัดไป
       checkOutPhoto: photo
     }
     
-    // บันทึกข้อมูลการลงเวลาของวันนี้ลง records
-    const todayRecord = {
-      date: today,
+    // สร้าง shift record สำหรับการลงเวลาครั้งนี้
+    const shiftRecord = {
       checkIn: attendance.checkInTime,
       checkOut: time,
+      checkInPhoto: attendance.checkInPhoto,
+      checkOutPhoto: photo,
       status: getAttendanceStatus({
         checkIn: attendance.checkInTime,
         checkOut: time
       }, { workTimeStart: '08:00' })
     }
     
-    // อัปเดต records
+    // อัปเดต records รองรับหลาย shift ต่อวัน
     const updatedRecords = [...attendanceRecords]
-    const existingIndex = updatedRecords.findIndex(r => r.date === today)
+    const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
     
-    if (existingIndex >= 0) {
-      updatedRecords[existingIndex] = todayRecord
+    if (existingDayIndex >= 0) {
+      // วันนี้มีข้อมูลอยู่แล้ว - เพิ่ม shift ใหม่
+      const existingDay = updatedRecords[existingDayIndex]
+      if (!existingDay.shifts) {
+        // แปลงข้อมูลเก่าเป็นรูปแบบ shifts
+        existingDay.shifts = [{
+          checkIn: existingDay.checkIn,
+          checkOut: existingDay.checkOut,
+          status: existingDay.status
+        }]
+        delete existingDay.checkIn
+        delete existingDay.checkOut
+        delete existingDay.status
+      }
+      // เพิ่ม shift ใหม่
+      existingDay.shifts.push(shiftRecord)
+      updatedRecords[existingDayIndex] = existingDay
     } else {
-      updatedRecords.push(todayRecord)
+      // วันใหม่ - สร้าง record ใหม่
+      updatedRecords.push({
+        date: today,
+        shifts: [shiftRecord]
+      })
     }
     
     // เรียงลำดับตามวันที่
