@@ -1,25 +1,26 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import AlertDialog from '../../components/common/AlertDialog';
 import { useAuth } from '../../contexts/useAuth';
-import UserDetailModal from '../../components/admin/UserDetailModal';
-import UserEditModal from '../../components/admin/UserEditModal';
 import UserTable from '../../components/admin/UserTable';
-import UserCreateModal from '../../components/admin/UserCreateModal';
-import CsvImportModal from '../../components/admin/CsvImportModal';
 import { usersData as importedUsersData } from '../../data/usersData';
 import { 
   generateEmployeeId, 
   validateUserData, 
   parseCsvData, 
   processCsvUsers
-  // exportToCSV - will be used for export feature later
-} from '../../utils/adminUserUtils'; // Import utility functions
+} from '../../utils/adminUserUtils';
 import { generateUserPDF } from '../../utils/userPDFGenerator';
+
+// Lazy load heavy components เพื่อลดเวลา initial load
+const UserDetailModal = lazy(() => import('../../components/admin/UserDetailModal'));
+const UserEditModal = lazy(() => import('../../components/admin/UserEditModal'));
+const UserCreateModal = lazy(() => import('../../components/admin/UserCreateModal'));
+const CsvImportModal = lazy(() => import('../../components/admin/CsvImportModal'));
 
 function AdminManageUser() {
   const { user: currentUser } = useAuth();
   
-  // Initialize users from localStorage if available, otherwise use imported data
+  // เริ่มต้นข้อมูลผู้ใช้จาก localStorage หรือข้อมูล default
   const [users, setUsers] = useState(() => {
     try {
       const storedUsers = localStorage.getItem('usersData');
@@ -31,6 +32,31 @@ function AdminManageUser() {
     }
     return importedUsersData;
   });
+  
+  // ✅ ข้อ 3: ฟังการเปลี่ยนแปลง usersData จาก tab อื่น (User/Manager แก้ไข → Admin เห็น)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'usersData' && e.newValue) {
+        try {
+          const updatedUsers = JSON.parse(e.newValue);
+          setUsers(updatedUsers);
+          
+          // ถ้ากำลังเปิด detail modal อยู่ ให้อัปเดต selectedUser ด้วย
+          if (selectedUser) {
+            const updatedSelectedUser = updatedUsers.find(u => u.id === selectedUser.id);
+            if (updatedSelectedUser) {
+              setSelectedUser(updatedSelectedUser);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to parse updated users:', e);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [selectedUser]);
   
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -218,13 +244,16 @@ function AdminManageUser() {
     }
 
     // Sync with logged-in user in localStorage if editing current user
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      if (parsedUser.id === editingUser.id) {
-        // Update the logged-in user's data in localStorage
-        const updatedLoggedInUser = { ...parsedUser, ...updatedUserData };
-        localStorage.setItem('user', JSON.stringify(updatedLoggedInUser));
+    const tabId = window.name // ใช้ window.name แทน sessionStorage
+    if (tabId) {
+      const storedUser = localStorage.getItem(`user_${tabId}`)
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.id === editingUser.id) {
+          // Update the logged-in user's data in localStorage
+          const updatedLoggedInUser = { ...parsedUser, ...updatedUserData };
+          localStorage.setItem(`user_${tabId}`, JSON.stringify(updatedLoggedInUser));
+        }
       }
     }
 
@@ -285,12 +314,15 @@ function AdminManageUser() {
       // 2. Update localStorage - usersData
       localStorage.setItem('usersData', JSON.stringify(updatedUsers));
       
-      // 3. Remove from logged-in user if it's the same user
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser.id === userToDelete.id) {
-          localStorage.removeItem('user');
+      // 3. Remove from logged-in user if it's the same user (localStorage + tabId)
+      const tabId = window.name // ใช้ window.name แทน sessionStorage
+      if (tabId) {
+        const storedUser = localStorage.getItem(`user_${tabId}`)
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser.id === userToDelete.id) {
+            localStorage.removeItem(`user_${tabId}`);
+          }
         }
       }
 
@@ -390,13 +422,37 @@ function AdminManageUser() {
 
   // Handle create new user
   const handleCreateUser = (newUser) => {
-    setUsers([...users, newUser]);
+    // 1. เพิ่มเข้า state
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    
+    // 2. บันทึกลง localStorage เพื่อให้ user ใหม่สามารถ login ได้ทันที
+    localStorage.setItem('usersData', JSON.stringify(updatedUsers));
+    
+    // 3. บันทึกรหัสผ่าน user account ลง localStorage
+    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
+    
+    // บันทึกรหัสผ่านสำหรับ user account (username/employeeId)
+    if (newUser.username) {
+      storedPasswords[newUser.username.toLowerCase()] = newUser.password;
+    }
+    if (newUser.employeeId) {
+      storedPasswords[newUser.employeeId.toLowerCase()] = newUser.password;
+    }
+    
+    // 4. ถ้าเป็น admin/superadmin ให้บันทึกรหัสผ่าน admin account ด้วย
+    if ((newUser.role === 'admin' || newUser.role === 'superadmin') && newUser.adminAccount) {
+      storedPasswords[newUser.adminAccount.toLowerCase()] = newUser.adminPassword || newUser.password;
+    }
+    
+    // 5. บันทึก passwords ทั้งหมดลง localStorage
+    localStorage.setItem('mockUserPasswords', JSON.stringify(storedPasswords));
     
     setAlertDialog({
       isOpen: true,
       type: 'success',
       title: 'เพิ่มผู้ใช้สำเร็จ',
-      message: `เพิ่ม ${newUser.name} เข้าระบบเรียบร้อยแล้ว\n\nรหัสพนักงาน: ${newUser.employeeId}\nรหัสผ่าน: ${newUser.password}${
+      message: `เพิ่ม ${newUser.name} เข้าระบบเรียบร้อยแล้ว\n\n✅ สามารถ Login ได้ทันที!\n\nรหัสพนักงาน: ${newUser.employeeId}\nรหัสผ่าน: ${newUser.password}${
         newUser.adminAccount ? `\n\n🔐 Admin Account:\nUsername: ${newUser.adminAccount}\nPassword: ${newUser.adminPassword}` : ''
       }`,
       autoClose: false // ไม่ปิดอัตโนมัติเพื่อให้ admin อ่านรหัส
@@ -497,7 +553,31 @@ function AdminManageUser() {
       return;
     }
 
-    setUsers([...users, ...processedUsers]);
+    // 1. เพิ่ม users เข้า state
+    const updatedUsers = [...users, ...processedUsers];
+    setUsers(updatedUsers);
+    
+    // 2. บันทึกลง localStorage เพื่อให้ user ที่ import มาสามารถ login ได้
+    localStorage.setItem('usersData', JSON.stringify(updatedUsers));
+    
+    // 3. บันทึกรหัสผ่านของทุกคนที่ import มา
+    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
+    processedUsers.forEach(user => {
+      // บันทึกรหัสผ่าน user account
+      if (user.username) {
+        storedPasswords[user.username.toLowerCase()] = user.password;
+      }
+      if (user.employeeId) {
+        storedPasswords[user.employeeId.toLowerCase()] = user.password;
+      }
+      
+      // ถ้าเป็น admin/superadmin ให้บันทึกรหัสผ่าน admin account ด้วย
+      if ((user.role === 'admin' || user.role === 'superadmin') && user.adminAccount) {
+        storedPasswords[user.adminAccount.toLowerCase()] = user.adminPassword || user.password;
+      }
+    });
+    localStorage.setItem('mockUserPasswords', JSON.stringify(storedPasswords));
+    
     setShowCsvModal(false);
     setCsvData([]);
     setCsvFile(null);
@@ -506,7 +586,7 @@ function AdminManageUser() {
       isOpen: true,
       type: 'success',
       title: 'นำเข้าสำเร็จ',
-      message: `นำเข้าข้อมูลพนักงาน ${processedUsers.length} บัญชี เรียบร้อยแล้ว`,
+      message: `นำเข้าข้อมูลพนักงาน ${processedUsers.length} บัญชี เรียบร้อยแล้ว\n\n✅ ทุกคนสามารถ Login ได้ทันที!`,
       autoClose: true
     });
   };
@@ -668,40 +748,69 @@ function AdminManageUser() {
         </div>
       </div>
 
-      {/* User Detail Modal Component */}
-      <UserDetailModal
-        user={selectedUser}
-        showDetail={showDetail}
-        showAttendance={showAttendance}
-        selectedDate={selectedDate}
-        currentUser={currentUser}
-        onClose={closeDetail}
-        onEdit={openEditUser}
-        onDownloadPDF={downloadPDF}
-        onDelete={handleDeleteUser}
-        onToggleAttendance={() => setShowAttendance(!showAttendance)}
-        getStatusBadge={getStatusBadge}
-        getFilteredAttendanceRecords={getFilteredAttendanceRecords}
-        editingAttendance={editingAttendance}
-        attendanceForm={attendanceForm}
-        onSetSelectedDate={setSelectedDate}
-        onAttendanceEdit={handleAttendanceEdit}
-        onSaveAttendanceEdit={saveAttendanceEdit}
-        onAttendanceFormChange={setAttendanceForm}
-      />
+      {/* Lazy-loaded Modals พร้อม Suspense fallback */}
+      <Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div></div>}>
+        {/* User Detail Modal Component */}
+        {showDetail && selectedUser && (
+          <UserDetailModal
+            user={selectedUser}
+            showDetail={showDetail}
+            showAttendance={showAttendance}
+            selectedDate={selectedDate}
+            currentUser={currentUser}
+            onClose={closeDetail}
+            onEdit={openEditUser}
+            onDownloadPDF={downloadPDF}
+            onDelete={handleDeleteUser}
+            onToggleAttendance={() => setShowAttendance(!showAttendance)}
+            getStatusBadge={getStatusBadge}
+            getFilteredAttendanceRecords={getFilteredAttendanceRecords}
+            editingAttendance={editingAttendance}
+            attendanceForm={attendanceForm}
+            onSetSelectedDate={setSelectedDate}
+            onAttendanceEdit={handleAttendanceEdit}
+            onSaveAttendanceEdit={saveAttendanceEdit}
+            onAttendanceFormChange={setAttendanceForm}
+          />
+        )}
 
-      {/* User Edit Modal Component */}
-      <UserEditModal
-        show={showEditUser}
-        editingUser={editingUser}
-        editForm={editForm}
-        currentUser={currentUser}
-        onClose={closeEditUser}
-        onSave={saveEditUser}
-        onChange={setEditForm}
-      />
+        {/* User Edit Modal Component */}
+        {showEditUser && editingUser && (
+          <UserEditModal
+            show={showEditUser}
+            editingUser={editingUser}
+            editForm={editForm}
+            currentUser={currentUser}
+            onClose={closeEditUser}
+            onSave={saveEditUser}
+            onChange={setEditForm}
+          />
+        )}
 
-      {/* Alert Dialog */}
+        {/* CSV Import Modal */}
+        {showCsvModal && (
+          <CsvImportModal
+            isOpen={showCsvModal}
+            csvData={csvData}
+            generateEmployeeId={(provinceCode, branchCode) => generateEmployeeId(provinceCode, branchCode, users)}
+            onConfirm={confirmCsvImport}
+            onClose={closeCsvModal}
+          />
+        )}
+
+        {/* User Create Modal */}
+        {showCreateUser && (
+          <UserCreateModal
+            isOpen={showCreateUser}
+            onClose={() => setShowCreateUser(false)}
+            onSubmit={handleCreateUser}
+            generateEmployeeId={(provinceCode, branchCode) => generateEmployeeId(provinceCode, branchCode, users)}
+            users={users}
+          />
+        )}
+      </Suspense>
+
+      {/* Alert Dialog - ไม่ต้อง lazy load เพราะเบา */}
       <AlertDialog
         isOpen={alertDialog.isOpen}
         onClose={closeAlertDialog}
@@ -709,24 +818,6 @@ function AdminManageUser() {
         title={alertDialog.title}
         message={alertDialog.message}
         autoClose={alertDialog.autoClose}
-      />
-
-      {/* CSV Import Modal */}
-      <CsvImportModal
-        isOpen={showCsvModal}
-        csvData={csvData}
-        generateEmployeeId={(provinceCode, branchCode) => generateEmployeeId(provinceCode, branchCode, users)}
-        onConfirm={confirmCsvImport}
-        onClose={closeCsvModal}
-      />
-
-      {/* User Create Modal */}
-      <UserCreateModal
-        isOpen={showCreateUser}
-        onClose={() => setShowCreateUser(false)}
-        onSubmit={handleCreateUser}
-        generateEmployeeId={(provinceCode, branchCode) => generateEmployeeId(provinceCode, branchCode, users)}
-        users={users}
       />
     </div>
   );

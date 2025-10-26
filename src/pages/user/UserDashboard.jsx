@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import { useTeam } from '../../contexts/useTeam'
 import { useLoading } from '../../contexts/useLoading'
@@ -8,6 +8,8 @@ import { useLeave } from '../../contexts/LeaveContext'
 import { useEvents } from '../../contexts/EventContext'
 import { validateBuddy } from '../../data/usersData'
 import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
+import { useCamera } from '../../hooks/useCamera'
+import { config } from '../../config'
 
 function UserDashboard() {
   const { attendance, user, attendanceRecords } = useAuth()
@@ -16,6 +18,11 @@ function UserDashboard() {
   const { locations } = useLocations()
   const { leaveList, getUsedDays, leaveQuota } = useLeave()
   const { getEventsForUser } = useEvents()
+  const navigate = useNavigate()
+  
+  // Camera hook สำหรับขออนุญาตกล้อง
+  const { requestCameraPermission } = useCamera()
+  
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showBuddyCheckIn, setShowBuddyCheckIn] = useState(false)
   const [showAttendanceHistory, setShowAttendanceHistory] = useState(false)
@@ -25,11 +32,12 @@ function UserDashboard() {
   })
   const [buddyError, setBuddyError] = useState('')
   const [buddySuccess, setBuddySuccess] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState(null)
+  const [_currentLocation, _setCurrentLocation] = useState(null) // เก็บไว้สำหรับอนาคต
   const [isWithinAllowedArea, setIsWithinAllowedArea] = useState(false)
   const [checkingLocation, setCheckingLocation] = useState(true)
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [popupInfoMessage, setPopupInfoMessage] = useState('');
+  const [checkingCamera, setCheckingCamera] = useState(false)
 
   // ตรวจสอบว่าเป็นหัวหน้าหรือไม่
   const isManager = useMemo(() => user?.role === 'manager', [user])
@@ -210,15 +218,18 @@ function UserDashboard() {
     return R * c // ระยะทางเป็นเมตร
   }
 
-  // ตรวจสอบตำแหน่งปัจจุบัน
+  // ✅ แก้ไขความช้า: ตรวจสอบตำแหน่งปัจจุบันแบบ optimized
   useEffect(() => {
+    let watchId = null
+    
     if (navigator.geolocation) {
-      const watchId = navigator.geolocation.watchPosition(
+      // ใช้ getCurrentPosition ครั้งแรกเพื่อความเร็ว
+      navigator.geolocation.getCurrentPosition(
         (position) => {
           const userLat = position.coords.latitude
           const userLon = position.coords.longitude
           
-          setCurrentLocation({ lat: userLat, lon: userLon })
+          _setCurrentLocation({ lat: userLat, lon: userLon })
 
           // ตรวจสอบว่าอยู่ในพื้นที่อนุญาตหรือไม่
           const isInside = locations.some(location => {
@@ -238,18 +249,56 @@ function UserDashboard() {
           setCheckingLocation(false)
         },
         (error) => {
+          console.warn('Location error:', error)
           setCheckingLocation(false)
           // ในกรณี error ให้อนุญาตใช้งานได้ (เพื่อไม่ให้บล็อกการใช้งาน)
           setIsWithinAllowedArea(true)
         },
         {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 5000
+          enableHighAccuracy: false, // ใช้ความแม่นยำต่ำเพื่อความเร็ว
+          timeout: 5000, // ลดเวลา timeout
+          maximumAge: 30000 // ยอมรับตำแหน่งเก่าได้ถึง 30 วินาที
+        }
+      )
+      
+      // จากนั้นใช้ watchPosition สำหรับอัปเดตต่อเนื่อง
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const userLat = position.coords.latitude
+          const userLon = position.coords.longitude
+          
+          _setCurrentLocation({ lat: userLat, lon: userLon })
+
+          const isInside = locations.some(location => {
+            if (location.status !== 'active') return false
+            
+            const distance = calculateDistance(
+              userLat,
+              userLon,
+              location.latitude,
+              location.longitude
+            )
+            
+            return distance <= location.radius
+          })
+          
+          setIsWithinAllowedArea(isInside)
+        },
+        (error) => {
+          console.warn('Location watch error:', error)
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 30000
         }
       )
 
-      return () => navigator.geolocation.clearWatch(watchId)
+      return () => {
+        if (watchId !== null) {
+          navigator.geolocation.clearWatch(watchId)
+        }
+      }
     } else {
       setCheckingLocation(false)
       setIsWithinAllowedArea(true)
@@ -362,6 +411,38 @@ function UserDashboard() {
     setBuddyError('') // ล้าง error เมื่อพิมพ์
   }
 
+  // ✅ ฟังก์ชันสำหรับจัดการคลิกปุ่มเช็คอิน/เช็คเอาท์
+  const handleCheckInOutClick = async (e) => {
+    // ถ้าไม่อยู่ในพื้นที่อนุญาต
+    if (isButtonDisabled) {
+      e.preventDefault()
+      setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้');
+      setShowInfoPopup(true);
+      return
+    }
+
+    // ถ้าปิดการตรวจสอบกล้องใน config ให้ไปหน้าถ่ายรูปเลย
+    if (!config.features.enableCameraCheck) {
+      return // ปล่อยให้ Link ทำงานตามปกติ
+    }
+
+    // ขออนุญาตกล้อง
+    e.preventDefault() // หยุด Link ไว้ก่อน
+    setCheckingCamera(true)
+    
+    const result = await requestCameraPermission()
+    setCheckingCamera(false)
+
+    if (result.success) {
+      // อนุญาตกล้องแล้ว ไปหน้าถ่ายรูป
+      navigate('/user/take-photo', { state: { schedule: todaySchedule } })
+    } else {
+      // ไม่อนุญาตกล้อง แสดง error
+      setPopupInfoMessage(result.error || 'ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้องในการตั้งค่าเบราว์เซอร์')
+      setShowInfoPopup(true)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -420,22 +501,29 @@ function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Link 
-              to={isButtonDisabled ? "#" : "/user/take-photo"}
-              state={{ schedule: todaySchedule }} // ส่งข้อมูลตารางงานไปด้วย
-              onClick={(e) => {
-                if (isButtonDisabled) {
-                  e.preventDefault()
-                  setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้');
-                  setShowInfoPopup(true);
-                }
-              }}
-              className={`${buttonColor} ${buttonTextColor} px-8 py-3 rounded-full font-bold shadow-lg transform transition-all inline-block text-center ${
-                isButtonDisabled ? 'opacity-50 cursor-not-allowed hover:scale-100' : 'hover:scale-105'
-              }`}
-            >
-              {buttonText}
-            </Link>
+            {/* ปุ่มเช็คอิน/เช็คเอาท์ - พร้อมการขออนุญาตกล้อง */}
+            {checkingCamera ? (
+              <button
+                disabled
+                className="bg-white/50 text-gray-400 px-8 py-3 rounded-full font-bold shadow-lg inline-block text-center opacity-75 cursor-wait"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-gray-400 border-b-transparent rounded-full animate-spin"></div>
+                  <span>กำลังตรวจสอบกล้อง...</span>
+                </div>
+              </button>
+            ) : (
+              <Link 
+                to={isButtonDisabled ? "#" : "/user/take-photo"}
+                state={{ schedule: todaySchedule }}
+                onClick={handleCheckInOutClick}
+                className={`${buttonColor} ${buttonTextColor} px-8 py-3 rounded-full font-bold shadow-lg transform transition-all inline-block text-center ${
+                  isButtonDisabled ? 'opacity-50 cursor-not-allowed hover:scale-100' : 'hover:scale-105'
+                }`}
+              >
+                {buttonText}
+              </Link>
+            )}
             <button
               onClick={() => {
                 if (isButtonDisabled) {

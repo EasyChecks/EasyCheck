@@ -5,6 +5,7 @@ import L from 'leaflet'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { useLocations } from '../../contexts/LocationContext'
 import { useEvents } from '../../contexts/EventContext'
+import { mockAttendanceStats, mockAttendanceChartData, mockEventChartData } from '../../data/usersData'
 
 // Fix for default marker icon issue in Leaflet with webpack
 delete L.Icon.Default.prototype._getIconUrl
@@ -49,15 +50,8 @@ function AdminDashboard() {
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
   const locationRefs = useRef({}) // Refs for scrolling to location cards
 
-  // Mock data for demonstration - Attendance Stats
-  const attendanceStats = {
-    totalemployees: 300,
-    totalWeekly: 290,
-    totalToday: 95,
-    lateCount: 2,
-    leaveCount: 3,
-    absentCount: 3
-  }
+  // ใช้ Mock Data จาก usersData.js
+  const attendanceStats = mockAttendanceStats
 
   // Calculate real event stats from EventContext
   const eventStats = {
@@ -84,71 +78,36 @@ function AdminDashboard() {
   // Generate chart data based on selected period and type
   const getChartData = () => {
     if (statsType === 'attendance') {
-      // Attendance data based on attendanceStats
-      const baseData = {
-        week: [
-          { name: 'จันทร์', value: 285 },
-          { name: 'อังคาร', value: 292 },
-          { name: 'พุธ', value: 268 },
-          { name: 'พฤหัส', value: 290 },
-          { name: 'ศุกร์', value: 95 }, // Today's attendance
-          { name: 'เสาร์', value: 0 },
-          { name: 'อาทิตย์', value: 0 }
-        ],
-        month: [
-          { name: 'สัปดาห์ 1', value: 285 },
-          { name: 'สัปดาห์ 2', value: 290 },
-          { name: 'สัปดาห์ 3', value: 282 },
-          { name: 'สัปดาห์ 4', value: 290 }
-        ],
-        year: [
-          { name: 'ม.ค.', value: 280 },
-          { name: 'ก.พ.', value: 285 },
-          { name: 'มี.ค.', value: 290 },
-          { name: 'เม.ย.', value: 275 },
-          { name: 'พ.ค.', value: 292 },
-          { name: 'มิ.ย.', value: 288 },
-          { name: 'ก.ค.', value: 295 },
-          { name: 'ส.ค.', value: 290 },
-          { name: 'ก.ย.', value: 287 },
-          { name: 'ต.ค.', value: 290 }, // Weekly total
-          { name: 'พ.ย.', value: 0 },
-          { name: 'ธ.ค.', value: 0 }
-        ]
-      }
-      return baseData[chartPeriod] || []
+      // ใช้ Attendance Chart Data จาก usersData.js
+      return mockAttendanceChartData[chartPeriod] || []
     } else {
-      // Event data: convert event counts to estimated participants
-      // Use average participants per event (fallback to 15) so chart values reflect participants
+      // Event data: ใช้ mockEventChartData จาก usersData.js
       const avgParticipantsPerEvent = eventStats.totalEvents > 0
         ? Math.max(1, Math.round(eventStats.totalParticipants / eventStats.totalEvents))
         : 15
 
-      // Template counts (events) per label - we'll convert to participants
-      const weekCounts = [2, 3, 1, 2, eventStats.todayEvents || 0, 0, 0]
-      const monthCounts = [4, 5, 3, eventStats.activeEvents || 0]
-      const yearCounts = [12, 10, 15, 18, 14, 16, 13, 11, 17, eventStats.totalEvents || 0, 0, 0]
+      // ดึงข้อมูลจาก mockEventChartData
+      const eventData = mockEventChartData[chartPeriod];
+      if (!eventData) return [];
 
-      const mapCountsToParticipants = (labels, counts) =>
-        labels.map((label, idx) => {
-          // For 'today' entry prefer using the accurate todayParticipants when available
-          if (label === 'ศุกร์' && eventStats.todayParticipants) return { name: label, value: eventStats.todayParticipants }
-          // Otherwise multiply event count by average participants
-          return { name: label, value: (counts[idx] || 0) * avgParticipantsPerEvent }
-        })
+      const { labels, counts } = eventData;
 
-      const baseData = {
-        week: mapCountsToParticipants(['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'], weekCounts),
-        month: mapCountsToParticipants(['สัปดาห์ 1', 'สัปดาห์ 2', 'สัปดาห์ 3', 'สัปดาห์ 4'], monthCounts),
-        year: mapCountsToParticipants(['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'], yearCounts)
+      // แปลง event counts เป็น participant counts
+      const mapCountsToParticipants = labels.map((label, idx) => {
+        // สำหรับข้อมูลวันปัจจุบัน (ศุกร์) ใช้ todayParticipants ถ้ามี
+        if (label === 'ศุกร์' && eventStats.todayParticipants) {
+          return { name: label, value: eventStats.todayParticipants };
+        }
+        // แปลงจำนวน event เป็นจำนวนผู้เข้าร่วม
+        return { name: label, value: (counts[idx] || 0) * avgParticipantsPerEvent };
+      });
+
+      // ตรวจสอบว่ามีข้อมูลหรือไม่
+      if (mapCountsToParticipants.length === 0 && eventStats.totalParticipants) {
+        return [{ name: chartPeriod, value: eventStats.totalParticipants }];
       }
-
-      // Ensure we never return an empty dataset (fallback to totalParticipants distributed)
-      const result = baseData[chartPeriod] || []
-      if (result.length === 0 && eventStats.totalParticipants) {
-        return [{ name: chartPeriod, value: eventStats.totalParticipants }]
-      }
-      return result
+      
+      return mapCountsToParticipants;
     }
   }
 

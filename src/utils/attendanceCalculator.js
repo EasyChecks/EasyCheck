@@ -228,45 +228,10 @@ export const getAttendanceStatus = (record, options = {}) => {
 };
 
 /**
- * สร้าง mock data สำหรับทดสอบ (จะลบออกเมื่อมี API จริง)
+ * สร้าง mock data สำหรับทดสอบ (ย้ายไปยัง usersData.js แล้ว)
+ * ฟังก์ชันนี้เก็บไว้เพื่อ backward compatibility
+ * ใช้ generateMockAttendanceData จาก usersData.js แทน
  */
-export const generateMockAttendanceData = (days = 30) => {
-  const records = [];
-  const today = new Date();
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    
-    // สุ่มสถานะ
-    const rand = Math.random();
-    let status, checkIn, checkOut;
-    
-    if (rand < 0.8) { // 80% มาตรงเวลา
-      status = 'on-time';
-      checkIn = '07:45';
-      checkOut = '17:30';
-    } else if (rand < 0.9) { // 10% มาสาย
-      status = 'late';
-      checkIn = '08:30';
-      checkOut = '17:30';
-    } else if (rand < 0.95) { // 5% ลา
-      status = 'leave';
-      checkIn = null;
-      checkOut = null;
-    } else { // 5% ขาด
-      status = 'absent';
-      checkIn = null;
-      checkOut = null;
-    }
-    
-    records.push({
-      date: date.toISOString().split('T')[0],
-      checkIn,
-      checkOut,
-      status
-    });
-  }
-  
-  return records;
-};
+import { generateMockAttendanceData as mockDataGenerator } from '../data/usersData';
+
+export const generateMockAttendanceData = mockDataGenerator;
