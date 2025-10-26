@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { sampleSchedules } from '../../admin/Attendance/DataAttendance';
 import { useLocations } from '../../../contexts/LocationContext';
 import { MapContainer, TileLayer, Marker, Circle, LayersControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,7 +18,20 @@ export default function ScheduleDetails() {
   const navigate = useNavigate();
   const { locations } = useLocations();
 
-  const schedule = sampleSchedules.find((s) => s.id === parseInt(id));
+  // โหลดตารางงานจาก localStorage
+  const schedule = useMemo(() => {
+    const savedSchedules = localStorage.getItem('attendanceSchedules');
+    if (savedSchedules) {
+      try {
+        const schedules = JSON.parse(savedSchedules);
+        return schedules.find((s) => s.id === parseInt(id));
+      } catch (error) {
+        console.error('Error loading schedule:', error);
+        return null;
+      }
+    }
+    return null;
+  }, [id]);
 
   if (!schedule) {
     return (
@@ -67,12 +79,12 @@ export default function ScheduleDetails() {
             <div className="flex-1">
               <h1 className="text-2xl font-bold mb-2">{schedule.team}</h1>
               <p className="text-blue-100 text-sm mb-1">{schedule.date}</p>
-              <p className="text-blue-100 text-sm">เวลา: {schedule.time}</p>
+              <p className="text-blue-100 text-sm">เวลา: {schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</p>
             </div>
           </div>
           
           <div className="bg-white/20 px-4 py-2 rounded-xl border border-white/30 shadow-lg backdrop-blur-sm">
-            <span className="text-sm font-medium">{schedule.time}</span>
+            <span className="text-sm font-medium">{schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</span>
           </div>
         </div>
       </div>
