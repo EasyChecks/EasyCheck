@@ -8,7 +8,6 @@ import { useLeave } from '../../contexts/LeaveContext'
 import { useEvents } from '../../contexts/EventContext'
 import { validateBuddy } from '../../data/usersData'
 import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
-import { sampleSchedules } from '../admin/Attendance/DataAttendance'
 
 function UserDashboard() {
   const { attendance, user, attendanceRecords } = useAuth()
@@ -29,6 +28,8 @@ function UserDashboard() {
   const [currentLocation, setCurrentLocation] = useState(null)
   const [isWithinAllowedArea, setIsWithinAllowedArea] = useState(false)
   const [checkingLocation, setCheckingLocation] = useState(true)
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [popupInfoMessage, setPopupInfoMessage] = useState('');
 
   // ตรวจสอบว่าเป็นหัวหน้าหรือไม่
   const isManager = useMemo(() => user?.role === 'manager', [user])
@@ -69,20 +70,19 @@ function UserDashboard() {
     return events.filter(event => event.status === 'ongoing')
   }, [getEventsForUser, user])
 
-  // ตารางงานที่เกี่ยวข้องกับผู้ใช้ - กรองตาม department/position
-  const userSchedules = useMemo(() => {
-    if (!user?.department && !user?.position) return []
-    
-    return sampleSchedules.filter(schedule => {
-      // ถ้าไม่มี teams array หรือว่างเปล่า = แสดงให้ทุกคน
-      if (!schedule.teams || schedule.teams.length === 0) return true
-      
-      // ตรวจสอบว่า department หรือ position ของ user ตรงกับ teams array หรือไม่
-      return schedule.teams.some(team => 
-        team.toLowerCase() === user.department?.toLowerCase() || 
-        team.toLowerCase() === user.position?.toLowerCase()
-      )
-    })
+  // หาตารางงานสำหรับวันนี้จากข้อมูล user โดยตรง
+  const todaySchedule = useMemo(() => {
+    // ใช้ตารางงานจากข้อมูล user โดยตรง (จาก usersData.js ผ่าน useAuth)
+    if (user?.schedule) {
+      return {
+        id: user.employeeId || 'user-schedule',
+        time: user.schedule,
+        location: user.workLocation || 'Office', // สมมติว่ามี field workLocation
+        team: user.department || 'ทั่วไป'
+      };
+    }
+    // ตารางงานเริ่มต้นหากไม่พบในข้อมูล user
+    return { id: 'default', time: '09:00 - 18:00', location: 'Office', team: 'ทั่วไป' };
   }, [user])
 
   // สร้างการแจ้งเตือนจากหลายแหล่ง
@@ -365,11 +365,11 @@ function UserDashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
+      <div className="p-6 bg-white shadow-md rounded-2xl">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">สวัสดี, {mockData.user.name}</h2>
-            <p className="text-gray-600 mt-1">{mockData.user.position}</p>
+            <p className="mt-1 text-gray-600">{mockData.user.position}</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">{formatDate(currentTime)}</p>
@@ -380,24 +380,24 @@ function UserDashboard() {
 
       {/* Check In/Out Card */}
       <div className="bg-gradient-to-br from-[#48CBFF] to-[#3AB4E8] rounded-2xl shadow-lg p-6 text-white">
-        <h3 className="text-xl font-bold mb-4">บันทึกเวลา</h3>
+        <h3 className="mb-4 text-xl font-bold">บันทึกเวลา</h3>
         
         {/* Location Status Banner */}
         {checkingLocation ? (
-          <div className="mb-4 bg-white/20 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          <div className="flex items-center gap-2 p-3 mb-4 bg-white/20 backdrop-blur-sm rounded-xl">
+            <div className="w-5 h-5 border-b-2 border-white rounded-full animate-spin"></div>
             <span className="text-sm">กำลังตรวจสอบตำแหน่งของคุณ...</span>
           </div>
         ) : !isWithinAllowedArea ? (
-          <div className="mb-4 bg-red-500/30 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 border border-red-300/50">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-2 p-3 mb-4 border bg-red-500/30 backdrop-blur-sm rounded-xl border-red-300/50">
+            <svg xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span className="text-sm">⚠️ คุณอยู่นอกพื้นที่อนุญาต - ไม่สามารถเช็คอินได้</span>
           </div>
         ) : (
-          <div className="mb-4 bg-green-500/30 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 border border-green-300/50">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-2 p-3 mb-4 border bg-green-500/30 backdrop-blur-sm rounded-xl border-green-300/50">
+            <svg xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-sm">คุณอยู่ในพื้นที่อนุญาต - สามารถเช็คอินได้</span>
@@ -422,10 +422,12 @@ function UserDashboard() {
           <div className="flex flex-col gap-2">
             <Link 
               to={isButtonDisabled ? "#" : "/user/take-photo"}
+              state={{ schedule: todaySchedule }} // ส่งข้อมูลตารางงานไปด้วย
               onClick={(e) => {
                 if (isButtonDisabled) {
                   e.preventDefault()
-                  alert('❌ คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้')
+                  setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้');
+                  setShowInfoPopup(true);
                 }
               }}
               className={`${buttonColor} ${buttonTextColor} px-8 py-3 rounded-full font-bold shadow-lg transform transition-all inline-block text-center ${
@@ -437,7 +439,8 @@ function UserDashboard() {
             <button
               onClick={() => {
                 if (isButtonDisabled) {
-                  alert('❌ คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คชื่อแทนเพื่อนได้')
+                  setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คชื่อแทนเพื่อนได้');
+                  setShowInfoPopup(true);
                 } else {
                   setShowBuddyCheckIn(true)
                 }
@@ -471,63 +474,37 @@ function UserDashboard() {
       </div>
 
       {/* Work Schedule - ตารางงาน */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
+      <div className="p-6 bg-white shadow-md rounded-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-gray-800">ตารางงานของคุณ</h3>
           <span className="text-sm text-gray-500">วันนี้</span>
         </div>
         
-        {/* User's work schedules - กรองตาม department/position */}
-        {userSchedules.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* User's work schedules - แสดงตารางงานของ user */}
+        {todaySchedule && todaySchedule.id !== 'default' ? (
+          <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-xl p-4 text-white">
+            <div className="flex items-start justify-between mb-2">
+              <h4 className="text-lg font-semibold">{todaySchedule.team}</h4>
+              <span className="px-3 py-1 text-xs border rounded-full bg-white/20 border-white/30">
+                {todaySchedule.time}
+              </span>
+            </div>
+            <div className="space-y-1 text-sm text-white/90">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>สถานที่: {todaySchedule.location}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p>ไม่มีตารางงานสำหรับวันนี้</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {userSchedules.map((schedule, index) => {
-              return (
-                <div key={schedule.id} className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-xl p-4 text-white">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-lg">{schedule.team}</h4>
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-xs border border-white/30">
-                      {schedule.time}
-                    </span>
-                  </div>
-                  <div className="text-sm space-y-1 text-white/90 mb-3">
-                    <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span>สถานที่: {schedule.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <span>สมาชิก: {schedule.members}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      <span>ประเภท: {schedule.type}</span>
-                    </div>
-                  </div>
-                  
-                  {/* ปุ่มดูรายละเอียด */}
-                  <Link
-                    to={`/user/schedule/${schedule.id}`}
-                    className="block w-full text-center bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-semibold border border-white/30 transition-all"
-                  >
-                    ดูรายละเอียด
-                  </Link>
-                </div>
-              )
-            })}
           </div>
         )}
       </div>
@@ -536,7 +513,7 @@ function UserDashboard() {
       {isManager && teamStats && (
         <div className="space-y-4">
           {/* Team Stats */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="p-6 bg-white shadow-lg rounded-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">สถิติทีมวันนี้</h3>
               <Link 
@@ -546,32 +523,32 @@ function UserDashboard() {
                 ดูทั้งหมด →
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
               <div className="bg-[#48CBFF] rounded-xl p-4 text-center text-white">
                 <p className="text-2xl font-bold">{teamStats.total}</p>
-                <p className="text-sm mt-1">ทั้งหมด</p>
+                <p className="mt-1 text-sm">ทั้งหมด</p>
               </div>
-              <div className="bg-green-50 rounded-xl p-4 text-center">
-                <p className="text-2xl text-green-600 font-bold">{teamStats.checkedIn}</p>
-                <p className="text-sm text-gray-600 mt-1">เข้างาน</p>
+              <div className="p-4 text-center bg-green-50 rounded-xl">
+                <p className="text-2xl font-bold text-green-600">{teamStats.checkedIn}</p>
+                <p className="mt-1 text-sm text-gray-600">เข้างาน</p>
               </div>
-              <div className="bg-yellow-50 rounded-xl p-4 text-center">
-                <p className="text-2xl text-yellow-600 font-bold">{teamStats.late}</p>
-                <p className="text-sm text-gray-600 mt-1">สาย</p>
+              <div className="p-4 text-center bg-yellow-50 rounded-xl">
+                <p className="text-2xl font-bold text-yellow-600">{teamStats.late}</p>
+                <p className="mt-1 text-sm text-gray-600">สาย</p>
               </div>
-              <div className="bg-red-50 rounded-xl p-4 text-center">
-                <p className="text-2xl text-red-600 font-bold">{teamStats.absent}</p>
-                <p className="text-sm text-gray-600 mt-1">ขาด</p>
+              <div className="p-4 text-center bg-red-50 rounded-xl">
+                <p className="text-2xl font-bold text-red-600">{teamStats.absent}</p>
+                <p className="mt-1 text-sm text-gray-600">ขาด</p>
               </div>
             </div>
           </div>
 
           {/* Pending Leaves */}
           {notifications && notifications.pendingLeaveCount > 0 && (
-            <div className="bg-white rounded-2xl shadow-md p-6">
+            <div className="p-6 bg-white shadow-md rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FB923C">
                       <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Z"/>
                     </svg>
@@ -583,7 +560,7 @@ function UserDashboard() {
                 </div>
                 <Link 
                   to="/user/leave-approval"
-                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white transition-colors bg-orange-500 rounded-lg hover:bg-orange-600"
                 >
                   จัดการ
                 </Link>
@@ -594,8 +571,8 @@ function UserDashboard() {
       )}
 
       {/* Recent Notifications */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">การแจ้งเตือนล่าสุด</h3>
+      <div className="p-6 bg-white shadow-md rounded-2xl">
+        <h3 className="mb-4 text-lg font-bold text-gray-800">การแจ้งเตือนล่าสุด</h3>
         <div 
           className={`space-y-3 ${
             userNotifications.length > 3 
@@ -608,10 +585,10 @@ function UserDashboard() {
           } : {}}
         >
           {userNotifications.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">ไม่มีการแจ้งเตือน</p>
+            <p className="py-4 text-center text-gray-500">ไม่มีการแจ้งเตือน</p>
           ) : (
             userNotifications.map(notification => (
-              <div key={notification.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={notification.id} className="flex items-start p-3 space-x-3 transition-colors rounded-lg hover:bg-gray-50">
                 <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                   notification.type === 'success' ? 'bg-green-500' : 
                   notification.type === 'error' ? 'bg-red-500' :
@@ -619,9 +596,9 @@ function UserDashboard() {
                   'bg-blue-500'
                 }`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-gray-800 font-medium text-sm leading-snug">{notification.title}</p>
+                  <p className="text-sm font-medium leading-snug text-gray-800">{notification.title}</p>
                   {notification.description && (
-                    <p className="text-xs text-gray-600 mt-1">{notification.description}</p>
+                    <p className="mt-1 text-xs text-gray-600">{notification.description}</p>
                   )}
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-xs text-gray-500">{notification.date}</p>
@@ -820,29 +797,29 @@ function UserDashboard() {
           }}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
               <h2 className="text-2xl font-bold text-white">เช็คชื่อแทนเพื่อน</h2>
-              <p className="text-white/90 text-sm mt-1">กรุณากรอกข้อมูลเพื่อนของคุณ</p>
+              <p className="mt-1 text-sm text-white/90">กรุณากรอกข้อมูลเพื่อนของคุณ</p>
             </div>
             
             <div className="p-6 space-y-4">
               {buddySuccess ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="py-8 text-center">
+                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#22C55E">
                       <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold text-gray-800">บันทึกสำเร็จ!</h3>
-                  <p className="text-gray-600 mt-2">เช็คชื่อแทนเพื่อนเรียบร้อยแล้ว</p>
+                  <p className="mt-2 text-gray-600">เช็คชื่อแทนเพื่อนเรียบร้อยแล้ว</p>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block mb-2 text-sm font-semibold text-gray-700">
                       รหัสพนักงาน <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -855,7 +832,7 @@ function UserDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block mb-2 text-sm font-semibold text-gray-700">
                       เบอร์โทรศัพท์ <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -866,15 +843,15 @@ function UserDashboard() {
                       maxLength="10"
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#48CBFF] focus:border-transparent outline-none transition-all"
                     />
-                    <p className="text-xs text-gray-500 mt-1">กรอกเบอร์โทรศัพท์ 10 หลัก</p>
+                    <p className="mt-1 text-xs text-gray-500">กรอกเบอร์โทรศัพท์ 10 หลัก</p>
                   </div>
 
                   {buddyError && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center space-x-2">
+                    <div className="flex items-center p-3 space-x-2 border border-red-200 bg-red-50 rounded-xl">
                       <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#EF4444">
                         <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
                       </svg>
-                      <p className="text-sm text-red-600 font-medium">{buddyError}</p>
+                      <p className="text-sm font-medium text-red-600">{buddyError}</p>
                     </div>
                   )}
 
@@ -885,7 +862,7 @@ function UserDashboard() {
                         setBuddyData({ employeeId: '', phone: '' })
                         setBuddyError('')
                       }}
-                      className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                      className="flex-1 py-3 font-semibold text-gray-700 transition-colors bg-gray-100 rounded-xl hover:bg-gray-200"
                     >
                       ยกเลิก
                     </button>
@@ -899,6 +876,27 @@ function UserDashboard() {
                 </>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info Popup */}
+      {showInfoPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm p-8 text-center bg-white shadow-2xl rounded-2xl">
+            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-yellow-100 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#F59E0B">
+                <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
+              </svg>
+            </div>
+            <h2 className="mb-2 text-2xl font-bold text-gray-800">แจ้งเตือน</h2>
+            <p className="mb-8 text-gray-600">{popupInfoMessage}</p>
+            <button
+              onClick={() => setShowInfoPopup(false)}
+              className="w-full bg-[#48CBFF] text-white py-3 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-[#3AB5E8] transition-all duration-300 transform hover:scale-105 active:scale-95"
+            >
+              ตกลง
+            </button>
           </div>
         </div>
       )}

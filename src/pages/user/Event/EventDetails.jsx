@@ -150,7 +150,7 @@ export default function EventDetails() {
       </div>
 
       {/* Event Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
+      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
         <div className="flex items-start space-x-3">
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
