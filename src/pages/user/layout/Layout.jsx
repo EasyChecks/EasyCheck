@@ -6,7 +6,7 @@ import { getLegacyUserData } from '../../../data/usersData' // Updated: merged f
 
 function Layout() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth() // เพิ่ม user เพื่อรู้ว่า user คนไหน login อยู่
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [profileData, setProfileData] = useState(() => {
     const saved = localStorage.getItem('userProfileData')
@@ -15,10 +15,35 @@ function Layout() {
 
   // อัพเดตข้อมูลเมื่อ localStorage เปลี่ยน
   useEffect(() => {
-    const handleStorageChange = () => {
-      const saved = localStorage.getItem('userProfileData')
-      if (saved) {
-        setProfileData(JSON.parse(saved))
+    const handleStorageChange = (e) => {
+      // ฟังการเปลี่ยนแปลง userProfileData (จาก ProfileScreen)
+      if (e.key === 'userProfileData' && e.newValue) {
+        setProfileData(JSON.parse(e.newValue))
+      }
+      
+      // ✅ ข้อ 3: ฟังการเปลี่ยนแปลง usersData (Admin แก้ไข → User เห็นทันที)
+      if (e.key === 'usersData' && e.newValue && user) {
+        try {
+          const updatedUsers = JSON.parse(e.newValue)
+          const updatedUser = updatedUsers.find(u => u.id === user.id)
+          
+          if (updatedUser) {
+            // อัปเดต profileData ให้ตรงกับข้อมูลที่ Admin แก้ไข
+            setProfileData(prev => ({
+              ...prev,
+              name: updatedUser.name || prev.name,
+              position: updatedUser.position || prev.position,
+              department: updatedUser.department || prev.department,
+              profilePic: updatedUser.profileImage || prev.profilePic,
+              workInfo: {
+                ...prev.workInfo,
+                employeeId: updatedUser.employeeId || updatedUser.username || prev.workInfo?.employeeId
+              }
+            }))
+          }
+        } catch (e) {
+          console.warn('Failed to sync layout data:', e)
+        }
       }
     }
 
@@ -44,7 +69,7 @@ function Layout() {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
     }
-  }, [])
+  }, [user]) // dependency: user เพื่อรู้ว่า user คนไหน login อยู่
 
   // ใช้ข้อมูลจาก profileData ที่อัพเดตจาก localStorage
   const mockUser = {

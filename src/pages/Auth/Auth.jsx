@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import PuffLoader from '../../components/common/PuffLoader'
-import { getUserForAuth } from '../../data/usersData' // Import helper functions
+import { usersData, getUserForAuth, mockLoginAPI, getFallbackAdminAccount } from '../../data/usersData' // Import helper functions
 
 
 function Auth() {
@@ -11,10 +11,11 @@ function Auth() {
   const [showReset, setShowReset] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Reset form state (inside same file, modal)
+  // 🔄 สถานะสำหรับฟอร์ม Reset Password (Modal ภายในหน้าเดียวกัน)
   const [Username, setUsernameReset] = useState('')
   const [Password, setPasswordReset] = useState('')
   const [NewPassword, setNewPassword] = useState('')
@@ -26,7 +27,20 @@ function Auth() {
   const { login, getDashboardPath } = useAuth()
   const navigate = useNavigate()
 
-  // Check if coming from Settings with mode=reset
+  // ✅ โหลด Remember Me จาก localStorage
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('rememberedUsername')
+    const savedPassword = localStorage.getItem('rememberedPassword')
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true'
+    
+    if (savedRememberMe && savedUsername && savedPassword) {
+      setUsername(savedUsername)
+      setPassword(savedPassword)
+      setRememberMe(true)
+    }
+  }, [])
+
+  // 🔍 ตรวจสอบว่ามาจากหน้า Settings พร้อม mode=reset หรือไม่
   useEffect(() => {
     if (searchParams.get('mode') === 'reset') {
       setShowReset(true)
@@ -58,13 +72,24 @@ function Auth() {
     setError('')
 
     try {
-      // Simulate API call - replace with actual authentication
+      // 🔐 จำลองการเรียก API Login - ในอนาคตจะแทนที่ด้วย API จริง
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
         console.log('🔐 Login Success:', response.user) // Debug log
         console.log('👤 User Role:', response.user.role) // Debug log
         console.log('📍 Dashboard Path:', getDashboardPath(response.user.role)) // Debug log
+        
+        // ✅ บันทึก Remember Me
+        if (rememberMe) {
+          localStorage.setItem('rememberedUsername', username)
+          localStorage.setItem('rememberedPassword', password)
+          localStorage.setItem('rememberMe', 'true')
+        } else {
+          localStorage.removeItem('rememberedUsername')
+          localStorage.removeItem('rememberedPassword')
+          localStorage.removeItem('rememberMe')
+        }
         
         login(response.user)
         const dashboardPath = getDashboardPath(response.user.role)
@@ -79,31 +104,15 @@ function Auth() {
     }
   }
 
-  // Mock login API - replace with actual API call
-  const mockLoginAPI = async (username, password) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Normalize username to uppercase for employee ID format
-    const normalizedUsername = username.toUpperCase()
-    
-    // Get user from shared data source
-    const user = getUserForAuth(normalizedUsername)
-    
-    if (user && password === user.password) {
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user
-      return { success: true, user: userWithoutPassword }
-    }
-
-    return { success: false }
-  }
+  // 📝 หมายเหตุ: ฟังก์ชัน mockLoginAPI ถูกย้ายไปยัง usersData.js แล้ว
+  // เพื่อให้ง่ายต่อการจัดการ Mock Data ทั้งหมดที่ไฟล์เดียว
+  // const mockLoginAPI ถูกย้ายไปยัง usersData.js
 
   function handleResetConfirm() {
     setResetError('')
     setResetSuccess('')
     
-    // Validation
+    // ✅ ตรวจสอบความถูกต้องของข้อมูล
     if (!Username || !Password || !NewPassword) {
       setResetError('กรุณากรอกข้อมูลให้ครบทุกช่อง')
       return
@@ -114,20 +123,20 @@ function Auth() {
       return
     }
 
-    // Get stored passwords or use defaults
+    // 📦 ดึงรหัสผ่านที่เก็บใน localStorage หรือใช้ค่าเริ่มต้น
     const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
     
-    // Try to find user in usersData first
+    // 👤 ลองหา user ใน usersData ก่อน
     const userData = getUserForAuth(Username)
     
     if (userData) {
-      // Regular user from usersData
+      // ✅ พบ user ปกติจาก usersData
       if (userData.password !== Password) {
         setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
         return
       }
 
-      // Update user password in usersData
+      // 💾 อัปเดตรหัสผ่านของ user ใน localStorage
       const users = JSON.parse(localStorage.getItem('users') || '[]')
       const updatedUsers = users.map(user => {
         if (user.username === Username) {
@@ -137,7 +146,7 @@ function Auth() {
       })
       localStorage.setItem('users', JSON.stringify(updatedUsers))
 
-      // If user is admin or superadmin, also update their admin account password
+      // 🔐 ถ้า user เป็น admin หรือ superadmin ให้อัปเดตรหัสผ่าน admin account ด้วย
       if (userData.role === 'admin' || userData.role === 'superadmin') {
         const adminUsername = `ADM${userData.employeeId}`
         const updatedPasswords = {
@@ -149,36 +158,35 @@ function Auth() {
 
       setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
     } else {
-      // Check if it's an admin account (ADM prefix)
-      const mockUsers = {
-        'admin': { username: 'admin', password: storedPasswords['admin'] || '123456' }
-      }
+      // 🔑 ตรวจสอบบัญชี fallback (เช่น username = admin) จาก data layer กลาง
+      const fallbackAccount = getFallbackAdminAccount(Username, storedPasswords)
 
-      const user = mockUsers[Username.toLowerCase()]
-      
-      if (!user) {
+      if (!fallbackAccount) {
         setResetError('ไม่พบชื่อผู้ใช้นี้ในระบบ')
         return
       }
 
-      if (user.password !== Password) {
+      if (fallbackAccount.password !== Password) {
         setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
         return
       }
 
-      // Update password in localStorage
+      const normalizedUsername = fallbackAccount.username.toLowerCase()
       const updatedPasswords = {
         ...storedPasswords,
-        [Username.toLowerCase()]: NewPassword
+        [normalizedUsername]: NewPassword
       }
+
+      if (fallbackAccount.linkedAdminAccount) {
+        updatedPasswords[fallbackAccount.linkedAdminAccount.toLowerCase()] = NewPassword
+      }
+
       localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
 
-      // If it's an admin account (ADM prefix), also update the main user account
-      if (Username.toLowerCase().startsWith('adm')) {
-        const employeeId = Username.substring(3) // Remove 'ADM' prefix
+      if (fallbackAccount.employeeId) {
         const users = JSON.parse(localStorage.getItem('users') || '[]')
         const updatedUsers = users.map(user => {
-          if (user.employeeId === employeeId && (user.role === 'admin' || user.role === 'superadmin')) {
+          if (user.employeeId === fallbackAccount.employeeId && (user.role === 'admin' || user.role === 'superadmin')) {
             return { ...user, password: NewPassword }
           }
           return user
@@ -188,8 +196,8 @@ function Auth() {
 
       setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
     }
-    
-    // Reset form and close modal after 2 seconds
+
+    // 🔄 รีเซ็ตฟอร์มและปิด modal หลังจาก 2 วินาที
     setTimeout(() => {
       setShowReset(false)
       setUsernameReset('')
@@ -202,17 +210,17 @@ function Auth() {
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      {/* Show PuffLoader when loading */}
+      {/* 🔄 แสดง PuffLoader ขณะกำลัง Loading */}
       {loading && <PuffLoader text="กำลังเข้าสู่ระบบ..." />}
 
-      {/* Decorative background elements */}
+      {/* 🎨 ตกแต่งพื้นหลัง (Background decorative elements) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
         <div className="absolute top-40 right-10 w-72 h-72 bg-cyan-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-sky-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* card login */}
+      {/* 📋 card login - หน้าล็อกอินหลัก */}
       <section
         className={`font-prompt fixed inset-x-0 bottom-0 left-0 right-0 xl:left-[400px] xl:right-[500px] 2xl:left-[500px] 2xl:right-[500px] bg-white/95 backdrop-blur-sm rounded-t-[28px] shadow-2xl md:px-[60px] lg:px-[80px] xl:px-[40px] px-6 pb-8 pt-6 z-40 overflow-hidden transition-all duration-500 ease-in-out ${
           showReset ? 'opacity-0 scale-95 pointer-events-none translate-y-4' : 'opacity-100 scale-100 translate-y-0'
@@ -220,19 +228,19 @@ function Auth() {
         style={{ boxShadow: '0 -18px 60px rgba(72,203,255,0.25)' }}
       >
         <div className="space-y-6">
-          {/* header */}
+          {/* ส่วนหัว (Header) */}
           <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             Login
           </header>
 
-          {/* Error message */}
+          {/* ⚠️ ข้อความแสดงข้อผิดพลาด (Error message) */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-shake">
               {error}
             </div>
           )}
 
-          {/* Username */}
+          {/* 📝 ช่องกรอกชื่อผู้ใช้ (Username input field) */}
           <div className="flex flex-col gap-2 group">
             <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
               Username
@@ -246,7 +254,7 @@ function Auth() {
             />
           </div>
 
-          {/* Password */}
+          {/* 🔒 ช่องกรอกรหัสผ่าน (Password input field) */}
           <div className="flex flex-col gap-2 group">
             <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
               Password
@@ -259,7 +267,7 @@ function Auth() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
-              {/* toggle password */}
+              {/* 👁️ ปุ่มแสดง/ซ่อนรหัสผ่าน (Toggle password visibility) */}
               <button
                 type="button"
                 onClick={() => setShowPwd((s) => !s)}
@@ -280,7 +288,24 @@ function Auth() {
             </div>
           </div>
 
-          {/* primary button */}
+          {/* ✅ Checkbox จำฉันไว้ */}
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 text-cyan-500 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+            />
+            <label
+              htmlFor="rememberMe"
+              className="text-gray-600 text-sm sm:text-base cursor-pointer select-none"
+            >
+              จำชื่อผู้ใช้และรหัสผ่าน
+            </label>
+          </div>
+
+          {/* ✅ ปุ่มหลัก (Primary button) - เข้าสู่ระบบ */}
           <div className="flex justify-center pt-2">
             <button
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold rounded-xl py-3 px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
@@ -291,7 +316,7 @@ function Auth() {
             </button>
           </div>
 
-          {/* secondary action */}
+          {/* 🔄 ปุ่มเปลี่ยนรหัสผ่าน (Secondary action) */}
           <div className="text-center">
             <button
               type="button"
@@ -304,7 +329,7 @@ function Auth() {
         </div>
       </section>
 
-      {/* card reset password (overlay) */}
+      {/* 🔐 Card เปลี่ยนรหัสผ่าน (Reset Password Overlay Modal) */}
       {showReset && (
         <section
           className={`font-prompt fixed inset-x-0 bottom-0 left-0 right-0 xl:left-[400px] xl:right-[500px] 2xl:left-[500px] 2xl:right-[500px] bg-white/95 backdrop-blur-sm rounded-t-[28px] shadow-2xl md:px-[60px] lg:px-[80px] xl:px-[40px] px-6 pb-8 pt-6 z-50 overflow-hidden transition-all duration-500 ease-in-out ${
@@ -317,21 +342,21 @@ function Auth() {
               Reset Password
             </header>
 
-            {/* Error message */}
+            {/* ⚠️ ข้อความแสดงข้อผิดพลาด (Error message) */}
             {resetError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-shake">
                 {resetError}
               </div>
             )}
 
-            {/* Success message */}
+            {/* ✅ ข้อความแสดงผลสำเร็จ (Success message) */}
             {resetSuccess && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
                 {resetSuccess}
               </div>
             )}
 
-            {/* Username */}
+            {/* 📝 ช่องกรอกชื่อผู้ใช้ (Username input field) */}
             <div className="flex flex-col gap-2 group">
               <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
                 Username <span className="text-red-500">*</span>
@@ -348,7 +373,7 @@ function Auth() {
               />
             </div>
 
-            {/* Password */}
+            {/* 🔒 ช่องกรอกรหัสผ่านเดิม (Current Password input field) */}
             <div className="flex flex-col gap-2 group">
               <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
                 Password <span className="text-red-500">*</span>
@@ -384,7 +409,7 @@ function Auth() {
               </div>
             </div>
 
-            {/* New Password */}
+            {/* 🔑 ช่องกรอกรหัสผ่านใหม่ (New Password input field) */}
             <div className="flex flex-col gap-2 group">
               <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
                 New Password <span className="text-red-500">*</span>
@@ -420,7 +445,7 @@ function Auth() {
               </div>
             </div>
 
-            {/* actions */}
+            {/* ✅ ปุ่มยืนยันการเปลี่ยนรหัสผ่าน (Confirm button) */}
             <div className='flex justify-center pt-2'>
               <button
                 className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl py-3 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
@@ -431,7 +456,7 @@ function Auth() {
               </button>
             </div>
 
-            {/* back  */}
+            {/* 🔙 ปุ่มกลับหน้า Login (Back to login button) */}
             <div className="text-center mt-2 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
               <button
                 type="button"
