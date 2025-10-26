@@ -97,10 +97,26 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [preparations, setPreparations] = useState('')
   const [tasks, setTasks] = useState('')
   const [goals, setGoals] = useState('')
+  const [selectedTeams, setSelectedTeams] = useState([]) // แผนก/ตำแหน่งที่จะเห็นตาราง
+  const [showTeamsDropdown, setShowTeamsDropdown] = useState(false) // แสดง/ซ่อน dropdown
+  const teamsDropdownRef = useRef(null) // ref สำหรับปิด dropdown เมื่อคลิกนอก
   const [showMapModal, setShowMapModal] = useState(false)
   const [showWarningPopup, setShowWarningPopup] = useState(false)
   const [showErrorPopup, setShowErrorPopup] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  
+  // รายการแผนกและตำแหน่งที่มี
+  const availableTeams = [
+    'IT',
+    'Engineering', 
+    'Marketing',
+    'Sales',
+    'HR',
+    'Finance',
+    'Operations',
+    'Manager',
+    'Staff'
+  ]
   
   // New location form for map modal
   const [newLocationForm, setNewLocationForm] = useState({
@@ -138,6 +154,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     setPreparations((initialData.preparations || []).join('\n'))
     setTasks((initialData.tasks || []).join('\n'))
     setGoals((initialData.goals || []).join('\n'))
+    setSelectedTeams(initialData.teams || [])
   }, [initialData])
 
   useEffect(() => {
@@ -145,6 +162,20 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  // ปิด dropdown เมื่อคลิกนอก
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (teamsDropdownRef.current && !teamsDropdownRef.current.contains(event.target)) {
+        setShowTeamsDropdown(false)
+      }
+    }
+    
+    if (showTeamsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showTeamsDropdown])
 
   // refs to call native pickers where supported
   const monthRef = useRef(null)
@@ -274,6 +305,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     setMapClickEnabled(false)
   }
 
+  // Toggle team selection
+  const toggleTeam = (teamName) => {
+    setSelectedTeams(prev => {
+      if (prev.includes(teamName)) {
+        return prev.filter(t => t !== teamName)
+      } else {
+        return [...prev, teamName]
+      }
+    })
+  }
+
   // Handle map modal open with validation
   const handleOpenMapModal = () => {
     // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง
@@ -389,12 +431,15 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       month: month || (nDate ? nDate.slice(0,7) : ''),
       date: nDate || '',
       time: timeStr,
+      startTime: nTimeStart || '', // เพิ่มเวลาเริ่มแยก
+      endTime: nTimeEnd || '',     // เพิ่มเวลาสิ้นสุดแยก
       location: location || '',
       members: members || '',
       type: type || '',
       preparations: preparations.split('\n').map(s => s.trim()).filter(Boolean),
       tasks: tasks.split('\n').map(s => s.trim()).filter(Boolean),
       goals: goals.split('\n').map(s => s.trim()).filter(Boolean),
+      teams: selectedTeams, // เพิ่มแผนก/ตำแหน่งที่จะเห็นตาราง
     }
 
     if (onUpdate) {
@@ -404,10 +449,21 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-[92%] max-w-4xl bg-white rounded-lg border-4 border-[#1877F2] p-6 shadow-lg">
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 bg-black/60 backdrop-blur-md"
+      style={{
+        animation: 'fadeIn 0.3s ease-out forwards'
+      }}
+    >
+      <div className="absolute inset-0" onClick={onClose} />
+      <div 
+        className="relative w-[92%] max-w-4xl bg-white rounded-lg border-4 border-[#1877F2] p-6 shadow-lg"
+        style={{
+          animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-xl font-semibold text-[#0b2b57] mb-2">จัดตารางการทำงาน</h2>
         <p className="text-sm text-gray-600 mb-4">กรอกข้อมูลเพื่อสร้างตารางงานใหม่</p>
 
@@ -415,6 +471,75 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           <div>
             <label className="block text-sm text-gray-700 mb-1">ชื่อทีม</label>
             <input value={team} onChange={e => setTeam(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="ทีม" />
+          </div>
+
+          {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ */}
+          <div className="relative" ref={teamsDropdownRef}>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              แผนก/ตำแหน่งที่จะเห็นตารางนี้ 
+              <span className="text-xs font-normal text-gray-500 ml-2">(ถ้าไม่เลือก = ทุกคนเห็น)</span>
+            </label>
+            
+            {/* Dropdown Button */}
+            <button
+              type="button"
+              onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all flex items-center justify-between"
+            >
+              <span className="text-gray-700">
+                {selectedTeams.length === 0 
+                  ? 'เลือกแผนก/ตำแหน่ง...' 
+                  : `เลือกแล้ว ${selectedTeams.length} รายการ`
+                }
+              </span>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 text-gray-400 transition-transform ${showTeamsDropdown ? 'rotate-180' : ''}`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showTeamsDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {availableTeams.map((teamOption) => (
+                  <label
+                    key={teamOption}
+                    className="flex items-center px-4 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTeams.includes(teamOption)}
+                      onChange={() => toggleTeam(teamOption)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mr-3"
+                    />
+                    <span className="text-gray-700">{teamOption}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Teams Tags */}
+            {selectedTeams.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedTeams.map(team => (
+                  <span key={team} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                    {team}
+                    <button
+                      type="button"
+                      onClick={() => toggleTeam(team)}
+                      className="hover:text-blue-900 ml-1 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -1060,6 +1185,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
           </div>
         ))}
-    </div>
+    </div>,
+    document.body
   )
 }
