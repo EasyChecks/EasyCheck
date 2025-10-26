@@ -16,7 +16,25 @@ L.Icon.Default.mergeOptions({
 
 function Attendance() {
   const { locations } = useLocations()
-  const [schedules, setSchedules] = useState(sampleSchedules)
+  
+  // Load schedules from localStorage or use sampleSchedules as default
+  const [schedules, setSchedules] = useState(() => {
+    const savedSchedules = localStorage.getItem('attendanceSchedules')
+    if (savedSchedules) {
+      try {
+        return JSON.parse(savedSchedules)
+      } catch (error) {
+        console.error('Error parsing saved schedules:', error)
+        // บันทึก sampleSchedules ลง localStorage ถ้า parse error
+        localStorage.setItem('attendanceSchedules', JSON.stringify(sampleSchedules))
+        return sampleSchedules
+      }
+    }
+    // บันทึก sampleSchedules ลง localStorage ถ้ายังไม่มีข้อมูล
+    localStorage.setItem('attendanceSchedules', JSON.stringify(sampleSchedules))
+    return sampleSchedules
+  })
+  
   const [openIds, setOpenIds] = useState([])
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
@@ -30,6 +48,11 @@ function Attendance() {
   const wrapperRefs = useRef({})
   const innerRefs = useRef({})
   const endListenersRef = useRef({}) // เก็บ listener ปัจจุบันต่อรายการ
+
+  // Save schedules to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('attendanceSchedules', JSON.stringify(schedules))
+  }, [schedules])
 
   useEffect(() => {
     Object.values(wrapperRefs.current).forEach(w => {

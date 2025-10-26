@@ -78,19 +78,49 @@ function UserDashboard() {
     return events.filter(event => event.status === 'ongoing')
   }, [getEventsForUser, user])
 
-  // หาตารางงานสำหรับวันนี้จากข้อมูล user โดยตรง
-  const todaySchedule = useMemo(() => {
-    // ใช้ตารางงานจากข้อมูล user โดยตรง (จาก usersData.js ผ่าน useAuth)
+  // โหลดตารางงานทั้งหมดจาก localStorage
+  const allSchedules = useMemo(() => {
+    const savedSchedules = localStorage.getItem('attendanceSchedules')
+    if (savedSchedules) {
+      try {
+        const schedules = JSON.parse(savedSchedules)
+        
+        // กรองตารางตาม teams (แผนก/ตำแหน่ง)
+        const userSchedules = schedules.filter(schedule => {
+          // ถ้าไม่มี teams หรือ teams ว่าง = ทุกคนเห็น
+          if (!schedule.teams || schedule.teams.length === 0) {
+            return true
+          }
+          
+          // ตรวจสอบว่า department หรือ position ของ user ตรงกับ teams หรือไม่
+          return schedule.teams.some(team => 
+            team === user?.department || team === user?.position
+          )
+        })
+        
+        // เพิ่ม time field ถ้าไม่มี
+        return userSchedules.map(schedule => ({
+          ...schedule,
+          time: schedule.time || `${schedule.startTime} - ${schedule.endTime}`
+        }))
+      } catch (error) {
+        console.error('Error loading schedules:', error)
+        return []
+      }
+    }
+    
+    // ถ้าไม่มีตารางจาก localStorage ให้ใช้จาก user profile
     if (user?.schedule) {
-      return {
+      return [{
         id: user.employeeId || 'user-schedule',
         time: user.schedule,
-        location: user.workLocation || 'Office', // สมมติว่ามี field workLocation
-        team: user.department || 'ทั่วไป'
-      };
+        location: user.workLocation || 'Office',
+        team: user.department || 'ทั่วไป',
+        date: new Date().toISOString().split('T')[0]
+      }]
     }
-    // ตารางงานเริ่มต้นหากไม่พบในข้อมูล user
-    return { id: 'default', time: '09:00 - 18:00', location: 'Office', team: 'ทั่วไป' };
+    
+    return []
   }, [user])
 
   // สร้างการแจ้งเตือนจากหลายแหล่ง
@@ -435,7 +465,7 @@ function UserDashboard() {
 
     if (result.success) {
       // อนุญาตกล้องแล้ว ไปหน้าถ่ายรูป
-      navigate('/user/take-photo', { state: { schedule: todaySchedule } })
+      navigate('/user/take-photo', { state: { schedule: allSchedules[0] } })
     } else {
       // ไม่อนุญาตกล้อง แสดง error
       setPopupInfoMessage(result.error || 'ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้องในการตั้งค่าเบราว์เซอร์')
@@ -501,7 +531,7 @@ function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            {/* ปุ่มเช็คอิน/เช็คเอาท์ - พร้อมการขออนุญาตกล้อง */}
+            {/* ปุ่มเช็คอิน/เช็คเอาท์ - พร้อมการขออนุญาตกล้อง + popup เตือน */}
             {checkingCamera ? (
               <button
                 disabled
@@ -515,8 +545,16 @@ function UserDashboard() {
             ) : (
               <Link 
                 to={isButtonDisabled ? "#" : "/user/take-photo"}
-                state={{ schedule: todaySchedule }}
-                onClick={handleCheckInOutClick}
+                state={{ schedule: allSchedules[0] }}
+                onClick={(e) => {
+                  if (isButtonDisabled) {
+                    e.preventDefault();
+                    setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้');
+                    setShowInfoPopup(true);
+                    return;
+                  }
+                  handleCheckInOutClick(e);
+                }}
                 className={`${buttonColor} ${buttonTextColor} px-8 py-3 rounded-full font-bold shadow-lg transform transition-all inline-block text-center ${
                   isButtonDisabled ? 'opacity-50 cursor-not-allowed hover:scale-100' : 'hover:scale-105'
                 }`}
@@ -565,34 +603,63 @@ function UserDashboard() {
       <div className="p-6 bg-white shadow-md rounded-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-gray-800">ตารางงานของคุณ</h3>
-          <span className="text-sm text-gray-500">วันนี้</span>
+          <span className="text-sm text-gray-500">ทั้งหมด {allSchedules.length} รายการ</span>
         </div>
         
-        {/* User's work schedules - แสดงตารางงานของ user */}
-        {todaySchedule && todaySchedule.id !== 'default' ? (
-          <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-xl p-4 text-white">
-            <div className="flex items-start justify-between mb-2">
-              <h4 className="text-lg font-semibold">{todaySchedule.team}</h4>
-              <span className="px-3 py-1 text-xs border rounded-full bg-white/20 border-white/30">
-                {todaySchedule.time}
-              </span>
-            </div>
-            <div className="space-y-1 text-sm text-white/90">
-              <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>สถานที่: {todaySchedule.location}</span>
-              </div>
-            </div>
+        {/* User's work schedules - แสดงตารางงานทั้งหมดของ user */}
+        {allSchedules.length > 0 ? (
+          <div className="space-y-3">
+            {allSchedules.map((schedule) => (
+              <Link key={schedule.id} to={`/user/schedule/${schedule.id}`} className="block">
+                <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-xl p-4 text-white transform transition-all hover:scale-[1.02] hover:shadow-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold">{schedule.team}</h4>
+                      <p className="text-xs text-white/80 mt-1">{schedule.date}</p>
+                    </div>
+                    <span className="px-3 py-1 text-xs border rounded-full bg-white/20 border-white/30 whitespace-nowrap">
+                      {schedule.time || 'ไม่ระบุเวลา'}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm text-white/90">
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>สถานที่: {schedule.location}</span>
+                    </div>
+                    {schedule.type && (
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        <span>ประเภท: {schedule.type}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between text-white/90">
+                    <span className="text-xs flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>ดูรายละเอียดเพิ่มเติม</span>
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         ) : (
           <div className="py-8 text-center text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p>ไม่มีตารางงานสำหรับวันนี้</p>
+            <p>ไม่มีตารางงาน</p>
           </div>
         )}
       </div>
