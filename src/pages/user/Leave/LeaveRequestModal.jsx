@@ -204,7 +204,7 @@ function LeaveRequestModal({ closeModal }) {
 
       setTimeout(() => {
         closeModal();
-      }, 2000);
+      }, 3000);
       return;
     }
 
@@ -272,16 +272,11 @@ function LeaveRequestModal({ closeModal }) {
     // Close modal after showing success
     setTimeout(() => {
       closeModal();
-    }, 2000);
+    }, 3000);
   };
 
-  return createPortal(
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 font-prompt overflow-y-auto"
-      style={{
-        animation: 'fadeIn 0.3s ease-out forwards'
-      }}
-    >
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 overflow-y-auto bg-black/60 backdrop-blur-sm sm:p-4 font-prompt">
       <style>{`
         @keyframes fadeIn {
           from {
@@ -323,21 +318,16 @@ function LeaveRequestModal({ closeModal }) {
           color: transparent;
         }
       `}</style>
-      <div 
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl my-auto"
-        style={{
-          animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-        }}
-      >
+      <div className="w-full max-w-xs my-auto bg-white shadow-2xl rounded-2xl sm:rounded-3xl sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-4 sm:p-5 lg:p-6 rounded-t-2xl sm:rounded-t-3xl sticky top-0 z-10">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white drop-shadow-md">ขอลางาน</h2>
+            <h2 className="text-lg font-bold text-white sm:text-xl lg:text-2xl drop-shadow-md">ขอลางาน</h2>
             <button
               onClick={closeModal}
               className="text-white hover:bg-white/20 p-1.5 sm:p-2 rounded-full transition-all duration-200"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -416,13 +406,13 @@ function LeaveRequestModal({ closeModal }) {
 
               {/* Show leave rules when type is selected */}
               {formData.leaveType && (
-                <div className="mt-3 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 sm:p-4">
+                <div className="p-3 mt-3 border-2 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 rounded-xl sm:p-4">
                   <div className="flex items-start gap-2 mb-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-amber-800 text-sm sm:text-base mb-2">เงื่อนไขการลา{formData.leaveType}</h4>
+                      <h4 className="mb-2 text-sm font-semibold text-amber-800 sm:text-base">เงื่อนไขการลา{formData.leaveType}</h4>
                       <ul className="space-y-1.5">
                         {getLeaveRules(formData.leaveType).map((rule, index) => (
                           <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-amber-900">
@@ -440,13 +430,13 @@ function LeaveRequestModal({ closeModal }) {
 
           {/* Show late arrival rules */}
           {formData.requestType === 'lateArrival' && (
-            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-3 sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
               <div className="flex items-start gap-2 mb-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-cyan-800 text-sm sm:text-base mb-2">เงื่อนไขการขอเข้างานสาย</h4>
+                  <h4 className="mb-2 text-sm font-semibold text-cyan-800 sm:text-base">เงื่อนไขการขอเข้างานสาย</h4>
                   <ul className="space-y-1.5">
                     {getLeaveRules('ขอเข้างานสาย').map((rule, index) => (
                       <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-cyan-900">
@@ -508,14 +498,14 @@ function LeaveRequestModal({ closeModal }) {
                     className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
                     required
                   />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <p className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   การขอเข้างานสายจะถูกล็อคเป็นวันปัจจุบัน
@@ -545,9 +535,9 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeStartPicker(!showTimeStartPicker);
                         setShowTimeEndPicker(false);
                       }}
-                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-600 transition-colors"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
                         <path d="M12 7v6l4 2" strokeWidth="1.5" />
                       </svg>
@@ -555,11 +545,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeStartPicker && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border-2 border-cyan-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -583,7 +573,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -631,9 +621,9 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeEndPicker(!showTimeEndPicker);
                         setShowTimeStartPicker(false);
                       }}
-                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-600 transition-colors"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
                         <path d="M12 7v6l4 2" strokeWidth="1.5" />
                       </svg>
@@ -641,11 +631,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeEndPicker && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border-2 border-cyan-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -669,7 +659,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -700,7 +690,7 @@ function LeaveRequestModal({ closeModal }) {
           ) : (
             /* Regular Leave - Date Range - Full Day Mode */
             formData.leaveMode === 'fullday' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               {/* Start Date */}
               <div>
                 <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
@@ -719,7 +709,7 @@ function LeaveRequestModal({ closeModal }) {
                     style={{ colorScheme: 'light' }}
                   />
                   {displayDates.startDate && (
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-sm sm:text-base text-gray-700 bg-white pr-2">
+                    <div className="absolute pr-2 text-sm text-gray-700 -translate-y-1/2 bg-white pointer-events-none left-3 top-1/2 sm:text-base">
                       {displayDates.startDate}
                     </div>
                   )}
@@ -744,7 +734,7 @@ function LeaveRequestModal({ closeModal }) {
                     style={{ colorScheme: 'light' }}
                   />
                   {displayDates.endDate && (
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-sm sm:text-base text-gray-700 bg-white pr-2">
+                    <div className="absolute pr-2 text-sm text-gray-700 -translate-y-1/2 bg-white pointer-events-none left-3 top-1/2 sm:text-base">
                       {displayDates.endDate}
                     </div>
                   )}
@@ -767,14 +757,14 @@ function LeaveRequestModal({ closeModal }) {
                     className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
                     required
                   />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <p className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   การลารายชั่วโมงจะถูกล็อคเป็นวันปัจจุบัน
@@ -812,9 +802,9 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeStartPicker(!showTimeStartPicker);
                         setShowTimeEndPicker(false);
                       }}
-                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-600 transition-colors"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
                         <path d="M12 7v6l4 2" strokeWidth="1.5" />
                       </svg>
@@ -822,11 +812,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeStartPicker && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border-2 border-cyan-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -857,7 +847,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -920,9 +910,9 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeEndPicker(!showTimeEndPicker);
                         setShowTimeStartPicker(false);
                       }}
-                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-600 transition-colors"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
                         <path d="M12 7v6l4 2" strokeWidth="1.5" />
                       </svg>
@@ -930,11 +920,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeEndPicker && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border-2 border-cyan-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -965,7 +955,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="bg-cyan-500 text-white text-center py-2 text-xs sm:text-sm font-semibold">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -1005,28 +995,28 @@ function LeaveRequestModal({ closeModal }) {
 
           {/* Total Days/Hours Display */}
           {formData.requestType === 'leave' && formData.leaveMode === 'fullday' && formData.startDate && formData.endDate && (
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-3 sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-semibold text-sm sm:text-base">จำนวนวันที่ลา:</span>
-                <span className="text-cyan-600 font-bold text-lg sm:text-xl">{getTotalDays()} วัน</span>
+                <span className="text-sm font-semibold text-gray-700 sm:text-base">จำนวนวันที่ลา:</span>
+                <span className="text-lg font-bold text-cyan-600 sm:text-xl">{getTotalDays()} วัน</span>
               </div>
             </div>
           )}
 
           {formData.requestType === 'lateArrival' && formData.startTime && formData.endTime && (
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-3 sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-semibold text-sm sm:text-base">ระยะเวลาที่สาย:</span>
-                <span className="text-cyan-600 font-bold text-lg sm:text-xl">{getTotalHours()}</span>
+                <span className="text-sm font-semibold text-gray-700 sm:text-base">ระยะเวลาที่สาย:</span>
+                <span className="text-lg font-bold text-cyan-600 sm:text-xl">{getTotalHours()}</span>
               </div>
             </div>
           )}
 
           {formData.requestType === 'leave' && formData.leaveMode === 'hourly' && formData.startTime && formData.endTime && (
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-3 sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-semibold text-sm sm:text-base">จำนวนชั่วโมงที่ลา:</span>
-                <span className="text-cyan-600 font-bold text-lg sm:text-xl">{getTotalHours()}</span>
+                <span className="text-sm font-semibold text-gray-700 sm:text-base">จำนวนชั่วโมงที่ลา:</span>
+                <span className="text-lg font-bold text-cyan-600 sm:text-xl">{getTotalHours()}</span>
               </div>
             </div>
           )}
@@ -1036,7 +1026,7 @@ function LeaveRequestModal({ closeModal }) {
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
               {formData.requestType === 'lateArrival' ? 'เหตุผลที่เข้างานสาย' : 'เหตุผลในการลา'} <span className="text-red-500">*</span>
               {formData.requestType === 'lateArrival' && (
-                <span className="text-cyan-600 text-xs ml-1">(ต้องเป็นเหตุสุดวิสัย)</span>
+                <span className="ml-1 text-xs text-cyan-600">(ต้องเป็นเหตุสุดวิสัย)</span>
               )}
             </label>
             <textarea
@@ -1059,18 +1049,18 @@ function LeaveRequestModal({ closeModal }) {
                 <span className="text-red-500"> * (จำเป็นสำหรับลาป่วย 3 วันขึ้นไป)</span>
               )}
               {formData.requestType === 'lateArrival' && (
-                <span className="text-cyan-600 text-xs ml-1">(แนะนำให้แนบหลักฐานประกอบ)</span>
+                <span className="ml-1 text-xs text-cyan-600">(แนะนำให้แนบหลักฐานประกอบ)</span>
               )}
             </label>
 
             {/* Warning for sick leave 3+ days */}
             {formData.requestType === 'leave' && formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday' && getTotalDays() >= 3 && (
-              <div className="mb-2 bg-red-50 border-2 border-red-200 rounded-lg p-2 sm:p-3">
+              <div className="p-2 mb-2 border-2 border-red-200 rounded-lg bg-red-50 sm:p-3">
                 <div className="flex items-start gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  <p className="text-xs sm:text-sm text-red-800 font-medium">
+                  <p className="text-xs font-medium text-red-800 sm:text-sm">
                     การลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องแนบใบรับรองแพทย์
                   </p>
                 </div>
@@ -1079,12 +1069,12 @@ function LeaveRequestModal({ closeModal }) {
 
             {/* Info for late arrival */}
             {formData.requestType === 'lateArrival' && (
-              <div className="mb-2 bg-cyan-50 border-2 border-cyan-200 rounded-lg p-2 sm:p-3">
+              <div className="p-2 mb-2 border-2 rounded-lg bg-cyan-50 border-cyan-200 sm:p-3">
                 <div className="flex items-start gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-xs sm:text-sm text-cyan-800 font-medium">
+                  <p className="text-xs font-medium sm:text-sm text-cyan-800">
                     การแนบรูปภาพหลักฐาน (เช่น รูปถ่ายเหตุการณ์, ใบรับรองจากหน่วยงานที่เกี่ยวข้อง) จะช่วยในการพิจารณาอนุมัติ
                   </p>
                 </div>
@@ -1098,8 +1088,8 @@ function LeaveRequestModal({ closeModal }) {
               onChange={handleFileChange}
               className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 file:cursor-pointer file:font-medium"
             />
-            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <p className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               รองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .pdf เท่านั้น
@@ -1107,8 +1097,8 @@ function LeaveRequestModal({ closeModal }) {
             {formData.documents.length > 0 && (
               <div className="mt-2 space-y-1">
                 {formData.documents.map((doc, index) => (
-                  <div key={index} className="text-xs sm:text-sm text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div key={index} className="flex items-center gap-2 text-xs text-gray-600 sm:text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>{doc}</span>
@@ -1119,7 +1109,7 @@ function LeaveRequestModal({ closeModal }) {
           </div>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-4">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:gap-3 sm:pt-4">
             <button
               type="button"
               onClick={closeModal}
@@ -1136,8 +1126,16 @@ function LeaveRequestModal({ closeModal }) {
           </div>
         </form>
       </div>
-    </div>,
-    document.body
+
+      {/* Alert Dialog for success/error messages */}
+      <AlertDialog
+        isOpen={_showAlert}
+        type={_alertConfig.type}
+        title={_alertConfig.title}
+        message={_alertConfig.message}
+        onClose={() => setShowAlert(false)}
+      />
+    </div>
   );
 }
 
