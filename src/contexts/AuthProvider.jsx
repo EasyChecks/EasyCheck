@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { AuthContext } from './AuthContextValue'
-import { calculateAttendanceStats, getAttendanceStatus } from '../utils/attendanceCalculator'
+import { calculateAttendanceStats } from '../utils/attendanceCalculator'
+import { mockAttendanceRecords } from '../data/usersData'
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [tabId] = useState(() => {
+    // ✅ สร้าง persistent tabId ที่ไม่หายแม้ปิด browser
+    // ใช้ window.name เพื่อเก็บ tabId ที่ unique ต่อแต่ละ tab
+    if (!window.name) {
+      // ถ้า tab นี้ยังไม่มี name (tab ใหม่) → สร้าง ID ใหม่
+      const newTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      window.name = newTabId
+      return newTabId
+    }
+    // ถ้ามี name แล้ว (refresh หรือ back/forward) → ใช้ ID เดิม
+    return window.name
+  })
   const [attendance, setAttendance] = useState({
     checkInTime: null,
     checkOutTime: null,
@@ -20,10 +33,12 @@ export const AuthProvider = ({ children }) => {
     absent: 0
   })
 
+  // ✅ โหลด session เมื่อ mount - แต่ละ tab มี session แยกกัน และไม่หายแม้ปิด browser
   useEffect(() => {
-    const savedUser = localStorage.getItem('user')
-    const savedAttendance = localStorage.getItem('attendance')
-    const savedRecords = localStorage.getItem('attendanceRecords')
+    // ใช้ localStorage + tabId (จาก window.name) เพื่อให้แต่ละ tab แยกกัน และไม่หายเมื่อปิด browser
+    const savedUser = localStorage.getItem(`user_${tabId}`)
+    const savedAttendance = localStorage.getItem(`attendance_${tabId}`)
+    const savedRecords = localStorage.getItem('attendanceRecords') // attendance records ใช้ localStorage เพื่อ sync ข้อมูล
     
     if (savedUser) {
       setUser(JSON.parse(savedUser))
@@ -38,65 +53,55 @@ export const AuthProvider = ({ children }) => {
       const stats = calculateAttendanceStats(records)
       setAttendanceStats(stats)
     } else {
-      // ถ้าไม่มีข้อมูล ให้สร้าง mock data สำหรับ demo
-      const mockRecords = [
-        {
-          date: new Date().toISOString().split('T')[0], // วันนี้
-          shifts: [
-            {
-              checkIn: '08:00',
-              checkOut: '12:00',
-              status: 'on_time'
-            },
-            {
-              checkIn: '13:00',
-              checkOut: '17:00',
-              status: 'on_time'
-            }
-          ]
-        },
-        {
-          date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // เมื่อวาน
-          shifts: [
-            {
-              checkIn: '08:15',
-              checkOut: '17:30',
-              status: 'late'
-            }
-          ]
-        },
-        {
-          date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 วันที่แล้ว
-          shifts: [
-            {
-              checkIn: '07:45',
-              checkOut: '12:00',
-              status: 'on_time'
-            },
-            {
-              checkIn: '18:00',
-              checkOut: '22:00',
-              status: 'on_time'
-            }
-          ]
-        }
-      ]
-      setAttendanceRecords(mockRecords)
-      localStorage.setItem('attendanceRecords', JSON.stringify(mockRecords))
+      // ถ้าไม่มีข้อมูล ใช้ Mock Data จาก usersData.js
+      setAttendanceRecords(mockAttendanceRecords)
+      localStorage.setItem('attendanceRecords', JSON.stringify(mockAttendanceRecords))
     }
     setLoading(false)
-  }, [])
+  }, [tabId])
+
+  // ✅ Multi-tab Sync - Sync เฉพาะข้อมูล attendance และ usersData (ไม่ sync session/login)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // ไม่ sync user session ระหว่าง tab (ให้แต่ละ tab login แยกกัน)
+      // Sync เฉพาะ attendance records และ usersData
+      
+      if (e.key === 'attendanceRecords') {
+        if (e.newValue) {
+          const records = JSON.parse(e.newValue)
+          setAttendanceRecords(records)
+          const stats = calculateAttendanceStats(records)
+          setAttendanceStats(stats)
+        }
+      } else if (e.key === 'usersData') {
+        // ✅ เมื่อ admin แก้ไข user data → อัปเดต user ที่ login อยู่
+        if (e.newValue && user) {
+          const updatedUsers = JSON.parse(e.newValue)
+          const updatedUser = updatedUsers.find(u => u.id === user.id)
+          if (updatedUser) {
+            const mergedUser = { ...user, ...updatedUser }
+            setUser(mergedUser)
+            localStorage.setItem(`user_${tabId}`, JSON.stringify(mergedUser))
+          }
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [user, tabId])
 
   const login = (userData) => {
-    console.log('💾 Saving user to context:', userData) // Debug log
+    console.log('💾 Saving user to localStorage with tabId:', tabId) // Debug log
     setUser(userData)
-    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem(`user_${tabId}`, JSON.stringify(userData)) // ใช้ localStorage + tabId
     console.log('✅ User saved to localStorage') // Debug log
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('user')
+    localStorage.removeItem(`user_${tabId}`) // ลบจาก localStorage ของ tab นี้
+    localStorage.removeItem(`attendance_${tabId}`) // ลบ attendance ด้วย
   }
 
   const checkIn = (time, photo) => {
@@ -107,7 +112,7 @@ export const AuthProvider = ({ children }) => {
       checkInPhoto: photo
     }
     setAttendance(newAttendance)
-    localStorage.setItem('attendance', JSON.stringify(newAttendance))
+    localStorage.setItem(`attendance_${tabId}`, JSON.stringify(newAttendance)) // ใช้ localStorage + tabId
   }
 
   const checkOut = (time, photo) => {
@@ -120,16 +125,23 @@ export const AuthProvider = ({ children }) => {
       checkOutPhoto: photo
     }
     
+    // ฟังก์ชันช่วยคำนวณสถานะการเข้างาน
+    const getShiftStatus = (checkInTime, workTimeStart = '08:00') => {
+      if (!checkInTime) return 'absent'
+      const [checkHour, checkMinute] = checkInTime.split(':').map(Number)
+      const [workHour, workMinute] = workTimeStart.split(':').map(Number)
+      const checkTotalMinutes = checkHour * 60 + checkMinute
+      const workTotalMinutes = workHour * 60 + workMinute
+      return checkTotalMinutes <= workTotalMinutes ? 'on_time' : 'late'
+    }
+    
     // สร้าง shift record สำหรับการลงเวลาครั้งนี้
     const shiftRecord = {
       checkIn: attendance.checkInTime,
       checkOut: time,
       checkInPhoto: attendance.checkInPhoto,
       checkOutPhoto: photo,
-      status: getAttendanceStatus({
-        checkIn: attendance.checkInTime,
-        checkOut: time
-      }, { workTimeStart: '08:00' })
+      status: getShiftStatus(attendance.checkInTime, '08:00')
     }
     
     // อัปเดต records รองรับหลาย shift ต่อวัน
@@ -172,7 +184,7 @@ export const AuthProvider = ({ children }) => {
     setAttendanceStats(stats)
     
     setAttendance(newAttendance)
-    localStorage.setItem('attendance', JSON.stringify(newAttendance))
+    localStorage.setItem(`attendance_${tabId}`, JSON.stringify(newAttendance)) // ใช้ localStorage + tabId
   }
 
   const resetAttendance = () => {
@@ -182,7 +194,7 @@ export const AuthProvider = ({ children }) => {
       status: 'not_checked_in'
     }
     setAttendance(newAttendance)
-    localStorage.setItem('attendance', JSON.stringify(newAttendance))
+    localStorage.setItem(`attendance_${tabId}`, JSON.stringify(newAttendance)) // ใช้ localStorage + tabId
   }
 
   const getDashboardPath = (role) => {

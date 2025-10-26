@@ -76,7 +76,8 @@ function LeaveApproval() {
       .filter(leave => leave.status === 'รออนุมัติ')
       .map(leave => {
         // ดึงข้อมูล user ที่เป็นเจ้าของใบลา
-        const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+        const tabId = window.name || '' // ใช้ window.name แทน sessionStorage
+        const currentUserData = tabId ? JSON.parse(localStorage.getItem(`user_${tabId}`) || '{}') : {}
         const user = usersData.find(u => u.username === currentUserData.username) || usersData[0];
         
         // แปลงวันที่จาก dd/mm/yyyy เป็น Date object เพื่อหา submittedDate

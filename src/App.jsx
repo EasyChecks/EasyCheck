@@ -1,6 +1,18 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+
+// Loading Component - Memoized เพื่อป้องกัน re-render
+const LoadingScreen = memo(() => (
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="text-center">
+      <div className="w-16 h-16 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-gray-700 font-medium">กำลังโหลด...</p>
+    </div>
+  </div>
+));
+
+LoadingScreen.displayName = 'LoadingScreen';
 
 function App() {
   const { user, loading, getDashboardPath } = useAuth()
@@ -9,25 +21,18 @@ function App() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        // User is logged in, redirect to their dashboard
+        // ผู้ใช้ล็อกอินแล้ว - ไปหน้า dashboard
         const dashboardPath = getDashboardPath(user.role)
         navigate(dashboardPath, { replace: true })
       } else {
-        // User is not logged in, redirect to auth
+        // ผู้ใช้ยังไม่ล็อกอิน - ไปหน้า auth
         navigate('/auth', { replace: true })
       }
     }
   }, [user, loading, navigate, getDashboardPath])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 border-b-2 border-blue-500 rounded-full animate-spin"></div>
-          <p className="text-gray-600">กำลังโหลด...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return null();

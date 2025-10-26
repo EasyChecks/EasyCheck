@@ -68,7 +68,8 @@ export default function Warning() {
       .map(leave => {
         // ในอนาคตถ้า leave มี userId เก็บไว้ ก็หา user จาก userId
         // แต่ตอนนี้ใช้ current user หรือข้อมูลทั่วไป
-        const currentUserData = JSON.parse(localStorage.getItem('user') || '{}')
+        const tabId = window.name || '' // ใช้ window.name แทน sessionStorage
+        const currentUserData = tabId ? JSON.parse(localStorage.getItem(`user_${tabId}`) || '{}') : {}
         const user = usersData.find(u => u.username === currentUserData.username) || usersData[0]
         
         return {

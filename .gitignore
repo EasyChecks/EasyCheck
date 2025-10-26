@@ -30,3 +30,6 @@ localhost.pem
 localhost-key.pem
 
 EVENT_REDESIGN.md
+
+.env
+.env.example
