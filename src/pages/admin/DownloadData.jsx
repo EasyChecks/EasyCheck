@@ -3,8 +3,9 @@ import { useAuth } from '../../contexts/useAuth';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import AlertDialog from '../../components/common/AlertDialog';
+import { mockBranches, mockReports, mockDataOptions, generateMockReportData } from '../../data/usersData';
 
-// Import Thai font if available
+// นำเข้าฟอนต์ภาษาไทย (ถ้ามี)
 // import { thaiFont } from '../../utils/thaiFont';
 
 function DownloadData() {
@@ -34,63 +35,10 @@ function DownloadData() {
     message: ''
   });
 
-  // Mock branches data for SuperAdmin
-  const branches = [
-    { id: 'BKK101', name: 'กรุงเทพ สาขา 101', provinceCode: 'BKK' },
-    { id: 'BKK102', name: 'กรุงเทพ สาขา 102', provinceCode: 'BKK' },
-    { id: 'CNX201', name: 'เชียงใหม่ สาขา 201', provinceCode: 'CNX' },
-    { id: 'PKT301', name: 'ภูเก็ต สาขา 301', provinceCode: 'PKT' },
-  ];
-
-  const reports = [
-    {
-      id: 1,
-      title: 'รายงาน',
-      subtitle: 'ข้อมูลแบบวันต่อวัน',
-      description: 'ดาวน์โหลดข้อมูล',
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
-      id: 2,
-      title: 'รายงาน2',
-      subtitle: 'ข้อมูลแบบเดือน',
-      description: 'ดาวน์โหลดข้อมูล',
-      color: 'from-cyan-500 to-blue-500'
-    }
-  ];
-
-  const dataOptions = [
-    {
-      id: 'attendanceData',
-      label: 'ข้อมูลเวลาเข้า/ออก',
-      description: 'เวลาเข้า-ออก, ขาด, ลา, มาสาย',
-      color: 'blue'
-    },
-    {
-      id: 'personalData',
-      label: 'ข้อมูลส่วนตัว/งาน',
-      description: 'ข้อมูลส่วนตัว, ตำแหน่งงาน',
-      color: 'purple'
-    },
-    {
-      id: 'gpsTracking',
-      label: 'GPS Tracking',
-      description: 'สถานะอยู่ในหรือนอกระยะ',
-      color: 'green'
-    },
-    {
-      id: 'photoAttendance',
-      label: 'ข้อมูลภาพถ่าย',
-      description: 'รูปถ่าย Check-in, Check-out',
-      color: 'pink'
-    },
-    {
-      id: 'eventStats',
-      label: 'สถิติการเข้าร่วมกิจกรรม',
-      description: 'จำนวนกิจกรรมที่เข้าร่วม',
-      color: 'orange'
-    }
-  ];
+  // ใช้ Mock Data จาก usersData.js
+  const branches = mockBranches;
+  const reports = mockReports;
+  const dataOptions = mockDataOptions;
 
   const openModal = (report) => {
     setSelectedReport(report);
@@ -129,55 +77,14 @@ function DownloadData() {
     });
   };
 
-  // Generate mock data based on selected options
+  // สร้างข้อมูล Mock สำหรับรายงาน (ใช้ฟังก์ชันจาก usersData.js)
   const generateMockData = () => {
-    const data = [];
-    
-    // Generate 10 mock records
-    for (let i = 1; i <= 10; i++) {
-      const record = {
-        'ลำดับ': i,
-        'รหัสพนักงาน': `EMP${String(i).padStart(4, '0')}`,
-        'ชื่อ-นามสกุล': `พนักงาน ${i}`,
-      };
-
-      if (selectedOptions.attendanceData) {
-        record['เวลาเข้างาน'] = '09:00';
-        record['เวลาออกงาน'] = '18:00';
-        record['สถานะ'] = i % 5 === 0 ? 'มาสาย' : 'ปกติ';
-      }
-
-      if (selectedOptions.personalData) {
-        record['แผนก'] = ['การเงิน', 'ไอที', 'การตลาด'][i % 3];
-        record['ตำแหน่ง'] = ['พนักงาน', 'หัวหน้าทีม', 'ผู้จัดการ'][i % 3];
-        record['อีเมล'] = `employee${i}@example.com`;
-      }
-
-      if (selectedOptions.gpsTracking) {
-        record['GPS Status'] = i % 3 === 0 ? 'อยู่นอกระยะ' : 'อยู่ในระยะ';
-        record['ระยะห่าง'] = i % 3 === 0 ? '250 ม.' : '15 ม.';
-      }
-
-      if (selectedOptions.photoAttendance) {
-        record['รูปภาพ Check-in'] = `photo_checkin_${i}.jpg`;
-        record['รูปภาพ Check-out'] = `photo_checkout_${i}.jpg`;
-      }
-
-      if (selectedOptions.eventStats) {
-        record['กิจกรรมที่เข้าร่วม'] = Math.floor(Math.random() * 10);
-        record['กิจกรรมทั้งหมด'] = 12;
-        record['เปอร์เซ็นต์'] = `${Math.floor((record['กิจกรรมที่เข้าร่วม'] / 12) * 100)}%`;
-      }
-
-      data.push(record);
-    }
-
-    return data;
+    return generateMockReportData(selectedOptions);
   };
 
-  // Handle Preview
+  // จัดการการแสดงตัวอย่าง
   const handlePreview = () => {
-    // Check validations first
+    // ตรวจสอบความถูกต้องก่อน
     if (isSuperAdmin && selectedBranches.length === 0) {
       setAlertDialog({
         isOpen: true,
@@ -522,8 +429,8 @@ function DownloadData() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
+      <div className="max-w-7xl px-6 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">

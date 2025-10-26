@@ -115,6 +115,90 @@ function ProfileScreen() {
     localStorage.setItem('userProfileData', JSON.stringify(profileData));
   }, [profileData]);
 
+  // ✅ ข้อ 3: ฟังการเปลี่ยนแปลงจาก Admin (Admin แก้ไข → User เห็นทันที)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'usersData' && e.newValue && user) {
+        try {
+          const updatedUsers = JSON.parse(e.newValue);
+          const updatedUser = updatedUsers.find(u => u.id === user.id);
+          
+          if (updatedUser) {
+            // อัปเดตข้อมูลโปรไฟล์ทันทีเมื่อ Admin แก้ไข
+            const workHistoryText = updatedUser.workHistory && Array.isArray(updatedUser.workHistory) 
+              ? updatedUser.workHistory.map(w => `${w.period}: ${w.position} ที่ ${w.company}`).join('\n')
+              : '';
+            
+            const skillsText = updatedUser.skills && Array.isArray(updatedUser.skills)
+              ? updatedUser.skills.join(', ')
+              : '';
+            
+            const educationText = updatedUser.education && Array.isArray(updatedUser.education)
+              ? updatedUser.education.join(', ')
+              : 'ปริญญาตรี';
+            
+            const certificationsText = updatedUser.certifications && Array.isArray(updatedUser.certifications)
+              ? updatedUser.certifications.join(', ')
+              : '';
+            
+            const timeSummary = updatedUser.timeSummary || {};
+            const attendanceText = timeSummary.totalWorkDays 
+              ? `ทำงาน ${timeSummary.totalWorkDays} วัน (ตรงเวลา ${timeSummary.onTime} วัน, สาย ${timeSummary.late} วัน, ลา ${timeSummary.leave} วัน, ขาด ${timeSummary.absent} วัน)`
+              : 'ไม่มีข้อมูล';
+            
+            setProfileData({
+              id: updatedUser.id,
+              name: updatedUser.name || '',
+              position: updatedUser.position || '',
+              department: updatedUser.department || '',
+              profilePic: updatedUser.profileImage || 'https://i.pravatar.cc/200?u=default',
+              status: updatedUser.status || 'ปฏิบัติงาน',
+              role: updatedUser.role || 'user',
+              personalInfo: {
+                birthDate: updatedUser.birthDate || '',
+                age: updatedUser.age || '',
+                address: updatedUser.address || '',
+                phone: updatedUser.phone || '',
+                email: updatedUser.email || '',
+                maritalStatus: 'โสด',
+                idCard: updatedUser.nationalId || ''
+              },
+              workInfo: {
+                position: updatedUser.position || '',
+                workplace: '',
+                employeeId: updatedUser.employeeId || updatedUser.username || '',
+                department: updatedUser.department || '',
+                startDate: updatedUser.startDate || '',
+                education: educationText,
+                workHistory: workHistoryText,
+                skills: skillsText,
+                benefits: 'ประกันสังคม, กองทุนสำรองเลี้ยงชีพ'
+              },
+              healthInfo: {
+                medicalHistory: 'ปกติ',
+                bloodType: updatedUser.bloodType || '',
+                socialSecurity: updatedUser.socialSecurityNumber || updatedUser.nationalId || '',
+                salary: updatedUser.salary ? `${updatedUser.salary} บาท` : ''
+              },
+              emergencyContact: updatedUser.emergencyContact || {
+                name: '',
+                phone: '',
+                relation: ''
+              },
+              attendance: attendanceText,
+              certifications: certificationsText
+            });
+          }
+        } catch (e) {
+          console.warn('Failed to sync profile data:', e);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user]);
+
   // ล็อกการเลื่อนหน้าเมื่อ Modal เปิด
   useEffect(() => {
     if (isEditing) {

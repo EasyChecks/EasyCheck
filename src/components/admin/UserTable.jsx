@@ -1,50 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 
+// Component: UserTable - แสดงตารางรายชื่อพนักงานพร้อมระบบขยายดูข้อมูล GPS และรูปถ่าย
+// Props:
+//   - users: รายการข้อมูลพนักงาน
+//   - onSelectUser: ฟังก์ชันเมื่อกดดูรายละเอียด
+//   - getStatusBadge: ฟังก์ชันจัดการสีของสถานะ
 const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatusBadge }) {
+  // สถานะการขยายแถว - เก็บ userId ของแถวที่กำลังขยาย
   const [expandedUserId, setExpandedUserId] = useState(null);
+  
+  // วันที่ที่เลือก - Default เป็นวันปัจจุบัน
   const [selectedDate, setSelectedDate] = useState(() => {
-    // Default to today
     return new Date().toISOString().split('T')[0];
   });
 
-  // Mock attendance data with GPS and photos
-  const getAttendanceData = (userId, date) => {
-    // Mock data - ในระบบจริงจะดึงจาก API
-    // Use userId and date to vary mock data (simple hash for consistency)
-    const seed = (userId + date).split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    const isInRange = true; // แก้ไขให้ GPS อยู่ในระยะเสมอเพื่อทดสอบ
-
-    const attendance = {
-      checkIn: {
-        time: '09:00',
-        gpsStatus: isInRange ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
-        distance: isInRange ? '15 ม.' : '250 ม.',
-        location: '13.7563° N, 100.5018° E',
-        photo: 'https://img.freepik.com/free-photo/portrait-young-asian-man-looking-confident-taking-selfie-while-standing-outdoors-street_58466-11951.jpg?w=740'
-      },
-      checkOut: {
-        time: '18:00',
-        gpsStatus: isInRange ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
-        distance: isInRange ? '12 ม.' : '180 ม.',
-        location: '13.7565° N, 100.5020° E',
-        photo: 'https://img.freepik.com/free-photo/portrait-young-asian-man-looking-confident-taking-selfie-while-standing-outdoors-street_58466-11951.jpg?w=740'
+  // ฟังก์ชันสร้างข้อมูลการเข้างาน GPS และรูปถ่าย (Mock Data)
+  // ใน Production: ดึงข้อมูลจาก API แทน
+  // Parameters:
+  //   - userId: รหัสพนักงาน
+  //   - date: วันที่ที่ต้องการดูข้อมูล
+  // Returns: Object ที่มีข้อมูล checkIn และ checkOut
+  const getAttendanceData = useMemo(() => {
+    return (userId, date) => {
+      // สร้าง seed จาก userId และ date เพื่อให้ข้อมูลแต่ละคนแต่ละวันไม่เหมือนกัน
+      const seed = String(userId) + String(date);
+      const numericSeed = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      
+      // ใช้ userId แบบตรงๆ เพื่อกำหนดสถานะ GPS ให้แต่ละคน (ไม่เปลี่ยนแปลงทุก refresh)
+      // แบ่งเป็น 2 กลุ่ม: อยู่ในระยะ และ อยู่นอกระยะ
+      // - userId คี่ (1, 3, 5) = อยู่ในระยะ (50%)
+      // - userId คู่ (2, 4, 6) = อยู่นอกระยะ (50%)
+      const isInRange = userId % 2 === 1;
+      
+      // สุ่มเวลาแต่ละคนโดยใช้ userId เป็นหลัก
+      const checkInBase = 7 + (userId % 3); // 7-9 โมง
+      const checkInMinute = (numericSeed % 60);
+      const checkOutBase = 17 + (userId % 2); // 17-18 โมง
+      const checkOutMinute = ((numericSeed + 30) % 60);
+      
+      // คำนวณระยะห่าง
+      let checkInDistance, checkOutDistance;
+      if (isInRange) {
+        // อยู่ในระยะ: 10-50 เมตร
+        checkInDistance = `${10 + (userId * 7 % 40)} ม.`;
+        checkOutDistance = `${15 + (userId * 5 % 35)} ม.`;
+      } else {
+        // อยู่นอกระยะ: 100-500 เมตร (หลากหลาย)
+        checkInDistance = `${100 + (userId * 13 % 400)} ม.`;
+        checkOutDistance = `${120 + (userId * 11 % 380)} ม.`;
       }
+      
+      // สร้าง URL รูปที่ไม่ซ้ำกันสำหรับแต่ละคน
+      const photoSeed = `${userId}-${date}`;
+
+      return {
+        checkIn: {
+          time: `${String(checkInBase).padStart(2, '0')}:${String(checkInMinute).padStart(2, '0')}`,
+          gpsStatus: isInRange ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
+          distance: checkInDistance,
+          location: `${(13.7563 + (userId * 7 % 100) * 0.0001).toFixed(4)}° N, ${(100.5018 + (userId * 5 % 100) * 0.0001).toFixed(4)}° E`,
+          photo: `https://i.pravatar.cc/400?u=checkin-${photoSeed}`
+        },
+        checkOut: {
+          time: `${String(checkOutBase).padStart(2, '0')}:${String(checkOutMinute).padStart(2, '0')}`,
+          gpsStatus: isInRange ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
+          distance: checkOutDistance,
+          location: `${(13.7565 + (userId * 11 % 100) * 0.0001).toFixed(4)}° N, ${(100.5020 + (userId * 13 % 100) * 0.0001).toFixed(4)}° E`,
+          photo: `https://i.pravatar.cc/400?u=checkout-${photoSeed}`
+        }
+      };
     };
-
-    return attendance;
-  };
+  }, []); // Empty dependency - ฟังก์ชันนี้ไม่ขึ้นกับ state ใดๆ
 
 
-  const toggleExpand = (userId, e) => {
-    // ป้องกันไม่ให้เปิด detail modal
-    e.stopPropagation();
-    setExpandedUserId(expandedUserId === userId ? null : userId);
-  };
+  // จัดการการขยาย/ย่อแถว (ใช้ useCallback เพื่อป้องกัน re-render ที่ไม่จำเป็น)
+  const toggleExpand = useCallback((userId, e) => {
+    e.stopPropagation(); // ป้องกันไม่ให้เปิด detail modal
+    setExpandedUserId(prevId => prevId === userId ? null : userId);
+  }, []);
 
-  const handleDateChange = (date, e) => {
-    e.stopPropagation();
+  // จัดการการเปลี่ยนวันที่ (ใช้ useCallback เพื่อป้องกัน re-render ที่ไม่จำเป็น)
+  const handleDateChange = useCallback((date, e) => {
+    e.stopPropagation(); // ป้องกัน event bubbling
     setSelectedDate(date);
-  };
+  }, []);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
@@ -162,7 +201,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                   
                   {/* Expanded Row - GPS & Photos */}
                   {isExpanded && (
-                    <tr className="bg-gradient-to-br from-sky-50/50 to-cyan-50/30">
+                    <tr className="bg-gradient-to-br from-gray-50 to-slate-50">
                       <td colSpan="7" className="px-6 py-6">
                         <div className="space-y-4">
                           {/* Date Selector */}
@@ -209,39 +248,39 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                 {/* Info */}
                                 <div className="space-y-2 text-sm">
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className="text-gray-600">เวลา:</span>
-                                    <span className="font-semibold text-gray-900">{attendanceData.checkIn.time}</span>
+                                    <span className="text-gray-700 font-medium">เวลา:</span>
+                                    <span className="font-bold text-gray-950">{attendanceData.checkIn.time}</span>
                                   </div>
                                   
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <span className="text-gray-600">GPS:</span>
-                                    <span className={`font-semibold ${attendanceData.checkIn.gpsStatus === 'อยู่ในระยะ' ? 'text-green-600' : 'text-red-600'}`}>
+                                    <span className="text-gray-700 font-medium">GPS:</span>
+                                    <span className={`font-bold ${attendanceData.checkIn.gpsStatus === 'อยู่ในระยะ' ? 'text-green-700' : 'text-red-700'}`}>
                                       {attendanceData.checkIn.gpsStatus}
                                     </span>
                                   </div>
                                   
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                     </svg>
-                                    <span className="text-gray-600">ระยะห่าง:</span>
-                                    <span className="font-semibold text-gray-900">{attendanceData.checkIn.distance}</span>
+                                    <span className="text-gray-700 font-medium">ระยะห่าง:</span>
+                                    <span className="font-bold text-gray-950">{attendanceData.checkIn.distance}</span>
                                   </div>
                                   
                                   <div className="flex items-start gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                     </svg>
                                     <div>
-                                      <span className="text-gray-600">พิกัด:</span>
-                                      <p className="font-mono text-xs text-gray-900 mt-1">{attendanceData.checkIn.location}</p>
+                                      <span className="text-gray-700 font-medium">พิกัด:</span>
+                                      <p className="font-mono text-xs font-semibold text-gray-950 mt-1">{attendanceData.checkIn.location}</p>
                                     </div>
                                   </div>
                                 </div>
@@ -274,39 +313,39 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                 {/* Info */}
                                 <div className="space-y-2 text-sm">
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className="text-gray-600">เวลา:</span>
-                                    <span className="font-semibold text-gray-900">{attendanceData.checkOut.time}</span>
+                                    <span className="text-gray-700 font-medium">เวลา:</span>
+                                    <span className="font-bold text-gray-950">{attendanceData.checkOut.time}</span>
                                   </div>
                                   
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <span className="text-gray-600">GPS:</span>
-                                    <span className={`font-semibold ${attendanceData.checkOut.gpsStatus === 'อยู่ในระยะ' ? 'text-green-600' : 'text-red-600'}`}>
+                                    <span className="text-gray-700 font-medium">GPS:</span>
+                                    <span className={`font-bold ${attendanceData.checkOut.gpsStatus === 'อยู่ในระยะ' ? 'text-green-700' : 'text-red-700'}`}>
                                       {attendanceData.checkOut.gpsStatus}
                                     </span>
                                   </div>
                                   
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                     </svg>
-                                    <span className="text-gray-600">ระยะห่าง:</span>
-                                    <span className="font-semibold text-gray-900">{attendanceData.checkOut.distance}</span>
+                                    <span className="text-gray-700 font-medium">ระยะห่าง:</span>
+                                    <span className="font-bold text-gray-950">{attendanceData.checkOut.distance}</span>
                                   </div>
                                   
                                   <div className="flex items-start gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                     </svg>
                                     <div>
-                                      <span className="text-gray-600">พิกัด:</span>
-                                      <p className="font-mono text-xs text-gray-900 mt-1">{attendanceData.checkOut.location}</p>
+                                      <span className="text-gray-700 font-medium">พิกัด:</span>
+                                      <p className="font-mono text-xs font-semibold text-gray-950 mt-1">{attendanceData.checkOut.location}</p>
                                     </div>
                                   </div>
                                 </div>
