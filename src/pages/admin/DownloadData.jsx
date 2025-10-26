@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/useAuth';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import AlertDialog from '../../components/common/AlertDialog';
 
 // Import Thai font if available
@@ -235,63 +235,143 @@ function DownloadData() {
     document.body.removeChild(link);
   };
 
-  // Download as PDF (Real PDF using jsPDF)
-  const downloadPDF = (data) => {
+  // Download as PDF using html2canvas (supports Thai language)
+  const downloadPDF = async (data) => {
     try {
-      const doc = new jsPDF('l', 'mm', 'a4'); // landscape orientation
-      
-      // Add Thai font if available
-      // Uncomment when thaiFont is ready:
-      // if (typeof thaiFont !== 'undefined') {
-      //   doc.addFileToVFS('THSarabun.ttf', thaiFont);
-      //   doc.addFont('THSarabun.ttf', 'THSarabun', 'normal');
-      //   doc.setFont('THSarabun');
-      // }
-      
-      // Header
-      doc.setFontSize(16);
-      doc.text(`Report: ${selectedReport.title}`, 14, 15);
-      doc.setFontSize(12);
-      doc.text(`Date: ${startDate} to ${endDate}`, 14, 22);
-      
+      // Create a temporary container for the table
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.background = 'white';
+      container.style.padding = '40px';
+      container.style.width = '1400px';
+      document.body.appendChild(container);
+
+      // Build HTML content with proper Thai font
+      let tableHTML = `
+        <div style="font-family: 'Sarabun', 'Prompt', 'Noto Sans Thai', sans-serif; background: white;">
+          <!-- Header -->
+          <div style="margin-bottom: 30px;">
+            <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: bold; color: #0f172a;">
+              รายงาน: ${selectedReport.title}
+            </h1>
+            <p style="margin: 5px 0; font-size: 16px; color: #64748b;">
+              วันที่: ${startDate} ถึง ${endDate}
+            </p>
+      `;
+
       if (isSuperAdmin && selectedBranches.length > 0) {
         const branchNames = selectedBranches.map(id => 
           branches.find(b => b.id === id)?.name || id
         ).join(', ');
-        doc.text(`Branch: ${branchNames}`, 14, 28);
+        tableHTML += `
+            <p style="margin: 5px 0; font-size: 16px; color: #64748b;">
+              สาขา: ${branchNames}
+            </p>
+        `;
       }
-      
-      // Prepare table data
-      const headers = [Object.keys(data[0])];
-      const body = data.map(row => Object.values(row));
-      
-      // Add table
-      autoTable(doc, {
-        startY: isSuperAdmin && selectedBranches.length > 0 ? 32 : 28,
-        head: headers,
-        body: body,
-        styles: {
-          font: 'helvetica',
-          fontSize: 10,
-          cellPadding: 2
-        },
-        headStyles: {
-          fillColor: [8, 94, 197],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [245, 247, 250]
-        },
-        columnStyles: {
-          0: { cellWidth: 15 }
-        }
+
+      tableHTML += `
+          </div>
+          
+          <!-- Table -->
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr style="background: linear-gradient(to right, #0ea5e9, #06b6d4);">
+      `;
+
+      // Add headers
+      Object.keys(data[0]).forEach(header => {
+        tableHTML += `
+                <th style="padding: 12px 8px; text-align: center; color: white; font-weight: bold; border: 1px solid #0284c7; font-size: 14px;">
+                  ${header}
+                </th>
+        `;
       });
 
+      tableHTML += `
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      // Add data rows
+      data.forEach((row, index) => {
+        const bgColor = index % 2 === 0 ? '#ffffff' : '#f0f9ff';
+        tableHTML += `<tr style="background-color: ${bgColor};">`;
+        
+        Object.values(row).forEach(value => {
+          tableHTML += `
+                <td style="padding: 10px 8px; text-align: left; border: 1px solid #e2e8f0; color: #0f172a; font-size: 13px;">
+                  ${value}
+                </td>
+          `;
+        });
+        
+        tableHTML += `</tr>`;
+      });
+
+      tableHTML += `
+            </tbody>
+          </table>
+          
+          <!-- Footer -->
+          <div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px;">
+            สร้างเมื่อ: ${new Date().toLocaleString('th-TH', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = tableHTML;
+
+      // Wait for fonts to load
+      await document.fonts.ready;
+
+      // Convert to canvas
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1400
+      });
+
+      // Remove temporary container
+      document.body.removeChild(container);
+
+      // Create PDF
+      const imgWidth = 297; // A4 width in mm (landscape)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageHeight = 210; // A4 height in mm (landscape)
+      
+      const doc = new jsPDF('l', 'mm', 'a4');
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add image to PDF (first page)
+      doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if needed
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Save PDF
       doc.save(`รายงาน_${startDate}_${endDate}.pdf`);
     } catch (error) {
       console.error('PDF generation error:', error);
-      throw new Error('ไม่สามารถสร้าง PDF ได้');
+      throw new Error('ไม่สามารถสร้าง PDF ได้: ' + error.message);
     }
   };
 
@@ -317,7 +397,7 @@ function DownloadData() {
     document.body.removeChild(link);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     // Check if SuperAdmin has selected branches
     if (isSuperAdmin && selectedBranches.length === 0) {
       setAlertDialog({
@@ -352,7 +432,7 @@ function DownloadData() {
           downloadExcel(data);
           break;
         case 'pdf':
-          downloadPDF(data);
+          await downloadPDF(data);
           break;
         case 'csv':
           downloadCSV(data);
