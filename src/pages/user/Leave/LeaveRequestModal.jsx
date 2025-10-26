@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLeave } from '../../../contexts/LeaveContext';
 import AlertDialog from '../../../components/common/AlertDialog';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
@@ -277,6 +278,26 @@ function LeaveRequestModal({ closeModal }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 overflow-y-auto bg-black/60 backdrop-blur-sm sm:p-4 font-prompt">
       <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes modalSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
         input[type="date"]::-webkit-calendar-picker-indicator {
           cursor: pointer;
           position: absolute;
