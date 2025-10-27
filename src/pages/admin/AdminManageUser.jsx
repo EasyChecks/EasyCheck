@@ -32,7 +32,7 @@ function AdminManageUser() {
     }
     return importedUsersData;
   });
-  
+  const [selectedUser, setSelectedUser] = useState(null);
   // ✅ ข้อ 3: ฟังการเปลี่ยนแปลง usersData จาก tab อื่น (User/Manager แก้ไข → Admin เห็น)
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -58,7 +58,7 @@ function AdminManageUser() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [selectedUser]);
   
-  const [selectedUser, setSelectedUser] = useState(null);
+
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
