@@ -81,11 +81,54 @@ function Attendance() {
     const isOpen = openIds.includes(id)
 
     if (!wrapper || !inner) {
-      setOpenIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
+      // ถ้าจะเปิด ให้ปิดอันอื่นก่อน
+      if (!isOpen) {
+        setOpenIds([id])
+      } else {
+        setOpenIds([])
+      }
       return
     }
 
     if (!isOpen) {
+      // ปิดทุกอันที่เปิดอยู่ก่อน
+      openIds.forEach(openId => {
+        if (openId !== id) {
+          const otherWrapper = wrapperRefs.current[openId]
+          const otherInner = innerRefs.current[openId]
+          
+          if (otherWrapper && otherInner) {
+            // ลบ listener เก่าถ้ามี
+            if (endListenersRef.current[openId]) {
+              otherWrapper.removeEventListener('transitionend', endListenersRef.current[openId])
+              delete endListenersRef.current[openId]
+            }
+
+            const currentMax = getComputedStyle(otherWrapper).maxHeight
+            if (currentMax === 'none') otherWrapper.style.maxHeight = `${otherInner.scrollHeight}px`
+            otherWrapper.style.opacity = '1'
+            otherInner.style.transform = 'translateY(-8px)'
+            otherInner.style.opacity = '0'
+            void otherWrapper.offsetHeight
+
+            requestAnimationFrame(() => {
+              otherWrapper.style.transition = 'max-height 260ms cubic-bezier(.2,.85,.2,1), opacity 200ms ease'
+              otherWrapper.style.maxHeight = '0px'
+              otherWrapper.style.opacity = '0'
+            })
+
+            const onEndClose = (e) => {
+              if (e.propertyName === 'max-height') {
+                otherWrapper.removeEventListener('transitionend', onEndClose)
+                if (endListenersRef.current[openId] === onEndClose) delete endListenersRef.current[openId]
+              }
+            }
+            endListenersRef.current[openId] = onEndClose
+            otherWrapper.addEventListener('transitionend', onEndClose)
+          }
+        }
+      })
+
       // ถ้ามี listener เก่าให้ลบก่อน เพื่อไม่ให้ listener เก่ามากระทบหลังจาก reopen
       if (endListenersRef.current[id]) {
         wrapper.removeEventListener('transitionend', endListenersRef.current[id])
@@ -99,9 +142,8 @@ function Attendance() {
       inner.style.opacity = '0'
       void wrapper.offsetHeight
 
-      // update openIds after layout flush so starting the animation isn't
-      // interrupted by a React rerender which may affect refs/styles
-      setOpenIds(prev => prev.includes(id) ? prev : [...prev, id])
+      // update openIds - เปิดเฉพาะอันนี้อันเดียว
+      setOpenIds([id])
 
       requestAnimationFrame(() => {
         const h = inner.scrollHeight
@@ -146,7 +188,7 @@ function Attendance() {
         if (e.propertyName === 'max-height') {
           wrapper.removeEventListener('transitionend', onEndClose)
           if (endListenersRef.current[id] === onEndClose) delete endListenersRef.current[id]
-          setOpenIds(prev => prev.filter(x => x !== id))
+          setOpenIds([])
         }
       }
       endListenersRef.current[id] = onEndClose
@@ -307,9 +349,9 @@ function Attendance() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
           {schedules.length === 0 && (
-            <div className="text-center text-gray-600 py-8">ไม่มีตารางงาน</div>
+            <div className="col-span-full text-center text-gray-600 py-8">ไม่มีตารางงาน</div>
           )}
 
           {schedules.map(item => {
@@ -319,11 +361,16 @@ function Attendance() {
             return (
               <div
                 key={item.id}
-                className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 pb-4 text-white shadow-lg min-h-[120px] mb-6"
+                onClick={() => selectMode && toggleSelect(item.id)}
+                className={`relative rounded-xl p-4 text-[#0b2b57] border-2 shadow-inner h-fit transition-all duration-200 ${
+                  selectMode 
+                    ? `cursor-pointer ${checked ? 'border-blue-500 bg-blue-50' : 'border-blue-100 hover:border-blue-300 hover:bg-blue-50/50'}` 
+                    : 'border-blue-100'
+                }`}
               >
                 {/* top-right: checkbox (in select mode) + time pill (always shown) */}
-                <div className="absolute top-4 right-4 flex items-center space-x-3">
-                  <div className="bg-white/20 text-white px-3 py-1.5 rounded-full text-sm border border-white/30 shadow-sm">
+                <div className="absolute top-3 right-3 flex items-center space-x-2">
+                  <div className="bg-white/20 text-[#0b2b57] px-2.5 py-1 rounded-full text-xs border-2 border-blue-100 shadow-sm">
                     {item.time}
                   </div>
                   {selectMode && (
@@ -331,7 +378,7 @@ function Attendance() {
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleSelect(item.id)}
-                      className="w-5 h-5 rounded border-white/40 bg-white"
+                      className="w-4 h-4 rounded border-white/40 bg-white"
                       aria-label={`เลือก ${item.team}`}
                     />
                   )}
@@ -339,31 +386,32 @@ function Attendance() {
 
                 <div className="flex items-start">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-2xl">{item.team}</h3>
-                    <div className="text-base text-white/95 mt-1 space-y-1">
+                    <h3 className="font-semibold text-xl pr-20">{item.team}</h3>
+                    <div className="text-sm text-gray-600 mt-1 space-y-0.5">
                       <div className="leading-tight">วันที่: {item.date}</div>
                       <div className="leading-tight">สถานที่: {item.location}</div>
                       <div className="leading-tight">สมาชิก: {item.members}</div>
                       <div className="leading-tight">ประเภทงาน: {item.type}</div>
                     </div>
 
-                    <div className="mt-6 mb-2 flex items-center gap-2 flex-wrap">
-                      {/* Primary button - unified size */}
-                      <button
-                        onClick={() => { setEditingItem(item); setShowEdit(true); }}
-                        className="inline-flex items-center justify-center text-base font-semibold bg-gradient-to-br from-sky-400 to-blue-500 text-white min-w-[120px] h-10 px-5 leading-none hover:from-sky-600 hover:to-cyan-700 rounded-xl shadow-md transition-all duration-200"
-                        style={{ boxShadow: '0 6px 18px rgba(11,43,87,0.12)' }}
-                      >
-                        ปรับตาราง
-                      </button>
+                    <div className="mt-4 mb-2 flex items-center gap-2 flex-wrap">
+                      {/* Primary button - smaller size */}
+                      {!selectMode && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowEdit(true); }}
+                          className="inline-flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-sky-400 to-blue-500 text-white min-w-[100px] h-8 px-4 leading-none hover:from-sky-600 hover:to-cyan-700 rounded-lg shadow-md transition-all duration-200"
+                        >
+                          ปรับตาราง
+                        </button>
+                      )}
 
-                      {/* Secondary toggle - unified size */}
-                      <button
-                        onClick={() => toggleDetails(item.id)}
-                        aria-expanded={isOpen}
-                        className="relative inline-flex items-center justify-center text-base font-semibold rounded-xl shadow-md transition-all duration-200 overflow-hidden bg-white text-[#0b2b57] border-2 border-white/50 min-w-[120px] h-10 px-5 leading-none hover:bg-gray-50"
-                        style={{ boxShadow: '0 6px 18px rgba(11,43,87,0.12)' }}
-                      >
+                      {/* Secondary toggle - smaller size */}
+                      {!selectMode && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleDetails(item.id); }}
+                          aria-expanded={isOpen}
+                          className="relative inline-flex items-center justify-center text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 overflow-hidden bg-white text-[#0b2b57] border-2 border-blue-100 min-w-[100px] h-8 px-4 leading-none hover:bg-gray-50"
+                        >
                         <span
                           aria-hidden={isOpen}
                           className={`absolute inset-0 flex items-center justify-center transition-opacity duration-[220ms] ease-in-out pointer-events-none ${isOpen ? 'opacity-0' : 'opacity-100'}`}
@@ -375,11 +423,12 @@ function Attendance() {
                           aria-hidden={!isOpen}
                           className={`absolute inset-0 flex items-center justify-center transition-opacity duration-[220ms] ease-in-out pointer-events-none ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                         >
-                          ซ่อนรายละเอียด
+                          ซ่อน
                         </span>
 
                         <span className="sr-only">{isOpen ? 'ซ่อนรายละเอียด' : 'รายละเอียด'}</span>
                       </button>
+                      )}
                     </div>
 
                     <div
@@ -395,7 +444,7 @@ function Attendance() {
                         wrapperRefs.current[item.id] = el
                       }}
                       aria-hidden={!isOpen}
-                      className="mt-4"
+                      className="mt-3"
                     >
                       <div
                         ref={el => {
@@ -407,51 +456,51 @@ function Attendance() {
                             }
                             innerRefs.current[item.id] = el
                         }}
-                        className="bg-white text-gray-800 rounded-md p-4 border border-gray-200"
+                        className="bg-white text-gray-800 rounded-lg p-3 border border-gray-200"
                       >
-                        {/* Layout: Left side (Info) + Right side (Map) */}
+                        {/* Compact layout */}
                         {(() => {
                           const locationData = locations.find(loc => loc.name === item.location)
                           
                           return (
-                            <div className="flex flex-col lg:flex-row gap-6">
-                              {/* Left Side - Information */}
-                              <div className="flex-1 space-y-4">
-                                <div className="mb-3">
-                                  <h4 className="font-semibold mb-2 text-base">ภารกิจหลัก:</h4>
-                                  <ul className="list-disc pl-5 text-sm space-y-1">
+                            <div className="flex flex-col gap-4">
+                              {/* Information - Compact */}
+                              <div className="space-y-3">
+                                <div>
+                                  <h4 className="font-semibold mb-1.5 text-base">ภารกิจหลัก:</h4>
+                                  <ul className="list-disc pl-5 text-sm space-y-0.5">
                                     {item.tasks?.map((t, idx) => <li key={idx}>{t}</li>)}
                                   </ul>
                                 </div>
 
-                                <div className="mb-3">
-                                  <h4 className="font-semibold mb-2 text-base">สิ่งที่ต้องเตรียม:</h4>
-                                  <ul className="list-disc pl-5 text-sm space-y-1">
+                                <div>
+                                  <h4 className="font-semibold mb-1.5 text-base">สิ่งที่ต้องเตรียม:</h4>
+                                  <ul className="list-disc pl-5 text-sm space-y-0.5">
                                     {item.preparations?.map((p, idx) => <li key={idx}>{p}</li>)}
                                   </ul>
                                 </div>
 
                                 <div>
-                                  <h4 className="font-semibold mb-2 text-base">เป้าหมาย:</h4>
-                                  <ul className="list-disc pl-5 text-sm space-y-1">
+                                  <h4 className="font-semibold mb-1.5 text-base">เป้าหมาย:</h4>
+                                  <ul className="list-disc pl-5 text-sm space-y-0.5">
                                     {item.goals?.map((g, idx) => <li key={idx}>{g}</li>)}
                                   </ul>
                                 </div>
                               </div>
 
-                              {/* Right Side - Map */}
+                              {/* Map - Compact */}
                               {locationData && (
-                                <div className="lg:w-[400px] flex-shrink-0">
-                                  <h4 className="font-semibold mb-3 text-base flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                                <div>
+                                  <h4 className="font-semibold mb-2 text-base flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/>
                                     </svg>
                                     แผนที่ตำแหน่ง
                                   </h4>
-                                  <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-blue-200 shadow-lg">
+                                  <div className="relative h-[250px] rounded-lg overflow-hidden border-2 border-blue-200 shadow-md">
                                     <MapContainer
                                       center={[locationData.latitude, locationData.longitude]}
-                                      zoom={16}
+                                      zoom={15}
                                       style={{ height: '100%', width: '100%' }}
                                       scrollWheelZoom={true}
                                       zoomControl={true}
@@ -483,7 +532,7 @@ function Attendance() {
                                       />
                                     </MapContainer>
                                   </div>
-                                  <p className="text-xs text-gray-500 mt-2 text-center">
+                                  <p className="text-xs text-gray-500 mt-1.5 text-center">
                                     วงกลมสีเขียวแสดงพื้นที่ที่สามารถเช็คอินได้
                                   </p>
                                 </div>

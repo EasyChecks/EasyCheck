@@ -120,14 +120,64 @@ function LeaveRequestModal({ closeModal }) {
   // Generate minutes (00-59)
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
+  // Normalize time input (auto-complete)
+  const normalizeTime = (input) => {
+    if (!input) return '';
+    
+    // ถ้าพิมเฉพาะตัวเลข 1-2 ตัว (เช่น "9" หรือ "14") ให้เติม :00
+    if (/^\d{1,2}$/.test(input)) {
+      const hour = parseInt(input);
+      if (hour >= 0 && hour <= 23) {
+        return `${input.padStart(2, '0')}:00`;
+      }
+    }
+    
+    // แปลง am/pm format
+    const amPmMatch = input.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)/i);
+    if (amPmMatch) {
+      let hour = parseInt(amPmMatch[1]);
+      const minute = amPmMatch[2] || '00';
+      const period = amPmMatch[3].toLowerCase();
+      
+      if (period === 'pm' && hour !== 12) hour += 12;
+      if (period === 'am' && hour === 12) hour = 0;
+      
+      return `${hour.toString().padStart(2, '0')}:${minute}`;
+    }
+    
+    // แปลง HH:MM format
+    const timeMatch = input.match(/^(\d{1,2}):(\d{2})$/);
+    if (timeMatch) {
+      const hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
+      
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      }
+    }
+    
+    return input;
+  };
+
   // Handle time selection from picker
   const handleTimeSelect = (hour, minute, isStart) => {
     const timeValue = `${hour}:${minute}`;
+    const todayDate = getTodayDate();
     if (isStart) {
-      setFormData({ ...formData, startTime: timeValue });
+      setFormData({ 
+        ...formData, 
+        startTime: timeValue,
+        startDate: todayDate,
+        endDate: todayDate
+      });
       setShowTimeStartPicker(false);
     } else {
-      setFormData({ ...formData, endTime: timeValue });
+      setFormData({ 
+        ...formData, 
+        endTime: timeValue,
+        startDate: todayDate,
+        endDate: todayDate
+      });
       setShowTimeEndPicker(false);
     }
   };
@@ -524,6 +574,13 @@ function LeaveRequestModal({ closeModal }) {
                       value={formData.startTime}
                       onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                       onFocus={() => setShowTimeStartPicker(true)}
+                      onBlur={(e) => {
+                        const normalized = normalizeTime(e.target.value);
+                        if (normalized !== e.target.value) {
+                          setFormData({ ...formData, startTime: normalized });
+                        }
+                        setTimeout(() => setShowTimeStartPicker(false), 200);
+                      }}
                       placeholder="เช่น 09:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
                       required
@@ -610,6 +667,13 @@ function LeaveRequestModal({ closeModal }) {
                       value={formData.endTime}
                       onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                       onFocus={() => setShowTimeEndPicker(true)}
+                      onBlur={(e) => {
+                        const normalized = normalizeTime(e.target.value);
+                        if (normalized !== e.target.value) {
+                          setFormData({ ...formData, endTime: normalized });
+                        }
+                        setTimeout(() => setShowTimeEndPicker(false), 200);
+                      }}
                       placeholder="เช่น 10:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
                       required
@@ -791,6 +855,19 @@ function LeaveRequestModal({ closeModal }) {
                         });
                       }}
                       onFocus={() => setShowTimeStartPicker(true)}
+                      onBlur={(e) => {
+                        const normalized = normalizeTime(e.target.value);
+                        if (normalized !== e.target.value) {
+                          const todayDate = getTodayDate();
+                          setFormData({
+                            ...formData,
+                            startTime: normalized,
+                            startDate: todayDate,
+                            endDate: todayDate
+                          });
+                        }
+                        setTimeout(() => setShowTimeStartPicker(false), 200);
+                      }}
                       placeholder="เช่น 09:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
                       required
@@ -899,6 +976,19 @@ function LeaveRequestModal({ closeModal }) {
                         });
                       }}
                       onFocus={() => setShowTimeEndPicker(true)}
+                      onBlur={(e) => {
+                        const normalized = normalizeTime(e.target.value);
+                        if (normalized !== e.target.value) {
+                          const todayDate = getTodayDate();
+                          setFormData({
+                            ...formData,
+                            endTime: normalized,
+                            startDate: todayDate,
+                            endDate: todayDate
+                          });
+                        }
+                        setTimeout(() => setShowTimeEndPicker(false), 200);
+                      }}
                       placeholder="เช่น 17:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
                       required
