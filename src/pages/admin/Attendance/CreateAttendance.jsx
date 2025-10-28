@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -72,8 +72,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
-// Component to handle map clicks
-function MapClickHandler({ onMapClick, isActive }) {
+// Component to handle map clicks - memoize เพื่อลด re-render
+const MapClickHandler = React.memo(function MapClickHandler({ onMapClick, isActive }) {
   useMapEvents({
     click: (e) => {
       if (isActive) {
@@ -82,7 +82,79 @@ function MapClickHandler({ onMapClick, isActive }) {
     },
   })
   return null
-}
+})
+
+// Map Component - แยกออกมาเพื่อ lazy load
+const LocationMapView = React.memo(function LocationMapView({ 
+  defaultCenter, 
+  defaultZoom, 
+  mapClickEnabled, 
+  handleMapClick, 
+  locations, 
+  handleSelectLocation,
+  newLocationForm 
+}) {
+  return (
+    <MapContainer
+      center={defaultCenter}
+      zoom={defaultZoom}
+      style={{ height: '100%', width: '100%' }}
+      scrollWheelZoom={true}
+    >
+      <LayersControl position="topright">
+        <LayersControl.BaseLayer checked name="แผนที่ปกติ">
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
+          <TileLayer
+            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          />
+        </LayersControl.BaseLayer>
+      </LayersControl>
+
+      <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
+
+      {/* Show existing locations */}
+      {locations.map((loc) => (
+        <React.Fragment key={loc.id}>
+          <Marker 
+            position={[loc.latitude, loc.longitude]}
+            eventHandlers={{
+              click: () => handleSelectLocation(loc.name)
+            }}
+          />
+          <Circle
+            center={[loc.latitude, loc.longitude]}
+            radius={loc.radius}
+            pathOptions={{ 
+              color: 'green',
+              fillColor: 'green',
+              fillOpacity: 0.2 
+            }}
+          />
+        </React.Fragment>
+      ))}
+
+      {/* Show new location preview */}
+      {newLocationForm.latitude && newLocationForm.longitude && (
+        <>
+          <Marker position={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]} />
+          {newLocationForm.radius && (
+            <Circle
+              center={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}
+              radius={parseFloat(newLocationForm.radius)}
+              pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }}
+            />
+          )}
+        </>
+      )}
+    </MapContainer>
+  )
+})
 
 export default function CreateAttendance({ onClose, onCreate, initialData, onUpdate }) {
   const { locations, addLocation } = useLocations()
@@ -100,6 +172,22 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [selectedTeams, setSelectedTeams] = useState([]) // แผนก/ตำแหน่งที่จะเห็นตาราง
   const [showTeamsDropdown, setShowTeamsDropdown] = useState(false) // แสดง/ซ่อน dropdown
   const teamsDropdownRef = useRef(null) // ref สำหรับปิด dropdown เมื่อคลิกนอก
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false) // แสดง/ซ่อน dropdown ประเภทงาน
+  const typeDropdownRef = useRef(null) // ref สำหรับปิด dropdown ประเภทงาน
+  const [workTypes, setWorkTypes] = useState(() => [
+    'งานประจำ',
+    'โครงการพิเศษ',
+    'งานบริการลูกค้า',
+    'งานวิจัยและพัฒนา',
+    'งานการตลาด',
+    'งานฝึกอบรม',
+    'งานประชุม',
+    'งานสัมมนา',
+    'งานอีเวนท์',
+    'งานบำรุงรักษา'
+  ]) // รายการประเภทงาน - lazy init
+  const [showAddTypeForm, setShowAddTypeForm] = useState(false)
+  const [newTypeName, setNewTypeName] = useState('')
   const [showMapModal, setShowMapModal] = useState(false)
   const [showWarningPopup, setShowWarningPopup] = useState(false)
   const [showErrorPopup, setShowErrorPopup] = useState(false)
@@ -130,6 +218,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [showNewLocationForm, setShowNewLocationForm] = useState(false)
   const [showTimeStartPicker, setShowTimeStartPicker] = useState(false)
   const [showTimeEndPicker, setShowTimeEndPicker] = useState(false)
+  const [searchLocation, setSearchLocation] = useState('') // ค้นหาสถานที่
 
   // If initialData provided, prefill fields (support editing)
   useEffect(() => {
@@ -169,13 +258,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       if (teamsDropdownRef.current && !teamsDropdownRef.current.contains(event.target)) {
         setShowTeamsDropdown(false)
       }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
+        setShowTypeDropdown(false)
+        setShowAddTypeForm(false)
+      }
     }
     
-    if (showTeamsDropdown) {
+    if (showTeamsDropdown || showTypeDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showTeamsDropdown])
+  }, [showTeamsDropdown, showTypeDropdown])
 
   // refs to call native pickers where supported
   const monthRef = useRef(null)
@@ -184,6 +277,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const timeEndRef = useRef(null)
   const timeStartPickerRef = useRef(null)
   const timeEndPickerRef = useRef(null)
+  
+  // Refs สำหรับการกด Enter เพื่อไปช่องถัดไป
+  const teamRef = useRef(null)
+  const locationRef = useRef(null)
+  const membersRef = useRef(null)
+  const preparationsRef = useRef(null)
+  const tasksRef = useRef(null)
+  const goalsRef = useRef(null)
 
   // Close time pickers when clicking outside
   useEffect(() => {
@@ -202,12 +303,22 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     }
   }, [])
 
-  // Default map center (Bangkok)
-  const defaultCenter = [13.7606, 100.5034]
+  // Default map center (Bangkok) - memoize เพื่อไม่ให้สร้างใหม่ทุกครั้ง
+  const defaultCenter = useMemo(() => [13.7606, 100.5034], [])
   const defaultZoom = 12
 
-  // Handle map click to create new location
-  const handleMapClick = (latlng) => {
+  // Filter locations based on search - useMemo เพื่อไม่ให้คำนวณซ้ำ
+  const filteredLocations = useMemo(() => {
+    if (!searchLocation.trim()) return locations
+    const search = searchLocation.toLowerCase()
+    return locations.filter(loc => 
+      loc.name.toLowerCase().includes(search) || 
+      (loc.description && loc.description.toLowerCase().includes(search))
+    )
+  }, [locations, searchLocation])
+
+  // Handle map click to create new location - useCallback เพื่อป้องกัน re-render
+  const handleMapClick = useCallback((latlng) => {
     if (mapClickEnabled) {
       setNewLocationForm(prev => ({
         ...prev,
@@ -217,16 +328,16 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       setShowNewLocationForm(true)
       setMapClickEnabled(false)
     }
-  }
+  }, [mapClickEnabled])
 
-  // Handle select existing location from map
-  const handleSelectLocation = (locationName) => {
+  // Handle select existing location from map - useCallback
+  const handleSelectLocation = useCallback((locationName) => {
     setLocation(locationName)
     setShowMapModal(false)
-  }
+  }, [])
 
-  // Handle create new location from map
-  const handleCreateNewLocation = () => {
+  // Handle create new location from map - useCallback
+  const handleCreateNewLocation = useCallback(() => {
     console.log('Creating new location, current form:', newLocationForm)
     
     // ตรวจสอบว่ากรอกชื่อสถานที่แล้วหรือยัง
@@ -274,8 +385,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       status: 'active'
     }
 
-    // Add to locations context
+    console.log('Adding new location to context:', newLocation)
+    
+    // Add to locations context (จะบันทึกลง localStorage อัตโนมัติผ่าน useEffect ใน LocationContext)
     addLocation(newLocation)
+    
+    console.log('✓ Location added successfully and saved to localStorage')
+    console.log('Total locations now:', locations.length + 1)
     
     // Set as selected location
     setLocation(newLocation.name)
@@ -290,10 +406,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     })
     setShowNewLocationForm(false)
     setShowMapModal(false)
-  }
+  }, [newLocationForm, locations, addLocation])
 
-  // Cancel new location form
-  const handleCancelNewLocation = () => {
+  // Cancel new location form - useCallback
+  const handleCancelNewLocation = useCallback(() => {
     setNewLocationForm({
       name: '',
       description: '',
@@ -303,10 +419,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     })
     setShowNewLocationForm(false)
     setMapClickEnabled(false)
-  }
+  }, [])
 
-  // Toggle team selection
-  const toggleTeam = (teamName) => {
+  // Toggle team selection - useCallback
+  const toggleTeam = useCallback((teamName) => {
     setSelectedTeams(prev => {
       if (prev.includes(teamName)) {
         return prev.filter(t => t !== teamName)
@@ -314,7 +430,24 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         return [...prev, teamName]
       }
     })
-  }
+  }, [])
+
+  // Select work type - useCallback
+  const selectWorkType = useCallback((typeName) => {
+    setType(typeName)
+    setShowTypeDropdown(false)
+  }, [])
+
+  // Add new work type - useCallback
+  const handleAddNewType = useCallback(() => {
+    if (newTypeName.trim() && !workTypes.includes(newTypeName.trim())) {
+      setWorkTypes(prev => [...prev, newTypeName.trim()])
+      setType(newTypeName.trim())
+      setNewTypeName('')
+      setShowAddTypeForm(false)
+      setShowTypeDropdown(false)
+    }
+  }, [newTypeName, workTypes])
 
   // Handle map modal open with validation
   const handleOpenMapModal = () => {
@@ -335,6 +468,15 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const normalizeTime = (input) => {
     if (!input) return ''
     const s = input.trim().toLowerCase()
+    
+    // ถ้าพิมพ์แค่ตัวเลข 1-2 หลัก (เช่น 9, 14) ให้เพิ่ม :00
+    if (/^\d{1,2}$/.test(s)) {
+      const hour = parseInt(s, 10)
+      if (hour >= 0 && hour < 24) {
+        return `${pad(hour)}:00`
+      }
+    }
+    
     // am/pm
     const ampm = s.match(/^(\d{1,2}):?(\d{2})\s*(am|pm)$/)
     if (ampm) {
@@ -402,12 +544,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     }
   }
 
-  // Generate hours for 24-hour format (00-23)
-  const hours24 = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
-  // Generate minutes (00-59)
-  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
+  // Generate hours for 24-hour format (00-23) - memoize เพื่อไม่สร้างซ้ำ
+  const hours24 = useMemo(() => Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')), [])
+  // Generate minutes (00-59) - memoize เพื่อไม่สร้างซ้ำ
+  const minutes = useMemo(() => Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')), [])
 
-  const handleTimeSelect = (hour, minute, isStart) => {
+  const handleTimeSelect = useCallback((hour, minute, isStart) => {
     const timeValue = `${hour}:${minute}`
     if (isStart) {
       setTimeStart(timeValue)
@@ -416,10 +558,104 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       setTimeEnd(timeValue)
       setShowTimeEndPicker(false)
     }
-  }
+  }, [])
 
-  const handleSubmit = (e) => {
+  // ฟังก์ชันจัดการ Enter key เพื่อไปช่องถัดไป - useCallback
+  const handleKeyDown = useCallback((e, currentField) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      
+      // Auto-complete time format for time inputs
+      if (currentField === 'timeStart' || currentField === 'timeEnd') {
+        const value = currentField === 'timeStart' ? timeStart.trim() : timeEnd.trim()
+        if (/^\d{1,2}$/.test(value)) {
+          const hour = parseInt(value, 10)
+          if (hour >= 0 && hour < 24) {
+            const formattedTime = `${value.padStart(2, '0')}:00`
+            if (currentField === 'timeStart') {
+              setTimeStart(formattedTime)
+            } else {
+              setTimeEnd(formattedTime)
+            }
+          }
+        }
+        
+        // ปิด dropdown เวลา
+        if (currentField === 'timeStart') {
+          setShowTimeStartPicker(false)
+        } else if (currentField === 'timeEnd') {
+          setShowTimeEndPicker(false)
+        }
+      }
+      
+      // Navigate to next field
+      const fieldOrder = {
+        team: dateRef,
+        date: timeStartRef,
+        timeStart: timeEndRef,
+        timeEnd: locationRef,
+        location: membersRef,
+        members: preparationsRef,
+        preparations: tasksRef,
+        tasks: goalsRef,
+        goals: 'submit' // ช่องสุดท้าย - submit form
+      }
+      
+      const nextField = fieldOrder[currentField]
+      
+      if (nextField === 'submit') {
+        // ช่องสุดท้าย - บันทึกทันที
+        handleSubmit(e)
+      } else if (nextField && nextField.current) {
+        nextField.current.focus()
+      }
+    }
+  }, [timeStart, timeEnd, dateRef, timeStartRef, timeEndRef, locationRef, membersRef, preparationsRef, tasksRef, goalsRef])
+
+  const handleSubmit = useCallback((e) => {
     e.preventDefault()
+    
+    // ตรวจสอบข้อมูลที่จำเป็นต้องกรอก
+    if (!team.trim()) {
+      setErrorMessage('กรุณากรอกชื่อทีม')
+      setShowErrorPopup(true)
+      setTimeout(() => setShowErrorPopup(false), 3000)
+      teamRef.current?.focus()
+      return
+    }
+    
+    if (!date.trim()) {
+      setErrorMessage('กรุณากรอกวันที่')
+      setShowErrorPopup(true)
+      setTimeout(() => setShowErrorPopup(false), 3000)
+      dateRef.current?.focus()
+      return
+    }
+    
+    if (!timeStart.trim()) {
+      setErrorMessage('กรุณากรอกเวลาเริ่ม')
+      setShowErrorPopup(true)
+      setTimeout(() => setShowErrorPopup(false), 3000)
+      timeStartRef.current?.focus()
+      return
+    }
+    
+    if (!timeEnd.trim()) {
+      setErrorMessage('กรุณากรอกเวลาสิ้นสุด')
+      setShowErrorPopup(true)
+      setTimeout(() => setShowErrorPopup(false), 3000)
+      timeEndRef.current?.focus()
+      return
+    }
+    
+    if (!location.trim()) {
+      setErrorMessage('กรุณากรอกสถานที่')
+      setShowErrorPopup(true)
+      setTimeout(() => setShowErrorPopup(false), 3000)
+      locationRef.current?.focus()
+      return
+    }
+    
     // normalize times/dates before creating payload
     const nTimeStart = normalizeTime(timeStart)
     const nTimeEnd = normalizeTime(timeEnd)
@@ -447,7 +683,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     } else if (onCreate) {
       onCreate(payload)
     }
-  }
+  }, [team, date, timeStart, timeEnd, location, month, members, type, preparations, tasks, goals, selectedTeams, initialData, onUpdate, onCreate, teamRef, locationRef, timeStartRef, timeEndRef])
 
   return createPortal(
     <div 
@@ -469,8 +705,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-auto pr-2">
           <div>
-            <label className="block text-sm text-gray-700 mb-1">ชื่อทีม</label>
-            <input value={team} onChange={e => setTeam(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="ทีม" />
+            <label className="block text-sm text-gray-700 mb-1">
+              ชื่อทีม <span className="text-red-500">*</span>
+            </label>
+            <input 
+              ref={teamRef}
+              value={team} 
+              onChange={e => setTeam(e.target.value)} 
+              onKeyDown={(e) => handleKeyDown(e, 'team')}
+              className="w-full border rounded px-3 py-2" 
+              placeholder="ทีม" 
+            />
           </div>
 
           {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ */}
@@ -544,7 +789,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">วันที่</label>
+              <label className="block text-sm text-gray-700 mb-1">
+                วันที่ <span className="text-red-500">*</span>
+              </label>
               <div className="relative w-full">
                 <button
                   type="button"
@@ -566,6 +813,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                   value={date}
                   onChange={e => setDate(e.target.value)}
                   onBlur={e => setDate(prev => normalizeDate(prev))}
+                  onKeyDown={(e) => handleKeyDown(e, 'date')}
                   className="w-full border rounded px-3 py-2 pr-10"
                   aria-label="วันที่ (พิมพ์หรือใช้ปุ่มเลือก)"
                 />
@@ -582,14 +830,18 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">เวลาเริ่ม (24 ชม.)</label>
+                <label className="block text-sm text-gray-700 mb-1">
+                  เวลาเริ่ม (24 ชม.) <span className="text-red-500">*</span>
+                </label>
                 <div className="relative w-full" ref={timeStartPickerRef}>
                   <input
+                    ref={timeStartRef}
                     type="text"
                     value={timeStart}
                     onChange={(e) => setTimeStart(e.target.value)}
                     onBlur={(e) => setTimeStart(prev => normalizeTime(prev))}
                     onFocus={() => setShowTimeStartPicker(true)}
+                    onKeyDown={(e) => handleKeyDown(e, 'timeStart')}
                     placeholder="เช่น 09:00"
                     className="w-full border rounded px-3 py-2 pr-10 hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors"
                   />
@@ -666,14 +918,18 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               </div>
 
               <div>
-                <label className="block text-sm text-gray-700 mb-1">เวลาสิ้นสุด (24 ชม.)</label>
+                <label className="block text-sm text-gray-700 mb-1">
+                  เวลาสิ้นสุด (24 ชม.) <span className="text-red-500">*</span>
+                </label>
                 <div className="relative w-full" ref={timeEndPickerRef}>
                   <input
+                    ref={timeEndRef}
                     type="text"
                     value={timeEnd}
                     onChange={(e) => setTimeEnd(e.target.value)}
                     onBlur={(e) => setTimeEnd(prev => normalizeTime(prev))}
                     onFocus={() => setShowTimeEndPicker(true)}
+                    onKeyDown={(e) => handleKeyDown(e, 'timeEnd')}
                     placeholder="เช่น 17:00"
                     className="w-full border rounded px-3 py-2 pr-10 hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors"
                   />
@@ -752,7 +1008,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">สถานที่</label>
+            <label className="block text-sm text-gray-700 mb-1">
+              สถานที่ <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <button
                 type="button"
@@ -767,8 +1025,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               </button>
 
               <input 
+                ref={locationRef}
                 value={location} 
                 onChange={e => setLocation(e.target.value)} 
+                onKeyDown={(e) => handleKeyDown(e, 'location')}
                 className="w-full border rounded px-3 py-2 pr-12" 
                 placeholder="พิมพ์หรือเลือกจากแผนที่" 
               />
@@ -778,27 +1038,166 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-700 mb-1">สมาชิก</label>
-              <input value={members} onChange={e => setMembers(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="สมาชิก" />
+              <input 
+                ref={membersRef}
+                value={members} 
+                onChange={e => setMembers(e.target.value)} 
+                onKeyDown={(e) => handleKeyDown(e, 'members')}
+                className="w-full border rounded px-3 py-2" 
+                placeholder="สมาชิก" 
+              />
             </div>
-            <div>
-              <label className="block text-sm text-gray-700 mb-1">ประเภทงาน</label>
-              <input value={type} onChange={e => setType(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="ประเภทงาน" />
+            <div className="relative" ref={typeDropdownRef}>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">ประเภทงาน</label>
+              
+              {/* Dropdown Button */}
+              <button
+                type="button"
+                onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all flex items-center justify-between"
+              >
+                <span className={type ? "text-gray-700" : "text-gray-400"}>
+                  {type || 'เลือกประเภทงาน...'}
+                </span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 text-gray-400 transition-transform ${showTypeDropdown ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showTypeDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                  {/* Existing Types */}
+                  <div className="max-h-48 overflow-y-auto">
+                    {workTypes.map((workType) => (
+                      <button
+                        key={workType}
+                        type="button"
+                        onClick={() => selectWorkType(workType)}
+                        className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors ${
+                          type === workType ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {workType}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Add New Type Section */}
+                  <div className="border-t-2 border-gray-200">
+                    {showAddTypeForm ? (
+                      <div className="p-3 bg-gray-50">
+                        <input
+                          type="text"
+                          value={newTypeName}
+                          onChange={(e) => setNewTypeName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleAddNewType()
+                            }
+                          }}
+                          placeholder="ชื่อประเภทงานใหม่..."
+                          className="w-full px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none mb-2"
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAddNewType}
+                            className="flex-1 bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                          >
+                            เพิ่ม
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddTypeForm(false)
+                              setNewTypeName('')
+                            }}
+                            className="flex-1 bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-400 transition-colors"
+                          >
+                            ยกเลิก
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddTypeForm(true)}
+                        className="w-full px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 font-semibold transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        เพิ่มประเภทงานใหม่
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Type Badge */}
+              {type && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                    {type}
+                    <button
+                      type="button"
+                      onClick={() => setType('')}
+                      className="hover:text-purple-900 ml-1 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-1">สิ่งที่ต้องเตรียม (แต่ละบรรทัดคือรายการ)</label>
-            <textarea value={preparations} onChange={e => setPreparations(e.target.value)} className="w-full border rounded px-3 py-2" rows={3} placeholder="รายการเตรียม" />
+            <textarea 
+              ref={preparationsRef}
+              value={preparations} 
+              onChange={e => setPreparations(e.target.value)} 
+              onKeyDown={(e) => handleKeyDown(e, 'preparations')}
+              className="w-full border rounded px-3 py-2" 
+              rows={3} 
+              placeholder="รายการเตรียม" 
+            />
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-1">ภารกิจหลัก (แต่ละบรรทัดคือภารกิจ)</label>
-            <textarea value={tasks} onChange={e => setTasks(e.target.value)} className="w-full border rounded px-3 py-2" rows={3} placeholder="ภารกิจ" />
+            <textarea 
+              ref={tasksRef}
+              value={tasks} 
+              onChange={e => setTasks(e.target.value)} 
+              onKeyDown={(e) => handleKeyDown(e, 'tasks')}
+              className="w-full border rounded px-3 py-2" 
+              rows={3} 
+              placeholder="ภารกิจ" 
+            />
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-1">เป้าหมาย (แต่ละบรรทัด)</label>
-            <textarea value={goals} onChange={e => setGoals(e.target.value)} className="w-full border rounded px-3 py-2" rows={2} placeholder="เป้าหมาย" />
+            <textarea 
+              ref={goalsRef}
+              value={goals} 
+              onChange={e => setGoals(e.target.value)} 
+              onKeyDown={(e) => handleKeyDown(e, 'goals')}
+              className="w-full border rounded px-3 py-2" 
+              rows={2} 
+              placeholder="เป้าหมาย" 
+            />
           </div>
 
           <div className="flex items-center gap-3 pt-2 flex-wrap">
@@ -820,9 +1219,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       </div>
 
       {/* Map Modal */}
+      {/* Map Modal - Lazy load เฉพาะตอนเปิด */}
       {showMapModal && (
         <PageModal onClose={() => setShowMapModal(false)}>
-          <div className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden" style={{ maxHeight: '90vh' }}>
+          <div 
+            key="map-modal" 
+            className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden" 
+            style={{ maxHeight: '90vh' }}
+          >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
               <div>
@@ -842,64 +1246,15 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             <div className="flex flex-col lg:flex-row" style={{ height: 'calc(90vh - 80px)' }}>
               {/* Map Section */}
               <div className="flex-1 relative">
-                <MapContainer
-                  center={defaultCenter}
-                  zoom={defaultZoom}
-                  style={{ height: '100%', width: '100%' }}
-                  scrollWheelZoom={true}
-                >
-                  <LayersControl position="topright">
-                    <LayersControl.BaseLayer checked name="แผนที่ปกติ">
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                    </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                      />
-                    </LayersControl.BaseLayer>
-                  </LayersControl>
-
-                  <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
-
-                  {/* Show existing locations */}
-                  {locations.map((loc) => (
-                    <React.Fragment key={loc.id}>
-                      <Marker 
-                        position={[loc.latitude, loc.longitude]}
-                        eventHandlers={{
-                          click: () => handleSelectLocation(loc.name)
-                        }}
-                      />
-                      <Circle
-                        center={[loc.latitude, loc.longitude]}
-                        radius={loc.radius}
-                        pathOptions={{ 
-                          color: 'green',
-                          fillColor: 'green',
-                          fillOpacity: 0.2 
-                        }}
-                      />
-                    </React.Fragment>
-                  ))}
-
-                  {/* Show new location preview */}
-                  {newLocationForm.latitude && newLocationForm.longitude && (
-                    <>
-                      <Marker position={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]} />
-                      {newLocationForm.radius && (
-                        <Circle
-                          center={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}
-                          radius={parseFloat(newLocationForm.radius)}
-                          pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }}
-                        />
-                      )}
-                    </>
-                  )}
-                </MapContainer>
+                <LocationMapView
+                  defaultCenter={defaultCenter}
+                  defaultZoom={defaultZoom}
+                  mapClickEnabled={mapClickEnabled}
+                  handleMapClick={handleMapClick}
+                  locations={filteredLocations}
+                  handleSelectLocation={handleSelectLocation}
+                  newLocationForm={newLocationForm}
+                />
 
                 {/* Enable Click Mode Button */}
                 {!mapClickEnabled && !showNewLocationForm && (
@@ -1013,16 +1368,57 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 ) : (
                   // Location List
                   <div className="p-6">
-                    <h4 className="text-lg font-bold text-gray-800 mb-4">พื้นที่ที่มีอยู่ ({locations.length})</h4>
+                    {/* Search Box */}
+                    <div className="mb-4">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="ค้นหาสถานที่..."
+                          value={searchLocation}
+                          onChange={(e) => setSearchLocation(e.target.value)}
+                          className="w-full px-4 py-2 pr-20 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none bg-white"
+                        />
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        {searchLocation && (
+                          <button
+                            onClick={() => setSearchLocation('')}
+                            className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <h4 className="text-lg font-bold text-gray-800 mb-4">
+                      พื้นที่ที่มีอยู่ ({filteredLocations.length})
+                    </h4>
                     
-                    {locations.length === 0 ? (
+                    {searchLocation && filteredLocations.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>ไม่พบสถานที่ "{searchLocation}"</p>
+                      </div>
+                    ) : filteredLocations.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <p>ยังไม่มีพื้นที่</p>
                         <p className="text-sm mt-2">คลิก "สร้างพื้นที่ใหม่" เพื่อเริ่มต้น</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {locations.map((loc) => (
+                        {filteredLocations.map((loc) => (
                           <button
                             key={loc.id}
                             onClick={() => handleSelectLocation(loc.name)}
@@ -1057,12 +1453,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       {/* Warning Popup - กรอกข้อมูลก่อนเปิดแผนที่ (portal to body so it appears above map modal) */}
       {showWarningPopup && (typeof document !== 'undefined' ? createPortal(
         <div 
-          className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out"
+          className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out bg-black/30"
           style={{
             animation: 'fadeIn 0.3s ease-out forwards',
             pointerEvents: 'auto'
           }}
-          // capture clicks so they don't fall through to underlying map/modal
+          onClick={() => setShowWarningPopup(false)}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -1125,11 +1521,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       {/* Error Popup - กรอกข้อมูลไม่ครบในแผนที่ (portal to body so it appears above map modal) */}
       {showErrorPopup && (typeof document !== 'undefined' ? createPortal(
         <div 
-          className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out"
+          className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out bg-black/30"
           style={{
             animation: 'fadeIn 0.3s ease-out forwards',
             pointerEvents: 'auto'
           }}
+          onClick={() => setShowErrorPopup(false)}
         >
           <div onClick={(e) => e.stopPropagation()} 
             className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform"

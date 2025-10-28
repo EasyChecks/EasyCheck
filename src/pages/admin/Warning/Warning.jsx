@@ -43,6 +43,7 @@ export default function Warning() {
   const innerRefs = useRef({})
   const endListenersRef = useRef({})
   const animatingIds = useRef(new Set()) // ✅ เพิ่ม: ติดตาม animation ที่กำลังทำงาน
+  const rejectReasonRef = useRef(null)
   
   // Dialog states
   const [showApproveConfirm, setShowApproveConfirm] = useState(false)
@@ -119,6 +120,15 @@ export default function Warning() {
       i.style.transformOrigin = 'top center'
     })
   }, [])
+
+  // Auto focus textarea when reject modal opens
+  useEffect(() => {
+    if (showRejectModal && rejectReasonRef.current) {
+      setTimeout(() => {
+        rejectReasonRef.current.focus();
+      }, 100);
+    }
+  }, [showRejectModal]);
 
   const handleToggle = (id) => {
     // ✅ ป้องกันการกดซ้ำขณะที่ animation กำลังทำงาน
@@ -476,87 +486,74 @@ export default function Warning() {
         type="success"
       />
 
-      {/* Reject Modal with Reason */}
+      {/* Reject Modal with Reason - Redesigned */}
       {showRejectModal && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{
-            animation: 'fadeIn 0.3s ease-out forwards'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowRejectModal(false)
-              setRejectReason('')
-              setSelectedItem(null)
-            }
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            animation: 'fadeIn 0.2s ease-out'
           }}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
             style={{
-              animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+              animation: 'modalSlideUp 0.3s ease-out'
             }}
           >
-            <div className="bg-gradient-to-br from-[#ef4444] via-[#dc2626] to-[#b91c1c] text-white p-6 rounded-t-2xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 transform -skew-x-12" 
-                style={{ animation: 'shimmer 3s infinite' }}
-              />
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-bold">ไม่อนุมัติใบลา</h2>
-                </div>
-                <p className="text-sm text-white/90 ml-13">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
-              </div>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+              <h2 className="text-2xl font-bold mb-1">ไม่อนุมัติใบลา</h2>
+              <p className="text-red-100 text-sm">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
             </div>
             
+            {/* Content */}
             <div className="p-6">
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">รายการที่จะไม่อนุมัติ:</p>
-                <p className="text-gray-800 font-semibold">
-                  <span className="text-red-600">{selectedItem?.name}</span>
-                  <span className="text-gray-500 text-sm ml-2">({selectedItem?.role})</span>
+              {/* Employee Info */}
+              <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">รายการที่จะไม่อนุมัติ:</p>
+                <p className="text-gray-900 font-bold text-lg">
+                  {selectedItem?.name}
                 </p>
+                <p className="text-gray-600 text-sm mt-1">{selectedItem?.role}</p>
               </div>
               
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                เหตุผล <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="เช่น: มีงานเร่งด่วนที่ต้องทำในช่วงเวลานี้, ไม่สามารถอนุมัติได้เนื่องจาก..."
-                rows="4"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none resize-none transition-all duration-200 text-sm"
-                style={{
-                  animation: 'fadeInUp 0.5s ease-out 0.1s both'
-                }}
-                autoFocus
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                ข้อความนี้จะถูกส่งไปยังผู้ขอลา
+              {/* Reason Input */}
+              <div className="mb-2">
+                <label className="block text-sm font-bold text-gray-800 mb-3">
+                  เหตุผลที่ไม่อนุมัติ <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  ref={rejectReasonRef}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="ระบุเหตุผล เช่น มีงานเร่งด่วน, ไม่สามารถอนุมัติได้เนื่องจาก..."
+                  rows="4"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none resize-none text-sm"
+                  style={{ transition: 'all 0.2s ease' }}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                💡 ข้อความนี้จะถูกส่งไปยังผู้ขอลา
               </p>
             </div>
 
-            <div className="p-6 bg-gray-50 rounded-b-2xl flex gap-3">
+            {/* Footer Buttons */}
+            <div className="px-6 pb-6 flex gap-3">
               <button
                 onClick={() => {
                   setShowRejectModal(false)
                   setRejectReason('')
                   setSelectedItem(null)
                 }}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 font-semibold transform hover:scale-[1.02] active:scale-[0.98]"
+                className="flex-1 px-5 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={confirmReject}
                 disabled={!rejectReason.trim()}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="flex-1 px-5 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 shadow-md hover:shadow-lg"
               >
                 ยืนยันไม่อนุมัติ
               </button>

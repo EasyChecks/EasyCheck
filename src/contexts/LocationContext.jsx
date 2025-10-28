@@ -69,10 +69,21 @@ export function LocationProvider({ children }) {
       const savedLocations = localStorage.getItem('locations')
       if (savedLocations) {
         const parsed = JSON.parse(savedLocations)
+        // ลบข้อมูลที่ซ้ำกัน (ตาม id)
+        const uniqueLocations = []
+        const seenIds = new Set()
+        
+        for (const loc of parsed) {
+          if (!seenIds.has(loc.id)) {
+            seenIds.add(loc.id)
+            uniqueLocations.push(loc)
+          }
+        }
+        
         // Merge: เพิ่ม locations ใหม่จาก initialLocations ที่ยังไม่มีใน localStorage
-        const existingNames = new Set(parsed.map(loc => loc.name))
-        const newLocations = initialLocations.filter(loc => !existingNames.has(loc.name))
-        return [...parsed, ...newLocations]
+        const existingIds = new Set(uniqueLocations.map(loc => loc.id))
+        const newLocations = initialLocations.filter(loc => !existingIds.has(loc.id))
+        return [...uniqueLocations, ...newLocations]
       }
     } catch (error) {
       console.error('Error loading locations from localStorage:', error)
