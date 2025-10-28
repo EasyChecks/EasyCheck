@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl, useMap, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -246,6 +247,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
   const { events, addEvent, updateEvent, deleteEvent } = useEvents()
   // Use Location Context (to check for duplicates)
   const { locations } = useLocations()
+  // Use navigate hook
+  const navigate = useNavigate()
 
   const [isAddingEvent, setIsAddingEvent] = useState(false)
   const [editingEventId, setEditingEventId] = useState(null)
@@ -696,8 +699,12 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
     })
   }
 
-  // Handle view details button click - scroll to event card
+  // Handle view details button click - navigate to event details page
   const handleViewDetails = (eventId) => {
+    // Navigate to event details page
+    navigate(`/user/event/${eventId}`)
+    
+    // Optional: Also scroll to event card in current page for reference
     setTimeout(() => {
       const element = eventRefs.current[eventId]
       if (element) {
