@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEvents } from "../../../contexts/EventContext";
 import { useAuth } from '../../../contexts/useAuth';
 import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
+import SuccessDialog from '../../../components/common/SuccessDialog';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -18,13 +19,40 @@ export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { events, canJoinEvent, getTimeRemainingToJoin } = useEvents();
-  const { checkIn, attendance } = useAuth()
+  const { checkIn, attendance, user } = useAuth()
   const [timeRemaining, setTimeRemaining] = React.useState(null);
   const [userLocation, setUserLocation] = React.useState(null);
   const [isWithinRadius, setIsWithinRadius] = React.useState(false);
   const [checkingLocation, setCheckingLocation] = React.useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = React.useState(false);
 
   const event = events.find((e) => e.id === parseInt(id));
+
+  // ตรวจสอบว่าผู้ใช้เช็คอินกิจกรรมนี้แล้วหรือยัง (แยกตาม user)
+  const getEventCheckInStatus = (eventId, userId) => {
+    try {
+      const eventCheckIns = JSON.parse(localStorage.getItem('eventCheckIns') || '{}');
+      // เก็บข้อมูลแยกตาม userId และ eventId
+      return eventCheckIns[`${userId}_${eventId}`] || false;
+    } catch (error) {
+      console.error('Error getting event check-in status:', error);
+      return false;
+    }
+  };
+
+  // บันทึกสถานะการเช็คอินของกิจกรรม (แยกตาม user)
+  const setEventCheckInStatus = (eventId, userId, status) => {
+    try {
+      const eventCheckIns = JSON.parse(localStorage.getItem('eventCheckIns') || '{}');
+      // เก็บข้อมูลแยกตาม userId และ eventId
+      eventCheckIns[`${userId}_${eventId}`] = status;
+      localStorage.setItem('eventCheckIns', JSON.stringify(eventCheckIns));
+    } catch (error) {
+      console.error('Error setting event check-in status:', error);
+    }
+  };
+
+  const isJoined = user ? getEventCheckInStatus(parseInt(id), user.id) : false;
 
   // Calculate distance between two points
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -101,13 +129,14 @@ export default function EventDetails() {
   };
 
   const handleJoinEvent = async () => {
-    if (canJoinEvent(event) && isWithinRadius) {
+    if (canJoinEvent(event) && isWithinRadius && user) {
       await checkIn();
+      setEventCheckInStatus(parseInt(id), user.id, true); // บันทึกสถานะการเช็คอินของกิจกรรมนี้ สำหรับ user นี้
+      setShowSuccessPopup(true);
     }
   };
 
   const canUserJoin = event ? canJoinEvent(event) && isWithinRadius : false;
-  const isJoined = attendance?.status === 'checked_in'
 
   if (!event) {
     return (
@@ -322,23 +351,15 @@ export default function EventDetails() {
         </div>
       )}
 
-      {/* Join Event Button */}
-      <div className="mx-4 mt-6">
-        <button
-          onClick={() => {
-            // Handle join event
-            alert('เข้าร่วมกิจกรรมสำเร็จ!');
-          }}
-          disabled={!canJoinEvent(event)}
-          className={`w-full py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-            canJoinEvent(event)
-              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-xl hover:from-green-600 hover:to-green-700'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          เข้าร่วมกิจกรรม
-        </button>
-      </div>
+      {/* Success Popup */}
+      <SuccessDialog
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="เข้าร่วมกิจกรรมสำเร็จ!"
+        message="คุณได้เข้าร่วมกิจกรรมเรียบร้อยแล้ว"
+        autoClose={true}
+        autoCloseDelay={3000}
+      />
 
       {/* Info Banner */}
       <div className="mx-4 mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
