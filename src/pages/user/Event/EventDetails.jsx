@@ -137,7 +137,7 @@ export default function EventDetails() {
   return (
     <div className="min-h-screen ">
       {/* Back Button */}
-      <div className="p-4">
+      <div className="p-4 flex justify-between items-center">
         <button
           onClick={() => navigate("/user/event")}
           className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
@@ -146,6 +146,18 @@ export default function EventDetails() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span className="font-medium">กลับ</span>
+        </button>
+        
+        {/* Admin Management Link - Only show if user has admin access */}
+        <button
+          onClick={() => navigate("/admin/event-management")}
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="font-medium">จัดการ Event</span>
         </button>
       </div>
 
@@ -306,8 +318,8 @@ export default function EventDetails() {
       </div>
 
       {/* Time Remaining Banner */}
-      {timeRemaining && (
-        <div className="mx-4 mt-6 bg-blue-50 border border-blue-400 rounded-xl p-4">
+      {timeRemaining && canUserJoin && (
+        <div className="mx-4 mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-blue-800 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -316,29 +328,11 @@ export default function EventDetails() {
           </p>
           <p className="text-center mt-2">
             <span className="text-2xl font-bold text-blue-900">
-              คุณสามารถเข้าร่วมได้อีก {formatTimeRemaining(timeRemaining)}
+              {formatTimeRemaining(timeRemaining)}
             </span>
           </p>
         </div>
       )}
-
-      {/* Join Event Button */}
-      <div className="mx-4 mt-6">
-        <button
-          onClick={() => {
-            // Handle join event
-            alert('เข้าร่วมกิจกรรมสำเร็จ!');
-          }}
-          disabled={!canJoinEvent(event)}
-          className={`w-full py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-            canJoinEvent(event)
-              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-xl hover:from-green-600 hover:to-green-700'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          เข้าร่วมกิจกรรม
-        </button>
-      </div>
 
       {/* Info Banner */}
       <div className="mx-4 mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
