@@ -83,14 +83,16 @@ function EventList() {
   const { getEventsForUser } = useEvents();
   const { user } = useAuth();
 
-  // Get user's department and position
+  // Get user's info
+  const userId = user?.id || 0;
+  const userRole = user?.role || 'user';
   const userDepartment = user?.department || '';
   const userPosition = user?.position || '';
 
   // Get filtered events for this user
   const userEvents = useMemo(() => {
-    return getEventsForUser(userDepartment, userPosition);
-  }, [getEventsForUser, userDepartment, userPosition]);
+    return getEventsForUser(userId, userRole, userDepartment, userPosition);
+  }, [getEventsForUser, userId, userRole, userDepartment, userPosition]);
 
   // Sort events (ongoing first)
   const sortedEvents = useMemo(() => {

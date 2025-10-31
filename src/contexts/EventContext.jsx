@@ -9,6 +9,8 @@ const defaultEvents = [
     id: 1,
     name: 'ประชุมทีมขาย ประจำเดือน',
     date: '20/10/2025', // Today's date
+    startDate: '20/10/2025',
+    endDate: '20/10/2025',
     description: 'ประชุมวางแผนการขายและทบทวนผลการดำเนินงาน',
     locationName: 'ห้องประชุมชั้น 3',
     latitude: 13.7563,
@@ -17,12 +19,18 @@ const defaultEvents = [
     status: 'ongoing',
     startTime: '14:00',
     endTime: '16:00',
-    teams: ['ทีมขาย', 'Marketing', 'การตลาด']
+    teams: ['ทีมขาย', 'Marketing', 'การตลาด'],
+    assignedUsers: [], // Array of user IDs or user objects
+    assignedRoles: [], // Array of roles
+    assignedDepartments: [], // Array of departments  
+    assignedPositions: [] // Array of positions
   },
   {
     id: 2,
     name: 'Workshop การพัฒนาระบบ',
     date: '21/10/2025',
+    startDate: '21/10/2025',
+    endDate: '21/10/2025',
     description: 'อบรมเชิงปฏิบัติการเทคโนโลยีใหม่สำหรับทีม IT',
     locationName: 'ศูนย์ฝึกอบรม อาคาร A',
     latitude: 13.7606,
@@ -31,12 +39,18 @@ const defaultEvents = [
     status: 'ongoing',
     startTime: '09:00',
     endTime: '17:00',
-    teams: ['IT', 'ทีมพัฒนา', 'Software Engineer']
+    teams: ['IT', 'ทีมพัฒนา', 'Software Engineer'],
+    assignedUsers: [3], // นายอภิชาติ (IT)
+    assignedRoles: [],
+    assignedDepartments: ['IT'],
+    assignedPositions: []
   },
   {
     id: 3,
     name: 'ตรวจสอบคุณภาพงานก่อสร้าง',
     date: '22/10/2025',
+    startDate: '22/10/2025',
+    endDate: '22/10/2025',
     description: 'ตรวจสอบความก้าวหน้าและคุณภาพของโครงการก่อสร้าง',
     locationName: 'ไซต์งานบางนา',
     latitude: 13.6671,
@@ -45,12 +59,18 @@ const defaultEvents = [
     status: 'ongoing',
     startTime: '10:00',
     endTime: '14:00',
-    teams: ['ทีมก่อสร้าง', 'ทีมควบคุมคุณภาพ', 'วิศวกร']
+    teams: ['ทีมก่อสร้าง', 'ทีมควบคุมคุณภาพ', 'วิศวกร'],
+    assignedUsers: [],
+    assignedRoles: ['manager'],
+    assignedDepartments: [],
+    assignedPositions: []
   },
   {
     id: 4,
     name: 'ฝึกอบรม HR Management',
     date: '23/10/2025',
+    startDate: '23/10/2025',
+    endDate: '23/10/2025',
     description: 'อบรมระบบการจัดการทรัพยากรบุคคลสำหรับผู้บริหาร',
     locationName: 'โรงแรม Grand Hyatt',
     latitude: 13.7435,
@@ -59,12 +79,18 @@ const defaultEvents = [
     status: 'ongoing',
     startTime: '08:30',
     endTime: '16:30',
-    teams: ['HR', 'ทรัพยากรบุคคล', 'Admin']
+    teams: ['HR', 'ทรัพยากรบุคคล', 'Admin'],
+    assignedUsers: [],
+    assignedRoles: [],
+    assignedDepartments: ['HR'],
+    assignedPositions: []
   },
   {
     id: 5,
     name: 'Customer Service Excellence',
     date: '24/10/2025',
+    startDate: '24/10/2025',
+    endDate: '24/10/2025',
     description: 'พัฒนาทักษะการบริการลูกค้าระดับมืออาชีพ',
     locationName: 'ศูนย์การค้า Central World',
     latitude: 13.7469,
@@ -73,7 +99,11 @@ const defaultEvents = [
     status: 'ongoing',
     startTime: '13:00',
     endTime: '17:00',
-    teams: ['ทีมบริการลูกค้า', 'Customer Service', 'ฝ่ายบริการ']
+    teams: ['ทีมบริการลูกค้า', 'Customer Service', 'ฝ่ายบริการ'],
+    assignedUsers: [4], // นางพรทิพย์ (Marketing)
+    assignedRoles: [],
+    assignedDepartments: [],
+    assignedPositions: []
   }
 ]
 
@@ -137,31 +167,79 @@ export function EventProvider({ children }) {
     return events.find(evt => evt.id === id)
   }
 
-  // Filter events by user's department/team
-  const getEventsForUser = (userDepartment, userPosition) => {
-    // Convert user info to comparable format
-    const userTeams = [userDepartment, userPosition].filter(Boolean).map(t => t.toLowerCase().trim())
-    
+  // Filter events by user's department/team/assignment
+  const getEventsForUser = (userId, userRole, userDepartment, userPosition) => {
     return events.filter(event => {
-      // If event has no teams specified, it's visible to all
-      if (!event.teams || event.teams.length === 0) {
-        return true
-      }
-      
-      // Check if user's department or position matches any of the event teams
-      return event.teams.some(eventTeam => {
-        const normalizedEventTeam = eventTeam.toLowerCase().trim()
-        
-        return userTeams.some(userTeam => {
-          // Check both ways: event team contains user team OR user team contains event team
-          // Also check exact match
-          return (
-            normalizedEventTeam === userTeam ||
-            normalizedEventTeam.includes(userTeam) || 
-            userTeam.includes(normalizedEventTeam)
-          )
+      // 1. Check if user is directly assigned (by ID or name)
+      if (event.assignedUsers && event.assignedUsers.length > 0) {
+        const isAssigned = event.assignedUsers.some(assigned => {
+          // Check if it's a user ID (number)
+          if (typeof assigned === 'number' && assigned === userId) {
+            return true
+          }
+          // Check if it's a user object with id
+          if (typeof assigned === 'object' && assigned.id === userId) {
+            return true
+          }
+          // Check if it's a name string (normalize comparison)
+          if (typeof assigned === 'string') {
+            return assigned.toLowerCase().includes(String(userId).toLowerCase())
+          }
+          return false
         })
-      })
+        if (isAssigned) return true
+      }
+
+      // 2. Check if user's role is assigned
+      if (event.assignedRoles && event.assignedRoles.length > 0) {
+        if (event.assignedRoles.some(role => 
+          role.toLowerCase() === userRole?.toLowerCase()
+        )) {
+          return true
+        }
+      }
+
+      // 3. Check if user's department is assigned
+      if (event.assignedDepartments && event.assignedDepartments.length > 0) {
+        if (event.assignedDepartments.some(dept => 
+          dept.toLowerCase() === userDepartment?.toLowerCase() ||
+          dept.toLowerCase().includes(userDepartment?.toLowerCase()) ||
+          userDepartment?.toLowerCase().includes(dept.toLowerCase())
+        )) {
+          return true
+        }
+      }
+
+      // 4. Check if user's position is assigned
+      if (event.assignedPositions && event.assignedPositions.length > 0) {
+        if (event.assignedPositions.some(pos => 
+          pos.toLowerCase() === userPosition?.toLowerCase() ||
+          pos.toLowerCase().includes(userPosition?.toLowerCase()) ||
+          userPosition?.toLowerCase().includes(pos.toLowerCase())
+        )) {
+          return true
+        }
+      }
+
+      // 5. Fallback to old teams logic for backward compatibility
+      if (event.teams && event.teams.length > 0) {
+        const userTeams = [userDepartment, userPosition].filter(Boolean).map(t => t.toLowerCase().trim())
+        
+        return event.teams.some(eventTeam => {
+          const normalizedEventTeam = eventTeam.toLowerCase().trim()
+          
+          return userTeams.some(userTeam => {
+            return (
+              normalizedEventTeam === userTeam ||
+              normalizedEventTeam.includes(userTeam) || 
+              userTeam.includes(normalizedEventTeam)
+            )
+          })
+        })
+      }
+
+      // If no assignment criteria, don't show the event
+      return false
     })
   }
 

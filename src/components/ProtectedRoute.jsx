@@ -18,7 +18,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (!user) {
-    // Redirect to login with return url
     return <Navigate to="/auth" state={{ from: location }} replace />
   }
 

@@ -27,7 +27,6 @@ function Auth() {
   const { login, getDashboardPath } = useAuth()
   const navigate = useNavigate()
 
-  // ✅ โหลด Remember Me จาก localStorage
   useEffect(() => {
     const savedUsername = localStorage.getItem('rememberedUsername')
     const savedPassword = localStorage.getItem('rememberedPassword')
@@ -72,15 +71,9 @@ function Auth() {
     setError('')
 
     try {
-      // 🔐 จำลองการเรียก API Login - ในอนาคตจะแทนที่ด้วย API จริง
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
-        console.log('🔐 Login Success:', response.user) // Debug log
-        console.log('👤 User Role:', response.user.role) // Debug log
-        console.log('📍 Dashboard Path:', getDashboardPath(response.user.role)) // Debug log
-        
-        // ✅ บันทึก Remember Me
         if (rememberMe) {
           localStorage.setItem('rememberedUsername', username)
           localStorage.setItem('rememberedPassword', password)
@@ -104,15 +97,10 @@ function Auth() {
     }
   }
 
-  // 📝 หมายเหตุ: ฟังก์ชัน mockLoginAPI ถูกย้ายไปยัง usersData.js แล้ว
-  // เพื่อให้ง่ายต่อการจัดการ Mock Data ทั้งหมดที่ไฟล์เดียว
-  // const mockLoginAPI ถูกย้ายไปยัง usersData.js
-
   function handleResetConfirm() {
     setResetError('')
     setResetSuccess('')
     
-    // ✅ ตรวจสอบความถูกต้องของข้อมูล
     if (!Username || !Password || !NewPassword) {
       setResetError('กรุณากรอกข้อมูลให้ครบทุกช่อง')
       return
@@ -123,14 +111,11 @@ function Auth() {
       return
     }
 
-    // 📦 ดึงรหัสผ่านที่เก็บใน localStorage หรือใช้ค่าเริ่มต้น
     const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
     
-    // 👤 ลองหา user ใน usersData ก่อน
     const userData = getUserForAuth(Username)
     
     if (userData) {
-      // ✅ พบ user ปกติจาก usersData
       if (userData.password !== Password) {
         setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
         return
@@ -158,7 +143,6 @@ function Auth() {
 
       setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
     } else {
-      // 🔑 ตรวจสอบบัญชี fallback (เช่น username = admin) จาก data layer กลาง
       const fallbackAccount = getFallbackAdminAccount(Username, storedPasswords)
 
       if (!fallbackAccount) {
@@ -197,7 +181,6 @@ function Auth() {
       setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
     }
 
-    // 🔄 รีเซ็ตฟอร์มและปิด modal หลังจาก 2 วินาที
     setTimeout(() => {
       setShowReset(false)
       setUsernameReset('')
@@ -210,17 +193,14 @@ function Auth() {
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      {/* 🔄 แสดง PuffLoader ขณะกำลัง Loading */}
       {loading && <PuffLoader text="กำลังเข้าสู่ระบบ..." />}
 
-      {/* 🎨 ตกแต่งพื้นหลัง (Background decorative elements) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
         <div className="absolute top-40 right-10 w-72 h-72 bg-cyan-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-sky-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* 📋 card login - หน้าล็อกอินหลัก */}
       <section
         className={`font-prompt fixed inset-x-0 bottom-0 left-0 right-0 xl:left-[400px] xl:right-[500px] 2xl:left-[500px] 2xl:right-[500px] bg-white/95 backdrop-blur-sm rounded-t-[28px] shadow-2xl md:px-[60px] lg:px-[80px] xl:px-[40px] px-6 pb-8 pt-6 z-40 overflow-hidden transition-all duration-500 ease-in-out ${
           showReset ? 'opacity-0 scale-95 pointer-events-none translate-y-4' : 'opacity-100 scale-100 translate-y-0'
@@ -228,19 +208,16 @@ function Auth() {
         style={{ boxShadow: '0 -18px 60px rgba(72,203,255,0.25)' }}
       >
         <div className="space-y-6">
-          {/* ส่วนหัว (Header) */}
           <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             Login
           </header>
 
-          {/* ⚠️ ข้อความแสดงข้อผิดพลาด (Error message) */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-shake">
               {error}
             </div>
           )}
 
-          {/* 📝 ช่องกรอกชื่อผู้ใช้ (Username input field) */}
           <div className="flex flex-col gap-2 group">
             <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
               Username
