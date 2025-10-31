@@ -174,6 +174,18 @@ function MapClickHandler({ onMapClick }) {
 
 // Component to show temporary search marker
 function SearchMarker({ position, name, onClick }) {
+  const markerRef = useRef(null)
+  
+  // Auto-open popup when marker is created or updated
+  useEffect(() => {
+    if (markerRef.current && position) {
+      // Small delay to ensure marker is rendered
+      setTimeout(() => {
+        markerRef.current.openPopup()
+      }, 100)
+    }
+  }, [position])
+  
   if (!position) return null
   
   const searchIcon = new L.Icon({
@@ -190,6 +202,7 @@ function SearchMarker({ position, name, onClick }) {
     <Marker 
       position={position} 
       icon={searchIcon}
+      ref={markerRef}
     >
       <Popup autoClose={false} closeOnClick={false}>
         <div className="p-2">
@@ -227,9 +240,33 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
 
   const startDateRef = useRef(null)
   const endDateRef = useRef(null)
+  const formRef = useRef(null)
 
   // Helper function to pad numbers with zero
   const pad = (n) => n.toString().padStart(2, '0')
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // ESC to cancel
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onCancel()
+      }
+      // Enter to submit
+      if ((e.key === 'Enter')) {
+        e.preventDefault()
+        if (formRef.current) {
+          formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onCancel])
 
   // Helper function to normalize date input to DD/MM/YYYY
   const normalizeDate = (input) => {
@@ -301,7 +338,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       {/* Position Info */}
       <div className="bg-gray-50 p-4 rounded-lg">
         <p className="text-xs text-gray-500 mb-2 font-medium">พิกัดที่เลือก</p>
@@ -514,9 +551,304 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
   )
 }
 
+// Edit Form Component
+function EditForm({ type, item, onSubmit, onCancel }) {
+  const [formData, setFormData] = useState({
+    name: item.name || '',
+    description: item.description || '',
+    radius: item.radius || 100,
+    locationName: item.locationName || '',
+    startDate: item.startDate || '',
+    endDate: item.endDate || ''
+  })
+
+  const startDateRef = useRef(null)
+  const endDateRef = useRef(null)
+  const formRef = useRef(null)
+
+  const pad = (n) => n.toString().padStart(2, '0')
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // ESC to cancel
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onCancel()
+      }
+      // Enter to submit
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (formRef.current) {
+          formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onCancel])
+
+  const normalizeDate = (input) => {
+    if (!input) return ''
+    const s = input.trim()
+    
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+
+    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
+    if (dmy) {
+      const d = pad(parseInt(dmy[1], 10))
+      const m = pad(parseInt(dmy[2], 10))
+      const y = dmy[3]
+      return `${y}-${m}-${d}`
+    }
+
+    const parsed = new Date(s)
+    if (!isNaN(parsed)) {
+      const y = parsed.getFullYear()
+      const m = pad(parsed.getMonth() + 1)
+      const d = pad(parsed.getDate())
+      return `${y}-${m}-${d}`
+    }
+
+    return s
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!formData.name.trim()) {
+      alert('กรุณากรอกชื่อ')
+      return
+    }
+    if (type === 'event' && (!formData.startDate || !formData.endDate)) {
+      alert('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด')
+      return
+    }
+    
+    if (type === 'event') {
+      let startDateObj, endDateObj
+      
+      if (formData.startDate.includes('/')) {
+        const [d1, m1, y1] = formData.startDate.split('/')
+        startDateObj = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1))
+      } else {
+        startDateObj = new Date(formData.startDate)
+      }
+      
+      if (formData.endDate.includes('/')) {
+        const [d2, m2, y2] = formData.endDate.split('/')
+        endDateObj = new Date(parseInt(y2), parseInt(m2) - 1, parseInt(d2))
+      } else {
+        endDateObj = new Date(formData.endDate)
+      }
+      
+      if (startDateObj > endDateObj) {
+        alert('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
+        return
+      }
+    }
+    
+    onSubmit(formData)
+  }
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          ชื่อ{type === 'location' ? 'พื้นที่' : 'กิจกรรม'} <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          คำอธิบาย
+        </label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+          rows="3"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          รัศมี (เมตร) <span className="text-red-500">*</span>
+        </label>
+        <div className="flex items-center gap-4">
+          <input
+            type="range"
+            min="50"
+            max="1000"
+            step="10"
+            value={formData.radius}
+            onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) })}
+            className="flex-1"
+          />
+          <input
+            type="number"
+            min="50"
+            max="1000"
+            value={formData.radius}
+            onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 100 })}
+            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center font-medium"
+          />
+        </div>
+      </div>
+
+      {type === 'event' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ชื่อสถานที่
+            </label>
+            <input
+              type="text"
+              value={formData.locationName}
+              onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              วันที่เริ่มกิจกรรม <span className="text-red-500">*</span>
+            </label>
+            <div className="relative w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  if (startDateRef.current) {
+                    startDateRef.current.showPicker?.() || startDateRef.current.click()
+                  }
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
+                  <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
+                </svg>
+              </button>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="DD/MM/YYYY"
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                onBlur={(e) => {
+                  const normalized = normalizeDate(e.target.value)
+                  if (normalized) {
+                    const [year, month, day] = normalized.split('-')
+                    setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
+                  }
+                }}
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                required
+              />
+
+              <input
+                ref={startDateRef}
+                type="date"
+                className="sr-only"
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [year, month, day] = e.target.value.split('-')
+                    setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              วันที่สิ้นสุดกิจกรรม <span className="text-red-500">*</span>
+            </label>
+            <div className="relative w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  if (endDateRef.current) {
+                    endDateRef.current.showPicker?.() || endDateRef.current.click()
+                  }
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
+                  <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
+                </svg>
+              </button>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="DD/MM/YYYY"
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                onBlur={(e) => {
+                  const normalized = normalizeDate(e.target.value)
+                  if (normalized) {
+                    const [year, month, day] = normalized.split('-')
+                    setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
+                  }
+                }}
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                required
+              />
+
+              <input
+                ref={endDateRef}
+                type="date"
+                className="sr-only"
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [year, month, day] = e.target.value.split('-')
+                    setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+        >
+          ยกเลิก
+        </button>
+        <button
+          type="submit"
+          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
+            type === 'location'
+              ? 'bg-green-500 hover:bg-green-600'
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
+        >
+          บันทึก
+        </button>
+      </div>
+    </form>
+  )
+}
+
 function MappingAndEvents() {
-  const { locations, deleteLocation, addLocation } = useLocations()
-  const { events, deleteEvent, addEvent } = useEvents()
+  const { locations, deleteLocation, addLocation, updateLocation } = useLocations()
+  const { events, deleteEvent, addEvent, updateEvent } = useEvents()
   const [activeTab, setActiveTab] = useState('all') // 'all', 'locations' or 'events'
   const [mapType, setMapType] = useState('default') // 'default' or 'satellite'
   const [searchQuery, setSearchQuery] = useState('')
@@ -533,6 +865,9 @@ function MappingAndEvents() {
   const wrapperRefs = useRef({})
   const innerRefs = useRef({})
   const endListenersRef = useRef({})
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editItem, setEditItem] = useState(null)
+  const [showHelpModal, setShowHelpModal] = useState(false)
   const mapSearchTimeoutRef = useRef(null)
 
   const defaultCenter = [13.7606, 100.5034]
@@ -582,6 +917,39 @@ function MappingAndEvents() {
 
   const filteredItems = getFilteredItems()
 
+  // Helper function to translate location display name to Thai-friendly format
+  const formatLocationName = (result) => {
+    const parts = result.display_name.split(',').map(s => s.trim())
+    
+    // Try to extract meaningful parts
+    const addressParts = []
+    
+    // Get the main location name (usually first part)
+    if (parts[0]) addressParts.push(parts[0])
+    
+    // Look for district/subdistrict (usually contains ตำบล, อำเภอ, เขต)
+    const districtPart = parts.find(p => 
+      p.includes('ตำบล') || p.includes('อำเภอ') || p.includes('เขต') || 
+      p.includes('District') || p.includes('Sub-district')
+    )
+    if (districtPart) addressParts.push(districtPart)
+    
+    // Look for province (usually contains จังหวัด or ends with Province)
+    const provincePart = parts.find(p => 
+      p.includes('จังหวัด') || p.includes('Province') || p.includes('Bangkok')
+    )
+    if (provincePart && !addressParts.includes(provincePart)) {
+      addressParts.push(provincePart)
+    }
+    
+    // If we have less than 2 parts, add the second part from original
+    if (addressParts.length < 2 && parts.length > 1 && !addressParts.includes(parts[1])) {
+      addressParts.push(parts[1])
+    }
+    
+    return addressParts.join(', ')
+  }
+
   // Search map locations using Nominatim API
   const searchMapLocation = async (query) => {
     if (!query.trim()) {
@@ -592,10 +960,15 @@ function MappingAndEvents() {
     setIsSearchingMap(true)
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=th`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=th&accept-language=th`
       )
       const data = await response.json()
-      setMapSearchResults(data)
+      // Add formatted name to each result
+      const formattedResults = data.map(result => ({
+        ...result,
+        formatted_name: formatLocationName(result)
+      }))
+      setMapSearchResults(formattedResults)
     } catch (error) {
       console.error('Error searching map:', error)
       setMapSearchResults([])
@@ -845,8 +1218,214 @@ function MappingAndEvents() {
     }
   }
 
+  // Handle edit location/event
+  const handleEdit = async (formData) => {
+    try {
+      if (editItem.type === 'location') {
+        updateLocation(editItem.id, {
+          ...editItem,
+          ...formData
+        })
+      } else if (editItem.type === 'event') {
+        let formattedStartDate = formData.startDate
+        let formattedEndDate = formData.endDate
+        
+        if (!formData.startDate.includes('/')) {
+          const [y1, m1, d1] = formData.startDate.split('-')
+          formattedStartDate = `${d1}/${m1}/${y1}`
+        }
+        
+        if (!formData.endDate.includes('/')) {
+          const [y2, m2, d2] = formData.endDate.split('-')
+          formattedEndDate = `${d2}/${m2}/${y2}`
+        }
+        
+        updateEvent(editItem.id, {
+          ...editItem,
+          ...formData,
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          date: formattedStartDate
+        })
+      }
+      setShowEditModal(false)
+      setEditItem(null)
+      alert('แก้ไขสำเร็จ!')
+    } catch (error) {
+      console.error('Error updating:', error)
+      alert('เกิดข้อผิดพลาดในการแก้ไข')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800">
+                {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false)
+                  setCreateType(null)
+                  setNewMarkerPosition(null)
+                  setSearchMarkerPosition(null)
+                  setSearchMarkerName('')
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">1</span>
+                  การสร้างพื้นที่/กิจกรรมใหม่
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-700 ml-8">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span><strong>คลิกที่แผนที่</strong> เพื่อปักหมุดและสร้างพื้นที่/กิจกรรมใหม่</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span><strong>ค้นหาสถานที่</strong> ด้วยช่องค้นหาบนแผนที่ แล้วคลิกผลลัพธ์</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>คลิกปุ่ม <strong>"สร้างพื้นที่/กิจกรรมที่นี่"</strong> ใน popup ที่ปรากฏ</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">2</span>
+                  การจัดการรายการ
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-700 ml-8">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span><strong>คลิกที่หมุด</strong> บนแผนที่จะพาไปยังรายการนั้นในลิสต์</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span><strong>ปุ่มแก้ไข</strong> สำหรับแก้ไขข้อมูลพื้นที่หรือกิจกรรม</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span><strong>ปุ่มลบ</strong> สำหรับลบรายการที่ไม่ต้องการ</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
+                  สัญลักษณ์บนแผนที่
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700 ml-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span><strong>หมุดสีเขียว</strong> = พื้นที่อนุญาตให้เช็คอิน</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span><strong>หมุดสีน้ำเงิน</strong> = กิจกรรมพิเศษ</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span><strong>หมุดสีแดง</strong> = ตำแหน่งที่กำลังเลือก</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm">💡</span>
+                  เคล็ดลับ
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-700 ml-8">
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-500 mt-1">•</span>
+                    <span>ใช้ <strong>แท็บกรอง</strong> เพื่อแสดงเฉพาะพื้นที่หรือกิจกรรม</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-500 mt-1">•</span>
+                    <span>สลับ <strong>มุมมองแผนที่/ดาวเทียม</strong> ได้ที่มุมบนขวา</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-500 mt-1">•</span>
+                    <span>คลิก <strong>"ลบหมุดค้นหา"</strong> เพื่อลบหมุดชั่วคราว</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-gray-300">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm">⌨️</span>
+                  คีย์ลัด (Keyboard Shortcuts)
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700 ml-8">
+                  <div className="flex items-center gap-3">
+                    <kbd className="px-2 py-1 bg-white border-2 border-gray-300 rounded text-xs font-mono shadow-sm">ESC</kbd>
+                    <span>ยกเลิกการแก้ไข/สร้าง</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <kbd className="px-2 py-1 bg-white border-2 border-gray-300 rounded text-xs font-mono shadow-sm">Enter</kbd>
+                    <span>บันทึกการแก้ไข/สร้าง</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editItem && (
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800">
+                แก้ไข{editItem.type === 'location' ? 'พื้นที่อนุญาต' : 'กิจกรรม'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditItem(null)
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              <EditForm
+                type={editItem.type}
+                item={editItem}
+                onSubmit={handleEdit}
+                onCancel={() => {
+                  setShowEditModal(false)
+                  setEditItem(null)
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
@@ -919,10 +1498,23 @@ function MappingAndEvents() {
 
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <h1 className="text-2xl font-bold text-gray-800">ตั้งค่าพื้นที่และกิจกรรม</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          กำหนดพื้นที่อนุญาตและกิจกรรมต่างๆที่พนักงานต้องเช็คเข้างาน
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">ตั้งค่าพื้นที่และกิจกรรม</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              กำหนดพื้นที่อนุญาตและกิจกรรมต่างๆที่พนักงานต้องเช็คเข้างาน
+            </p>
+          </div>
+          <button
+            onClick={() => setShowHelpModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors font-medium text-sm border border-blue-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            วิธีใช้งาน
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -1006,7 +1598,7 @@ function MappingAndEvents() {
                         
                         // Set marker position and name (FlyToLocation component will handle the animation)
                         setSearchMarkerPosition([lat, lon])
-                        setSearchMarkerName(result.display_name)
+                        setSearchMarkerName(result.formatted_name || result.display_name)
                         
                         // Clear search
                         setMapSearchQuery('')
@@ -1014,9 +1606,9 @@ function MappingAndEvents() {
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
-                      <div className="font-medium text-sm text-gray-800">{result.display_name}</div>
+                      <div className="font-medium text-sm text-gray-800">{result.formatted_name || result.display_name}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {parseFloat(result.lat).toFixed(6)}, {parseFloat(result.lon).toFixed(6)}
+                        พิกัด: {parseFloat(result.lat).toFixed(6)}, {parseFloat(result.lon).toFixed(6)}
                       </div>
                     </button>
                   ))}
@@ -1113,28 +1705,21 @@ function MappingAndEvents() {
                   <Marker
                     position={[location.latitude, location.longitude]}
                     icon={locationIcon}
-                  >
-                    <Popup>
-                      <div className="p-2 min-w-[200px]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                          <h3 className="font-bold text-gray-800">{location.name}</h3>
-                        </div>
-                        <p className="text-xs font-medium mb-2 text-green-600">พื้นที่อนุญาต</p>
-                        <p className="text-xs text-gray-600 mb-2">{location.description}</p>
-                        <div className="text-xs text-gray-500 space-y-1">
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">รัศมี:</span>
-                            <span>{location.radius} เมตร</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">สถานะ:</span>
-                            <span>{location.status === 'active' ? 'กำลังใช้งาน' : 'ไม่ได้ใช้งาน'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
+                    eventHandlers={{
+                      click: () => {
+                        // Scroll to the item in the list and highlight it
+                        const itemElement = document.querySelector(`[data-item-id="location-${location.id}"]`)
+                        if (itemElement) {
+                          itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                          // Add highlight effect
+                          itemElement.classList.add('ring-4', 'ring-green-400', 'ring-opacity-50')
+                          setTimeout(() => {
+                            itemElement.classList.remove('ring-4', 'ring-green-400', 'ring-opacity-50')
+                          }, 2000)
+                        }
+                      }
+                    }}
+                  />
                   <Circle
                     center={[location.latitude, location.longitude]}
                     radius={location.radius}
@@ -1153,34 +1738,21 @@ function MappingAndEvents() {
                   <Marker
                     position={[event.latitude, event.longitude]}
                     icon={eventIcon}
-                  >
-                    <Popup>
-                      <div className="p-2 min-w-[200px]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-3 h-3 rounded-full ${event.status === 'ongoing' ? 'bg-blue-500' : 'bg-gray-500'}`}></div>
-                          <h3 className="font-bold text-gray-800">{event.name}</h3>
-                        </div>
-                        <p className={`text-xs font-medium mb-2 ${event.status === 'ongoing' ? 'text-blue-600' : 'text-gray-600'}`}>
-                          กิจกรรม - {event.status === 'ongoing' ? 'เริ่มงานแล้ว' : 'เสร็จสิ้น'}
-                        </p>
-                        <p className="text-xs text-gray-600 mb-2">{event.description}</p>
-                        <div className="text-xs text-gray-500 space-y-1">
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">สถานที่:</span>
-                            <span>{event.locationName}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">วันที่:</span>
-                            <span>{event.date}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">รัศมี:</span>
-                            <span>{event.radius} เมตร</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
+                    eventHandlers={{
+                      click: () => {
+                        // Scroll to the item in the list and highlight it
+                        const itemElement = document.querySelector(`[data-item-id="event-${event.id}"]`)
+                        if (itemElement) {
+                          itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                          // Add highlight effect
+                          itemElement.classList.add('ring-4', 'ring-blue-400', 'ring-opacity-50')
+                          setTimeout(() => {
+                            itemElement.classList.remove('ring-4', 'ring-blue-400', 'ring-opacity-50')
+                          }, 2000)
+                        }
+                      }
+                    }}
+                  />
                   <Circle
                     center={[event.latitude, event.longitude]}
                     radius={event.radius}
@@ -1282,6 +1854,7 @@ function MappingAndEvents() {
                 return (
                   <div
                     key={`${item.type}-${item.id}`}
+                    data-item-id={`${item.type}-${item.id}`}
                     className={`relative rounded-xl p-4 border-2 shadow-sm transition-all duration-200 ${
                       isLocation 
                         ? 'border-green-100 bg-gradient-to-br from-green-50/50 to-white' 
@@ -1340,14 +1913,21 @@ function MappingAndEvents() {
                     {/* Action Buttons */}
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleDetails(item.id); }}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setEditItem(item);
+                          setShowEditModal(true);
+                        }}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                           isLocation
                             ? 'bg-green-500 hover:bg-green-600 text-white'
                             : 'bg-blue-500 hover:bg-blue-600 text-white'
                         }`}
                       >
-                        {isOpen ? 'ซ่อน' : 'รายละเอียด'}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                        แก้ไข
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.type); }}
