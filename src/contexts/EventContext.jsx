@@ -101,6 +101,24 @@ export function EventProvider({ children }) {
     }
   }, [events])
 
+  // Listen for localStorage changes (for cross-tab sync)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'easycheck_events' && e.newValue !== e.oldValue) {
+        try {
+          const newEvents = JSON.parse(e.newValue || '[]')
+          setEvents(newEvents)
+          console.debug('[EventContext] localStorage changed, syncing events')
+        } catch (error) {
+          console.error('Error parsing events from localStorage:', error)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
   // Add new event
   const addEvent = (event) => {
     setEvents(prev => {
@@ -108,6 +126,14 @@ export function EventProvider({ children }) {
         const base = Array.isArray(prev) ? prev : []
         const newEvents = [...base, event]
         console.debug('[EventContext] addEvent - adding', event, 'new length', newEvents.length)
+        
+        // Trigger storage event for cross-tab sync
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'easycheck_events',
+          newValue: JSON.stringify(newEvents),
+          oldValue: JSON.stringify(base)
+        }))
+        
         return newEvents
       } catch (e) {
         console.error('[EventContext] addEvent error:', e)

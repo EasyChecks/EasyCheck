@@ -857,16 +857,41 @@ function MappingAndEvents() {
   const [isSearchingMap, setIsSearchingMap] = useState(false)
   const [searchMarkerPosition, setSearchMarkerPosition] = useState(null) // For temporary search marker
   const [searchMarkerName, setSearchMarkerName] = useState('') // Name of searched location
+  const [openIds, setOpenIds] = useState([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createType, setCreateType] = useState(null) // 'location' or 'event'
   const [newMarkerPosition, setNewMarkerPosition] = useState(null)
   const [isFlying, setIsFlying] = useState(false) // Track if map is currently flying
+  const wrapperRefs = useRef({})
+  const innerRefs = useRef({})
+  const endListenersRef = useRef({})
   const [showEditModal, setShowEditModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
   const mapSearchTimeoutRef = useRef(null)
 
   const defaultCenter = [13.7606, 100.5034]
+
+  // Initialize refs for animations
+  useEffect(() => {
+    Object.values(wrapperRefs.current).forEach(w => {
+      if (!w) return
+      w.style.overflow = 'hidden'
+      w.style.maxHeight = '0px'
+      w.style.opacity = '0'
+      w.style.transition = 'max-height 280ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease'
+      w.style.willChange = 'max-height, opacity'
+      try { w.style.contain = 'layout'; } catch (e) {}
+    })
+    Object.values(innerRefs.current).forEach(i => {
+      if (!i) return
+      i.style.transform = 'translateY(-6px)'
+      i.style.opacity = '0'
+      i.style.transition = 'transform 240ms cubic-bezier(.2,.85,.2,1), opacity 200ms ease'
+      i.style.willChange = 'transform, opacity'
+      i.style.transformOrigin = 'top center'
+    })
+  }, [])
 
   // Filter items based on search query
   const filteredLocations = locations.filter(location =>
@@ -984,6 +1009,122 @@ function MappingAndEvents() {
     return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }
 
+  // Toggle details animation
+  const toggleDetails = (id) => {
+    const wrapper = wrapperRefs.current[id]
+    const inner = innerRefs.current[id]
+    const isOpen = openIds.includes(id)
+
+    if (!wrapper || !inner) {
+      if (!isOpen) {
+        setOpenIds([id])
+      } else {
+        setOpenIds([])
+      }
+      return
+    }
+
+    if (!isOpen) {
+      // Close all other open items
+      openIds.forEach(openId => {
+        if (openId !== id) {
+          const otherWrapper = wrapperRefs.current[openId]
+          const otherInner = innerRefs.current[openId]
+          
+          if (otherWrapper && otherInner) {
+            if (endListenersRef.current[openId]) {
+              otherWrapper.removeEventListener('transitionend', endListenersRef.current[openId])
+              delete endListenersRef.current[openId]
+            }
+
+            const currentMax = getComputedStyle(otherWrapper).maxHeight
+            if (currentMax === 'none') otherWrapper.style.maxHeight = `${otherInner.scrollHeight}px`
+            otherWrapper.style.opacity = '1'
+            otherInner.style.transform = 'translateY(-8px)'
+            otherInner.style.opacity = '0'
+            void otherWrapper.offsetHeight
+
+            requestAnimationFrame(() => {
+              otherWrapper.style.transition = 'max-height 260ms cubic-bezier(.2,.85,.2,1), opacity 200ms ease'
+              otherWrapper.style.maxHeight = '0px'
+              otherWrapper.style.opacity = '0'
+            })
+
+            const onEndClose = (e) => {
+              if (e.propertyName === 'max-height') {
+                otherWrapper.removeEventListener('transitionend', onEndClose)
+                if (endListenersRef.current[openId] === onEndClose) delete endListenersRef.current[openId]
+              }
+            }
+            endListenersRef.current[openId] = onEndClose
+            otherWrapper.addEventListener('transitionend', onEndClose)
+          }
+        }
+      })
+
+      if (endListenersRef.current[id]) {
+        wrapper.removeEventListener('transitionend', endListenersRef.current[id])
+        delete endListenersRef.current[id]
+      }
+
+      wrapper.style.transition = 'none'
+      wrapper.style.maxHeight = '0px'
+      wrapper.style.opacity = '0'
+      inner.style.transform = 'translateY(-8px)'
+      inner.style.opacity = '0'
+      void wrapper.offsetHeight
+
+      setOpenIds([id])
+
+      requestAnimationFrame(() => {
+        const h = inner.scrollHeight
+        wrapper.style.transition = 'max-height 320ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease'
+        wrapper.style.maxHeight = `${h}px`
+        wrapper.style.opacity = '1'
+        inner.style.transform = 'translateY(0)'
+        inner.style.opacity = '1'
+
+        const onEnd = (e) => {
+          if (e.propertyName === 'max-height') {
+            wrapper.style.maxHeight = 'none'
+            wrapper.removeEventListener('transitionend', onEnd)
+            if (endListenersRef.current[id] === onEnd) delete endListenersRef.current[id]
+          }
+        }
+        endListenersRef.current[id] = onEnd
+        wrapper.addEventListener('transitionend', onEnd)
+      })
+    } else {
+      if (endListenersRef.current[id]) {
+        wrapper.removeEventListener('transitionend', endListenersRef.current[id])
+        delete endListenersRef.current[id]
+      }
+
+      const currentMax = getComputedStyle(wrapper).maxHeight
+      if (currentMax === 'none') wrapper.style.maxHeight = `${inner.scrollHeight}px`
+      wrapper.style.opacity = '1'
+      inner.style.transform = 'translateY(-8px)'
+      inner.style.opacity = '0'
+      void wrapper.offsetHeight
+
+      requestAnimationFrame(() => {
+        wrapper.style.transition = 'max-height 260ms cubic-bezier(.2,.85,.2,1), opacity 200ms ease'
+        wrapper.style.maxHeight = '0px'
+        wrapper.style.opacity = '0'
+      })
+
+      const onEndClose = (e) => {
+        if (e.propertyName === 'max-height') {
+          wrapper.removeEventListener('transitionend', onEndClose)
+          if (endListenersRef.current[id] === onEndClose) delete endListenersRef.current[id]
+          setOpenIds([])
+        }
+      }
+      endListenersRef.current[id] = onEndClose
+      wrapper.addEventListener('transitionend', onEndClose)
+    }
+  }
+
   // Handle delete
   const handleDelete = async (id, type) => {
     if (window.confirm(`คุณต้องการลบ${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}นี้ใช่หรือไม่?`)) {
@@ -993,7 +1134,8 @@ function MappingAndEvents() {
         } else {
           await deleteEvent(id)
         }
-        alert('ลบสำเร็จ!')
+        // Close the detail if it was open
+        setOpenIds(prev => prev.filter(openId => openId !== id))
       } catch (error) {
         console.error('Error deleting:', error)
         alert('เกิดข้อผิดพลาดในการลบ')
@@ -1117,19 +1259,23 @@ function MappingAndEvents() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
-      {/* Help Modal */}
-      {showHelpModal && (
+      {/* Create Modal */}
+      {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                วิธีใช้งาน
+              <h2 className="text-xl font-bold text-gray-800">
+                {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
               </h2>
               <button
-                onClick={() => setShowHelpModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false)
+                  setCreateType(null)
+                  setNewMarkerPosition(null)
+                  setSearchMarkerPosition(null)
+                  setSearchMarkerName('')
+                }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1702,6 +1848,7 @@ function MappingAndEvents() {
               )}
 
               {filteredItems.map((item) => {
+                const isOpen = openIds.includes(item.id)
                 const isLocation = item.type === 'location'
                 
                 return (
@@ -1790,6 +1937,109 @@ function MappingAndEvents() {
                           <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                       </button>
+                    </div>
+
+                    {/* Details Section (Collapsible) */}
+                    <div
+                      ref={el => {
+                        if (el && !el.dataset.attInit) {
+                          el.style.overflow = 'hidden'
+                          el.style.maxHeight = '0px'
+                          el.style.opacity = '0'
+                          el.style.transition = 'max-height 320ms cubic-bezier(.4,0,.2,1), opacity 220ms ease'
+                          el.dataset.attInit = '1'
+                        }
+                        wrapperRefs.current[item.id] = el
+                      }}
+                      className="mt-3"
+                    >
+                      <div
+                        ref={el => {
+                          if (el && !el.dataset.attInnerInit) {
+                            el.style.transform = 'translateY(-6px)'
+                            el.style.opacity = '0'
+                            el.style.transition = 'transform 260ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease'
+                            el.dataset.attInnerInit = '1'
+                          }
+                          innerRefs.current[item.id] = el
+                        }}
+                        className="bg-white rounded-lg p-3 border border-gray-200 space-y-3"
+                      >
+                        {/* Coordinates/Location Info */}
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 mb-2 font-medium">
+                            {isLocation ? 'พิกัดที่ตั้ง' : 'ข้อมูลเพิ่มเติม'}
+                          </p>
+                          {isLocation ? (
+                            <div className="text-sm space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 text-xs">Lat:</span>
+                                <span className="text-gray-700 font-mono text-xs">{item.latitude}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 text-xs">Lng:</span>
+                                <span className="text-gray-700 font-mono text-xs">{item.longitude}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 text-xs">สถานที่:</span>
+                                <span className="text-gray-700 text-xs">{item.locationName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 text-xs">วันที่:</span>
+                                <span className="text-gray-700 text-xs">{item.date}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500 text-xs">พิกัด:</span>
+                                <span className="text-gray-700 font-mono text-xs">{item.latitude}, {item.longitude}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* View on Map Button */}
+                        <button
+                          onClick={() => {
+                            const mapElement = document.querySelector('.leaflet-container')
+                            if (mapElement && mapElement._leaflet_map) {
+                              const map = mapElement._leaflet_map
+                              const position = [item.latitude, item.longitude]
+                              
+                              // Get map container dimensions
+                              const container = map.getContainer()
+                              const containerWidth = container.offsetWidth
+                              
+                              // Calculate the visible map area (excluding right panel)
+                              const rightPanelWidth = 504 // 480px panel + 24px gap
+                              const visibleMapWidth = containerWidth - rightPanelWidth
+                              const visibleCenterX = visibleMapWidth / 2
+                              const containerCenterX = containerWidth / 2
+                              const offsetPixelsX = visibleCenterX - containerCenterX
+                              
+                              // Convert pixel offset to lat/lng offset at zoom 16
+                              const targetZoom = 16
+                              const markerPoint = map.project(position, targetZoom)
+                              const adjustedPoint = L.point(markerPoint.x - offsetPixelsX, markerPoint.y)
+                              const adjustedPosition = map.unproject(adjustedPoint, targetZoom)
+                              
+                              // Fly to adjusted position
+                              map.flyTo(adjustedPosition, targetZoom, { animate: true, duration: 1.0 })
+                            }
+                          }}
+                          className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                            isLocation
+                              ? 'bg-green-100 hover:bg-green-200 text-green-700'
+                              : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                          }`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                          ดูบนแผนที่
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )

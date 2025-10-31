@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { usersData } from '../../../data/usersData';
+import React, { useState, useEffect, useRef } from 'react';
 
 // --- Toast Notification Component ---
 const Toast = ({ message, type, onClose }) => {
@@ -62,79 +61,29 @@ const Toast = ({ message, type, onClose }) => {
     );
 };
 
-
-const LineIcon = ({ className = 'block w-6 h-6', ...props }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        preserveAspectRatio="xMidYMid meet"
-        fill="none"
-        stroke="currentColor"
-        className={className}
-        aria-hidden="true"
-        focusable="false"
-        style={{ display: 'block', verticalAlign: 'middle' }}
-        {...props}
-    >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9h8m-8 3h4" />
-    </svg>
-);
-
-const SmsIcon = ({ className = 'block w-6 h-6', ...props }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        preserveAspectRatio="xMidYMid meet"
-        fill="none"
-        stroke="currentColor"
-        className={className}
-        aria-hidden="true"
-        focusable="false"
-        style={{ display: 'block', verticalAlign: 'middle' }}
-        {...props}
-    >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-    </svg>
-);
-
-const EmailIcon = ({ className = 'block w-6 h-6', ...props }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        preserveAspectRatio="xMidYMid meet"
-        fill="none"
-        stroke="currentColor"
-        className={className}
-        aria-hidden="true"
-        focusable="false"
-        style={{ display: 'block', verticalAlign: 'middle' }}
-        {...props}
-    >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-    </svg>
-);
-
 // --- Modal สำหรับดูรายละเอียดประวัติการแจ้งเตือน ---
-const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) => {
+const HistoryDetailModal = ({ notification, onClose }) => {
+    const recipientOptions = [
+        { value: 'all', label: 'ทั้งหมด' },
+        { value: 'managers', label: 'หัวหน้า' },
+        { value: 'hr', label: 'HR' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'marketing', label: 'Marketing' },
+        { value: 'finance', label: 'Finance' },
+    ];
+
     const getRecipientText = () => {
         if (notification.recipients.includes('all')) return 'ทั้งหมด';
         return notification.recipients
-            .map(value => recipientOptions.find(opt => opt.value === value)?.label || value)
+            .map(value => recipientOptions.find(opt => opt.value === value)?.label)
             .join(', ');
     };
 
     const getChannelIcons = () => {
         const channels = [];
-        if (notification.channels.line) channels.push({ name: 'LINE', icon: <LineIcon className="w-5 h-5" />, color: 'bg-green-500' });
-        if (notification.channels.sms) channels.push({ name: 'SMS', icon: <SmsIcon className="w-5 h-5" />, color: 'bg-blue-500' });
-        if (notification.channels.email) channels.push({ name: 'Email', icon: <EmailIcon className="w-5 h-5" />, color: 'bg-red-500' });
+        if (notification.channels.line) channels.push({ name: 'LINE', icon: '💬', color: 'bg-green-500' });
+        if (notification.channels.sms) channels.push({ name: 'SMS', icon: '📱', color: 'bg-blue-500' });
+        if (notification.channels.email) channels.push({ name: 'Email', icon: '📧', color: 'bg-red-500' });
         return channels;
     };
 
@@ -219,19 +168,28 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
 };
 
 // --- Modal สำหรับยืนยันการส่ง ---
-const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions = [] }) => {
+const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
+    const recipientOptions = [
+        { value: 'all', label: 'ทั้งหมด' },
+        { value: 'managers', label: 'หัวหน้า' },
+        { value: 'hr', label: 'HR' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'marketing', label: 'Marketing' },
+        { value: 'finance', label: 'Finance' },
+    ];
+
     const getRecipientText = () => {
         if (data.recipientGroups.includes('all')) return 'ทั้งหมด';
         return data.recipientGroups
-            .map(value => recipientOptions.find(opt => opt.value === value)?.label || value)
+            .map(value => recipientOptions.find(opt => opt.value === value)?.label)
             .join(', ');
     };
 
     const getSelectedChannels = () => {
         const selected = [];
-        if (channels.line) selected.push({ name: 'LINE', icon: <LineIcon className="inline-block w-4 h-4 mr-1" /> });
-        if (channels.sms) selected.push({ name: 'SMS', icon: <SmsIcon className="inline-block w-4 h-4 mr-1" /> });
-        if (channels.email) selected.push({ name: 'Email', icon: <EmailIcon className="inline-block w-4 h-4 mr-1" /> });
+        if (channels.line) selected.push('LINE');
+        if (channels.sms) selected.push('SMS');
+        if (channels.email) selected.push('Email');
         return selected;
     };
 
@@ -250,7 +208,7 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions
                             <div>
                                 <p className="font-semibold text-blue-800">คุณกำลังจะส่งแจ้งเตือนไปยัง</p>
                                 <p className="mt-1 text-blue-700"><strong>{getRecipientText()}</strong></p>
-                                <p className="mt-2 text-sm text-blue-600">ผ่านช่องทาง: <strong>{getSelectedChannels().map(c => <span key={c.name} className="inline-flex items-center gap-1 mr-2">{c.icon}{c.name}</span>)}</strong></p>
+                                <p className="mt-2 text-sm text-blue-600">ผ่านช่องทาง: <strong>{getSelectedChannels().join(', ')}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -301,10 +259,10 @@ const SuccessModal = ({ onClose }) => {
 const NotificationHistoryCard = ({ notification, onClick }) => {
     const getChannelIcons = () => {
         const icons = [];
-        if (notification.channels.line) icons.push(<div key="line" className="text-green-500"><LineIcon className="w-6 h-6" /></div>);
-        if (notification.channels.sms) icons.push(<div key="sms" className="text-blue-500"><SmsIcon className="w-6 h-6" /></div>);
-        if (notification.channels.email) icons.push(<div key="email" className="text-red-500"><EmailIcon className="w-6 h-6" /></div>);
-        return icons;
+        if (notification.channels.line) icons.push('💬');
+        if (notification.channels.sms) icons.push('📱');
+        if (notification.channels.email) icons.push('📧');
+        return icons.join(' ');
     };
 
     return (
@@ -319,9 +277,7 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">{notification.timestamp}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    {getChannelIcons().map((ic, i) => <div key={i}>{ic}</div>)}
-                </div>
+                <div className="text-2xl">{getChannelIcons()}</div>
             </div>
             <p className="mb-3 text-sm text-gray-600 line-clamp-2">{notification.message}</p>
             <div className="flex items-center justify-between">
@@ -339,7 +295,7 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
     );
 };
 
-
+// --- คอมโพเนนต์หลักของหน้าจอ ---
 function GroupNotificationScreen() {
     const [title, setTitle] = useState('');
     const [recipientGroups, setRecipientGroups] = useState([]);
@@ -352,76 +308,7 @@ function GroupNotificationScreen() {
     const [notificationHistory, setNotificationHistory] = useState([]);
     const [toast, setToast] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
-    const [recipientSearch, setRecipientSearch] = useState('');
     const dropdownRef = useRef(null);
-
-    // สร้าง groupOptions และ userOptions แยกกัน และรวมเป็น recipientOptions
-    const groupOptions = useMemo(() => {
-        const byDept = usersData.reduce((acc, u) => {
-            const d = u.department || 'อื่นๆ';
-            acc[d] = (acc[d] || 0) + 1;
-            return acc;
-        }, {});
-
-        const allCount = usersData.length;
-        const managersCount = usersData.filter(u => u.role === 'manager').length;
-        const adminCount = usersData.filter(u => u.role === 'admin' || u.role === 'superadmin').length;
-        const hrCount = byDept['HR'] || 0;
-        const marketingCount = byDept['Marketing'] || 0;
-        const financeCount = byDept['Finance'] || 0;
-
-        return [
-            { value: 'all', label: 'ทั้งหมด', count: allCount },
-            { value: 'managers', label: 'หัวหน้าทีม', count: managersCount },
-            { value: 'hr', label: 'ฝ่ายบุคคล', count: hrCount },
-            { value: 'admin', label: 'ผู้ดูแลระบบ', count: adminCount },
-            { value: 'marketing', label: 'ฝ่ายการตลาด', count: marketingCount },
-            { value: 'finance', label: 'ฝ่ายการเงิน', count: financeCount },
-        ];
-    }, [usersData]);
-
-    const userOptions = useMemo(() => {
-        return usersData.map(u => ({
-            value: `user:${u.employeeId || u.username || u.id}`,
-            label: `${u.name}${u.position ? ' — ' + u.position : (u.department ? ' — ' + u.department : '')}`,
-            count: 1,
-            meta: { id: u.employeeId || u.username || u.id, name: u.name || '', email: u.email || '', phone: u.phone || '' }
-        }));
-    }, [usersData]);
-
-    // รวมไว้ด้วยเพื่อโค้ดเดิมที่ใช้ recipientOptions.find(...) ยังคงทำงานได้
-    const recipientOptions = useMemo(() => [...groupOptions, ...userOptions], [groupOptions, userOptions]);
-
-    // ฟังก์ชันลบรายชื่อที่เลือก (ใช้ในชิป)
-    const removeRecipient = (value) => {
-        setRecipientGroups(prev => prev.filter(v => v !== value));
-    };
-
-    // กรอง options:
-    // - เมื่อช่องค้นหา ว่าง: แสดงเฉพาะกลุ่ม (role/group) ตามที่ต้องการ
-    // - เมื่อมีคำค้นหา: แสดงทั้งกลุ่มที่ตรงและผู้ใช้ (รายชื่อ) ที่ตรงกับคำค้นหา
-    const filteredRecipientOptions = (() => {
-        const q = recipientSearch.trim().toLowerCase();
-        if (!q) {
-            return groupOptions;
-        }
-
-        const matchedGroups = groupOptions.filter(opt =>
-            (opt.label && opt.label.toLowerCase().includes(q)) ||
-            (String(opt.value).toLowerCase().includes(q))
-        );
-
-        const matchedUsers = userOptions.filter(opt =>
-            (opt.label && opt.label.toLowerCase().includes(q)) ||
-            (opt.meta && opt.meta.name && opt.meta.name.toLowerCase().includes(q)) ||
-            (opt.meta && opt.meta.email && opt.meta.email.toLowerCase().includes(q)) ||
-            (opt.meta && opt.meta.phone && opt.meta.phone.toLowerCase().includes(q)) ||
-            String(opt.value).toLowerCase().includes(q)
-        );
-
-        // แสดงกลุ่มก่อน แล้วตามด้วยรายบุคคล
-        return [...matchedGroups, ...matchedUsers];
-    })();
 
     // โหลดประวัติการแจ้งเตือนจาก localStorage
     useEffect(() => {
@@ -440,28 +327,24 @@ function GroupNotificationScreen() {
         setToast(null);
     };
 
-    // คำนวณจำนวนผู้รับทั้งหมด (รองรับ group + user:<id>)
+    const recipientOptions = [
+        { value: 'all', label: 'ทั้งหมด', count: 150 },
+        { value: 'managers', label: 'หัวหน้าทีม', count: 25 },
+        { value: 'hr', label: 'ฝ่ายบุคคล', count: 8 },
+        { value: 'admin', label: 'ผู้ดูแลระบบ', count: 5 },
+        { value: 'marketing', label: 'ฝ่ายการตลาด', count: 20 },
+        { value: 'finance', label: 'ฝ่ายการเงิน', count: 12 },
+    ];
+
+    // คำนวณจำนวนผู้รับทั้งหมด
     const calculateRecipientCount = () => {
         if (recipientGroups.includes('all')) {
             return recipientOptions.find(opt => opt.value === 'all')?.count || 0;
         }
-
-        const uniqueUsers = new Set();
-        let totalFromGroups = 0;
-
-        recipientGroups.forEach(group => {
-            if (typeof group === 'string' && group.startsWith('user:')) {
-                uniqueUsers.add(group);
-            } else {
-                const opt = recipientOptions.find(o => o.value === group);
-                if (opt) {
-                    // ถ้าเป็นกลุ่ม (not user:...) ให้นับตาม opt.count
-                    totalFromGroups += opt.count || 0;
-                }
-            }
-        });
-
-        return totalFromGroups + uniqueUsers.size;
+        return recipientGroups.reduce((total, group) => {
+            const option = recipientOptions.find(opt => opt.value === group);
+            return total + (option?.count || 0);
+        }, 0);
     };
 
     const handleRecipientChange = (value) => {
@@ -500,30 +383,40 @@ function GroupNotificationScreen() {
         const errors = {};
         let isValid = true;
 
+        // ตรวจสอบหัวข้อ
         if (!title.trim()) {
             errors.title = true;
             showToast('กรุณากรอกหัวข้อการแจ้งเตือน', 'error');
             isValid = false;
-        } else if (recipientGroups.length === 0) {
+        }
+        // ตรวจสอบผู้รับ
+        else if (recipientGroups.length === 0) {
             errors.recipients = true;
             showToast('กรุณาเลือกกลุ่มผู้รับอย่างน้อย 1 กลุ่ม', 'error');
             isValid = false;
-        } else if (!message.trim()) {
+        }
+        // ตรวจสอบข้อความ
+        else if (!message.trim()) {
             errors.message = true;
             showToast('กรุณากรอกข้อความที่ต้องการส่ง', 'error');
             isValid = false;
-        } else if (message.trim().length < 10) {
+        }
+        // ตรวจสอบข้อความสั้นเกินไป
+        else if (message.trim().length < 10) {
             errors.message = true;
             showToast('ข้อความควรมีความยาวอย่างน้อย 10 ตัวอักษร', 'warning');
             isValid = false;
-        } else if (!hasSelectedChannel()) {
+        }
+        // ตรวจสอบช่องทางการส่ง
+        else if (!hasSelectedChannel()) {
             errors.channels = true;
             showToast('กรุณาเลือกช่องทางการส่งอย่างน้อย 1 ช่องทาง', 'error');
             isValid = false;
         }
 
         setFieldErrors(errors);
-
+        
+        // ล้าง error หลัง 3 วินาที
         if (!isValid) {
             setTimeout(() => setFieldErrors({}), 3000);
         }
@@ -539,6 +432,7 @@ function GroupNotificationScreen() {
     const confirmSendNotification = async () => {
         setShowConfirmModal(false);
 
+        // สร้างข้อมูลการแจ้งเตือน
         const notification = {
             id: Date.now(),
             title: title.trim(),
@@ -556,22 +450,26 @@ function GroupNotificationScreen() {
             status: 'success'
         };
 
+        // บันทึกประวัติ
         const updatedHistory = [notification, ...notificationHistory];
         setNotificationHistory(updatedHistory);
         localStorage.setItem('notificationHistory', JSON.stringify(updatedHistory));
 
+        // จำลองการส่งผ่าน LINE API, SMS Gateway, Email Service
         try {
             if (sendChannels.line) {
                 console.log('📤 Sending to LINE:', {
                     recipients: recipientGroups,
                     message: `${title}\n\n${message}`
                 });
+                // await sendLineNotification(notification);
             }
             if (sendChannels.sms) {
                 console.log('📤 Sending SMS:', {
                     recipients: recipientGroups,
                     message: `${title}\n${message}`
                 });
+                // await sendSMSNotification(notification);
             }
             if (sendChannels.email) {
                 console.log('📤 Sending Email:', {
@@ -579,11 +477,13 @@ function GroupNotificationScreen() {
                     subject: title,
                     body: message
                 });
+                // await sendEmailNotification(notification);
             }
         } catch (error) {
             console.error('Error sending notification:', error);
         }
 
+        // แสดง success modal และรีเซ็ตฟอร์ม
         setShowSuccessModal(true);
         setTimeout(() => {
             setTitle('');
@@ -684,96 +584,65 @@ function GroupNotificationScreen() {
                                         เลือกผู้รับ <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative" ref={dropdownRef}>
-                                        <div
-                                            role="button"
-                                            tabIndex={0}
+                                        <button
+                                            type="button"
                                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                            className={`flex items-center justify-between w-full px-4 py-3 text-left bg-white border-2 rounded-xl transition-all cursor-pointer ${
+                                            className={`flex items-center justify-between w-full px-4 py-3 text-left bg-white border-2 rounded-xl transition-all ${
                                                 fieldErrors.recipients
                                                     ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake'
                                                     : 'border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
                                             }`}
                                         >
-                                            <div className="flex-1 min-w-0">
-                                                {recipientGroups.length === 0 ? (
-                                                    <span className="text-gray-400">เลือกผู้รับ</span>
-                                                ) : (
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        {recipientGroups.map(val => {
-                                                            const opt = recipientOptions.find(o => o.value === val);
-                                                            const label = opt?.label || val;
-                                                            return (
-                                                                <span key={val} className="flex items-center gap-2 px-2 py-1 text-sm bg-gray-100 rounded-full">
-                                                                    <span className="truncate max-w-[180px]">{label}</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={(e) => { e.stopPropagation(); removeRecipient(val); }}
-                                                                        className="flex items-center justify-center w-5 h-5 text-gray-500 rounded-full hover:bg-gray-200"
-                                                                        aria-label="ลบ"
-                                                                    >
-                                                                        &times;
-                                                                    </button>
-                                                                </span>
-                                                            );
-                                                        })}
-                                                        <span className="ml-1 text-sm text-gray-500">({calculateRecipientCount()} คน)</span>
-                                                    </div>
+                                            <span className={recipientGroups.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
+                                                {getDropdownButtonText()}
+                                                {recipientGroups.length > 0 && (
+                                                    <span className="ml-2 text-sm text-gray-500">
+                                                        ({calculateRecipientCount()} คน)
+                                                    </span>
                                                 )}
-                                            </div>
+                                            </span>
                                             <svg className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                             </svg>
-                                        </div>
-                                         {fieldErrors.recipients && (
-                                             <p className="flex items-center gap-1 mt-1 text-xs text-red-600">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                 </svg>
-                                                 กรุณาเลือกผู้รับ
-                                             </p>
-                                         )}
-                                         {isDropdownOpen && (
-                                             <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 shadow-xl rounded-xl">
-                                                 <div className="p-3 border-b">
-                                                     <input
-                                                         type="text"
-                                                         value={recipientSearch}
-                                                         onChange={(e) => setRecipientSearch(e.target.value)}
-                                                         placeholder="ค้นหาผู้รับ..."
-                                                         className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                     />
-                                                 </div>
-                                                 <ul className="p-2 space-y-1 overflow-y-auto max-h-64">
-                                                     {filteredRecipientOptions.length === 0 && (
-                                                         <li className="p-3 text-sm text-gray-500">ไม่พบผลลัพธ์</li>
-                                                     )}
-                                                     {filteredRecipientOptions.map(option => (
-                                                         <li key={option.value}>
-                                                             <label className="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer hover:bg-blue-50 group">
-                                                                 <div className="flex items-center">
-                                                                     <input
-                                                                         type="checkbox"
-                                                                         checked={recipientGroups.includes(option.value)}
-                                                                         onChange={() => {
-                                                                             handleRecipientChange(option.value);
-                                                                             if (fieldErrors.recipients) setFieldErrors(prev => ({ ...prev, recipients: false }));
-                                                                         }}
-                                                                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                                     />
-                                                                     <span className="ml-3 font-medium text-gray-800 group-hover:text-blue-600">
-                                                                         {option.label}
-                                                                     </span>
-                                                                 </div>
-                                                                 <span className="px-2 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
-                                                                     {option.count} คน
-                                                                 </span>
-                                                             </label>
-                                                         </li>
-                                                     ))}
-                                                 </ul>
-                                             </div>
-                                         )}
-                                     </div>
+                                        </button>
+                                        {fieldErrors.recipients && (
+                                            <p className="flex items-center gap-1 mt-1 text-xs text-red-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                กรุณาเลือกผู้รับ
+                                            </p>
+                                        )}
+                                        {isDropdownOpen && (
+                                            <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 shadow-xl rounded-xl">
+                                                <ul className="p-2 space-y-1 overflow-y-auto max-h-64">
+                                                    {recipientOptions.map(option => (
+                                                        <li key={option.value}>
+                                                            <label className="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer hover:bg-blue-50 group">
+                                                                <div className="flex items-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={recipientGroups.includes(option.value)}
+                                                                        onChange={() => {
+                                                                            handleRecipientChange(option.value);
+                                                                            if (fieldErrors.recipients) setFieldErrors(prev => ({ ...prev, recipients: false }));
+                                                                        }}
+                                                                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                    />
+                                                                    <span className="ml-3 font-medium text-gray-800 group-hover:text-blue-600">
+                                                                        {option.label}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="px-2 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
+                                                                    {option.count} คน
+                                                                </span>
+                                                            </label>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* ข้อความ */}
@@ -840,9 +709,7 @@ function GroupNotificationScreen() {
                                                     : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <div className={`${sendChannels.line ? 'text-green-700' : 'text-gray-700'} inline-flex items-center justify-center w-8 h-8`}>
-                                                <LineIcon className="w-6 h-6" />
-                                            </div>
+                                            <span className="text-3xl">💬</span>
                                             <span className={`font-semibold ${sendChannels.line ? 'text-green-700' : 'text-gray-700'}`}>
                                                 LINE
                                             </span>
@@ -868,9 +735,7 @@ function GroupNotificationScreen() {
                                                     : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <div className={`${sendChannels.sms ? 'text-blue-700' : 'text-gray-700'} inline-flex items-center justify-center w-8 h-8`}>
-                                                <SmsIcon className="w-6 h-6" />
-                                            </div>
+                                            <span className="text-3xl">📱</span>
                                             <span className={`font-semibold ${sendChannels.sms ? 'text-blue-700' : 'text-gray-700'}`}>
                                                 SMS
                                             </span>
@@ -896,9 +761,7 @@ function GroupNotificationScreen() {
                                                     : 'border-gray-200 hover:border-red-300 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <div className={`${sendChannels.email ? 'text-red-700' : 'text-gray-700'} inline-flex items-center justify-center w-8 h-8`}>
-                                                <EmailIcon className="w-6 h-6" />
-                                            </div>
+                                            <span className="text-3xl">📧</span>
                                             <span className={`font-semibold ${sendChannels.email ? 'text-red-700' : 'text-gray-700'}`}>
                                                 Email
                                             </span>
@@ -972,7 +835,6 @@ function GroupNotificationScreen() {
                     channels={sendChannels}
                     onConfirm={confirmSendNotification}
                     onClose={() => setShowConfirmModal(false)}
-                    recipientOptions={recipientOptions}
                 />
             )}
 
@@ -984,7 +846,6 @@ function GroupNotificationScreen() {
                 <HistoryDetailModal
                     notification={selectedHistory}
                     onClose={() => setSelectedHistory(null)}
-                    recipientOptions={recipientOptions}
                 />
             )}
 
