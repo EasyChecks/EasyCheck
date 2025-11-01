@@ -208,7 +208,7 @@ function SearchMarker({ position, name, onClick }) {
       <Popup autoClose={false} closeOnClick={false}>
         <div className="p-2">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <div className="w-3 h-3 rounded-full bg-gray-600"></div>
             <h3 className="font-bold text-gray-800">{name === 'ตำแหน่งใหม่' ? 'ตำแหน่งที่เลือก' : 'ผลการค้นหา'}</h3>
           </div>
           <p className="text-xs text-gray-600 mb-2">{name}</p>
@@ -218,7 +218,7 @@ function SearchMarker({ position, name, onClick }) {
           </div>
           <button
             onClick={onClick}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg text-xs font-medium transition-colors"
+            className="w-full bg-brand-primary hover:bg-gray-700 text-white px-3 py-2.5 rounded-lg text-xs font-medium transition-colors"
           >
             สร้างพื้นที่/กิจกรรมที่นี่
           </button>
@@ -269,14 +269,14 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
       </label>
       
       <div 
-        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus-within:border-blue-500 cursor-pointer min-h-[42px] flex flex-wrap gap-2 items-center"
+        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus-within:border-brand-primary cursor-pointer min-h-[42px] flex flex-wrap gap-2 items-center"
         onClick={() => setIsOpen(!isOpen)}
       >
         {selected.length === 0 ? (
           <span className="text-gray-400 text-sm">{placeholder}</span>
         ) : (
           selectedLabels.map((label, idx) => (
-            <span key={idx} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+            <span key={idx} className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
               {label}
               <button
                 type="button"
@@ -285,7 +285,7 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
                   const opt = options.find(o => o.label === label)
                   if (opt) toggleOption(opt.value)
                 }}
-                className="hover:bg-blue-200 rounded-full"
+                className="hover:bg-orange-200 rounded-full"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -297,14 +297,14 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
       </div>
 
       {isOpen && (
-        <div className="absolute z-[2100] w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-hidden">
+        <div className="absolute z-[2100] w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-sm max-h-64 overflow-hidden">
           <div className="p-2 border-b border-gray-200">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="ค้นหา..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brand-primary focus:outline-none"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -315,8 +315,8 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
               filtered.map(opt => (
                 <div
                   key={opt.value}
-                  className={`px-4 py-2 cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
-                    selected.includes(opt.value) ? 'bg-blue-100' : ''
+                  className={`px-4 py-2 cursor-pointer hover:bg-orange-50 flex items-center gap-2 ${
+                    selected.includes(opt.value) ? 'bg-orange-100' : ''
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -327,7 +327,7 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
                     type="checkbox"
                     checked={selected.includes(opt.value)}
                     onChange={() => {}}
-                    className="w-4 h-4 text-blue-600"
+                    className="w-4 h-4 text-brand-primary"
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900">{opt.label}</div>
@@ -489,7 +489,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
           placeholder={`ระบุชื่อ${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}`}
           required
         />
@@ -503,7 +503,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors resize-none"
           rows="3"
           placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
         />
@@ -530,7 +530,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
             max="1000"
             value={formData.radius}
             onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 100 })}
-            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center font-medium"
+            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none text-center font-medium"
           />
         </div>
         <p className="text-xs text-gray-500 mt-1">ระยะทางที่อนุญาตให้เช็คอินได้จากจุดนี้</p>
@@ -547,7 +547,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
               type="text"
               value={formData.locationName}
               onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
               placeholder="เช่น โรงแรม ABC, งานเทศกาล XYZ"
             />
           </div>
@@ -586,7 +586,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                     setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -638,7 +638,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                     setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -666,7 +666,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -678,7 +678,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -735,9 +735,12 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
               placeholder="เลือกตำแหน่ง..."
             />
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-800">
-                <strong>💡 หมายเหตุ:</strong> ผู้ใช้จะเห็นกิจกรรมนี้หากตรงกับเงื่อนไข<strong>ใดเงื่อนไขหนึ่ง</strong>ที่กำหนด
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <p className="text-xs text-orange-800 flex items-center gap-2">
+                <svg className="w-4 h-4 fill-brand-primary flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <span><strong>หมายเหตุ:</strong> ผู้ใช้จะเห็นกิจกรรมนี้หากตรงกับเงื่อนไข<strong>ใดเงื่อนไขหนึ่ง</strong>ที่กำหนด</span>
               </p>
             </div>
           </div>
@@ -757,8 +760,8 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
           type="submit"
           className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
             type === 'location'
-              ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-blue-500 hover:bg-blue-600'
+              ? 'bg-gray-600 hover:hover:bg-gray-700'
+              : 'bg-brand-primary hover:bg-gray-700'
           }`}
         >
           สร้าง{type === 'location' ? 'พื้นที่' : 'กิจกรรม'}
@@ -896,7 +899,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
           required
         />
       </div>
@@ -908,7 +911,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors resize-none"
           rows="3"
         />
       </div>
@@ -933,7 +936,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
             max="1000"
             value={formData.radius}
             onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 100 })}
-            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center font-medium"
+            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none text-center font-medium"
           />
         </div>
       </div>
@@ -948,7 +951,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
               type="text"
               value={formData.locationName}
               onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
             />
           </div>
 
@@ -985,7 +988,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                     setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -1036,7 +1039,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                     setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -1064,7 +1067,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -1076,7 +1079,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -1090,7 +1093,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
               required
             >
               <option value="ongoing">● ดำเนินการ</option>
@@ -1164,8 +1167,8 @@ function EditForm({ type, item, onSubmit, onCancel }) {
           type="submit"
           className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
             type === 'location'
-              ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-blue-500 hover:bg-blue-600'
+              ? 'bg-gray-600 hover:hover:bg-gray-700'
+              : 'bg-brand-primary hover:bg-gray-700'
           }`}
         >
           บันทึก
@@ -1675,21 +1678,21 @@ function MappingAndEvents() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className="min-h-screen bg-[#FAFBFC]">
       {/* Detail Modal */}
       {showDetailModal && detailItem && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8">
+          <div className="bg-white rounded-2xl shadow-sm max-w-3xl w-full my-8">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 {detailItem.type === 'location' ? (
                   <>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-gray-600"></div>
                     รายละเอียดพื้นที่อนุญาต
                   </>
                 ) : (
                   <>
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-brand-primary"></div>
                     รายละเอียดกิจกรรม
                   </>
                 )}
@@ -1709,9 +1712,9 @@ function MappingAndEvents() {
 
             <div className="p-6 space-y-6 max-h-[calc(90vh-80px)] overflow-y-auto">
               {/* Basic Info */}
-              <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border-2 border-gray-100">
+              <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
                 <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   ข้อมูลพื้นฐาน
@@ -1727,9 +1730,9 @@ function MappingAndEvents() {
                       detailItem.status === 'active' || detailItem.status === 'ongoing'
                         ? detailItem.type === 'location'
                           ? 'bg-green-100 text-green-700'
-                          : 'bg-blue-100 text-blue-700'
+                          : 'bg-orange-100 text-orange-700'
                         : detailItem.status === 'upcoming'
-                        ? 'bg-purple-100 text-purple-700'
+                        ? 'bg-orange-50 text-orange-700'
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {detailItem.type === 'location' 
@@ -1761,9 +1764,9 @@ function MappingAndEvents() {
 
               {/* Date & Time Info (Events only) */}
               {detailItem.type === 'event' && (
-                <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-5 border-2 border-blue-100">
+                <div className="bg-orange-50 rounded-xl p-5 border-2 border-orange-100">
                   <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     วันที่และเวลา
@@ -1790,7 +1793,7 @@ function MappingAndEvents() {
               )}
 
               {/* Location Info */}
-              <div className="bg-gradient-to-br from-green-50 to-white rounded-xl p-5 border-2 border-green-100">
+              <div className="bg-green-50 rounded-xl p-5 border-2 border-green-100">
                 <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -1812,9 +1815,9 @@ function MappingAndEvents() {
 
               {/* Assignment Info (Events only) */}
               {detailItem.type === 'event' && (
-                <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl p-5 border-2 border-purple-100">
+                <div className="bg-orange-50 rounded-xl p-5 border-2 border-orange-100">
                   <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     ผู้รับผิดชอบ
@@ -1827,7 +1830,7 @@ function MappingAndEvents() {
                           {detailItem.assignedUsers.map(userId => {
                             const user = usersData.find(u => u.id === userId)
                             return user ? (
-                              <span key={userId} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                              <span key={userId} className="bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                                 {user.name}
                               </span>
                             ) : null
@@ -1840,7 +1843,7 @@ function MappingAndEvents() {
                         <p className="text-sm text-gray-500 mb-2">บทบาทที่ถูกมอบหมาย</p>
                         <div className="flex flex-wrap gap-2">
                           {detailItem.assignedRoles.map(role => (
-                            <span key={role} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                            <span key={role} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                               {role === 'user' ? 'User' : role === 'manager' ? 'Manager' : role}
                             </span>
                           ))}
@@ -1898,7 +1901,7 @@ function MappingAndEvents() {
                     setEditItem(detailItem)
                     setShowEditModal(true)
                   }}
-                  className="flex-1 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-gray-600 hover:hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
                 >
                   แก้ไข
                 </button>
@@ -1911,7 +1914,7 @@ function MappingAndEvents() {
       {/* Help Modal */}
       {showHelpModal && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-800">
@@ -1934,30 +1937,30 @@ function MappingAndEvents() {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+              <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">1</span>
+                  <span className="w-6 h-6 bg-brand-primary text-white rounded-full flex items-center justify-center text-sm">1</span>
                   การสร้างพื้นที่/กิจกรรมใหม่
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-brand-primary mt-1">•</span>
                     <span><strong>คลิกที่แผนที่</strong> เพื่อปักหมุดและสร้างพื้นที่/กิจกรรมใหม่</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-brand-primary mt-1">•</span>
                     <span><strong>ค้นหาสถานที่</strong> ด้วยช่องค้นหาบนแผนที่ แล้วคลิกผลลัพธ์</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-brand-primary mt-1">•</span>
                     <span>คลิกปุ่ม <strong>"สร้างพื้นที่/กิจกรรมที่นี่"</strong> ใน popup ที่ปรากฏ</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">2</span>
+                  <span className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm">2</span>
                   การจัดการรายการ
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
@@ -1976,30 +1979,32 @@ function MappingAndEvents() {
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+              <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
+                  <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
                   สัญลักษณ์บนแผนที่
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700 ml-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
                     <span><strong>หมุดสีเขียว</strong> = พื้นที่อนุญาตให้เช็คอิน</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
                     <span><strong>หมุดสีน้ำเงิน</strong> = กิจกรรมพิเศษ</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
                     <span><strong>หมุดสีแดง</strong> = ตำแหน่งที่กำลังเลือก</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm">💡</span>
+                  <svg className="w-6 h-6 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                  </svg>
                   เคล็ดลับ
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
@@ -2018,7 +2023,7 @@ function MappingAndEvents() {
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-gray-300">
+              <div className="bg-slate-50 rounded-xl p-4 border border-gray-300">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm">⌨️</span>
                   คีย์ลัด (Keyboard Shortcuts)
@@ -2042,7 +2047,7 @@ function MappingAndEvents() {
       {/* Edit Modal */}
       {showEditModal && editItem && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
+          <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full my-8">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
                 แก้ไข{editItem.type === 'location' ? 'พื้นที่อนุญาต' : 'กิจกรรม'}
@@ -2078,7 +2083,7 @@ function MappingAndEvents() {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
+          <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full my-8">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
@@ -2112,7 +2117,7 @@ function MappingAndEvents() {
                   </div>
                   <button
                     onClick={() => setCreateType('location')}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl"
+                    className="w-full bg-gray-600  hover: text-white px-6 py-4 rounded-xl font-medium transition-all shadow-sm hover:shadow-sm"
                   >
                     <div className="text-center">
                       <div className="font-bold text-lg mb-1">พื้นที่อนุญาต</div>
@@ -2121,7 +2126,7 @@ function MappingAndEvents() {
                   </button>
                   <button
                     onClick={() => setCreateType('event')}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl"
+                    className="w-full bg-brand-primary  hover: text-white px-6 py-4 rounded-xl font-medium transition-all shadow-sm hover:shadow-sm"
                   >
                     <div className="text-center">
                       <div className="font-bold text-lg mb-1">กิจกรรม</div>
@@ -2156,7 +2161,7 @@ function MappingAndEvents() {
           </div>
           <button
             onClick={() => setShowHelpModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors font-medium text-sm border border-blue-200"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-50 hover:bg-orange-100 text-brand-primary rounded-lg transition-colors font-medium text-sm border border-orange-200"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2170,7 +2175,7 @@ function MappingAndEvents() {
       <div className="px-6 py-6 max-w-full mx-auto">
         <div className="flex gap-6 h-[calc(100vh-180px)]">
           {/* Left Side - Map */}
-          <div className="flex-1 bg-white rounded-2xl shadow-lg overflow-hidden relative">
+          <div className="flex-1 bg-white rounded-2xl shadow-sm overflow-hidden relative">
             {/* Clear Search Marker Button - Top Left (if marker exists) */}
             {searchMarkerPosition && (
               <div className="absolute top-20 left-14 z-[1001] flex flex-col gap-2">
@@ -2179,7 +2184,7 @@ function MappingAndEvents() {
                     setSearchMarkerPosition(null)
                     setSearchMarkerName('')
                   }}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg shadow-lg font-medium text-xs transition-all flex items-center gap-2 border border-red-600"
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg shadow-sm font-medium text-xs transition-all flex items-center gap-2 border border-red-600"
                   title="ลบหมุดค้นหา"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -2188,7 +2193,7 @@ function MappingAndEvents() {
                   ลบหมุดค้นหา
                 </button>
                 {searchMarkerName && (
-                  <div className="bg-white rounded-lg shadow-lg px-3 py-2 border border-gray-200 max-w-[160px]">
+                  <div className="bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200 max-w-[160px]">
                     <p className="text-xs text-gray-500 mb-1 font-medium">ตำแหน่งปัจจุบัน</p>
                     <p className="text-xs text-gray-800 font-medium line-clamp-2">{searchMarkerName.split(',')[0]}</p>
                   </div>
@@ -2204,7 +2209,7 @@ function MappingAndEvents() {
                   value={mapSearchQuery}
                   onChange={(e) => setMapSearchQuery(e.target.value)}
                   placeholder="ค้นหาสถานที่บนแผนที่..."
-                  className="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-gray-200 rounded-xl shadow-lg focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                  className="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:border-brand-primary focus:outline-none transition-colors text-sm"
                 />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2217,7 +2222,7 @@ function MappingAndEvents() {
                 </svg>
                 {isSearchingMap && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-primary"></div>
                   </div>
                 )}
                 {mapSearchQuery && !isSearchingMap && (
@@ -2237,7 +2242,7 @@ function MappingAndEvents() {
 
               {/* Search Results Dropdown */}
               {mapSearchResults.length > 0 && (
-                <div className="mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-64 overflow-y-auto">
+                <div className="mt-2 bg-white rounded-lg shadow-sm border border-gray-200 max-h-64 overflow-y-auto">
                   {mapSearchResults.map((result, index) => (
                     <button
                       key={index}
@@ -2253,7 +2258,7 @@ function MappingAndEvents() {
                         setMapSearchQuery('')
                         setMapSearchResults([])
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      className="w-full text-left px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
                       <div className="font-medium text-sm text-gray-800">{result.formatted_name || result.display_name}</div>
                       <div className="text-xs text-gray-500 mt-1">
@@ -2269,7 +2274,7 @@ function MappingAndEvents() {
             <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
               <button
                 onClick={() => setMapType(mapType === 'default' ? 'satellite' : 'default')}
-                className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg font-medium text-sm transition-all flex items-center gap-2 border border-gray-200"
+                className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-sm font-medium text-sm transition-all flex items-center gap-2 border border-gray-200"
                 title={mapType === 'default' ? 'สลับเป็นมุมมองดาวเทียม' : 'สลับเป็นมุมมองแผนที่'}
               >
                 {mapType === 'default' ? (
@@ -2291,21 +2296,21 @@ function MappingAndEvents() {
               </button>
 
               {/* Stats Badge */}
-              <div className="bg-white rounded-lg shadow-lg p-3 border border-gray-200 min-w-[150px]">
+              <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-200 min-w-[150px]">
                 <div className="text-xs text-gray-500 mb-2 font-medium">หมุดทั้งหมด</div>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 bg-green-50 px-2 py-1.5 rounded-md">
-                    <span className="w-2.5 h-2.5 bg-green-500 rounded-full flex-shrink-0"></span>
+                    <span className="w-2.5 h-2.5 bg-gray-600 rounded-full flex-shrink-0"></span>
                     <div className="flex flex-col">
                       <span className="text-xs text-green-600 font-medium">พื้นที่อนุญาต</span>
                       <span className="text-lg font-bold text-green-700">{locations.length}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-blue-50 px-2 py-1.5 rounded-md">
-                    <span className="w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0"></span>
+                  <div className="flex items-center gap-2 bg-orange-50 px-2 py-1.5 rounded-md">
+                    <span className="w-2.5 h-2.5 bg-brand-primary rounded-full flex-shrink-0"></span>
                     <div className="flex flex-col">
-                      <span className="text-xs text-blue-600 font-medium">กิจกรรม</span>
-                      <span className="text-lg font-bold text-blue-700">{events.length}</span>
+                      <span className="text-xs text-brand-primary font-medium">กิจกรรม</span>
+                      <span className="text-lg font-bold text-orange-700">{events.length}</span>
                     </div>
                   </div>
                 </div>
@@ -2394,9 +2399,9 @@ function MappingAndEvents() {
                         if (itemElement) {
                           itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
                           // Add highlight effect
-                          itemElement.classList.add('ring-4', 'ring-blue-400', 'ring-opacity-50')
+                          itemElement.classList.add('ring-4', 'ring-orange-400', 'ring-opacity-50')
                           setTimeout(() => {
-                            itemElement.classList.remove('ring-4', 'ring-blue-400', 'ring-opacity-50')
+                            itemElement.classList.remove('ring-4', 'ring-orange-400', 'ring-opacity-50')
                           }, 2000)
                         }
                       }
@@ -2417,7 +2422,7 @@ function MappingAndEvents() {
           </div>
 
           {/* Right Panel - List View */}
-          <div className="w-[480px] bg-white rounded-2xl shadow-lg flex flex-col overflow-hidden border border-gray-200">
+          <div className="w-[480px] bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden border border-gray-200">
             {/* Header with Search and Tabs */}
             <div className="p-4 border-b border-gray-200 space-y-3">
               {/* Search Box */}
@@ -2427,7 +2432,7 @@ function MappingAndEvents() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="ค้นหาพื้นที่หรือกิจกรรม..."
-                  className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                  className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-xl focus:border-brand-primary focus:outline-none transition-colors text-sm"
                 />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2456,7 +2461,7 @@ function MappingAndEvents() {
                   onClick={() => setActiveTab('all')}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'all'
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-brand-primary text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -2466,7 +2471,7 @@ function MappingAndEvents() {
                   onClick={() => setActiveTab('locations')}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'locations'
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-gray-600 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -2476,7 +2481,7 @@ function MappingAndEvents() {
                   onClick={() => setActiveTab('events')}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'events'
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-brand-primary text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -2506,8 +2511,8 @@ function MappingAndEvents() {
                     data-item-id={`${item.type}-${item.id}`}
                     className={`relative rounded-xl p-4 border-2 shadow-sm transition-all duration-200 ${
                       isLocation 
-                        ? 'border-green-100 bg-gradient-to-br from-green-50/50 to-white' 
-                        : 'border-blue-100 bg-gradient-to-br from-blue-50/50 to-white'
+                        ? 'border-green-100 bg-green-50/50 to-white' 
+                        : 'border-orange-100 bg-orange-50/50 to-white'
                     }`}
                   >
                     {/* Header */}
@@ -2516,7 +2521,7 @@ function MappingAndEvents() {
                         <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold mb-2 ${
                           isLocation 
                             ? 'bg-green-100 text-green-700' 
-                            : 'bg-blue-100 text-blue-700'
+                            : 'bg-orange-100 text-orange-700'
                         }`}>
                           {isLocation ? 'พื้นที่' : 'กิจกรรม'}
                         </div>
@@ -2525,18 +2530,33 @@ function MappingAndEvents() {
                       </div>
                       
                       {/* Status Badge */}
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                         item.status === 'active' || item.status === 'ongoing'
                           ? isLocation 
                             ? 'bg-green-100 text-green-700' 
-                            : 'bg-blue-100 text-blue-700'
+                            : 'bg-orange-100 text-orange-700'
                           : 'bg-red-100 text-red-700'
                       }`}>
                         {isLocation 
-                          ? (item.status === 'active' ? '✓ ใช้งาน' : '✕ ปิด')
+                          ? (item.status === 'active' 
+                            ? <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                                ใช้งาน
+                              </>
+                            : <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                                ปิด
+                              </>
+                            )
                           : item.status === 'ongoing' 
-                          ? '● ดำเนินการ' 
-                          : '○ สิ้นสุด'
+                          ? <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"/></svg>
+                              ดำเนินการ
+                            </>
+                          : <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"/></svg>
+                              สิ้นสุด
+                            </>
                         }
                       </span>
                     </div>
@@ -2569,7 +2589,7 @@ function MappingAndEvents() {
                           setDetailItem(item);
                           setShowDetailModal(true);
                         }}
-                        className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        className="px-3 py-2 bg-brand-primary hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         title="ดูรายละเอียด"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -2584,7 +2604,7 @@ function MappingAndEvents() {
                           setEditItem(item);
                           setShowEditModal(true);
                         }}
-                        className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        className="px-3 py-2 bg-gray-600 hover:hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         title="แก้ไข"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -2594,7 +2614,7 @@ function MappingAndEvents() {
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.type); }}
-                        className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
+                        className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
                         title="ลบ"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -2695,7 +2715,7 @@ function MappingAndEvents() {
                           className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                             isLocation
                               ? 'bg-green-100 hover:bg-green-200 text-green-700'
-                              : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                              : 'bg-orange-100 hover:bg-orange-200 text-orange-700'
                           }`}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

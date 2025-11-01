@@ -16,9 +16,9 @@ const CsvImportModal = memo(function CsvImportModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm max-w-6xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-sky-500 to-blue-600 text-white p-6">
+        <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -35,16 +35,21 @@ const CsvImportModal = memo(function CsvImportModal({
               </svg>
             </button>
           </div>
-          <p className="text-sky-100 mt-2">ตรวจสอบข้อมูลก่อนนำเข้าระบบ</p>
+          <p className="text-orange-100 mt-2">ตรวจสอบข้อมูลก่อนนำเข้าระบบ</p>
         </div>
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <span className="font-semibold">📋 จำนวนข้อมูล:</span> {csvData.length} รายการ
+          <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <p className="text-sm text-orange-800">
+              <span className="font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 16H9v-2h4v2zm3-4H9v-2h7v2z"/>
+                </svg>
+                จำนวนข้อมูล:
+              </span> {csvData.length} รายการ
             </p>
-            <p className="text-sm text-blue-600 mt-1">
+            <p className="text-sm text-brand-primary mt-1">
               กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการนำเข้า
             </p>
           </div>
@@ -76,7 +81,7 @@ const CsvImportModal = memo(function CsvImportModal({
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="border border-gray-300 px-2 py-2 text-center">{index + 1}</td>
                       <td className="border border-gray-300 px-2 py-2">
-                        <span className="font-semibold text-blue-600">{previewEmployeeId}</span>
+                        <span className="font-semibold text-brand-primary">{previewEmployeeId}</span>
                       </td>
                       <td className="border border-gray-300 px-2 py-2">{row.name || ''}</td>
                       <td className="border border-gray-300 px-2 py-2 text-xs">{row.email || ''}</td>
@@ -86,7 +91,7 @@ const CsvImportModal = memo(function CsvImportModal({
                       <td className="border border-gray-300 px-2 py-2">{row.position || ''}</td>
                       <td className="border border-gray-300 px-2 py-2">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          row.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                          row.role === 'admin' ? 'bg-orange-50 text-orange-700' :
                           row.role === 'superadmin' ? 'bg-red-100 text-red-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
@@ -105,7 +110,12 @@ const CsvImportModal = memo(function CsvImportModal({
 
           {/* CSV Format Example */}
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-700 mb-2">📄 ตัวอย่างรูปแบบไฟล์ CSV:</h3>
+            <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+              </svg>
+              ตัวอย่างรูปแบบไฟล์ CSV:
+            </h3>
             <div className="bg-white border border-gray-300 rounded p-3 text-xs overflow-x-auto">
               <code className="text-gray-800">
                 name,email,provinceCode,branchCode,role,department,position,nationalId,phone,skills<br/>
@@ -126,7 +136,7 @@ const CsvImportModal = memo(function CsvImportModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-medium"
+            className="px-6 py-2.5 bg-gradient-to-r from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl shadow-sm hover:shadow-sm transition-all font-medium"
           >
             ยืนยันนำเข้า ({csvData.length} รายการ)
           </button>

@@ -1,6 +1,6 @@
 import React from 'react'
 
-function PuffLoader({ size = 80, color = '#48CBFF', text = '' }) {
+function PuffLoader({ size = 80, color = '#F26623', text = '' }) {
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/30 backdrop-blur-md">
       <div className="relative" style={{ width: size, height: size }}>

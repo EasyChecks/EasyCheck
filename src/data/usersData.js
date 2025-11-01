@@ -774,14 +774,14 @@ export const mockReports = [
     title: 'รายงาน',
     subtitle: 'ข้อมูลแบบวันต่อวัน',
     description: 'ดาวน์โหลดข้อมูล',
-    color: 'from-blue-500 to-blue-600'
+    color: 'from-brand-primary to-orange-600'
   },
   {
     id: 2,
     title: 'รายงาน2',
     subtitle: 'ข้อมูลแบบเดือน',
     description: 'ดาวน์โหลดข้อมูล',
-    color: 'from-cyan-500 to-blue-500'
+    color: 'from-brand-primary to-orange-600'
   }
 ];
 

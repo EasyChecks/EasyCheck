@@ -86,10 +86,10 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
   }, []);
 
   return (
-    <div className="bg-white dark:bg-secondary/95 transition-colors duration-300 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-white/10">
+    <div className="bg-white dark:bg-secondary/95 transition-colors duration-300 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-white/10">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-accent dark:bg-accent-orange border-b border-gray-200">
+          <thead className="bg-brand-accent dark:bg-orange-100 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-12">
                 
@@ -121,11 +121,11 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               
               return (
                 <React.Fragment key={user.id}>
-                  <tr className="hover:bg-sky-50/20 transition-colors">
+                  <tr className="hover:bg-orange-50/20 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={(e) => toggleExpand(user.id, e)}
-                        className="p-1 hover:bg-sky-100 rounded-lg transition-colors"
+                        className="p-1 hover:bg-orange-100 rounded-lg transition-colors"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -207,7 +207,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                           {/* Date Selector */}
                           <div className="flex items-center gap-3 mb-4">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
                               เลือกวันที่:
@@ -216,7 +216,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                               type="date"
                               value={selectedDate}
                               onChange={(e) => handleDateChange(e.target.value, e)}
-                              className="px-4 py-2 border-2 border-sky-200 rounded-lg focus:border-sky-500 focus:outline-none transition-colors text-sm font-medium"
+                              className="px-4 py-2 border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none transition-colors text-sm font-medium"
                               style={{ colorScheme: 'light' }}
                             />
                           </div>

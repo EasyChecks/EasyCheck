@@ -37,7 +37,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
         <h3 className="font-bold text-gray-800 text-base sm:text-lg lg:text-xl">{title}</h3>
         <button
           onClick={handleViewHistory}
-          className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs sm:text-sm rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+          className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-brand-primary to-orange-600 text-white text-xs sm:text-sm rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -66,7 +66,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
         <div className="border-t border-gray-200 pt-3">
           <button
             onClick={toggleExpand}
-            className="flex items-center justify-between w-full text-left text-xs sm:text-sm font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
+            className="flex items-center justify-between w-full text-left text-xs sm:text-sm font-medium text-brand-primary hover:text-orange-700 transition-colors"
           >
             <span>ดูเงื่อนไขและรายละเอียดการลา</span>
             <svg
@@ -86,12 +86,12 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
               isExpanded ? 'max-h-[500px] opacity-100 mt-3' : 'max-h-0 opacity-0'
             }`}
           >
-            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg p-3 sm:p-4 space-y-2">
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-3 sm:p-4 space-y-2">
               {leaveRules.map((rule, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-cyan-600 mt-0.5 flex-shrink-0"
+                    className="h-4 w-4 text-brand-primary mt-0.5 flex-shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -133,7 +133,7 @@ function LeaveList({ leaveItems }) {
           </h3>
           <button
             onClick={handleLateArrivalClick}
-            className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs sm:text-sm rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-brand-primary to-orange-600 text-white text-xs sm:text-sm rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -147,7 +147,7 @@ function LeaveList({ leaveItems }) {
         </p>
 
         <div className="border-t border-gray-200 pt-3">
-          <p className="text-xs sm:text-sm font-medium text-cyan-600 mb-2 flex items-center gap-2">
+          <p className="text-xs sm:text-sm font-medium text-brand-primary mb-2 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -155,15 +155,15 @@ function LeaveList({ leaveItems }) {
           </p>
           <ul className="space-y-1.5 text-xs sm:text-sm text-gray-700">
             <li className="flex items-start gap-2">
-              <span className="text-cyan-600 mt-0.5">•</span>
+              <span className="text-brand-primary mt-0.5">•</span>
               <span>ต้องเป็นเหตุสุดวิสัยที่เกิดขึ้นในระหว่างเดินทางมาทำงาน</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-cyan-600 mt-0.5">•</span>
+              <span className="text-brand-primary mt-0.5">•</span>
               <span>ระบุเหตุผลที่ชัดเจนและสมเหตุสมผล</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-cyan-600 mt-0.5">•</span>
+              <span className="text-brand-primary mt-0.5">•</span>
               <span>แนบหลักฐานประกอบ (แนะนำ)</span>
             </li>
           </ul>
