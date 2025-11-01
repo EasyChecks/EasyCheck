@@ -119,7 +119,7 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
           <div className="flex gap-3 w-full">
             <button
               onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+              className="flex-1 bg-accent dark:bg-accent-orange text-secondary dark:text-white px-6 py-3 rounded-xl font-semibold hover:bg-accent/80 dark:hover:bg-accent-orange/80 transition-all"
             >
               ยกเลิก (Esc)
             </button>
@@ -618,12 +618,12 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
             <div>
               <h2 className="text-xl font-bold text-gray-800">พื้นที่อนุญาตทั้งหมด</h2>
             </div>
-            <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+            <div className="bg-accent dark:bg-accent-orange text-primary dark:text-primary px-4 py-2 rounded-full text-sm font-medium">
               {locations.length} สถานที่
             </div>
           </div>
 
-          <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-blue-200">
+          <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-gray-200 dark:border-white/10 dark:border-white/10">
             <MapContainer
               center={defaultCenter}
               zoom={13}
@@ -711,7 +711,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={handleAddLocation}
-                  className="flex items-center gap-3 bg-[#085EC5] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                  className="flex items-center gap-3 bg-[#085EC5] text-white px-6 py-3 rounded-xl font-semibold transition-all transition-all "
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                     <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
@@ -722,7 +722,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                 {!isMultiDeleteMode ? (
                   <button
                     onClick={handleToggleMultiDelete}
-                    className="flex items-center gap-3 bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 hover:shadow-xl transition-all hover:scale-105"
+                    className="flex items-center gap-3 bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 transition-all transition-all "
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                       <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z" />
@@ -733,7 +733,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   <>
                     <button
                       onClick={handleDeleteSelected}
-                      className="flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 hover:shadow-xl transition-all hover:scale-105"
+                      className="flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition-all transition-all "
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                         <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z" />
@@ -742,7 +742,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                     </button>
                     <button
                       onClick={handleToggleMultiDelete}
-                      className="flex items-center gap-3 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-xl transition-all hover:scale-105"
+                      className="flex items-center gap-3 bg-secondary dark:bg-white text-white dark:text-secondary px-6 py-3 rounded-xl font-semibold hover:bg-secondary/80 dark:hover:bg-white/80 transition-all transition-all "
                     >
                       ยกเลิก
                     </button>
@@ -754,7 +754,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
 
           {/* Add Location Form */}
         {isAddingLocation && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-blue-300">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-gray-200 dark:border-white/10 dark:border-white/10">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-800">เพิ่มพื้นที่ใหม่</h3>
               <button
@@ -779,7 +779,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="เช่น สำนักใหญ่ TGS"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-white/20 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-all"
                 />
               </div>
 
@@ -793,7 +793,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   value={formData.radius}
                   onChange={handleInputChange}
                   placeholder="เช่น 200"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-white/20 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-all"
                 />
               </div>
 
@@ -807,7 +807,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   onChange={handleInputChange}
                   placeholder="เช่น ศูนย์การประชุมหลักของหัสรักดี"
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-white/20 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-all"
                 />
               </div>
 
@@ -845,7 +845,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                         alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
                       }
                     }}
-                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all "
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
                       <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
@@ -853,7 +853,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                     ใช้ตำแหน่งปัจจุบัน
                   </button>
                 </div>
-                <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300">
+                <div className="relative h-[400px] rounded-xl overflow-hidden border-2 border-gray-300 dark:border-white/20">
                   <MapContainer
                     center={formData.latitude && formData.longitude
                       ? [parseFloat(formData.latitude), parseFloat(formData.longitude)]
@@ -882,7 +882,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                       </>
                     )}
                   </MapContainer>
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg z-[1000] pointer-events-none">
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-primary dark:bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg z-[1000] pointer-events-none">
                     คลิกบนแผนที่เพื่อเลือกตำแหน่ง
                   </div>
                 </div>
@@ -900,13 +900,13 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
             <div className="flex gap-4">
               <button
                 onClick={handleSubmitLocation}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                className="flex-1 bg-primary dark:bg-primary text-white px-6 py-3 rounded-xl font-semibold transition-all transition-all "
               >
                 ยืนยัน
               </button>
               <button
                 onClick={handleCancelForm}
-                className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all"
+                className="flex-1 bg-accent dark:bg-accent-orange text-secondary dark:text-white px-6 py-3 rounded-xl font-semibold hover:bg-accent/80 dark:hover:bg-accent-orange/80 transition-all"
               >
                 ยกเลิก
               </button>
@@ -936,7 +936,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                     ref={(el) => (locationRefs.current[location.id] = el)}
                     className={`rounded-xl p-5 transition-all ${isEditing
                         ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 shadow-xl'
-                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 hover:shadow-lg'
+                        : 'bg-accent dark:bg-accent-orange border-2 border-gray-200 dark:border-white/10 dark:border-white/10 hover:shadow-lg'
                       }`}
                   >
                     <div className="flex items-start justify-between">
@@ -948,7 +948,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                               type="checkbox"
                               checked={selectedLocations.includes(location.id)}
                               onChange={() => handleCheckboxChange(location.id)}
-                              className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                              className="w-5 h-5 text-primary dark:text-primary border-2 border-gray-300 dark:border-white/20 rounded  cursor-pointer"
                             />
                           </div>
                         )}
@@ -956,7 +956,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                         {/* Location Icon */}
                         <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isEditing
                             ? 'bg-gradient-to-br from-green-500 to-green-600'
-                            : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                            : 'bg-primary dark:bg-primary'
                           }`}>
                           <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="white">
                             <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
@@ -982,7 +982,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                     type="text"
                                     value={currentFormData.name}
                                     onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-green-500 focus:outline-none"
                                   />
                                 </div>
 
@@ -994,7 +994,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                     type="text"
                                     value={currentFormData.description}
                                     onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-green-500 focus:outline-none"
                                   />
                                 </div>
 
@@ -1006,7 +1006,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                     type="number"
                                     value={currentFormData.radius}
                                     onChange={(e) => setEditFormData({ ...editFormData, radius: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-green-500 focus:outline-none"
                                   />
                                 </div>
 
@@ -1019,7 +1019,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                     step="0.000001"
                                     value={currentFormData.latitude}
                                     onChange={(e) => setEditFormData({ ...editFormData, latitude: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-green-500 focus:outline-none"
                                   />
                                 </div>
 
@@ -1032,7 +1032,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                     step="0.000001"
                                     value={currentFormData.longitude}
                                     onChange={(e) => setEditFormData({ ...editFormData, longitude: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-green-500 focus:outline-none"
                                   />
                                 </div>
                               </div>
@@ -1071,7 +1071,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                         alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
                                       }
                                     }}
-                                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all "
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
                                       <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
@@ -1124,13 +1124,13 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                               <div className="flex gap-3 pt-2">
                                 <button
                                   onClick={handleUpdateLocation}
-                                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold transition-all transition-all "
                                 >
                                   บันทึกการแก้ไข
                                 </button>
                                 <button
                                   onClick={handleCancelEdit}
-                                  className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all"
+                                  className="flex-1 bg-accent dark:bg-accent-orange text-secondary dark:text-white px-6 py-3 rounded-xl font-semibold hover:bg-accent/80 dark:hover:bg-accent-orange/80 transition-all"
                                 >
                                   ยกเลิก
                                 </button>
@@ -1169,7 +1169,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                         <div className="flex gap-2 ml-4">
                           <button
                             onClick={() => handleEditLocation(location)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-all hover:scale-110 shadow-md"
+                            className="bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white p-3 rounded-lg transition-all  shadow-md"
                             title="แก้ไข"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
@@ -1178,7 +1178,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                           </button>
                           <button
                             onClick={() => handleDeleteLocation(location.id)}
-                            className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-all hover:scale-110 shadow-md"
+                            className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-all  shadow-md"
                             title="ลบ"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">

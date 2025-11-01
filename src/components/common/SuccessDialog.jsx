@@ -61,7 +61,7 @@ const SuccessDialog = ({
           <div className="px-6 pb-6 sm:px-8 sm:pb-8">
             <button
               onClick={onClose}
-              className="w-full px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl sm:rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base"
+              className="w-full px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl sm:rounded-2xl transition-colors transform hover:scale-105 shadow-lg text-sm sm:text-base"
             >
               ตกลง
             </button>

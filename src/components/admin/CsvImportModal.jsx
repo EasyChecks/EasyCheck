@@ -18,7 +18,7 @@ const CsvImportModal = memo(function CsvImportModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-sky-500 to-blue-600 text-white p-6">
+        <div className="bg-primary dark:bg-primary text-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -28,7 +28,7 @@ const CsvImportModal = memo(function CsvImportModal({
             </h2>
             <button
               onClick={onClose}
-              className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              className="text-white hover:bg-accent hover:bg-opacity-20 rounded-lg p-2 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -40,11 +40,11 @@ const CsvImportModal = memo(function CsvImportModal({
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
+          <div className="mb-4 bg-accent dark:bg-accent-orange border border-gray-200 dark:border-white/10 rounded-lg p-4">
+            <p className="text-sm text-secondary dark:text-white">
               <span className="font-semibold">📋 จำนวนข้อมูล:</span> {csvData.length} รายการ
             </p>
-            <p className="text-sm text-blue-600 mt-1">
+            <p className="text-sm text-primary dark:text-primary mt-1">
               กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการนำเข้า
             </p>
           </div>
@@ -53,7 +53,7 @@ const CsvImportModal = memo(function CsvImportModal({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
-                <tr className="bg-gray-100">
+                <tr className="bg-accent dark:bg-accent-orange">
                   <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">#</th>
                   <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">รหัสพนักงาน (Auto)</th>
                   <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">ชื่อ-นามสกุล</th>
@@ -76,7 +76,7 @@ const CsvImportModal = memo(function CsvImportModal({
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="border border-gray-300 px-2 py-2 text-center">{index + 1}</td>
                       <td className="border border-gray-300 px-2 py-2">
-                        <span className="font-semibold text-blue-600">{previewEmployeeId}</span>
+                        <span className="font-semibold text-primary dark:text-primary">{previewEmployeeId}</span>
                       </td>
                       <td className="border border-gray-300 px-2 py-2">{row.name || ''}</td>
                       <td className="border border-gray-300 px-2 py-2 text-xs">{row.email || ''}</td>
@@ -88,7 +88,7 @@ const CsvImportModal = memo(function CsvImportModal({
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           row.role === 'admin' ? 'bg-purple-100 text-purple-700' :
                           row.role === 'superadmin' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-700'
+                          'bg-accent dark:bg-accent-orange text-secondary dark:text-white'
                         }`}>
                           {row.role === 'admin' ? 'Admin' : 
                            row.role === 'superadmin' ? 'Super Admin' : 
@@ -105,7 +105,7 @@ const CsvImportModal = memo(function CsvImportModal({
 
           {/* CSV Format Example */}
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-700 mb-2">📄 ตัวอย่างรูปแบบไฟล์ CSV:</h3>
+            <h3 className="font-semibold text-secondary dark:text-white mb-2">📄 ตัวอย่างรูปแบบไฟล์ CSV:</h3>
             <div className="bg-white border border-gray-300 rounded p-3 text-xs overflow-x-auto">
               <code className="text-gray-800">
                 name,email,provinceCode,branchCode,role,department,position,nationalId,phone,skills<br/>
@@ -120,13 +120,13 @@ const CsvImportModal = memo(function CsvImportModal({
         <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors font-medium"
+            className="px-6 py-2.5 bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 text-secondary dark:text-white rounded-xl transition-colors font-medium"
           >
             ยกเลิก
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-medium"
+            className="px-6 py-2.5 bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white rounded-xl shadow-lg hover: transition-all font-medium"
           >
             ยืนยันนำเข้า ({csvData.length} รายการ)
           </button>

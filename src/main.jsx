@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import "./index.css";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
+import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { LeaveProvider } from "./contexts/LeaveContext.jsx";
 import { TeamProvider } from "./contexts/TeamContext.jsx";
 import { LoadingProvider } from "./contexts/LoadingContext.jsx";
@@ -25,6 +26,7 @@ const GroupNotificationScreen = lazy(() => import("./pages/admin/GroupNotificati
 const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
 const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
 const MappingAndEvents = lazy(() => import("./pages/admin/MappingAndEvents.jsx"));
+const CheckInApproval = lazy(() => import("./pages/admin/CheckInApproval.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
@@ -89,6 +91,10 @@ const router = createBrowserRouter([
       {
         path: 'warning',
         element: <Suspense fallback={<PageLoader />}><Warning /></Suspense>
+      },
+      {
+        path: 'checkin-approval',
+        element: <Suspense fallback={<PageLoader />}><CheckInApproval /></Suspense>
       }
     ]
   },  
@@ -174,18 +180,20 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <LoadingProvider>
-      <AuthProvider>
-        <TeamProvider>
-          <LeaveProvider>
-            <LocationProvider>
-              <EventProvider>
-                <RouterProvider router={router} />
-              </EventProvider>
-            </LocationProvider>
-          </LeaveProvider>
-        </TeamProvider>
-      </AuthProvider>
-    </LoadingProvider>
+    <ThemeProvider>
+      <LoadingProvider>
+        <AuthProvider>
+          <TeamProvider>
+            <LeaveProvider>
+              <LocationProvider>
+                <EventProvider>
+                  <RouterProvider router={router} />
+                </EventProvider>
+              </LocationProvider>
+            </LeaveProvider>
+          </TeamProvider>
+        </AuthProvider>
+      </LoadingProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

@@ -86,10 +86,10 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+    <div className="bg-white dark:bg-secondary/95 transition-colors duration-300 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-white/10">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gradient-to-r from-sky-50 to-cyan-50 border-b border-gray-200">
+          <thead className="bg-accent dark:bg-accent-orange border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-12">
                 
@@ -121,7 +121,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               
               return (
                 <React.Fragment key={user.id}>
-                  <tr className="hover:bg-sky-50/50 transition-colors">
+                  <tr className="hover:bg-sky-50/20 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={(e) => toggleExpand(user.id, e)}
@@ -140,7 +140,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-sky-400 to-cyan-500 flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-primary dark:bg-primary flex-shrink-0">
                           <img
                             src={user.profileImage || `https://i.pravatar.cc/100?u=${user.id}`}
                             alt={user.name}
@@ -148,16 +148,16 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                           />
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900">{user.name}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="font-semibold text-black dark:text-white">{user.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-700">{user.department}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{user.department}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-700 capitalize">{user.role}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user.role}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -166,13 +166,13 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                         {user.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {user.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() => onSelectUser(user)}
-                        className="inline-flex items-center gap-1 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-all duration-200 transform hover:scale-105 text-sm font-medium shadow-md hover:shadow-lg"
+                        className="inline-flex items-center gap-1 px-4 py-2 bg-primary dark:bg-primary-orange text-white rounded-lg hover:bg-primary/70 transition-colors transform hover:scale-105 text-sm font-medium shadow-md hover:shadow-lg"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -201,7 +201,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                   
                   {/* Expanded Row - GPS & Photos */}
                   {isExpanded && (
-                    <tr className="bg-gradient-to-br from-gray-50 to-slate-50">
+                    <tr className="bg-white dark:bg-secondary/95 transition-colors duration-300">
                       <td colSpan="7" className="px-6 py-6">
                         <div className="space-y-4">
                           {/* Date Selector */}
