@@ -113,7 +113,7 @@ function SuccessDialog({ isOpen, message, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#22C55E">
@@ -124,7 +124,7 @@ function SuccessDialog({ isOpen, message, onClose }) {
           <p className="text-gray-600 mb-6">{message}</p>
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="w-full bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
           >
             ตกลง
           </button>
@@ -156,7 +156,7 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#EF4444">
@@ -174,7 +174,7 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+              className="flex-1 bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
             >
               ยืนยัน
             </button>
@@ -204,7 +204,7 @@ function ErrorDialog({ isOpen, message, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#F97316">
@@ -215,7 +215,7 @@ function ErrorDialog({ isOpen, message, onClose }) {
           <p className="text-gray-600 mb-6">{message}</p>
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="w-full bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
           >
             ตกลง
           </button>
@@ -706,16 +706,16 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
           block: 'center'
         })
         // Add highlight effect
-        element.classList.add('ring-4', 'ring-blue-400')
+        element.classList.add('ring-4', 'ring-orange-400')
         setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-blue-400')
+          element.classList.remove('ring-4', 'ring-orange-400')
         }, 2000)
       }
     }, 100)
   }
 
   return (
-    <div className={hideHeader ? "" : "min-h-screen bg-[#F5F7FA]"}>
+    <div className={hideHeader ? "" : "min-h-screen bg-[#FAFBFC]"}>
       {/* Page Header */}
       {!hideHeader && (
         <div className="bg-white border-b border-gray-200 px-6 py-5">
@@ -730,7 +730,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
       <main className={hideHeader ? "" : "px-6 py-8 max-w-8xl mx-auto"}>
         {/* Section: All Event Locations Map */}
         {!hideMap && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-800">พื้นที่กิจกรรมทั้งหมด</h2>
@@ -738,12 +738,12 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                 แสดงตำแหน่งของกิจกรรมทั้งหมดบนแผนที่
               </p>
             </div>
-            <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+            <div className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium">
               {events.length} กิจกรรม
             </div>
           </div>
 
-          <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-blue-200">
+          <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-orange-200">
             <MapContainer
               center={defaultCenter}
               zoom={13}
@@ -777,7 +777,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                     <Popup>
                       <div className="p-2 min-w-[200px]">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-3 h-3 rounded-full ${event.status === 'ongoing' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                          <div className={`w-3 h-3 rounded-full ${event.status === 'ongoing' ? 'bg-gray-600' : 'bg-gray-500'}`}></div>
                           <h3 className="font-bold text-gray-800">{event.name}</h3>
                         </div>
                         <p className={`text-xs font-medium mb-2 ${event.status === 'ongoing' ? 'text-green-600' : 'text-gray-600'}`}>
@@ -786,21 +786,27 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                         <p className="text-xs text-gray-600 mb-2">{event.description}</p>
                         <div className="text-xs text-gray-500 space-y-1">
                           <div className="flex items-center gap-1">
-                            <span>📍</span>
+                            <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                            </svg>
                             <span>{event.locationName}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span>📅</span>
+                            <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+                            </svg>
                             <span>{event.date}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span>🎯</span>
+                            <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                            </svg>
                             <span>รัศมี: {event.radius} เมตร</span>
                           </div>
                         </div>
                         <button
                           onClick={() => handleViewDetails(event.id)}
-                          className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors"
+                          className="mt-3 w-full bg-brand-primary hover:bg-gray-700 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors"
                         >
                           ดูรายละเอียด
                         </button>
@@ -824,14 +830,14 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
         )}
 
         {/* Section: Events List */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-800">รายการกิจกรรมทั้งหมด</h2>
             {/* Action Button */}
             <div className="mb-4">
               <button
                 onClick={handleAddEvent}
-                className="flex items-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                className="flex items-center gap-3 bg-brand-primary  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all hover:scale-105"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
@@ -843,7 +849,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
 
           {/* Add Event Form */}
             {isAddingEvent && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-blue-300">
+              <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 border-2 border-orange-300">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-gray-800">เพิ่มกิจกรรมใหม่</h3>
                   <button
@@ -868,7 +874,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="เช่น Grand Opening Siam Square"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                     />
                   </div>
 
@@ -885,7 +891,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                           setFormData(prev => ({ ...prev, date: e.target.value }))
                           setDisplayDates(prev => ({ ...prev, addDate: formatDateForDisplay(e.target.value) }))
                         }}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                         style={{ colorScheme: 'light' }}
                         required
                       />
@@ -907,7 +913,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                       onChange={handleInputChange}
                       placeholder="เช่น กิจกรรมเปิดตัวและติดตั้ง รับประทานอาหาร"
                       rows="3"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                     />
                   </div>
 
@@ -921,7 +927,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                       value={formData.locationName}
                       onChange={handleInputChange}
                       placeholder="เช่น Siam Square ชั้น 4 ห้องประชุมเอ"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                     />
                   </div>
 
@@ -935,7 +941,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                       value={formData.radius}
                       onChange={handleInputChange}
                       placeholder="เช่น 100"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                     />
                   </div>
 
@@ -951,17 +957,17 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                         onClick={() => setShowStartTimePicker(!showStartTimePicker)}
                         onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
                         placeholder="เลือกเวลา"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all cursor-pointer"
                         readOnly
                       />
                       {showStartTimePicker && (
                         <div
                           ref={startTimePickerRef}
-                          className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                          className="absolute z-50 mt-2 bg-white border-2 border-orange-300 rounded-xl shadow-sm"
                         >
                           <div className="grid grid-cols-2 gap-0 w-64">
                             <div>
-                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                              <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
                                 ชั่วโมง
                               </div>
                               <div className="overflow-y-auto max-h-56">
@@ -973,8 +979,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                       const currentMinute = formData.startTime?.split(':')[1] || '00'
                                       handleTimeSelect(hour, currentMinute, true, false)
                                     }}
-                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                      formData.startTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                      formData.startTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                     }`}
                                   >
                                     {hour}
@@ -983,7 +989,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               </div>
                             </div>
                             <div>
-                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                              <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
                                 นาที
                               </div>
                               <div className="overflow-y-auto max-h-56">
@@ -995,8 +1001,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                       const currentHour = formData.startTime?.split(':')[0] || '00'
                                       handleTimeSelect(currentHour, minute, true, false)
                                     }}
-                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                      formData.startTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                      formData.startTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                     }`}
                                   >
                                     {minute}
@@ -1022,17 +1028,17 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                         onClick={() => setShowEndTimePicker(!showEndTimePicker)}
                         onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
                         placeholder="เลือกเวลา"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all cursor-pointer"
                         readOnly
                       />
                       {showEndTimePicker && (
                         <div
                           ref={endTimePickerRef}
-                          className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                          className="absolute z-50 mt-2 bg-white border-2 border-orange-300 rounded-xl shadow-sm"
                         >
                           <div className="grid grid-cols-2 gap-0 w-64">
                             <div>
-                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                              <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
                                 ชั่วโมง
                               </div>
                               <div className="overflow-y-auto max-h-56">
@@ -1044,8 +1050,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                       const currentMinute = formData.endTime?.split(':')[1] || '00'
                                       handleTimeSelect(hour, currentMinute, false, false)
                                     }}
-                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                      formData.endTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                      formData.endTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                     }`}
                                   >
                                     {hour}
@@ -1054,7 +1060,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               </div>
                             </div>
                             <div>
-                              <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                              <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
                                 นาที
                               </div>
                               <div className="overflow-y-auto max-h-56">
@@ -1066,8 +1072,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                       const currentHour = formData.endTime?.split(':')[0] || '00'
                                       handleTimeSelect(currentHour, minute, false, false)
                                     }}
-                                    className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                      formData.endTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                    className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                      formData.endTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                     }`}
                                   >
                                     {minute}
@@ -1091,7 +1097,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                       value={formData.teams}
                       onChange={handleInputChange}
                       placeholder="เช่น ทีมพัฒนา, ทีมการตลาด, ทีมปฏิบัติการ"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                     />
                   </div>
 
@@ -1129,7 +1135,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                           </>
                         )}
                       </MapContainer>
-                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg z-[1000] pointer-events-none">
+                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm z-[1000] pointer-events-none">
                         คลิกบนแผนที่เพื่อเลือกตำแหน่ง
                       </div>
                     </div>
@@ -1147,7 +1153,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                 <div className="flex gap-4">
                   <button
                     onClick={handleSubmitEvent}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                    className="flex-1 bg-brand-primary  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all hover:scale-105"
                   >
                     ยืนยัน
                   </button>
@@ -1164,8 +1170,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
           {/* Event List - Show max 3 items, scrollable */}
           <div className="max-h-[800px] overflow-y-auto space-y-6 pr-2">
             {events.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#D1D5DB" className="mx-auto mb-4">
+              <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#E5E7EB" className="mx-auto mb-4">
                   <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Z" />
                 </svg>
                 <p className="text-gray-500 text-lg">ยังไม่มีกิจกรรม</p>
@@ -1180,7 +1186,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                   <div
                     key={event.id}
                     ref={(el) => (eventRefs.current[event.id] = el)}
-                    className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:shadow-xl'
+                    className={`bg-white rounded-2xl shadow-sm overflow-hidden transition-all ${isEditing ? 'ring-2 ring-orange-500' : 'hover:shadow-sm'
                       }`}
                   >
                     {isEditing ? (
@@ -1207,7 +1213,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               type="text"
                               value={currentFormData.name}
                               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                             />
                           </div>
 
@@ -1223,7 +1229,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                   setEditFormData({ ...editFormData, date: e.target.value })
                                   setDisplayDates(prev => ({ ...prev, editDate: formatDateForDisplay(e.target.value) }))
                                 }}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                                 style={{ colorScheme: 'light' }}
                                 required
                               />
@@ -1243,7 +1249,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               value={currentFormData.description}
                               onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                               rows="3"
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                             />
                           </div>
 
@@ -1255,7 +1261,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               type="text"
                               value={currentFormData.locationName}
                               onChange={(e) => setEditFormData({ ...editFormData, locationName: e.target.value })}
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                             />
                           </div>
 
@@ -1267,7 +1273,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               type="number"
                               value={currentFormData.radius}
                               onChange={(e) => setEditFormData({ ...editFormData, radius: e.target.value })}
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                             />
                           </div>
 
@@ -1283,17 +1289,17 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                 onClick={() => setShowEditStartTimePicker(!showEditStartTimePicker)}
                                 onChange={(e) => setEditFormData({ ...editFormData, startTime: e.target.value })}
                                 placeholder="เลือกเวลา"
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none cursor-pointer"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none cursor-pointer"
                                 readOnly
                               />
                               {showEditStartTimePicker && (
                                 <div
                                   ref={startTimePickerRef}
-                                  className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                                  className="absolute z-50 mt-2 bg-white border-2 border-orange-300 rounded-xl shadow-sm"
                                 >
                                   <div className="grid grid-cols-2 gap-0 w-64">
                                     <div>
-                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                                      <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
                                         ชั่วโมง
                                       </div>
                                       <div className="overflow-y-auto max-h-56">
@@ -1305,8 +1311,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                               const currentMinute = currentFormData.startTime?.split(':')[1] || '00'
                                               handleTimeSelect(hour, currentMinute, true, true)
                                             }}
-                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                              currentFormData.startTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                              currentFormData.startTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                             }`}
                                           >
                                             {hour}
@@ -1315,7 +1321,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                       </div>
                                     </div>
                                     <div>
-                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                                      <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
                                         นาที
                                       </div>
                                       <div className="overflow-y-auto max-h-56">
@@ -1327,8 +1333,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                               const currentHour = currentFormData.startTime?.split(':')[0] || '00'
                                               handleTimeSelect(currentHour, minute, true, true)
                                             }}
-                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                              currentFormData.startTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                              currentFormData.startTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                             }`}
                                           >
                                             {minute}
@@ -1354,17 +1360,17 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                 onClick={() => setShowEditEndTimePicker(!showEditEndTimePicker)}
                                 onChange={(e) => setEditFormData({ ...editFormData, endTime: e.target.value })}
                                 placeholder="เลือกเวลา"
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none cursor-pointer"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none cursor-pointer"
                                 readOnly
                               />
                               {showEditEndTimePicker && (
                                 <div
                                   ref={endTimePickerRef}
-                                  className="absolute z-50 mt-2 bg-white border-2 border-blue-300 rounded-xl shadow-2xl"
+                                  className="absolute z-50 mt-2 bg-white border-2 border-orange-300 rounded-xl shadow-sm"
                                 >
                                   <div className="grid grid-cols-2 gap-0 w-64">
                                     <div>
-                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
+                                      <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tl-xl">
                                         ชั่วโมง
                                       </div>
                                       <div className="overflow-y-auto max-h-56">
@@ -1376,8 +1382,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                               const currentMinute = currentFormData.endTime?.split(':')[1] || '00'
                                               handleTimeSelect(hour, currentMinute, false, true)
                                             }}
-                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                              currentFormData.endTime?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                              currentFormData.endTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                             }`}
                                           >
                                             {hour}
@@ -1386,7 +1392,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                       </div>
                                     </div>
                                     <div>
-                                      <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
+                                      <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold rounded-tr-xl">
                                         นาที
                                       </div>
                                       <div className="overflow-y-auto max-h-56">
@@ -1398,8 +1404,8 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                               const currentHour = currentFormData.endTime?.split(':')[0] || '00'
                                               handleTimeSelect(currentHour, minute, false, true)
                                             }}
-                                            className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                              currentFormData.endTime?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                            className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                              currentFormData.endTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                             }`}
                                           >
                                             {minute}
@@ -1420,7 +1426,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                             <select
                               value={currentFormData.status}
                               onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                             >
                               <option value="ongoing">เริ่มงานแล้ว</option>
                               <option value="completed">เสร็จสิ้น</option>
@@ -1436,7 +1442,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                               value={currentFormData.teams}
                               onChange={(e) => setEditFormData({ ...editFormData, teams: e.target.value })}
                               placeholder="เช่น ทีมพัฒนา, ทีมการตลาด, ทีมปฏิบัติการ"
-                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none"
                             />
                           </div>
 
@@ -1475,7 +1481,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                                   </>
                                 )}
                               </MapContainer>
-                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg z-[1000] pointer-events-none">
+                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm z-[1000] pointer-events-none">
                                 คลิกบนแผนที่เพื่อเปลี่ยนตำแหน่ง
                               </div>
                             </div>
@@ -1492,7 +1498,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                         <div className="flex gap-4">
                           <button
                             onClick={handleUpdateEvent}
-                            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all"
+                            className="flex-1 bg-brand-primary  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
                           >
                             บันทึกการแก้ไข
                           </button>
@@ -1506,11 +1512,11 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                       </div>
                     ) : (
                       /* Normal Display Mode */
-                      <div className="bg-[#085EC5] p-6">
+                      <div className="bg-brand-primary p-6">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <h3 className="text-xl font-bold text-white mb-1">{event.name}</h3>
-                            <p className="text-blue-100 text-sm">{event.date}</p>
+                            <p className="text-orange-100 text-sm">{event.date}</p>
                           </div>
                           <EventStatusBadge status={event.status} />
                         </div>
@@ -1538,7 +1544,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                         <div className="flex gap-3">
                           <button
                             onClick={() => handleEditEvent(event)}
-                            className="flex-1 bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                            className="flex-1 bg-white text-brand-primary px-4 py-2 rounded-lg font-semibold hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
                               <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z" />
@@ -1547,7 +1553,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
                           </button>
                           <button
                             onClick={() => handleCancelEvent(event.id)}
-                            className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition-all"
+                            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-all"
                           >
                             ลบงาน
                           </button>

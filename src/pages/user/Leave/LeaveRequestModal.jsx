@@ -368,9 +368,9 @@ function LeaveRequestModal({ closeModal }) {
           color: transparent;
         }
       `}</style>
-      <div className="w-full max-w-xs my-auto bg-white shadow-2xl rounded-2xl sm:rounded-3xl sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
+      <div className="w-full max-w-xs mt-4 bg-white shadow-2xl rounded-2xl sm:rounded-3xl sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-4 sm:p-5 lg:p-6 rounded-t-2xl sm:rounded-t-3xl sticky top-0 z-10">
+        <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-4 sm:p-5 lg:p-6 rounded-t-2xl sm:rounded-t-3xl sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white sm:text-xl lg:text-2xl drop-shadow-md">ขอลางาน</h2>
             <button
@@ -385,7 +385,7 @@ function LeaveRequestModal({ closeModal }) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-5 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} id="leave-request-form" className="p-4 sm:p-5 lg:p-6 leave-form-space space-y-3 sm:space-y-4 lg:space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Request Type Selection */}
           <div>
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
@@ -406,11 +406,14 @@ function LeaveRequestModal({ closeModal }) {
                   documents: []
                 })}
                 className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 ${formData.requestType === 'leave'
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white border-cyan-500 shadow-lg'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-cyan-400'
+                    ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white border-orange-500 shadow-lg'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
                   }`}
               >
-                📋 ขอลางาน
+                <svg className="w-4 h-4 inline mr-1 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 16H9v-2h4v2zm3-4H9v-2h7v2z"/>
+                </svg>
+                ขอลางาน
               </button>
               <button
                 type="button"
@@ -425,12 +428,13 @@ function LeaveRequestModal({ closeModal }) {
                   reason: '',
                   documents: []
                 })}
-                className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 ${formData.requestType === 'lateArrival'
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white border-cyan-500 shadow-lg'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-cyan-400'
+                className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${formData.requestType === 'lateArrival'
+                    ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white border-orange-500 shadow-lg'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
                   }`}
               >
-                ⏰ ขอเข้างานสาย
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                ขอเข้างานสาย
               </button>
             </div>
           </div>
@@ -444,7 +448,7 @@ function LeaveRequestModal({ closeModal }) {
               <select
                 value={formData.leaveType}
                 onChange={(e) => setFormData({ ...formData, leaveType: e.target.value })}
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
                 required
               >
                 <option value="">เลือกประเภทการลา</option>
@@ -480,17 +484,17 @@ function LeaveRequestModal({ closeModal }) {
 
           {/* Show late arrival rules */}
           {formData.requestType === 'lateArrival' && (
-            <div className="p-3 border-2 bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-br from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
               <div className="flex items-start gap-2 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="flex-1">
-                  <h4 className="mb-2 text-sm font-semibold text-cyan-800 sm:text-base">เงื่อนไขการขอเข้างานสาย</h4>
+                  <h4 className="mb-2 text-sm font-semibold text-orange-800 sm:text-base">เงื่อนไขการขอเข้างานสาย</h4>
                   <ul className="space-y-1.5">
                     {getLeaveRules('ขอเข้างานสาย').map((rule, index) => (
-                      <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-cyan-900">
-                        <span className="text-cyan-600 mt-0.5">•</span>
+                      <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-orange-900">
+                        <span className="text-brand-primary mt-0.5">•</span>
                         <span>{rule}</span>
                       </li>
                     ))}
@@ -510,22 +514,24 @@ function LeaveRequestModal({ closeModal }) {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, leaveMode: 'fullday', startTime: '', endTime: '' })}
-                  className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 ${formData.leaveMode === 'fullday'
-                      ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white border-cyan-500 shadow-lg'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-cyan-400'
+                  className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${formData.leaveMode === 'fullday'
+                      ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white border-orange-500 shadow-lg'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
                     }`}
                 >
-                  🗓️ ลาเต็มวัน
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+                  ลาเต็มวัน
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, leaveMode: 'hourly', endDate: formData.startDate })}
-                  className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 ${formData.leaveMode === 'hourly'
-                      ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white border-cyan-500 shadow-lg'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-cyan-400'
+                  className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${formData.leaveMode === 'hourly'
+                      ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white border-orange-500 shadow-lg'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
                     }`}
                 >
-                  ⏰ ลารายชั่วโมง
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                  ลารายชั่วโมง
                 </button>
               </div>
             </div>
@@ -582,7 +588,7 @@ function LeaveRequestModal({ closeModal }) {
                         setTimeout(() => setShowTimeStartPicker(false), 200);
                       }}
                       placeholder="เช่น 09:00"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
                       required
                     />
                     
@@ -592,7 +598,7 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeStartPicker(!showTimeStartPicker);
                         setShowTimeEndPicker(false);
                       }}
-                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -602,11 +608,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeStartPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -618,8 +624,8 @@ function LeaveRequestModal({ closeModal }) {
                                     const currentMinute = formData.startTime?.split(':')[1] || '00';
                                     handleTimeSelect(hour, currentMinute, true);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.startTime?.startsWith(hour) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.startTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -630,7 +636,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -642,8 +648,8 @@ function LeaveRequestModal({ closeModal }) {
                                     const currentHour = formData.startTime?.split(':')[0] || '00';
                                     handleTimeSelect(currentHour, minute, true);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.startTime?.endsWith(minute) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.startTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -675,7 +681,7 @@ function LeaveRequestModal({ closeModal }) {
                         setTimeout(() => setShowTimeEndPicker(false), 200);
                       }}
                       placeholder="เช่น 10:00"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
                       required
                     />
                     
@@ -685,7 +691,7 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeEndPicker(!showTimeEndPicker);
                         setShowTimeStartPicker(false);
                       }}
-                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -695,11 +701,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeEndPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -711,8 +717,8 @@ function LeaveRequestModal({ closeModal }) {
                                     const currentMinute = formData.endTime?.split(':')[1] || '00';
                                     handleTimeSelect(hour, currentMinute, false);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.endTime?.startsWith(hour) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.endTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -723,7 +729,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -735,8 +741,8 @@ function LeaveRequestModal({ closeModal }) {
                                     const currentHour = formData.endTime?.split(':')[0] || '00';
                                     handleTimeSelect(currentHour, minute, false);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.endTime?.endsWith(minute) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.endTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -768,7 +774,7 @@ function LeaveRequestModal({ closeModal }) {
                       setFormData({ ...formData, startDate: e.target.value });
                       setDisplayDates({ ...displayDates, startDate: formatDateForDisplay(e.target.value) });
                     }}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
                     required
                     style={{ colorScheme: 'light' }}
                   />
@@ -793,7 +799,7 @@ function LeaveRequestModal({ closeModal }) {
                       setFormData({ ...formData, endDate: e.target.value });
                       setDisplayDates({ ...displayDates, endDate: formatDateForDisplay(e.target.value) });
                     }}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
                     required
                     style={{ colorScheme: 'light' }}
                   />
@@ -869,7 +875,7 @@ function LeaveRequestModal({ closeModal }) {
                         setTimeout(() => setShowTimeStartPicker(false), 200);
                       }}
                       placeholder="เช่น 09:00"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
                       required
                     />
                     
@@ -879,7 +885,7 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeStartPicker(!showTimeStartPicker);
                         setShowTimeEndPicker(false);
                       }}
-                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -889,11 +895,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeStartPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -912,8 +918,8 @@ function LeaveRequestModal({ closeModal }) {
                                     });
                                     setShowTimeStartPicker(false);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.startTime?.startsWith(hour) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.startTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -924,7 +930,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -943,8 +949,8 @@ function LeaveRequestModal({ closeModal }) {
                                     });
                                     setShowTimeStartPicker(false);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.startTime?.endsWith(minute) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.startTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -990,7 +996,7 @@ function LeaveRequestModal({ closeModal }) {
                         setTimeout(() => setShowTimeEndPicker(false), 200);
                       }}
                       placeholder="เช่น 17:00"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
                       required
                     />
                     
@@ -1000,7 +1006,7 @@ function LeaveRequestModal({ closeModal }) {
                         setShowTimeEndPicker(!showTimeEndPicker);
                         setShowTimeStartPicker(false);
                       }}
-                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-cyan-600"
+                      className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -1010,11 +1016,11 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeEndPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-cyan-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -1033,8 +1039,8 @@ function LeaveRequestModal({ closeModal }) {
                                     });
                                     setShowTimeEndPicker(false);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.endTime?.startsWith(hour) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.endTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -1045,7 +1051,7 @@ function LeaveRequestModal({ closeModal }) {
                           
                           {/* Minutes Column */}
                           <div className="flex-1">
-                            <div className="py-2 text-xs font-semibold text-center text-white bg-cyan-500 sm:text-sm">
+                            <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
                             <div className="overflow-y-auto max-h-56">
@@ -1064,8 +1070,8 @@ function LeaveRequestModal({ closeModal }) {
                                     });
                                     setShowTimeEndPicker(false);
                                   }}
-                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-cyan-50 transition-colors ${
-                                    formData.endTime?.endsWith(minute) ? 'bg-cyan-100 font-semibold text-cyan-600' : ''
+                                  className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
+                                    formData.endTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -1085,28 +1091,28 @@ function LeaveRequestModal({ closeModal }) {
 
           {/* Total Days/Hours Display */}
           {formData.requestType === 'leave' && formData.leaveMode === 'fullday' && formData.startDate && formData.endDate && (
-            <div className="p-3 border-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-r from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-700 sm:text-base">จำนวนวันที่ลา:</span>
-                <span className="text-lg font-bold text-cyan-600 sm:text-xl">{getTotalDays()} วัน</span>
+                <span className="text-lg font-bold text-brand-primary sm:text-xl">{getTotalDays()} วัน</span>
               </div>
             </div>
           )}
 
           {formData.requestType === 'lateArrival' && formData.startTime && formData.endTime && (
-            <div className="p-3 border-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-r from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-700 sm:text-base">ระยะเวลาที่สาย:</span>
-                <span className="text-lg font-bold text-cyan-600 sm:text-xl">{getTotalHours()}</span>
+                <span className="text-lg font-bold text-brand-primary sm:text-xl">{getTotalHours()}</span>
               </div>
             </div>
           )}
 
           {formData.requestType === 'leave' && formData.leaveMode === 'hourly' && formData.startTime && formData.endTime && (
-            <div className="p-3 border-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 rounded-xl sm:p-4">
+            <div className="p-3 border-2 bg-gradient-to-r from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-700 sm:text-base">จำนวนชั่วโมงที่ลา:</span>
-                <span className="text-lg font-bold text-cyan-600 sm:text-xl">{getTotalHours()}</span>
+                <span className="text-lg font-bold text-brand-primary sm:text-xl">{getTotalHours()}</span>
               </div>
             </div>
           )}
@@ -1116,7 +1122,7 @@ function LeaveRequestModal({ closeModal }) {
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
               {formData.requestType === 'lateArrival' ? 'เหตุผลที่เข้างานสาย' : 'เหตุผลในการลา'} <span className="text-red-500">*</span>
               {formData.requestType === 'lateArrival' && (
-                <span className="ml-1 text-xs text-cyan-600">(ต้องเป็นเหตุสุดวิสัย)</span>
+                <span className="ml-1 text-xs text-brand-primary">(ต้องเป็นเหตุสุดวิสัย)</span>
               )}
             </label>
             <textarea
@@ -1126,7 +1132,7 @@ function LeaveRequestModal({ closeModal }) {
               placeholder={formData.requestType === 'lateArrival' 
                 ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตุ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
                 : "กรุณาระบุเหตุผลในการลา..."}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors resize-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors resize-none"
               required
             />
           </div>
@@ -1139,7 +1145,7 @@ function LeaveRequestModal({ closeModal }) {
                 <span className="text-red-500"> * (จำเป็นสำหรับลาป่วย 3 วันขึ้นไป)</span>
               )}
               {formData.requestType === 'lateArrival' && (
-                <span className="ml-1 text-xs text-cyan-600">(แนะนำให้แนบหลักฐานประกอบ)</span>
+                <span className="ml-1 text-xs text-brand-primary">(แนะนำให้แนบหลักฐานประกอบ)</span>
               )}
             </label>
 
@@ -1159,12 +1165,12 @@ function LeaveRequestModal({ closeModal }) {
 
             {/* Info for late arrival */}
             {formData.requestType === 'lateArrival' && (
-              <div className="p-2 mb-2 border-2 rounded-lg bg-cyan-50 border-cyan-200 sm:p-3">
+              <div className="p-2 mb-2 border-2 rounded-lg bg-orange-50 border-orange-200 sm:p-3">
                 <div className="flex items-start gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-xs font-medium sm:text-sm text-cyan-800">
+                  <p className="text-xs font-medium sm:text-sm text-orange-800">
                     การแนบรูปภาพหลักฐาน (เช่น รูปถ่ายเหตุการณ์, ใบรับรองจากหน่วยงานที่เกี่ยวข้อง) จะช่วยในการพิจารณาอนุมัติ
                   </p>
                 </div>
@@ -1176,7 +1182,7 @@ function LeaveRequestModal({ closeModal }) {
               multiple
               accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
               onChange={handleFileChange}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm border-2 border-gray-200 rounded-xl focus:border-cyan-500 focus:outline-none transition-colors file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 file:cursor-pointer file:font-medium"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 file:cursor-pointer file:font-medium"
             />
             <p className="flex items-center gap-1 mt-1 text-xs text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1188,7 +1194,7 @@ function LeaveRequestModal({ closeModal }) {
               <div className="mt-2 space-y-1">
                 {formData.documents.map((doc, index) => (
                   <div key={index} className="flex items-center gap-2 text-xs text-gray-600 sm:text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>{doc}</span>
@@ -1209,7 +1215,7 @@ function LeaveRequestModal({ closeModal }) {
             </button>
             <button
               type="submit"
-              className="w-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+              className="w-full px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
             >
               ส่งคำขอ
             </button>

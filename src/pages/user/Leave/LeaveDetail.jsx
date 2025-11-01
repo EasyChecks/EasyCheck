@@ -44,7 +44,7 @@ function LeaveDetail() {
             case 'green':
                 return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200'
             case 'red':
-                return 'bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border border-red-200'
+                return 'bg-gradient-to-r from-orange-50 to-orange-100 text-red-700 border border-red-200'
             default:
                 return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 border border-gray-200'
         }
@@ -54,9 +54,9 @@ function LeaveDetail() {
     const isLateArrival = leaveData.category === 'ขอเข้างานสาย' || leaveData.leaveType === 'ขอเข้างานสาย';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 font-prompt">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-orange-50 to-orange-100 font-prompt">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] px-4 sm:px-5 lg:px-6 py-4 sm:py-5 shadow-lg sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-brand-primary to-orange-600 px-4 sm:px-5 lg:px-6 py-4 sm:py-5 shadow-lg sticky top-0 z-10">
                 <div className="flex items-center justify-between max-w-4xl mx-auto">
                     <button 
                         onClick={() => navigate(-1)}
@@ -76,7 +76,7 @@ function LeaveDetail() {
                 {/* Main Card */}
                 <div className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-white/50">
                     {/* Header Section with gradient */}
-                    <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-4 sm:p-5 lg:p-6">
+                    <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-4 sm:p-5 lg:p-6">
                         <div className="flex justify-between items-start gap-2 sm:gap-3">
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
@@ -98,9 +98,9 @@ function LeaveDetail() {
                     {/* Details Section */}
                     <div className="p-4 sm:p-5 lg:p-6 space-y-4 sm:space-y-5 lg:space-y-6">
                         {/* ประเภทการลา */}
-                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-blue-100">
+                        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-orange-100">
                             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                                <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                                <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
@@ -115,9 +115,9 @@ function LeaveDetail() {
                         </div>
 
                         {/* ช่วงเวลา */}
-                        <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-cyan-100">
+                        <div className="bg-gradient-to-r from-orange-50 to-orange-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-orange-100">
                             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                                <div className="bg-gradient-to-br from-brand-primary to-orange-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
@@ -132,9 +132,9 @@ function LeaveDetail() {
                         </div>
 
                         {/* เหตุผลในการลา */}
-                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-blue-100">
+                        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-orange-100">
                             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                                <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+                                <div className="bg-gradient-to-br from-brand-primary to-orange-600 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -184,7 +184,7 @@ function LeaveDetail() {
                 <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 bg-gradient-to-t from-white via-white to-transparent backdrop-blur-sm">
                     <button 
                         onClick={() => setShowCancelConfirm(true)}
-                        className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg"
+                        className="w-full bg-gradient-to-r from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 text-sm sm:text-base lg:text-lg"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

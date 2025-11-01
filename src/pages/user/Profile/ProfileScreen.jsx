@@ -274,7 +274,7 @@ function ProfileScreen() {
   return (
     <div className="relative">
       {/* Header with Profile Picture */}
-      <div className="relative bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-t-2xl overflow-hidden">
+      <div className="relative bg-gradient-to-r from-brand-primary to-orange-600 rounded-t-2xl overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full"></div>
@@ -295,16 +295,19 @@ function ProfileScreen() {
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
-              <div className="w-full h-full rounded-full bg-blue-100 hidden items-center justify-center text-blue-600 font-bold text-2xl">
+              <div className="w-full h-full rounded-full bg-orange-100 hidden items-center justify-center text-brand-primary font-bold text-2xl">
                 {profileData.name?.charAt(0) || 'U'}
               </div>
             </div>
             {/* Edit Button */}
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors"
+              className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-brand-primary hover:bg-orange-50 transition-colors"
             >
-              <span className="text-sm">✏️</span>
+              <svg className="w-5 h-5 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/>
+                <path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+              </svg>
             </button>
             <input
               ref={fileInputRef}
@@ -317,8 +320,8 @@ function ProfileScreen() {
 
           {/* User Info */}
           <h1 className="text-xl font-bold text-white mb-1">{profileData.name}</h1>
-          <p className="text-blue-100 text-sm mb-1">{profileData.position}</p>
-          <p className="text-blue-200 text-xs">{profileData.department}</p>
+          <p className="text-orange-100 text-sm mb-1">{profileData.position}</p>
+          <p className="text-orange-200 text-xs">{profileData.department}</p>
           
           {/* Status Badge */}
           <div className="mt-3 px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full">
@@ -332,12 +335,14 @@ function ProfileScreen() {
         <div className="bg-white rounded-2xl shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-800 flex items-center">
-              <span className="mr-2">👤</span>
+              <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
               ข้อมูลส่วนตัว
             </h2>
             <button
               onClick={() => handleEditClick('personalInfo')}
-              className="px-3 py-1 bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+              className="px-3 py-1 bg-gradient-to-r from-brand-primary to-orange-600 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
             >
               แก้ไข
             </button>
@@ -383,7 +388,9 @@ function ProfileScreen() {
         {/* 2. ข้อมูลการทำงาน */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <span className="mr-2">💼</span>
+            <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-5 9h-4v4h4v-4z"/>
+            </svg>
             ข้อมูลการทำงาน
           </h2>
           <div className="space-y-3 text-sm">
@@ -441,7 +448,9 @@ function ProfileScreen() {
         {/* 3. ข้อมูลสุขภาพและความสามารถ */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <span className="mr-2">📋</span>
+            <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 16H9v-2h4v2zm3-4H9v-2h7v2z"/>
+            </svg>
             ข้อมูลสุขภาพและความสามารถ
           </h2>
           <div className="space-y-3 text-sm">
@@ -467,7 +476,9 @@ function ProfileScreen() {
         {/* 4. ข้อมูลเพิ่มเติม */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <span className="mr-2">📊</span>
+            <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
             ข้อมูลเพิ่มเติม
           </h2>
           <div className="space-y-3 text-sm">
@@ -507,7 +518,7 @@ function ProfileScreen() {
         {/* ข้อมูลบริษัท */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <span className="mr-2">🏢</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7h-10zm6 10h-4v4h-4v-4H6v-4h4v-4h4v4h4v4z"/></svg>
             ข้อมูลบริษัท
           </h2>
           <div className="space-y-3 text-sm">
@@ -526,7 +537,7 @@ function ProfileScreen() {
           onClick={handleBackdropClick}
         >
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white p-6 rounded-t-2xl">
+            <div className="sticky top-0 bg-gradient-to-r from-brand-primary to-orange-600 text-white p-6 rounded-t-2xl">
               <h2 className="text-xl font-bold">แก้ไขข้อมูล</h2>
             </div>
             
@@ -539,7 +550,7 @@ function ProfileScreen() {
                       type="text"
                       value={tempData.birthDate || ''}
                       onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -548,7 +559,7 @@ function ProfileScreen() {
                       type="text"
                       value={tempData.age || ''}
                       onChange={(e) => handleInputChange('age', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -557,7 +568,7 @@ function ProfileScreen() {
                       value={tempData.address || ''}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -566,7 +577,7 @@ function ProfileScreen() {
                       type="tel"
                       value={tempData.phone || ''}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -575,7 +586,7 @@ function ProfileScreen() {
                       type="email"
                       value={tempData.email || ''}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -583,7 +594,7 @@ function ProfileScreen() {
                     <select
                       value={tempData.maritalStatus || ''}
                       onChange={(e) => handleInputChange('maritalStatus', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     >
                       <option value="โสด">โสด</option>
                       <option value="สมรส">สมรส</option>
@@ -596,7 +607,7 @@ function ProfileScreen() {
                       type="text"
                       value={tempData.idCard || ''}
                       onChange={(e) => handleInputChange('idCard', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                 </>
@@ -612,7 +623,7 @@ function ProfileScreen() {
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white rounded-lg hover:bg-[#1cbfff] transition-colors font-medium"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-brand-primary to-orange-600 text-white rounded-lg hover:bg-[#F26623] transition-colors font-medium"
               >
                 บันทึก
               </button>

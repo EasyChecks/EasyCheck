@@ -45,8 +45,8 @@ const ConfirmDialog = ({
             </svg>
           ),
           color: 'text-red-500',
-          bgColor: 'from-red-50 to-rose-50',
-          buttonColor: 'from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700'
+          bgColor: 'from-red-50 to-orange-50',
+          buttonColor: 'from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700'
         };
       default:
         return {
@@ -55,9 +55,9 @@ const ConfirmDialog = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          color: 'text-blue-500',
-          bgColor: 'from-blue-50 to-cyan-50',
-          buttonColor: 'from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700'
+          color: 'text-brand-primary',
+          bgColor: 'from-orange-50 to-amber-50',
+          buttonColor: 'from-brand-primary to-orange-600 hover:from-orange-700 hover:to-orange-700'
         };
     }
   };

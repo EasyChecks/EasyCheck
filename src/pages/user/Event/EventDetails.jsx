@@ -140,7 +140,7 @@ export default function EventDetails() {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
           <div className="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,7 +151,7 @@ export default function EventDetails() {
           <p className="text-gray-600 mb-6">ไม่สามารถค้นหากิจกรรมที่คุณต้องการได้</p>
           <button
             onClick={() => navigate("/user/event")}
-            className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 mx-auto"
+            className="bg-gradient-to-r from-brand-primary to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 mx-auto"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -169,7 +169,7 @@ export default function EventDetails() {
       <div className="p-4">
         <button
           onClick={() => navigate("/user/event")}
-          className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+          className="flex items-center space-x-2 text-gray-700 hover:text-brand-primary transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -179,7 +179,7 @@ export default function EventDetails() {
       </div>
 
       {/* Event Header */}
-      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
+      <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
         <div className="flex items-start space-x-3">
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -188,7 +188,7 @@ export default function EventDetails() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold mb-2">{event.name}</h1>
-            <p className="text-blue-100 text-sm mb-2">{event.date}</p>
+            <p className="text-orange-100 text-sm mb-2">{event.date}</p>
             {/* status badge removed as per UX request */}
           </div>
         </div>
@@ -200,8 +200,8 @@ export default function EventDetails() {
           {/* Description Section */}
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -253,8 +253,8 @@ export default function EventDetails() {
                   center={[event.latitude, event.longitude]}
                   radius={event.radius}
                   pathOptions={{ 
-                    color: event.status === 'ongoing' ? '#22C55E' : '#6B7280',
-                    fillColor: event.status === 'ongoing' ? '#22C55E' : '#6B7280',
+                    color: event.status === 'ongoing' ? '#22C55E' : '#9CA3AF',
+                    fillColor: event.status === 'ongoing' ? '#22C55E' : '#9CA3AF',
                     fillOpacity: 0.2 
                   }}
                 />
@@ -266,8 +266,8 @@ export default function EventDetails() {
           {event.startTime && event.endTime && (
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -292,7 +292,7 @@ export default function EventDetails() {
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">ทีมที่เข้าร่วม</h3>
                   <div className="flex flex-wrap gap-2">
                     {event.teams.map((team, idx) => (
-                      <span key={idx} className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+                      <span key={idx} className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium">
                         {team}
                       </span>
                     ))}
@@ -307,7 +307,7 @@ export default function EventDetails() {
         <div className="p-6">
           {checkingLocation ? (
             <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-2"></div>
               <p className="text-sm text-gray-600">กำลังตรวจสอบตำแหน่ง...</p>
             </div>
           ) : !isWithinRadius ? (
@@ -336,15 +336,15 @@ export default function EventDetails() {
 
       {/* Time Remaining Banner */}
       {timeRemaining && (
-        <div className="mx-4 mt-6 bg-blue-50 border border-blue-400 rounded-xl p-4">
-          <p className="text-sm text-blue-800 text-center">
+        <div className="mx-4 mt-6 bg-orange-50 border border-orange-400 rounded-xl p-4">
+          <p className="text-sm text-orange-800 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="font-medium">เวลาเหลือในการเข้าร่วม</span>
           </p>
           <p className="text-center mt-2">
-            <span className="text-2xl font-bold text-blue-900">
+            <span className="text-2xl font-bold text-orange-900">
               คุณสามารถเข้าร่วมได้อีก {formatTimeRemaining(timeRemaining)}
             </span>
           </p>
@@ -362,9 +362,10 @@ export default function EventDetails() {
       />
 
       {/* Info Banner */}
-      <div className="mx-4 mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <p className="text-sm text-blue-800 text-center">
-          💡 <span className="font-medium">เคล็ดลับ:</span> อย่าลืมเช็คอินเมื่อถึงสถานที่จัดกิจกรรม
+      <div className="mx-4 mt-6 bg-orange-50 border border-orange-200 rounded-xl p-4">
+        <p className="text-sm text-orange-800 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          <span><span className="font-medium">เคล็ดลับ:</span> อย่าลืมเช็คอินเมื่อถึงสถานที่จัดกิจกรรม</span>
         </p>
       </div>
     </div>

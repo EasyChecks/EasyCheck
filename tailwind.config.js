@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import animate from 'tailwindcss-animate'
+
 export default {
     darkMode: ["class"],
     content: [
@@ -55,7 +57,15 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+				// Custom brand colors
+				brand: {
+					primary: '#F26623',
+					secondary: '#000000',
+					background: '#FFFFFF',
+					accent: '#F5F5F5',
+					'accent-soft': '#FFF2EC',
+				}
   		},
 		keyframes: {
 			shake: {
@@ -69,5 +79,5 @@ export default {
 		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 }

@@ -160,10 +160,10 @@ function DownloadData() {
         <div style="font-family: 'Sarabun', 'Prompt', 'Noto Sans Thai', sans-serif; background: white;">
           <!-- Header -->
           <div style="margin-bottom: 30px;">
-            <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: bold; color: #0f172a;">
+            <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: bold; color: #111827;">
               รายงาน: ${selectedReport.title}
             </h1>
-            <p style="margin: 5px 0; font-size: 16px; color: #64748b;">
+            <p style="margin: 5px 0; font-size: 16px; color: #4B5563;">
               วันที่: ${startDate} ถึง ${endDate}
             </p>
       `;
@@ -173,7 +173,7 @@ function DownloadData() {
           branches.find(b => b.id === id)?.name || id
         ).join(', ');
         tableHTML += `
-            <p style="margin: 5px 0; font-size: 16px; color: #64748b;">
+            <p style="margin: 5px 0; font-size: 16px; color: #4B5563;">
               สาขา: ${branchNames}
             </p>
         `;
@@ -185,13 +185,13 @@ function DownloadData() {
           <!-- Table -->
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <thead>
-              <tr style="background: linear-gradient(to right, #0ea5e9, #06b6d4);">
+              <tr style="background: linear-gradient(to right, #F26623, #F26623);">
       `;
 
       // Add headers
       Object.keys(data[0]).forEach(header => {
         tableHTML += `
-                <th style="padding: 12px 8px; text-align: center; color: white; font-weight: bold; border: 1px solid #0284c7; font-size: 14px;">
+                <th style="padding: 12px 8px; text-align: center; color: white; font-weight: bold; border: 1px solid #F26623; font-size: 14px;">
                   ${header}
                 </th>
         `;
@@ -210,7 +210,7 @@ function DownloadData() {
         
         Object.values(row).forEach(value => {
           tableHTML += `
-                <td style="padding: 10px 8px; text-align: left; border: 1px solid #e2e8f0; color: #0f172a; font-size: 13px;">
+                <td style="padding: 10px 8px; text-align: left; border: 1px solid #e2e8f0; color: #111827; font-size: 13px;">
                   ${value}
                 </td>
           `;
@@ -224,7 +224,7 @@ function DownloadData() {
           </table>
           
           <!-- Footer -->
-          <div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px;">
+          <div style="margin-top: 30px; text-align: center; color: #9CA3AF; font-size: 12px;">
             สร้างเมื่อ: ${new Date().toLocaleString('th-TH', {
               year: 'numeric',
               month: 'long',
@@ -378,10 +378,10 @@ function DownloadData() {
 
   const getIconColor = (color) => {
     const colors = {
-      blue: 'bg-blue-100 text-blue-600',
-      purple: 'bg-purple-100 text-purple-600',
+      blue: 'bg-orange-100 text-brand-primary',
+      purple: 'bg-orange-50 text-orange-600',
       green: 'bg-green-100 text-green-600',
-      pink: 'bg-pink-100 text-pink-600',
+      pink: 'bg-orange-50 text-orange-600',
       orange: 'bg-orange-100 text-orange-600'
     };
     return colors[color] || colors.blue;
@@ -390,12 +390,12 @@ function DownloadData() {
   // SVG Icons
   const icons = {
     report: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
     chart: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
       </svg>
     ),
@@ -429,18 +429,18 @@ function DownloadData() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl px-6 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-brand-primary  rounded-2xl flex items-center justify-center shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-brand-primary  bg-clip-text text-transparent">
                 ดาวน์โหลดข้อมูล
               </h1>
               <p className="text-gray-500 text-sm mt-1">
@@ -455,10 +455,10 @@ function DownloadData() {
           {reports.map((report) => (
             <div 
               key={report.id}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]"
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden hover:shadow-sm transition-all duration-300 transform hover:scale-[1.02]"
             >
               {/* Card Header */}
-              <div className={`bg-gradient-to-r ${report.color} p-6 relative overflow-hidden`}>
+              <div className={`bg-${report.color} p-6 relative overflow-hidden`}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
                 
@@ -468,8 +468,8 @@ function DownloadData() {
                       {report.id === 1 ? icons.report : icons.chart}
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-white drop-shadow-md">{report.title}</h2>
-                      <p className="text-white/90 text-sm">{report.subtitle}</p>
+                      <h2 className="text-2xl font-bold text-black drop-shadow-sm">{report.title}</h2>
+                      <p className="text-black text-sm">{report.subtitle}</p>
                     </div>
                   </div>
                 </div>
@@ -481,7 +481,7 @@ function DownloadData() {
                 
                 <button
                   onClick={() => openModal(report)}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 font-semibold"
+                  className="w-full px-6 py-3 bg-brand-primary  hover: text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 font-semibold"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -497,9 +497,9 @@ function DownloadData() {
       {/* Modal */}
       {showModal && selectedReport && !showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden transform animate-slideUp max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-3xl bg-white rounded-3xl shadow-sm overflow-hidden transform animate-slideUp max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 relative overflow-hidden">
+            <div className="bg-brand-primary  p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
               
               <div className="relative flex items-center justify-between">
@@ -508,7 +508,7 @@ function DownloadData() {
                     {selectedReport.id === 1 ? icons.report : icons.chart}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white drop-shadow-md">
+                    <h2 className="text-2xl font-bold text-white drop-shadow-sm">
                       ดาวน์โหลดรวมข้อมูลพนักงานทั้งหมด
                     </h2>
                     <p className="text-white/90 text-sm">เลือกช่วงเวลาและประเภทข้อมูลที่ต้องการ</p>
@@ -531,7 +531,7 @@ function DownloadData() {
               {isSuperAdmin && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                     เลือกสาขา
@@ -542,7 +542,7 @@ function DownloadData() {
                         key={branch.id}
                         className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           selectedBranches.includes(branch.id)
-                            ? 'bg-blue-50 border-blue-300 shadow-md'
+                            ? 'bg-orange-50 border-orange-300 shadow-sm'
                             : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         }`}
                       >
@@ -550,7 +550,7 @@ function DownloadData() {
                           type="checkbox"
                           checked={selectedBranches.includes(branch.id)}
                           onChange={() => handleBranchToggle(branch.id)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                          className="w-5 h-5 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 cursor-pointer"
                         />
                         <div className="flex-1">
                           <div className="font-semibold text-gray-800 text-sm">{branch.name}</div>
@@ -565,7 +565,7 @@ function DownloadData() {
               {/* Date Range */}
               <div className="mb-6">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   ช่วงเวลา
@@ -577,7 +577,7 @@ function DownloadData() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-primary focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
@@ -586,7 +586,7 @@ function DownloadData() {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-primary focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -595,7 +595,7 @@ function DownloadData() {
               {/* Data Options */}
               <div className="mb-6">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   ประเภทข้อมูลที่ต้องการ
@@ -606,7 +606,7 @@ function DownloadData() {
                       key={option.id}
                       className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                         selectedOptions[option.id]
-                          ? 'bg-blue-50 border-blue-300 shadow-md'
+                          ? 'bg-orange-50 border-orange-300 shadow-sm'
                           : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-sm'
                       }`}
                     >
@@ -614,7 +614,7 @@ function DownloadData() {
                         type="checkbox"
                         checked={selectedOptions[option.id]}
                         onChange={() => handleOptionToggle(option.id)}
-                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                        className="w-5 h-5 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 cursor-pointer"
                       />
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconColor(option.color)}`}>
                         {option.id === 'attendanceData' && icons.clock}
@@ -635,7 +635,7 @@ function DownloadData() {
               {/* File Format Selection */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   รูปแบบไฟล์
@@ -645,7 +645,7 @@ function DownloadData() {
                     onClick={() => setSelectedFormat('excel')}
                     className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                       selectedFormat === 'excel'
-                        ? 'bg-green-50 border-green-400 shadow-md'
+                        ? 'bg-green-50 border-green-400 shadow-sm'
                         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -670,7 +670,7 @@ function DownloadData() {
                     onClick={() => setSelectedFormat('pdf')}
                     className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                       selectedFormat === 'pdf'
-                        ? 'bg-red-50 border-red-400 shadow-md'
+                        ? 'bg-red-50 border-red-400 shadow-sm'
                         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -695,20 +695,20 @@ function DownloadData() {
                     onClick={() => setSelectedFormat('csv')}
                     className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                       selectedFormat === 'csv'
-                        ? 'bg-blue-50 border-blue-400 shadow-md'
+                        ? 'bg-orange-50 border-orange-400 shadow-sm'
                         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2">
                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        selectedFormat === 'csv' ? 'bg-blue-100' : 'bg-gray-100'
+                        selectedFormat === 'csv' ? 'bg-orange-100' : 'bg-gray-100'
                       }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 ${selectedFormat === 'csv' ? 'text-blue-600' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 ${selectedFormat === 'csv' ? 'text-brand-primary' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                       <span className={`font-semibold text-sm ${
-                        selectedFormat === 'csv' ? 'text-blue-700' : 'text-gray-700'
+                        selectedFormat === 'csv' ? 'text-orange-700' : 'text-gray-700'
                       }`}>
                         CSV
                       </span>
@@ -730,7 +730,7 @@ function DownloadData() {
                 </button>
                 <button
                   onClick={handlePreview}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                  className="px-6 py-3 bg-brand-primary  hover: text-white rounded-xl shadow-sm hover:shadow-sm font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -740,7 +740,7 @@ function DownloadData() {
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                  className="px-6 py-3 bg-brand-primary  hover: text-white rounded-xl shadow-sm hover:shadow-sm font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -756,7 +756,7 @@ function DownloadData() {
       {/* Preview Modal */}
       {showPreview && previewData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-6xl bg-white rounded-2xl shadow-sm overflow-hidden max-h-[90vh] flex flex-col">
             {/* Preview Header */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -815,8 +815,8 @@ function DownloadData() {
               {/* Format-specific preview info */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>

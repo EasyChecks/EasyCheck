@@ -8,7 +8,7 @@ export const buttonVariants = ({ variant = "default", size } = {}) => {
   const variants = {
     default: "bg-transparent text-inherit",
     ghost: "bg-transparent hover:bg-gray-100",
-    primary: "bg-blue-600 text-white hover:bg-blue-500",
+    primary: "bg-orange-600 text-white hover:bg-brand-primary",
   }
   const sizes = {
     icon: "h-8 w-8 p-0",

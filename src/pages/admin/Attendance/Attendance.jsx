@@ -285,19 +285,19 @@ function Attendance() {
       >
         <div className="w-full pl-3 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-6">
           <div
-            className="w-full mx-auto bg-white rounded-2xl p-6 shadow-xl border border-gray-200"
+            className="w-full mx-auto bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
             style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)' }}
           >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-[#0b2b57]">จัดตารางงาน</h2>
+              <h2 className="text-2xl font-bold text-gray-900">จัดตารางงาน</h2>
               <p className="text-sm text-gray-600 mt-1">ตรวจสอบและปรับตารางให้เหมาะสมกับจำนวนพนักงานและพื้นที่</p>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
               <button 
                 onClick={() => setShowCreate(true)} 
-                className="inline-flex items-center justify-center text-base font-semibold bg-primary text-white min-w-[120px] h-10 px-5 leading-none hover:bg-primary/90 rounded-xl shadow-md transition-colors"
+                className="inline-flex items-center justify-center text-base font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-[120px] h-10 px-5 leading-none rounded-xl shadow-sm transition-colors"
               >
                 สร้างตารางใหม่
               </button>
@@ -306,7 +306,7 @@ function Attendance() {
                 // ปกติ: แสดงปุ่มเข้าสู่โหมดลบ
                 <button 
                   onClick={toggleSelectMode} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white rounded-lg shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-colors font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-destructive hover:bg-destructive/90 text-white rounded-lg shadow-sm transition-colors font-medium text-sm"
                 >
 
                   ลบตาราง
@@ -320,7 +320,7 @@ function Attendance() {
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-colors font-medium text-sm ${
                       schedules.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                        : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
+                        : 'bg-destructive hover:bg-destructive/90 text-white shadow-sm'
                     }`}
                   >
                     ลบทั้งหมด
@@ -332,7 +332,7 @@ function Attendance() {
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-colors font-medium text-sm ${
                       selectedIds.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                        : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
+                        : 'bg-destructive hover:bg-destructive/90 text-white shadow-sm'
                     }`}
                   >
                     ลบที่เลือก ({selectedIds.length})
@@ -340,7 +340,7 @@ function Attendance() {
 
                   <button 
                     onClick={toggleSelectMode} 
-                    className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-accent hover:border-primary transition-colors font-medium text-sm"
+                    className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-brand-accent hover:border-brand-primary transition-colors font-medium text-sm"
                   >
                     ยกเลิก
                   </button>
@@ -362,15 +362,15 @@ function Attendance() {
               <div
                 key={item.id}
                 onClick={() => selectMode && toggleSelect(item.id)}
-                className={`relative rounded-xl p-4 text-[#0b2b57] border-2 shadow-inner h-fit transition-colors ${
+                className={`relative rounded-xl p-4 text-gray-900 border-2 shadow-sm h-fit transition-colors ${
                   selectMode 
-                    ? `cursor-pointer ${checked ? 'border-primary bg-accent' : 'border-gray-200 hover:border-primary hover:bg-accent'}` 
+                    ? `cursor-pointer ${checked ? 'border-brand-primary bg-brand-accent-soft' : 'border-gray-200 hover:border-brand-primary hover:bg-brand-accent'}` 
                     : 'border-gray-200'
                 }`}
               >
                 {/* top-right: checkbox (in select mode) + time pill (always shown) */}
                 <div className="absolute top-3 right-3 flex items-center space-x-2">
-                  <div className="bg-white/20 text-[#0b2b57] px-2.5 py-1 rounded-full text-xs border-2 border-gray-200 shadow-sm">
+                  <div className="bg-brand-accent text-gray-900 px-2.5 py-1 rounded-full text-xs border border-gray-300 shadow-sm">
                     {item.time}
                   </div>
                   {selectMode && (
@@ -399,7 +399,7 @@ function Attendance() {
                       {!selectMode && (
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowEdit(true); }}
-                          className="inline-flex items-center justify-center text-sm font-semibold bg-primary text-white min-w-[100px] h-8 px-4 leading-none hover:bg-primary/90 rounded-lg shadow-md transition-colors"
+                          className="inline-flex items-center justify-center text-sm font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-[100px] h-8 px-4 leading-none rounded-lg shadow-sm transition-colors"
                         >
                           ปรับตาราง
                         </button>
@@ -410,7 +410,7 @@ function Attendance() {
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleDetails(item.id); }}
                           aria-expanded={isOpen}
-                          className="relative inline-flex items-center justify-center text-sm font-semibold rounded-lg shadow-sm transition-colors overflow-hidden bg-white text-[#0b2b57] border-2 border-gray-200 min-w-[100px] h-8 px-4 leading-none hover:bg-gray-50"
+                          className="relative inline-flex items-center justify-center text-sm font-semibold rounded-lg shadow-sm transition-colors overflow-hidden bg-white text-gray-900 border-2 border-gray-300 min-w-[100px] h-8 px-4 leading-none hover:bg-brand-accent"
                         >
                         <span
                           aria-hidden={isOpen}
@@ -497,7 +497,7 @@ function Attendance() {
                                     </svg>
                                     แผนที่ตำแหน่ง
                                   </h4>
-                                  <div className="relative h-[250px] rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
+                                  <div className="relative h-[250px] rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
                                     <MapContainer
                                       center={[locationData.latitude, locationData.longitude]}
                                       zoom={15}
@@ -570,7 +570,7 @@ function Attendance() {
         {/* Success Popup */}
         {showSuccessPopup && (
           <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-green-400 pointer-events-auto animate-bounce-in">
+            <div className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-green-400 pointer-events-auto animate-bounce-in">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-500" viewBox="0 0 24 24" fill="currentColor">
@@ -605,7 +605,7 @@ function Attendance() {
 
             {/* Modal content card with border, ring and elevated shadow */}
             <div
-              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-2xl z-[9999]"
+              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-sm z-[9999]"
               style={{ boxShadow: '0 10px 30px rgba(11,43,87,0.18)' }}
               role="document"
             >
@@ -616,14 +616,14 @@ function Attendance() {
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteAllConfirm(false)} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-accent hover:border-primary transition-colors font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-brand-accent transition-colors font-medium text-sm"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   type="button" 
                   onClick={deleteAll} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-colors font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-destructive hover:bg-destructive/90 text-white rounded-lg shadow-sm transition-colors font-medium text-sm"
                 >
                   ลบทั้งหมด
                 </button>
@@ -643,7 +643,7 @@ function Attendance() {
 
             {/* Modal content card with border, ring and elevated shadow */}
             <div
-              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-2xl z-[9999]"
+              className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 border border-gray-200 shadow-sm z-[9999]"
               style={{ boxShadow: '0 10px 30px rgba(11,43,87,0.18)' }}
               role="document"
             >
@@ -654,14 +654,14 @@ function Attendance() {
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteSelectedConfirm(false)} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-accent hover:border-primary transition-colors font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-brand-accent transition-colors font-medium text-sm"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   type="button" 
                   onClick={confirmDelete} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-colors font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-destructive hover:bg-destructive/90 text-white rounded-lg shadow-sm transition-colors font-medium text-sm"
                 >
                   ลบที่เลือก
                 </button>
