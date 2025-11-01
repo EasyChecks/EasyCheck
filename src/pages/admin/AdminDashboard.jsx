@@ -2,17 +2,37 @@ import React, { useState, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Circle, LayersControl, useMap, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { useLocations } from '../../contexts/LocationContext'
 import { useEvents } from '../../contexts/EventContext'
-import { mockAttendanceStats, mockAttendanceChartData, mockEventChartData } from '../../data/usersData'
+import { mockAttendanceStats } from '../../data/usersData'
 
-// Fix for default marker icon issue in Leaflet with webpack
+// Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+
+// Custom icons for different marker types
+const locationIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjJjNTVlIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjJjNTVlIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
+const eventIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjU2M2ViIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjU2M2ViIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 })
 
 // Component to auto-fit bounds to show all markers
@@ -45,106 +65,13 @@ function AdminDashboard() {
   // Use Event Context (for Event locations)
   const { events } = useEvents()
 
-  const [chartPeriod, setChartPeriod] = useState('week') // week, month, year
-  const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
+  const [selectedDetailType, setSelectedDetailType] = useState(null) // 'absent', 'late', 'leave'
+  const [showDetailModal, setShowDetailModal] = useState(false)
   const locationRefs = useRef({}) // Refs for scrolling to location cards
 
   // ใช้ Mock Data จาก usersData.js
   const attendanceStats = mockAttendanceStats
-
-  // Calculate real event stats from EventContext
-  const eventStats = {
-    totalEvents: events.length,
-    activeEvents: events.filter(e => e.status === 'ongoing').length,
-    todayEvents: events.filter(e => {
-      const today = new Date()
-      const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
-      return e.date === todayStr
-    }).length,
-    completedEvents: events.filter(e => e.status === 'completed').length,
-    // Mock participants data (can be extended to track real participants in the future)
-    totalParticipants: events.reduce((sum, e) => sum + (e.teams?.length || 0) * 15, 0), // Estimate 15 people per team
-    todayParticipants: events.filter(e => {
-      const today = new Date()
-      const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
-      return e.date === todayStr
-    }).reduce((sum, e) => sum + (e.teams?.length || 0) * 15, 0)
-  }
-
-  // Get current stats based on selected type
-  const stats = statsType === 'attendance' ? attendanceStats : eventStats
-
-  // Generate chart data based on selected period and type
-  const getChartData = () => {
-    if (statsType === 'attendance') {
-      // ใช้ Attendance Chart Data จาก usersData.js
-      return mockAttendanceChartData[chartPeriod] || []
-    } else {
-      // Event data: ใช้ mockEventChartData จาก usersData.js
-      const avgParticipantsPerEvent = eventStats.totalEvents > 0
-        ? Math.max(1, Math.round(eventStats.totalParticipants / eventStats.totalEvents))
-        : 15
-
-      // ดึงข้อมูลจาก mockEventChartData
-      const eventData = mockEventChartData[chartPeriod];
-      if (!eventData) return [];
-
-      const { labels, counts } = eventData;
-
-      // แปลง event counts เป็น participant counts
-      const mapCountsToParticipants = labels.map((label, idx) => {
-        // สำหรับข้อมูลวันปัจจุบัน (ศุกร์) ใช้ todayParticipants ถ้ามี
-        if (label === 'ศุกร์' && eventStats.todayParticipants) {
-          return { name: label, value: eventStats.todayParticipants };
-        }
-        // แปลงจำนวน event เป็นจำนวนผู้เข้าร่วม
-        return { name: label, value: (counts[idx] || 0) * avgParticipantsPerEvent };
-      });
-
-      // ตรวจสอบว่ามีข้อมูลหรือไม่
-      if (mapCountsToParticipants.length === 0 && eventStats.totalParticipants) {
-        return [{ name: chartPeriod, value: eventStats.totalParticipants }];
-      }
-      
-      return mapCountsToParticipants;
-    }
-  }
-
-  // Compute chart data and dynamic Y axis max so chart doesn't hug the top
-  const chartData = getChartData()
-  const maxValue = chartData && chartData.length ? Math.max(...chartData.map(d => d.value || 0)) : (statsType === 'attendance' ? attendanceStats.totalWeekly : eventStats.totalParticipants)
-  const yAxisMax = Math.ceil(Math.max(1, maxValue) * 1.12) // 12% headroom
-
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl shadow-2xl p-4 min-w-[200px]">
-          <p className="text-sm font-bold text-secondary dark:text-white mb-3 border-b border-gray-200 pb-2">{label}</p>
-          <div className="space-y-2">
-            {payload.map((entry, index) => (
-              <div key={index} className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: entry.color }}
-                  />
-                  <span className="text-sm text-secondary dark:text-white/70">
-                    {entry.name}
-                  </span>
-                </div>
-                <span className="text-lg font-bold" style={{ color: entry.color }}>
-                  {entry.value} คน
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    }
-    return null
-  }
 
   // Combine locations from both Mapping and Events
   const mappingLocations = locations.map((loc, index) => ({
@@ -237,256 +164,124 @@ function AdminDashboard() {
 
       {/* Main Content */}
       <main className="px-6 py-8 max-w-8xl mx-auto">
-        {/* Section 1: Stats with Selector */}
+        {/* Section 1: Stats Cards */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-secondary dark:text-white">
-              {statsType === 'attendance' ? 'สถิติการเข้างาน' : 'สถิติการเข้าร่วมกิจกรรม'}
+              สถิติการเข้างาน
             </h2>
-            <div className="flex gap-2 bg-white dark:bg-secondary/95 rounded-lg p-1 border border-gray-200 dark:border-white/10">
-              <button
-                onClick={() => setStatsType('attendance')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${statsType === 'attendance'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-secondary dark:text-white/70 dark:text-white/70 hover:bg-accent dark:hover:bg-accent-orange/30'
-                  }`}
-              >
-                การเข้างาน
-              </button>
-              <button
-                onClick={() => setStatsType('event')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${statsType === 'event'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-secondary dark:text-white/70 dark:text-white/70 hover:bg-accent dark:hover:bg-accent-orange/30'
-                  }`}
-              >
-                กิจกรรม
-              </button>
-            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {statsType === 'attendance' ? (
-              <>
-                {/* Total Weekly - Attendance */}
-                <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-primary transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 bg-accent-orange dark:bg-primary/20 rounded-full flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F26623">
-                        <path d="M40-160v-112q0-34 17.5-62.5T104-378q62-31 126-46.5T360-440q66 0 130 15.5T616-378q29 15 46.5 43.5T680-272v112H40Zm720 0v-120q0-44-24.5-84.5T666-434q51 6 96 20.5t84 35.5q36 20 55 44.5t19 53.5v120H760ZM360-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm400-160q0 66-47 113t-113 47q-11 0-28-2.5t-28-5.5q27-32 41.5-71t14.5-81q0-42-14.5-81T544-792q14-5 28-6.5t28-1.5q66 0 113 47t47 113Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-secondary dark:text-white/70 dark:text-white/70 text-sm mb-1">จำนวนพนักงานทั้งหมดในสัปดาห์นี้</h3>
-                  <p className="text-4xl font-bold text-secondary dark:text-white">{attendanceStats.totalWeekly}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/70 mt-2">จากทั้งหมด {attendanceStats.totalemployees} คน</p>
+            {/* Absent Count */}
+            <button
+              onClick={() => {
+                setSelectedDetailType('absent')
+                setShowDetailModal(true)
+              }}
+              className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-red-500 transition-all hover:shadow-lg text-left"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#dc2626">
+                    <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                  </svg>
                 </div>
+              </div>
+              <h3 className="text-secondary dark:text-white text-sm mb-1">คนขาดงาน</h3>
+              <p className="text-4xl font-bold text-red-600 dark:text-red-500">{attendanceStats.absentCount}</p>
+              <p className="text-xs text-gray-500 dark:text-white/70 mt-2">คลิกเพื่อดูรายละเอียด</p>
+            </button>
 
-                {/* Total Today - Attendance */}
-                <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-primary transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#16a34a">
-                        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-secondary dark:text-white/70 dark:text-white/70 text-sm mb-1">เข้างานสำเร็จวันนี้</h3>
-                  <p className="text-4xl font-bold text-secondary dark:text-white">{attendanceStats.totalToday}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/70 mt-2">95% check on-time</p>
+            {/* Late Count */}
+            <button
+              onClick={() => {
+                setSelectedDetailType('late')
+                setShowDetailModal(true)
+              }}
+              className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-yellow-500 transition-all hover:shadow-lg text-left"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/20 rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#eab308">
+                    <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                  </svg>
                 </div>
+              </div>
+              <h3 className="text-secondary dark:text-white text-sm mb-1">คนมาสาย</h3>
+              <p className="text-4xl font-bold text-yellow-600 dark:text-yellow-500">{attendanceStats.lateCount}</p>
+              <p className="text-xs text-gray-500 dark:text-white/70 mt-2">คลิกเพื่อดูรายละเอียด</p>
+            </button>
 
-                {/* Late Count - Attendance */}
-                <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-primary transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#dc2626">
-                        <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-secondary dark:text-white/70 dark:text-white/70 text-sm mb-1">มาสาย / ลางาน</h3>
-                  <p className="text-4xl font-bold text-secondary dark:text-white">{attendanceStats.lateCount + attendanceStats.leaveCount}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/70 mt-2">{attendanceStats.lateCount} คนมาสาย, {attendanceStats.leaveCount} ลางาน</p>
+            {/* Leave Count */}
+            <button
+              onClick={() => {
+                setSelectedDetailType('leave')
+                setShowDetailModal(true)
+              }}
+              className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-blue-500 transition-all hover:shadow-lg text-left"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#2563eb">
+                    <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
+                  </svg>
                 </div>
-              </>
-            ) : (
-              <>
-                {/* Total Participants - LEFT */}
-                <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-primary transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 bg-accent-orange dark:bg-primary/20 rounded-full flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F26623">
-                        <path d="M0-240v-63q0-43 44-70t116-27q13 0 25 .5t23 2.5q-14 21-21 44t-7 48v65H0Zm240 0v-65q0-32 17.5-58.5T307-410q32-20 76.5-30t96.5-10q53 0 97.5 10t76.5 30q32 20 49 46.5t17 58.5v65H240Zm540 0v-65q0-26-6.5-49T754-397q11-2 22.5-2.5t23.5-.5q72 0 116 26.5t44 70.5v63H780ZM160-440q-33 0-56.5-23.5T80-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T160-440Zm640 0q-33 0-56.5-23.5T720-520q0-34 23.5-57t56.5-23q34 0 57 23t23 57q0 33-23 56.5T800-440Zm-320-40q-50 0-85-35t-35-85q0-51 35-85.5t85-34.5q51 0 85.5 34.5T600-600q0 50-34.5 85T480-480Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-secondary dark:text-white/70 dark:text-white/70 text-sm mb-1">ผู้เข้าร่วมทั้งหมด</h3>
-                  <p className="text-4xl font-bold text-secondary dark:text-white">{eventStats.totalParticipants}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/70 mt-2">จาก {eventStats.totalEvents} กิจกรรม</p>
-                </div>
-
-                {/* Active Events - CENTER */}
-                <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-primary transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#16a34a">
-                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-secondary dark:text-white/70 dark:text-white/70 text-sm mb-1">กิจกรรมที่กำลังดำเนินการ</h3>
-                  <p className="text-4xl font-bold text-secondary dark:text-white">{eventStats.activeEvents}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/70 mt-2">จากทั้งหมด {eventStats.totalEvents} กิจกรรม</p>
-                </div>
-
-                {/* Today Events - RIGHT */}
-                <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10 hover:border-primary transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 bg-accent-orange dark:bg-primary/20 rounded-full flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F26623">
-                        <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-secondary dark:text-white/70 dark:text-white/70 text-sm mb-1">กิจกรรมวันนี้</h3>
-                  <p className="text-4xl font-bold text-secondary dark:text-white">{eventStats.todayEvents}</p>
-                  <p className="text-xs text-gray-500 dark:text-white/70 mt-2">เสร็จสิ้น {eventStats.completedEvents} กิจกรรม</p>
-                </div>
-              </>
-            )}
+              </div>
+              <h3 className="text-secondary dark:text-white text-sm mb-1">คนลางาน</h3>
+              <p className="text-4xl font-bold text-blue-600 dark:text-blue-500">{attendanceStats.leaveCount}</p>
+              <p className="text-xs text-gray-500 dark:text-white/70 mt-2">คลิกเพื่อดูรายละเอียด</p>
+            </button>
           </div>
         </div>
 
-        {/* Section 2: Attendance Trends Chart */}
-        <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 mb-8 border border-gray-200 dark:border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-secondary dark:text-white">แนวโน้มข้อมูล</h2>
-              <p className="text-sm text-secondary dark:text-white/70 dark:text-white/70 mt-1">
-                {statsType === 'attendance' ? 'แนวโน้มการเข้างานของพนักงาน' : 'แนวโน้มการเข้าร่วมกิจกรรม'}
-              </p>
+        {/* Detail Modal */}
+        {showDetailModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-secondary rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-secondary dark:text-white">
+                  {selectedDetailType === 'absent' && 'รายชื่อคนขาดงาน'}
+                  {selectedDetailType === 'late' && 'รายชื่อคนมาสาย'}
+                  {selectedDetailType === 'leave' && 'รายชื่อคนลางาน'}
+                </h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(80vh-88px)]">
+                <p className="text-center text-gray-500 dark:text-white/70 py-8">
+                  ฟีเจอร์นี้จะแสดงรายละเอียดพนักงานในอนาคต
+                </p>
+              </div>
             </div>
+          </div>
+        )}
 
-            {/* Control Panel */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Period Selector */}
-              <div className="flex gap-2 bg-accent dark:bg-black rounded-lg p-1 border border-gray-200 dark:border-white/20">
-                <button
-                  onClick={() => setChartPeriod('week')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${chartPeriod === 'week'
-                      ? 'bg-primary text-white shadow-md'
-                      : 'text-secondary dark:text-white/70 dark:text-white/90 hover:bg-accent dark:hover:text-black dark:hover:bg-accent'
-                    }`}
-                >
-                  สัปดาห์
-                </button>
-                <button
-                  onClick={() => setChartPeriod('month')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${chartPeriod === 'month'
-                      ? 'bg-primary text-white shadow-md'
-                      : 'text-secondary dark:text-white/70 dark:text-white/90 hover:bg-accent dark:hover:text-black dark:hover:bg-accent'
-                    }`}
-                >
-                  เดือน
-                </button>
-                <button
-                  onClick={() => setChartPeriod('year')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${chartPeriod === 'year'
-                      ? 'bg-primary text-white shadow-md'
-                      : 'text-secondary dark:text-white/70 dark:text-white/90 hover:bg-accent dark:hover:text-black dark:hover:bg-accent'
-                    }`}
-                >
-                  ปี
-                </button>
+        {/* Section 2: Permitted Area */}
+        <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-secondary dark:text-white">พื้นที่และกิจกรรม</h2>
+              <p className="text-sm text-secondary dark:text-white/70 mt-1">ภาพรวมพื้นที่อนุญาตและกิจกรรมทั้งหมด</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-accent-orange dark:bg-primary/20 text-primary dark:text-white px-4 py-2 rounded-full text-sm font-medium border border-primary/30">
+                📍 {locations.length} พื้นที่
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-full text-sm font-medium border border-blue-300 dark:border-blue-500/30">
+                📅 {events.length} กิจกรรม
               </div>
             </div>
           </div>
 
-          {/* Chart Area - Using Recharts with dual data */}
-          <div className="relative h-96 bg-accent dark:bg-secondary/50 rounded-xl p-6 border border-gray-200 dark:border-white/10">
-            <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-              <AreaChart
-                data={chartData}
-                margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F26623" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#F26623" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="colorEvent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F26623" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#F26623" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-gray-600" opacity={0.5} />
-                <XAxis
-                  dataKey="name"
-                  stroke="#6B7280"
-                  className="dark:stroke-gray-400"
-                  style={{ fontSize: '13px', fontFamily: 'Prompt', fontWeight: '500' }}
-                  tick={{ fill: '#6B7280' }}
-                />
-                <YAxis
-                  stroke="#6B7280"
-                  className="dark:stroke-gray-400"
-                  style={{ fontSize: '12px', fontFamily: 'Prompt' }}
-                  tick={{ fill: '#6B7280' }}
-                  domain={[0, yAxisMax]}
-                  label={{
-                    value: 'จำนวน (คน)',
-                    angle: -90,
-                    position: 'insideLeft',
-                    style: { fontSize: '13px', fontFamily: 'Prompt', fontWeight: '600', fill: '#374151' }
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-
-                {/* Show single line based on statsType */}
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  name={statsType === 'attendance' ? 'การเข้างาน' : 'กิจกรรม'}
-                  stroke={statsType === 'attendance' ? '#F26623' : '#F26623'}
-                  strokeWidth={3}
-                  fill={statsType === 'attendance' ? 'url(#colorAttendance)' : 'url(#colorEvent)'}
-                  fillOpacity={1}
-                  animationBegin={0}
-                  animationDuration={1500}
-                  animationEasing="ease-in-out"
-                  dot={{
-                    fill: statsType === 'attendance' ? '#F26623' : '#F26623',
-                    strokeWidth: 2,
-                    r: 5,
-                    stroke: '#fff'
-                  }}
-                  activeDot={{
-                    r: 8,
-                    stroke: statsType === 'attendance' ? '#F26623' : '#F26623',
-                    strokeWidth: 3,
-                    fill: '#fff'
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Section 3: Permitted Area */}
-        <div className="bg-white dark:bg-secondary/95 rounded-2xl p-6 border border-gray-200 dark:border-white/10">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-secondary dark:text-white">Permitted Work Area</h2>
-              <p className="text-sm text-secondary dark:text-white/70 dark:text-white/70 mt-1">พื้นที่อนุญาต</p>
-            </div>
-            <div className="bg-accent-orange dark:bg-primary/20 text-primary dark:text-white px-4 py-2 rounded-full text-sm font-medium border border-primary/30">
-              {locationsWithStatus.length} สถานที่
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-1 gap-6">
-            {/* Map Area - Leaflet */}
-            <div className="relative bg-white dark:bg-accent-orange rounded-xl overflow-hidden border border-gray-200 dark:border-white/20 h-[500px]">
+          <div className="flex gap-6 h-[calc(100vh-400px)] min-h-[600px]">
+            {/* Left Side - Map */}
+            <div className="flex-1 bg-white dark:bg-secondary rounded-2xl shadow-lg overflow-hidden relative border border-gray-200 dark:border-white/10">
               <MapContainer
                 center={defaultCenter}
                 zoom={13}
@@ -515,14 +310,15 @@ function AdminDashboard() {
                   <React.Fragment key={`marker-${location.id}-${location.type}`}>
                     <Marker
                       position={[location.latitude, location.longitude]}
+                      icon={location.type === 'event' ? eventIcon : locationIcon}
                     >
                       <Popup>
                         <div className="p-2 min-w-[200px]">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className={`w-3 h-3 rounded-full ${location.type === 'event' ? 'bg-secondary' : 'bg-primary'}`}></div>
+                            <div className={`w-3 h-3 rounded-full ${location.type === 'event' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
                             <h3 className="font-bold text-secondary dark:text-white">{location.name}</h3>
                           </div>
-                          <p className={`text-xs font-medium mb-2 ${location.type === 'event' ? 'text-secondary' : 'text-primary'}`}>
+                          <p className={`text-xs font-medium mb-2 ${location.type === 'event' ? 'text-blue-600' : 'text-green-600'}`}>
                             {location.checkInStatus}
                           </p>
                           <p className="text-xs text-secondary dark:text-white/70 mb-2">{location.description}</p>
@@ -549,8 +345,8 @@ function AdminDashboard() {
                       center={[location.latitude, location.longitude]}
                       radius={location.radius}
                       pathOptions={{
-                        color: location.type === 'event' ? '#000000' : (location.status === 'active' ? 'green' : 'red'),
-                        fillColor: location.type === 'event' ? '#000000' : (location.status === 'active' ? 'green' : 'red'),
+                        color: location.type === 'event' ? '#2563eb' : '#22c55e',
+                        fillColor: location.type === 'event' ? '#2563eb' : '#22c55e',
                         fillOpacity: 0.2
                       }}
                     />
@@ -563,42 +359,39 @@ function AdminDashboard() {
                 <h3 className="text-xs font-semibold text-gray-700 dark:text-white mb-2">สถานะ</h3>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-primary"></div>
-                    <span className="text-xs text-secondary dark:text-white/70 dark:text-white/70">พื้นที่อนุญาต</span>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-secondary dark:text-white/70">พื้นที่อนุญาต</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-black/80"></div>
-                    <span className="text-xs text-secondary dark:text-white/70 dark:text-white/70">กิจกรรม</span>
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-xs text-secondary dark:text-white/70">กิจกรรม</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Location Details List */}
-            <div className="relative">
-              {/* Scroll indicator at top (shows when scrolled down) */}
-              <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-accent dark:from-gray-800 to-transparent pointer-events-none z-10 opacity-0 transition-opacity" id="scroll-top-indicator"></div>
+            {/* Right Side - List */}
+            <div className="w-[400px] bg-white dark:bg-secondary rounded-2xl shadow-lg border border-gray-200 dark:border-white/10 flex flex-col">
+              {/* Header with Filter Tabs */}
+              <div className="p-4 border-b border-gray-200 dark:border-white/10">
+                <div className="flex gap-2 mb-4">
+                  <button className="flex-1 px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm transition-colors">
+                    ทั้งหมด ({locationsWithStatus.length})
+                  </button>
+                  <button className="flex-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-secondary dark:text-white font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    พื้นที่ ({locations.length})
+                  </button>
+                  <button className="flex-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-secondary dark:text-white font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    กิจกรรม ({events.length})
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-white/60">
+                  คลิกที่การ์ดเพื่อดูรายละเอียดเพิ่มเติม
+                </p>
+              </div>
 
-              {/* Scrollable container */}
-              <div
-                className="space-y-4 max-h-[380px] overflow-y-auto pr-2 scroll-smooth"
-                onScroll={(e) => {
-                  const target = e.currentTarget
-                  const topIndicator = document.getElementById('scroll-top-indicator')
-                  const bottomIndicator = document.getElementById('scroll-bottom-indicator')
-
-                  // Show top indicator when scrolled down
-                  if (topIndicator) {
-                    topIndicator.style.opacity = target.scrollTop > 20 ? '1' : '0'
-                  }
-
-                  // Show bottom indicator when not at bottom
-                  if (bottomIndicator) {
-                    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 20
-                    bottomIndicator.style.opacity = isAtBottom ? '0' : '1'
-                  }
-                }}
-              >
+              {/* Scrollable List */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {locationsWithStatus.map((location) => {
                   const isExpanded = expandedLocationIds.includes(location.id)
 
@@ -606,96 +399,78 @@ function AdminDashboard() {
                     <div
                       key={`card-${location.id}-${location.type}`}
                       ref={(el) => (locationRefs.current[location.id] = el)}
-                      className={`bg-white dark:bg-accent-orange ${location.type === 'event'
-                          ? 'border-secondary/30 dark:border-secondary/50'
-                          : 'border-primary/30'
-                        } border rounded-xl overflow-hidden transition-all hover:border-primary dark:hover:border-primary`}
+                      className={`bg-accent dark:bg-gray-800 border ${location.type === 'event'
+                          ? 'border-blue-200 dark:border-blue-500/30'
+                          : 'border-green-200 dark:border-green-500/30'
+                        } rounded-xl overflow-hidden transition-all hover:shadow-md cursor-pointer`}
+                      onClick={() => {
+                        handleViewDetails(location.id)
+                        toggleLocationDetails(location.id)
+                      }}
                     >
-                      {/* Header - Always Visible (Clickable) */}
-                      <div
-                        className="p-5 cursor-pointer bg-white dark:bg-secondary/95 hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors"
-                        onClick={() => toggleLocationDetails(location.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1">
-                            <div
-                              className={`w-12 h-12 ${location.type === 'event' ? 'bg-secondary' : 'bg-primary'
-                                } rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0`}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                      {/* Header - Always Visible */}
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className={`w-10 h-10 ${location.type === 'event' ? 'bg-blue-500' : 'bg-green-500'} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                              <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="white">
                                 <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
                               </svg>
                             </div>
-                            <div className="flex-1">
-                              <h3 className="font-bold text-secondary dark:text-white text-lg">{location.name}</h3>
-                              <p className={`text-sm font-medium ${location.type === 'event' ? 'text-secondary dark:text-white' : 'text-primary dark:text-primary'}`}>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-secondary dark:text-white text-sm truncate">{location.name}</h3>
+                              <p className={`text-xs font-medium ${location.type === 'event' ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'}`}>
                                 {location.checkInStatus}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-white/70 mt-1">
-                                {location.type === 'event' ? '📅 จากกิจกรรม' : '📍 จากตั้งค่าแผนที่'}
+                              <p className="text-xs text-gray-500 dark:text-white/60 mt-1 truncate">
+                                {location.description}
                               </p>
                             </div>
                           </div>
-
-                          {/* Dropdown Arrow */}
-                          <div className="ml-4">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              height="24px"
-                              viewBox="0 -960 960 960"
-                              width="24px"
-                              fill="currentColor"
-                              className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} text-secondary dark:text-white`}
-                            >
-                              <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
-                            </svg>
-                          </div>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            fill="currentColor"
+                            className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} text-gray-400 flex-shrink-0`}
+                          >
+                            <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+                          </svg>
                         </div>
                       </div>
 
                       {/* Details - Expandable */}
                       <div
-                        className={`transition-colors ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                        className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
                           } overflow-hidden`}
                       >
-                        <div className="px-5 pb-5 space-y-3">
-                          <div className="bg-accent dark:bg-accent rounded-lg p-3 border border-gray-200 dark:border-white/30">
-                            <p className="text-xs text-secondary dark:text-white/70 dark:text-white/70 mb-1">รายละเอียด</p>
-                            <p className="font-semibold text-secondary dark:text-white text-sm">{location.description}</p>
+                        <div className="px-4 pb-4 space-y-2 border-t border-gray-200 dark:border-white/10 pt-3">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <p className="text-gray-500 dark:text-white/60">ทีม</p>
+                              <p className="font-semibold text-secondary dark:text-white">{location.team}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 dark:text-white/60">เวลา</p>
+                              <p className="font-semibold text-secondary dark:text-white">{location.time}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 dark:text-white/60">รัศมี</p>
+                              <p className="font-semibold text-secondary dark:text-white">{location.radius} ม.</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 dark:text-white/60">สถานะ</p>
+                              <p className={`font-semibold ${location.type === 'event' ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'}`}>
+                                {location.type === 'event' ? 'กิจกรรม' : 'พื้นที่'}
+                              </p>
+                            </div>
                           </div>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-accent dark:bg-accent rounded-lg p-3 border border-gray-200 dark:border-white/30">
-                              <p className="text-xs text-secondary dark:text-white/70 dark:text-white/70 mb-1">ทีม / หน่วยงาน</p>
-                              <p className="font-semibold text-secondary dark:text-white text-sm">{location.team}</p>
-                            </div>
-                            <div className="bg-accent dark:bg-accent rounded-lg p-3 border border-gray-200 dark:border-white/30">
-                              <p className="text-xs text-secondary dark:text-white/70 dark:text-white/70 mb-1">เวลาเช็คอิน</p>
-                              <p className="font-semibold text-secondary dark:text-white text-sm">{location.time}</p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-accent dark:bg-accent rounded-lg p-3 border border-gray-200 dark:border-white/30">
-                              <p className="text-xs text-secondary dark:text-white/70 dark:text-white/70 mb-1">รัศมี</p>
-                              <p className="font-semibold text-secondary dark:text-white text-sm">{location.radius} เมตร</p>
-                            </div>
-                            <div className="bg-accent dark:bg-accent rounded-lg p-3 border border-gray-200 dark:border-white/30">
-                              <p className="text-xs text-secondary dark:text-white/70 dark:text-white/70 mb-1">พิกัด</p>
-                              <div className="flex items-center gap-1">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  height="14px"
-                                  viewBox="0 -960 960 960"
-                                  width="14px"
-                                  fill="#6B7280"
-                                  className="dark:fill-gray-400"
-                                >
-                                  <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
-                                </svg>
-                                <p className="text-xs text-gray-700 dark:text-white/90">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
-                              </div>
-                            </div>
+                          <div className="pt-2">
+                            <p className="text-gray-500 dark:text-white/60 text-xs mb-1">พิกัด</p>
+                            <p className="text-xs font-mono text-gray-700 dark:text-white/90">
+                              {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -703,9 +478,6 @@ function AdminDashboard() {
                   )
                 })}
               </div>
-
-              {/* Scroll indicator at bottom (shows when not scrolled to bottom) */}
-              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-accent dark:from-gray-800 to-transparent pointer-events-none z-10 transition-opacity" id="scroll-bottom-indicator"></div>
             </div>
           </div>
         </div>
