@@ -1,11 +1,29 @@
 import React, { useState } from 'react'
-import { Outlet, useNavigate, NavLink } from 'react-router-dom'
+import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../contexts/useAuth'
+import { ThemeToggle } from '../../../components/common/ThemeToggle'
 
 function AdminLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout } = useAuth()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Get page title based on current path
+  const getPageTitle = () => {
+    const path = location.pathname
+    if (path.includes('/dashboard')) return { title: 'ภาพรวมการปฏิบัติงานทั้งหมด', subtitle: 'ข้อมูลเรียลไทม์ของระบบตรวจสอบการเข้างาน การลางาน และพื้นที่อนุญาต' }
+    if (path.includes('/manage-users')) return { title: 'จัดการผู้ใช้', subtitle: 'จัดการสิทธิ์การใช้งานและข้อมูลผู้ใช้ในระบบ' }
+    if (path.includes('/attendance')) return { title: 'ตารางเวลางาน', subtitle: 'จัดการตารางเวลาและการเข้างานของพนักงาน' }
+    if (path.includes('/download')) return { title: 'ดาวน์โหลดข้อมูล', subtitle: 'ส่งออกรายงานและข้อมูลต่างๆ' }
+    if (path.includes('/mapping')) return { title: 'ตั้งค่าแผนที่และกิจกรรม', subtitle: 'จัดการพื้นที่อนุญาตและกิจกรรม' }
+    if (path.includes('/notifications')) return { title: 'ส่งแจ้งเตือนแบบกลุ่ม', subtitle: 'ส่งข้อความแจ้งเตือนไปยังผู้ใช้' }
+    if (path.includes('/checkin-approval')) return { title: 'อนุมัติเช็คชื่อแทน', subtitle: 'อนุมัติการเช็คชื่อแทนของพนักงาน' }
+    if (path.includes('/warning')) return { title: 'การแจ้งเตือน', subtitle: 'ตรวจสอบสาเหตุการลา / มาสายของพนักงาน' }
+    return { title: 'Admin Dashboard', subtitle: 'จัดการระบบ Easy Check' }
+  }
+
+  const pageInfo = getPageTitle()
 
   const handleLogout = () => {
     if (logout) {
@@ -70,6 +88,15 @@ function AdminLayout() {
       )
     },
     {
+      path: '/admin/checkin-approval',
+      label: 'อนุมัติเช็คชื่อแทน',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+          <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+        </svg>
+      )
+    },
+    {
       path: '/admin/warning',
       label: 'รับการแจ้งเตือน',
       icon: (
@@ -81,32 +108,32 @@ function AdminLayout() {
   ]
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-accent dark:bg-secondary transition-colors duration-300">
+      {/* Sidebar - Minimal Design */}
       <aside 
         className={`${
           sidebarCollapsed ? 'w-20' : 'w-64'
-        } bg-[#085EC5] text-white flex flex-col transition-all duration-300 shadow-xl`}
+        } bg-white dark:bg-secondary/95 border-r border-gray-200 dark:border-white/10 flex flex-col transition-all duration-300`}
       >
         {/* Logo */}
-        <div className="p-6 flex items-center justify-between border-b border-white/10">
+        <div className="p-6 flex items-center justify-between border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
           {!sidebarCollapsed && (
             <div>
-              <h1 className="text-2xl font-bold">Easy Check</h1>
-              <p className="text-xs text-white/70 mt-1">Admin Panel</p>
+              <h1 className="text-2xl font-bold text-primary">Easy Check</h1>
+              <p className="text-xs text-gray-500 dark:text-white/70 mt-1">Admin Panel</p>
             </div>
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 hover:bg-accent dark:hover:bg-accent-orange/30 rounded-lg transition-colors"
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               height="24px" 
               viewBox="0 -960 960 960" 
               width="24px" 
-              fill="white"
-              className={`transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`}
+              fill="currentColor"
+              className={`text-gray-600 dark:text-white/90 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`}
             >
               <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/>
             </svg>
@@ -114,24 +141,24 @@ function AdminLayout() {
         </div>
 
         {/* Menu Items */}
-        <nav className="flex-1 py-6 overflow-y-auto">
-          <div className="space-y-2 px-3">
+        <nav className="flex-1 py-2 overflow-y-auto">
+          <div className="space-y-1 px-3">
             {menuItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
+                  `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all${
                     isActive
-                      ? 'bg-white text-[#085EC5] shadow-lg'
-                      : 'text-white/90 hover:bg-white/10'
-                  } ${sidebarCollapsed ? 'justify-center' : ''}`
+                      ? 'bg-accent-orange text-primary border-l-4 border-primary dark:bg-primary/10'
+                      : 'text-gray-700 dark:text-white/90 hover:bg-accent dark:hover:bg-accent-orange/50 border-l-4 border-transparent'
+                  } ${sidebarCollapsed ? 'justify-center px-3' : ''}`
                 }
                 title={sidebarCollapsed ? item.label : ''}
               >
-                <span className="flex-shrink-0">{item.icon}</span>
+                <span className={`flex-shrink-0 ${({ isActive }) => isActive ? 'text-primary' : 'text-gray-600 dark:text-white/70 group-hover:text-primary'}`}>{item.icon}</span>
                 {!sidebarCollapsed && (
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 )}
               </NavLink>
             ))}
@@ -139,25 +166,39 @@ function AdminLayout() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-gray-200 dark:border-white/10 transition-colors duration-300">
           <button
             onClick={handleLogout}
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold flex items-center justify-center space-x-2 transition-all shadow-lg"
+            className={`w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-orange-50 dark:hover:bg-primary/20 rounded-lg transition-colors ${
+              sidebarCollapsed ? 'justify-center' : ''
+            }`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
               <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>
             </svg>
-            {!sidebarCollapsed && <span>Logout</span>}
+            {!sidebarCollapsed && <span className="font-medium">ออกจากระบบ</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="h-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <header className="bg-white dark:bg-secondary/95 border-b border-gray-200 dark:border-white/10 p-[1.63rem] flex items-center justify-between transition-colors duration-300">
+          <div>
+            <h2 className="text-xl font-bold text-secondary dark:text-white">{pageInfo.title}</h2>
+            <p className="text-sm text-gray-500 dark:text-white/70">{pageInfo.subtitle}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {/* Page Content - เพิ่ม transition */}
+        <main className="flex-1 overflow-y-auto bg-accent dark:bg-secondary transition-colors duration-300">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

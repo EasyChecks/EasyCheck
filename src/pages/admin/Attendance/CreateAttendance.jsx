@@ -729,7 +729,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             <button
               type="button"
               onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all flex items-center justify-between"
+              className="w-full border-2 border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 bg-white hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary /30 transition-all flex items-center justify-between"
             >
               <span className="text-gray-700">
                 {selectedTeams.length === 0 
@@ -750,17 +750,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
             {/* Dropdown Menu */}
             {showTeamsDropdown && (
-              <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 w-full mt-1 bg-white dark:bg-secondary/95 border-2 border-gray-300 dark:border-white/20 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {availableTeams.map((teamOption) => (
                   <label
                     key={teamOption}
-                    className="flex items-center px-4 py-2 hover:bg-blue-50 cursor-pointer transition-colors"
+                    className="flex items-center px-4 py-2 hover:bg-accent dark:hover:bg-accent-orange/30 cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={selectedTeams.includes(teamOption)}
                       onChange={() => toggleTeam(teamOption)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mr-3"
+                      className="w-4 h-4 text-primary dark:text-primary border-gray-300 dark:border-white/20 rounded focus:ring-primary focus:ring-2 mr-3"
                     />
                     <span className="text-gray-700">{teamOption}</span>
                   </label>
@@ -772,12 +772,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             {selectedTeams.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedTeams.map(team => (
-                  <span key={team} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                  <span key={team} className="inline-flex items-center gap-1 bg-accent dark:bg-accent-orange text-primary dark:text-primary px-3 py-1 rounded-full text-sm font-medium">
                     {team}
                     <button
                       type="button"
                       onClick={() => toggleTeam(team)}
-                      className="hover:text-blue-900 ml-1 font-bold"
+                      className="hover:text-primary dark:hover:text-primary ml-1 font-bold"
                     >
                       ×
                     </button>
@@ -843,7 +843,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     onFocus={() => setShowTimeStartPicker(true)}
                     onKeyDown={(e) => handleKeyDown(e, 'timeStart')}
                     placeholder="เช่น 09:00"
-                    className="w-full border rounded px-3 py-2 pr-10 hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full border rounded px-3 py-2 pr-10 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                   />
                   
                   <button
@@ -852,7 +852,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setShowTimeStartPicker(!showTimeStartPicker)
                       setShowTimeEndPicker(false)
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary dark:text-primary transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -862,11 +862,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                   {/* Custom Time Picker Dropdown */}
                   {showTimeStartPicker && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-blue-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-secondary/95 border-2 border-primary dark:border-primary rounded-lg shadow-2xl max-h-64 overflow-hidden">
                       <div className="flex">
                         {/* Hours Column */}
                         <div className="flex-1 border-r border-gray-200">
-                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -878,8 +878,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentMinute = timeStart?.split(':')[1] || '00'
                                   handleTimeSelect(hour, currentMinute, true)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                  timeStart?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
+                                  timeStart?.startsWith(hour) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
                                 }`}
                               >
                                 {hour}
@@ -890,7 +890,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         
                         {/* Minutes Column */}
                         <div className="flex-1">
-                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -902,8 +902,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentHour = timeStart?.split(':')[0] || '00'
                                   handleTimeSelect(currentHour, minute, true)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                  timeStart?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
+                                  timeStart?.endsWith(minute) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
                                 }`}
                               >
                                 {minute}
@@ -931,7 +931,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     onFocus={() => setShowTimeEndPicker(true)}
                     onKeyDown={(e) => handleKeyDown(e, 'timeEnd')}
                     placeholder="เช่น 17:00"
-                    className="w-full border rounded px-3 py-2 pr-10 hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full border rounded px-3 py-2 pr-10 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                   />
                   
                   <button
@@ -940,7 +940,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setShowTimeEndPicker(!showTimeEndPicker)
                       setShowTimeStartPicker(false)
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary dark:text-primary transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -950,11 +950,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                   {/* Custom Time Picker Dropdown */}
                   {showTimeEndPicker && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-blue-400 rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-secondary/95 border-2 border-primary dark:border-primary rounded-lg shadow-2xl max-h-64 overflow-hidden">
                       <div className="flex">
                         {/* Hours Column */}
                         <div className="flex-1 border-r border-gray-200">
-                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -966,8 +966,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentMinute = timeEnd?.split(':')[1] || '00'
                                   handleTimeSelect(hour, currentMinute, false)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                  timeEnd?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
+                                  timeEnd?.startsWith(hour) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
                                 }`}
                               >
                                 {hour}
@@ -978,7 +978,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         
                         {/* Minutes Column */}
                         <div className="flex-1">
-                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -990,8 +990,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentHour = timeEnd?.split(':')[0] || '00'
                                   handleTimeSelect(currentHour, minute, false)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                  timeEnd?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
+                                  timeEnd?.endsWith(minute) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
                                 }`}
                               >
                                 {minute}
@@ -1016,7 +1016,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 type="button"
                 onClick={handleOpenMapModal}
                 aria-label="เปิดแผนที่เลือกสถานที่"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700 z-10"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary dark:text-primary hover:text-primary dark:text-primary z-10"
               >
                 {/* Map icon */}
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
@@ -1054,7 +1054,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               <button
                 type="button"
                 onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all flex items-center justify-between"
+                className="w-full border-2 border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 bg-white hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary /30 transition-all flex items-center justify-between"
               >
                 <span className={type ? "text-gray-700" : "text-gray-400"}>
                   {type || 'เลือกประเภทงาน...'}
@@ -1072,7 +1072,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
               {/* Dropdown Menu */}
               {showTypeDropdown && (
-                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-secondary/95 border-2 border-gray-300 dark:border-white/20 rounded-lg shadow-lg max-h-60 overflow-hidden">
                   {/* Existing Types */}
                   <div className="max-h-48 overflow-y-auto">
                     {workTypes.map((workType) => (
@@ -1080,8 +1080,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         key={workType}
                         type="button"
                         onClick={() => selectWorkType(workType)}
-                        className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors ${
-                          type === workType ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700'
+                        className={`w-full text-left px-4 py-2 hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
+                          type === workType ? 'bg-accent dark:bg-accent-orange text-primary dark:text-primary font-semibold' : 'text-gray-700'
                         }`}
                       >
                         {workType}
@@ -1104,14 +1104,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                             }
                           }}
                           placeholder="ชื่อประเภทงานใหม่..."
-                          className="w-full px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none mb-2"
+                          className="w-full px-3 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none mb-2"
                           autoFocus
                         />
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={handleAddNewType}
-                            className="flex-1 bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                            className="flex-1 bg-primary dark:bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 dark:hover:bg-primary/80 transition-colors"
                           >
                             เพิ่ม
                           </button>
@@ -1203,14 +1203,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           <div className="flex items-center gap-3 pt-2 flex-wrap">
             <button 
               type="submit" 
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#2b78d3] to-[#1877F2] text-white rounded-full shadow-md hover:shadow-lg hover:from-[#2466c2] hover:to-[#166fe0] transition-all duration-200 font-medium text-sm"
+              className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#2b78d3] to-[#1877F2] text-white rounded-full shadow-md hover:shadow-lg hover:from-[#2466c2] hover:to-[#166fe0] transition-colors font-medium text-sm"
             >
               บันทึก
             </button>
             <button 
               type="button" 
               onClick={onClose} 
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+              className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 dark:border-white/20 text-gray-700 rounded-full hover:bg-accent dark:hover:bg-accent-orange hover:border-primary dark:hover:border-primary transition-colors font-medium text-sm"
             >
               ยกเลิก
             </button>
@@ -1228,14 +1228,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             style={{ maxHeight: '90vh' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
+            <div className="bg-primary dark:bg-primary px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">เลือกสถานที่จากแผนที่</h3>
-                <p className="text-sm text-blue-100 mt-1">คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่</p>
+                <p className="text-sm text-white/80 mt-1">คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่</p>
               </div>
               <button
                 onClick={() => setShowMapModal(false)}
-                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                className="text-white hover:bg-accent/20 rounded-lg p-2 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1261,7 +1261,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000]">
                     <button
                       onClick={() => setMapClickEnabled(true)}
-                      className="bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2"
+                      className="bg-primary dark:bg-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-primary/90 dark:hover:bg-primary/80 transition-all flex items-center gap-2"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -1295,7 +1295,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           value={newLocationForm.name}
                           onChange={(e) => setNewLocationForm(prev => ({ ...prev, name: e.target.value }))}
                           placeholder="เช่น สำนักใหญ่ TGS"
-                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none"
                         />
                       </div>
 
@@ -1308,7 +1308,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           value={newLocationForm.description}
                           onChange={(e) => setNewLocationForm(prev => ({ ...prev, description: e.target.value }))}
                           placeholder="เช่น ศูนย์การประชุมหลัก"
-                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none"
                         />
                       </div>
 
@@ -1321,7 +1321,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           value={newLocationForm.radius}
                           onChange={(e) => setNewLocationForm(prev => ({ ...prev, radius: e.target.value }))}
                           placeholder="100"
-                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none"
                         />
                       </div>
 
@@ -1333,7 +1333,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           type="text"
                           value={newLocationForm.latitude}
                           readOnly
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-100"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg bg-gray-100"
                         />
                       </div>
 
@@ -1345,14 +1345,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           type="text"
                           value={newLocationForm.longitude}
                           readOnly
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-100"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg bg-gray-100"
                         />
                       </div>
 
                       <div className="flex gap-3 pt-4">
                         <button
                           onClick={handleCreateNewLocation}
-                          className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                          className="flex-1 bg-primary dark:bg-primary text-white px-4 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
                         >
                           สร้างและเลือก
                         </button>
@@ -1376,7 +1376,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           placeholder="ค้นหาสถานที่..."
                           value={searchLocation}
                           onChange={(e) => setSearchLocation(e.target.value)}
-                          className="w-full px-4 py-2 pr-20 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none bg-white"
+                          className="w-full px-4 py-2 pr-20 rounded-lg border-2 border-gray-300 dark:border-white/20 focus:border-primary dark:focus:border-primary focus:outline-none bg-white"
                         />
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
@@ -1422,10 +1422,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           <button
                             key={loc.id}
                             onClick={() => handleSelectLocation(loc.name)}
-                            className="w-full text-left bg-white border-2 border-gray-200 hover:border-blue-400 rounded-lg p-4 transition-all hover:shadow-md"
+                            className="w-full text-left bg-white border-2 border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary rounded-lg p-4 transition-all hover:shadow-md"
                           >
                             <div className="flex items-start gap-3">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary dark:text-primary flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                               </svg>
                               <div className="flex-1">

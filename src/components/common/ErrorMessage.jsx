@@ -19,7 +19,7 @@ const ErrorMessage = memo(function ErrorMessage({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 font-medium"
+            className="px-6 py-2 bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white rounded-lg transition-colors duration-200 font-medium"
           >
             ลองอีกครั้ง
           </button>

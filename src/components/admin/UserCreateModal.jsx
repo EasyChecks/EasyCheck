@@ -348,7 +348,7 @@ const UserCreateModal = memo(function UserCreateModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 px-6 py-5 flex justify-between items-center relative overflow-hidden flex-shrink-0">
+        <div className="bg-primary dark:bg-primary px-6 py-5 flex justify-between items-center relative overflow-hidden flex-shrink-0">
           {/* Decorative background elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
@@ -366,7 +366,7 @@ const UserCreateModal = memo(function UserCreateModal({
           </div>
           <button
             onClick={handleClose}
-            className="relative text-white hover:bg-white/20 rounded-xl transition-all p-2"
+            className="relative text-white hover:bg-accent/20 rounded-xl transition-all p-2"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -386,7 +386,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="เช่น นายสมชาย ใจดี"
@@ -402,7 +402,7 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.provinceCode}
                 onChange={(e) => handleInputChange('provinceCode', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.provinceCode ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -422,7 +422,7 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.branchCode}
                 onChange={(e) => handleInputChange('branchCode', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.branchCode ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -437,9 +437,9 @@ const UserCreateModal = memo(function UserCreateModal({
             {/* Preview รหัสพนักงาน */}
             {previewEmployeeId && (
               <div className="md:col-span-2">
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-blue-700 mb-1"> รหัสพนักงานที่จะได้รับ:</p>
-                  <p className="text-2xl font-bold text-blue-900">{previewEmployeeId}</p>
+                <div className="bg-accent dark:bg-accent-orange border-2 border-gray-200 dark:border-white/10 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-primary dark:text-primary mb-1"> รหัสพนักงานที่จะได้รับ:</p>
+                  <p className="text-2xl font-bold text-secondary dark:text-white">{previewEmployeeId}</p>
                 </div>
               </div>
             )}
@@ -453,7 +453,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="example@company.com"
@@ -470,7 +470,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="0812345678"
@@ -488,7 +488,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="text"
                 value={formData.nationalId}
                 onChange={(e) => handleInputChange('nationalId', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.nationalId ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="1234567890123"
@@ -506,7 +506,7 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.department}
                 onChange={(e) => handleInputChange('department', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.department ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -526,7 +526,7 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.position}
                 onChange={(e) => handleInputChange('position', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg 500 focus:border-transparent ${
                   errors.position ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -546,14 +546,14 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.role}
                 onChange={(e) => handleInputChange('role', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
               >
                 <option value="user">ผู้ใช้ทั่วไป (User)</option>
                 <option value="admin">ผู้ดูแลระบบ (Admin)</option>
                 <option value="superadmin">ผู้ดูแลระบบสูงสุด (Super Admin)</option>
               </select>
               {(formData.role === 'admin' || formData.role === 'superadmin') && (
-                <p className="text-sm text-blue-600 mt-1">
+                <p className="text-sm text-primary dark:text-primary mt-1">
                   🔐 จะสร้างบัญชี Admin แยกต่างหาก (ADM{previewEmployeeId})
                 </p>
               )}
@@ -567,7 +567,7 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
               >
                 <option value="active">ใช้งาน (Active)</option>
                 <option value="inactive">ไม่ใช้งาน (Inactive)</option>
@@ -583,7 +583,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="date"
                 value={formData.birthDate}
                 onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
               />
             </div>
 
@@ -596,7 +596,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="number"
                 value={formData.age}
                 onChange={(e) => handleInputChange('age', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                 placeholder="อายุจะคำนวณอัตโนมัติจากวันเกิด"
                 readOnly={formData.birthDate ? true : false}
               />
@@ -610,7 +610,7 @@ const UserCreateModal = memo(function UserCreateModal({
               <select
                 value={formData.bloodType}
                 onChange={(e) => handleInputChange('bloodType', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
               >
                 <option value="">เลือกกรุ๊ปเลือด</option>
                 {bloodTypes.map(type => (
@@ -628,7 +628,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="number"
                 value={formData.salary}
                 onChange={(e) => handleInputChange('salary', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                 placeholder="0"
               />
             </div>
@@ -642,7 +642,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => handleInputChange('startDate', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
               />
             </div>
           </div>
@@ -662,7 +662,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   type="text"
                   value={formData.emergencyContactName}
                   onChange={(e) => handleInputChange('emergencyContactName', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   placeholder="ชื่อ-นามสกุล"
                 />
               </div>
@@ -676,7 +676,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   type="tel"
                   value={formData.emergencyContactPhone}
                   onChange={(e) => handleInputChange('emergencyContactPhone', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   placeholder="0812345678"
                   maxLength={10}
                 />
@@ -691,7 +691,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   type="text"
                   value={formData.emergencyContactRelation}
                   onChange={(e) => handleInputChange('emergencyContactRelation', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   placeholder="เช่น บิดา มารดา พี่ น้อง"
                 />
               </div>
@@ -708,7 +708,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 <textarea
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   rows={3}
                   placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"
                 />
@@ -726,7 +726,7 @@ const UserCreateModal = memo(function UserCreateModal({
             {formData.workHistory.length > 0 && (
               <div className="mb-4 space-y-2">
                 {formData.workHistory.map((work, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div key={index} className="flex items-start gap-3 p-3 bg-accent dark:bg-accent-orange rounded-lg border border-gray-200 dark:border-white/10">
                     <div className="flex-1">
                       <div className="font-medium text-gray-800">{work.position}</div>
                       <div className="text-sm text-gray-600">{work.company}</div>
@@ -753,7 +753,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   type="text"
                   value={currentWorkHistory.position}
                   onChange={(e) => setCurrentWorkHistory({ ...currentWorkHistory, position: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm"
                   placeholder="ตำแหน่ง"
                 />
               </div>
@@ -762,7 +762,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   type="text"
                   value={currentWorkHistory.company}
                   onChange={(e) => setCurrentWorkHistory({ ...currentWorkHistory, company: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm"
                   placeholder="บริษัท/หน่วยงาน"
                 />
               </div>
@@ -771,7 +771,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   type="text"
                   value={currentWorkHistory.period}
                   onChange={(e) => setCurrentWorkHistory({ ...currentWorkHistory, period: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm"
                   placeholder="ช่วงเวลา (เช่น 2020-2023)"
                 />
               </div>
@@ -779,7 +779,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 <button
                   type="button"
                   onClick={addWorkHistory}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="w-full px-4 py-2 bg-primary dark:bg-primary text-white rounded-lg hover:bg-primary/90 dark:hover:bg-primary/80 transition-colors text-sm font-medium"
                 >
                   + เพิ่ม
                 </button>
@@ -821,7 +821,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   value={currentEducation}
                   onChange={(e) => setCurrentEducation(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addEducation()}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm"
                   placeholder="เช่น ปริญญาตรี บริหารธุรกิจ มหาวิทยาลัย..."
                 />
               </div>
@@ -871,7 +871,7 @@ const UserCreateModal = memo(function UserCreateModal({
                   value={currentSkill}
                   onChange={(e) => setCurrentSkill(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm"
                   placeholder="เช่น Microsoft Office, การบริหารจัดการ, ภาษาอังกฤษ..."
                 />
               </div>
@@ -892,7 +892,7 @@ const UserCreateModal = memo(function UserCreateModal({
         <div className="border-t px-6 py-4 flex justify-end gap-3 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
           <button
             onClick={handleClose}
-            className="px-6 py-2.5 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-white hover:border-gray-400 transition-all font-medium flex items-center gap-2 shadow-sm"
+            className="px-6 py-2.5 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-accent hover:border-gray-400 transition-all font-medium flex items-center gap-2 shadow-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -901,7 +901,7 @@ const UserCreateModal = memo(function UserCreateModal({
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium flex items-center gap-2"
+            className="px-6 py-2.5 bg-primary dark:bg-primary text-white rounded-xl hover:bg-primary/90 dark:hover:bg-primary/80 transition-all shadow-lg hover:  font-medium flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

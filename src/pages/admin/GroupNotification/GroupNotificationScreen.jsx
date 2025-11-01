@@ -82,7 +82,7 @@ const HistoryDetailModal = ({ notification, onClose }) => {
     const getChannelIcons = () => {
         const channels = [];
         if (notification.channels.line) channels.push({ name: 'LINE', icon: '💬', color: 'bg-green-500' });
-        if (notification.channels.sms) channels.push({ name: 'SMS', icon: '📱', color: 'bg-blue-500' });
+        if (notification.channels.sms) channels.push({ name: 'SMS', icon: '📱', color: 'bg-primary dark:bg-primary' });
         if (notification.channels.email) channels.push({ name: 'Email', icon: '📧', color: 'bg-red-500' });
         return channels;
     };
@@ -91,15 +91,15 @@ const HistoryDetailModal = ({ notification, onClose }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
             <div className="w-full max-w-3xl overflow-hidden bg-white shadow-2xl rounded-2xl animate-scaleIn">
                 {/* Header */}
-                <div className="p-6 text-white bg-gradient-to-r from-blue-600 to-blue-700">
+                <div className="p-6 text-white bg-primary dark:bg-primary">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold">รายละเอียดการแจ้งเตือน</h2>
-                            <p className="mt-1 text-sm text-blue-100">{notification.timestamp}</p>
+                            <p className="mt-1 text-sm text-white/80">{notification.timestamp}</p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="flex items-center justify-center w-10 h-10 transition-colors rounded-full bg-white/20 hover:bg-white/30"
+                            className="flex items-center justify-center w-10 h-10 transition-colors rounded-full bg-white/20 hover:bg-accent/30"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -157,7 +157,7 @@ const HistoryDetailModal = ({ notification, onClose }) => {
                 <div className="p-4 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="w-full py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
+                        className="w-full py-3 font-semibold text-gray-800 transition-colors bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 rounded-xl"
                     >
                         ปิด
                     </button>
@@ -196,19 +196,19 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
-                <div className="p-6 text-white bg-gradient-to-r from-blue-500 to-blue-600">
+                <div className="p-6 text-white bg-primary dark:bg-primary">
                     <h3 className="text-xl font-bold">ยืนยันการส่งแจ้งเตือน</h3>
                 </div>
                 <div className="p-6 space-y-4">
-                    <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                    <div className="p-4 border border-gray-200 dark:border-white/10 rounded-lg bg-accent dark:bg-accent-orange">
                         <div className="flex items-start gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary dark:text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
-                                <p className="font-semibold text-blue-800">คุณกำลังจะส่งแจ้งเตือนไปยัง</p>
-                                <p className="mt-1 text-blue-700"><strong>{getRecipientText()}</strong></p>
-                                <p className="mt-2 text-sm text-blue-600">ผ่านช่องทาง: <strong>{getSelectedChannels().join(', ')}</strong></p>
+                                <p className="font-semibold text-secondary dark:text-white">คุณกำลังจะส่งแจ้งเตือนไปยัง</p>
+                                <p className="mt-1 text-secondary dark:text-white"><strong>{getRecipientText()}</strong></p>
+                                <p className="mt-2 text-sm text-primary dark:text-primary">ผ่านช่องทาง: <strong>{getSelectedChannels().join(', ')}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -217,13 +217,13 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
                 <div className="flex gap-3 p-4 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="flex-1 py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
+                        className="flex-1 py-3 font-semibold text-gray-800 transition-colors bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 rounded-xl"
                     >
                         ยกเลิก
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 py-3 font-semibold text-white transition-all shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl"
+                        className="flex-1 py-3 font-semibold text-white transition-all shadow-lg bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 rounded-xl"
                     >
                         ยืนยันและส่ง
                     </button>
@@ -268,11 +268,11 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
     return (
         <div
             onClick={onClick}
-            className="p-5 transition-all bg-white border border-gray-200 cursor-pointer rounded-xl hover:border-blue-300 hover:shadow-lg group"
+            className="p-5 transition-all bg-white border border-gray-200 cursor-pointer rounded-xl hover:border-gray-300 dark:border-white/20 dark:hover:border-white hover:shadow-lg group"
         >
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                    <h3 className="font-bold text-gray-800 transition-colors group-hover:text-blue-600 line-clamp-1">
+                    <h3 className="font-bold text-gray-800 transition-colors group-hover:text-primary dark:text-primary line-clamp-1">
                         {notification.title}
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">{notification.timestamp}</p>
@@ -516,17 +516,17 @@ function GroupNotificationScreen() {
 
     return (
         <>
-            <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50 md:p-8 font-prompt">
+            <div className="flex-1 p-4 overflow-y-auto bg-accent dark:bg-secondary md:p-8 font-prompt">
                 {/* Header */}
                 <header className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl">
+                        <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-primary dark:bg-primary rounded-xl">
                             <svg xmlns="http://www.w3.org/2000/svg" className="text-white h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800">การแจ้งเตือนแบบกลุ่ม</h1>
+                            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">การแจ้งเตือนแบบกลุ่ม</h1>
                             <p className="mt-1 text-gray-600">ส่งข้อความแจ้งเตือนไปยังกลุ่มเป้าหมายผ่าน LINE, SMS และ Email</p>
                         </div>
                     </div>
@@ -536,21 +536,21 @@ function GroupNotificationScreen() {
                     {/* ฟอร์มส่งแจ้งเตือน */}
                     <div className="space-y-6 lg:col-span-2">
                         {/* Card หลัก */}
-                        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
-                            <div className="p-6 text-white bg-gradient-to-r from-blue-600 to-blue-700">
+                        <div className="overflow-hidden bg-white dark:bg-black dark:border dark:border-white/10 border-gray-200 dark:border-white/10 rounded-2xl">
+                            <div className="p-6 text-white bg-primary dark:bg-primary">
                                 <h2 className="flex items-center gap-2 text-xl font-bold">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                                     </svg>
                                     สร้างข้อความแจ้งเตือน
                                 </h2>
-                                <p className="mt-1 text-sm text-blue-100">กรอกข้อมูลและเลือกกลุ่มเป้าหมาย</p>
+                                <p className="mt-1 text-sm text-white/80">กรอกข้อมูลและเลือกกลุ่มเป้าหมาย</p>
                             </div>
 
                             <div className="p-6 space-y-5">
                                 {/* หัวข้อ */}
                                 <div>
-                                    <label htmlFor="title" className="block mb-2 text-sm font-semibold text-gray-700">
+                                    <label htmlFor="title" className="block mb-2 text-sm font-semibold text-gray-500">
                                         หัวข้อ <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -562,10 +562,10 @@ function GroupNotificationScreen() {
                                             if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: false }));
                                         }}
                                         placeholder="เช่น ประกาศด่วนสำหรับทีมช่าง"
-                                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-all ${
+                                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-all dark:bg-black dark:border-white/10 ${
                                             fieldErrors.title 
-                                                ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake' 
-                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                                ? 'border-red-400 bg-red-50 500 shake' 
+                                                : 'border-gray-300 dark:border-white/20  focus:border-transparent'
                                         }`}
                                     />
                                     {fieldErrors.title && (
@@ -580,20 +580,20 @@ function GroupNotificationScreen() {
 
                                 {/* เลือกผู้รับ */}
                                 <div>
-                                    <label className="block mb-2 text-sm font-semibold text-gray-700">
+                                    <label className="block mb-2 text-sm font-semibold text-gray-500">
                                         เลือกผู้รับ <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative" ref={dropdownRef}>
                                         <button
                                             type="button"
                                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                            className={`flex items-center justify-between w-full px-4 py-3 text-left bg-white border-2 rounded-xl transition-all ${
+                                            className={`flex items-center justify-between w-full px-4 py-3 text-left bg-white border-2 rounded-xl transition-all dark:bg-black dark:border-white/10 ${
                                                 fieldErrors.recipients
-                                                    ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake'
-                                                    : 'border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                                    ? 'border-red-400 bg-red-50 500 shake'
+                                                    : 'border-gray-300 dark:border-white/20 hover:border-primary dark:hover:border-primary focus:outline-none '
                                             }`}
                                         >
-                                            <span className={recipientGroups.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
+                                            <span className={recipientGroups.length === 0 ? 'text-gray-400 ' : 'text-gray-700'}>
                                                 {getDropdownButtonText()}
                                                 {recipientGroups.length > 0 && (
                                                     <span className="ml-2 text-sm text-gray-500">
@@ -614,11 +614,11 @@ function GroupNotificationScreen() {
                                             </p>
                                         )}
                                         {isDropdownOpen && (
-                                            <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 shadow-xl rounded-xl">
+                                            <div className="absolute z-20 w-full mt-2 bg-white dark:bg-secondary/95 border border-gray-200 shadow-lg rounded-xl">
                                                 <ul className="p-2 space-y-1 overflow-y-auto max-h-64">
                                                     {recipientOptions.map(option => (
                                                         <li key={option.value}>
-                                                            <label className="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer hover:bg-blue-50 group">
+                                                            <label className="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer hover:bg-accent dark:bg-accent-orange group">
                                                                 <div className="flex items-center">
                                                                     <input
                                                                         type="checkbox"
@@ -627,9 +627,9 @@ function GroupNotificationScreen() {
                                                                             handleRecipientChange(option.value);
                                                                             if (fieldErrors.recipients) setFieldErrors(prev => ({ ...prev, recipients: false }));
                                                                         }}
-                                                                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                        className="w-5 h-5 text-primary dark:text-primary border-gray-300 dark:border-white/20 rounded focus:ring-primary"
                                                                     />
-                                                                    <span className="ml-3 font-medium text-gray-800 group-hover:text-blue-600">
+                                                                    <span className="ml-3 font-medium text-gray-800 group-hover:text-primary dark:text-primary">
                                                                         {option.label}
                                                                     </span>
                                                                 </div>
@@ -647,7 +647,7 @@ function GroupNotificationScreen() {
 
                                 {/* ข้อความ */}
                                 <div>
-                                    <label htmlFor="message" className="block mb-2 text-sm font-semibold text-gray-700">
+                                    <label htmlFor="message" className="block mb-2 text-sm font-semibold text-gray-500">
                                         ข้อความแจ้งเตือน <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
@@ -661,8 +661,8 @@ function GroupNotificationScreen() {
                                         placeholder="พิมพ์ข้อความที่ต้องการส่ง..."
                                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-all resize-none ${
                                             fieldErrors.message
-                                                ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake'
-                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                                ? 'border-red-400 bg-red-50 500 shake'
+                                                : 'border-gray-300 dark:border-white/20  focus:border-transparent'
                                         }`}
                                     ></textarea>
                                     <div className="flex items-center justify-between mt-1">
@@ -676,7 +676,7 @@ function GroupNotificationScreen() {
                                                 </p>
                                             )}
                                         </div>
-                                        <p className={`text-sm ${message.length < 10 && message.length > 0 ? 'text-blue-500 font-semibold' : 'text-gray-500'}`}>
+                                        <p className={`text-sm ${message.length < 10 && message.length > 0 ? 'text-primary dark:text-primary font-semibold' : 'text-gray-500'}`}>
                                             {message.length} ตัวอักษร
                                             {message.length > 0 && message.length < 10 && ' (ต้องการอย่างน้อย 10)'}
                                         </p>
@@ -685,7 +685,7 @@ function GroupNotificationScreen() {
 
                                 {/* เลือกช่องทางการส่ง */}
                                 <div>
-                                    <label className="block mb-3 text-sm font-semibold text-gray-700">
+                                    <label className="block mb-3 text-sm font-semibold text-gray-500">
                                         เลือกช่องทางการส่ง <span className="text-red-500">*</span>
                                     </label>
                                     {fieldErrors.channels && (
@@ -706,7 +706,7 @@ function GroupNotificationScreen() {
                                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                                                 sendChannels.line
                                                     ? 'border-green-500 bg-green-50 shadow-lg scale-105'
-                                                    : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
+                                                    : 'border-gray-200 hover:border-green-400 dark:hover:border-green-400 hover:bg-accent dark:hover:bg-accent-orange'
                                             }`}
                                         >
                                             <span className="text-3xl">💬</span>
@@ -731,16 +731,16 @@ function GroupNotificationScreen() {
                                             }}
                                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                                                 sendChannels.sms
-                                                    ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
-                                                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                                    ? 'border-primary dark:border-primary bg-accent dark:bg-accent-orange shadow-lg scale-105'
+                                                    : 'border-gray-200 hover:border-gray-300 dark:border-white/20 dark:hover:border-white hover:bg-accent dark:hover:bg-accent-orange'
                                             }`}
                                         >
                                             <span className="text-3xl">📱</span>
-                                            <span className={`font-semibold ${sendChannels.sms ? 'text-blue-700' : 'text-gray-700'}`}>
+                                            <span className={`font-semibold ${sendChannels.sms ? 'text-secondary dark:text-white' : 'text-gray-700'}`}>
                                                 SMS
                                             </span>
                                             {sendChannels.sms && (
-                                                <div className="flex items-center gap-1 text-xs text-blue-600">
+                                                <div className="flex items-center gap-1 text-xs text-primary dark:text-primary">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
@@ -758,7 +758,7 @@ function GroupNotificationScreen() {
                                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                                                 sendChannels.email
                                                     ? 'border-red-500 bg-red-50 shadow-lg scale-105'
-                                                    : 'border-gray-200 hover:border-red-300 hover:bg-gray-50'
+                                                    : 'border-gray-200 hover:border-red-400 dark:hover:border-red-400 hover:bg-accent dark:hover:bg-accent-orange'
                                             }`}
                                         >
                                             <span className="text-3xl">📧</span>
@@ -780,7 +780,7 @@ function GroupNotificationScreen() {
                                 {/* ปุ่มส่ง */}
                                 <button
                                     onClick={handleSubmit}
-                                    className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl hover:shadow-xl"
+                                    className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all shadow-lg bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 rounded-xl hover:shadow-lg"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -793,8 +793,8 @@ function GroupNotificationScreen() {
 
                     {/* ประวัติการแจ้งเตือน */}
                     <div className="lg:col-span-1">
-                        <div className="sticky overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl top-6">
-                            <div className="p-5 text-white bg-gradient-to-r from-indigo-600 to-indigo-700">
+                        <div className="sticky overflow-hidden bg-white dark:bg-secondary transition-colors duration-300/95 border border-gray-200 dark:border-white/10 shadow-lg rounded-2xl top-6">
+                            <div className="p-5 text-white bg-primary dark:bg-primary">
                                 <h2 className="flex items-center gap-2 text-lg font-bold">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

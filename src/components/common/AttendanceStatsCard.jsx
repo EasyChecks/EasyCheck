@@ -111,7 +111,7 @@ export const AttendanceStatsRow = ({ className = '' }) => {
   ];
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <div className={`${className}`}>
       <div className="flex items-center gap-2 text-gray-700 font-medium">
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -168,21 +168,21 @@ export const AttendanceProgressBar = ({ className = '' }) => {
       <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden flex">
         {onTimePercentage > 0 && (
           <div 
-            className="bg-green-500 h-full transition-all duration-500"
+            className="bg-green-500 h-full transition-colors"
             style={{ width: `${onTimePercentage}%` }}
             title={`ตรงเวลา ${onTimePercentage}%`}
           />
         )}
         {latePercentage > 0 && (
           <div 
-            className="bg-orange-500 h-full transition-all duration-500"
+            className="bg-orange-500 h-full transition-colors"
             style={{ width: `${latePercentage}%` }}
             title={`มาสาย ${latePercentage}%`}
           />
         )}
         {absentPercentage > 0 && (
           <div 
-            className="bg-red-500 h-full transition-all duration-500"
+            className="bg-red-500 h-full transition-colors"
             style={{ width: `${absentPercentage}%` }}
             title={`ขาดงาน ${absentPercentage}%`}
           />
