@@ -329,12 +329,12 @@ export default function Warning() {
   })
 
   return (
-    <div className="w-full bg-gray-50 dark:bg-black ">
+    <div className="w-full h-full bg-gray-50 dark:bg-black overflow-y-auto">
       <div className="">
         <div
           className="w-full mx-auto p-6"
         >
-        <div className="max-w-auto mx-auto min-h-screen">
+        <div className="max-w-auto mx-auto">
 
           {/* Search and Filter Section */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">

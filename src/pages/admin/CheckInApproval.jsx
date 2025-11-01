@@ -90,7 +90,7 @@ export default function CheckInApproval() {
   };
 
   return (
-    <div className="min-h-screen bg-accent dark:bg-secondary transition-colors duration-300">
+    <div className="h-full bg-accent dark:bg-secondary transition-colors duration-300 overflow-y-auto">
       {/* Header */}
       <div className="bg-white dark:bg-secondary transition-colors duration-300 border-b border-gray-200 dark:border-white/10 p-6 sticky top-0 z-40 shadow-sm">
         <h1 className="text-2xl font-bold text-secondary dark:text-white font-prompt">อนุมัติคำขอเช็คชื่อแทน</h1>

@@ -280,10 +280,10 @@ function Attendance() {
   }
 
     return (
-      <div className="w-full bg-gray-50 min-h-screen overflow-y-auto" 
+      <div className="w-full h-full bg-gray-50" 
       style={{ scrollbarGutter: 'stable' }}
       >
-        <div className="w-full pl-3 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-6">
+        <div className="w-full h-full pl-3 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-6 overflow-y-auto">
           <div
             className="w-full mx-auto bg-white rounded-2xl p-6 shadow-xl border border-gray-200"
             style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)' }}

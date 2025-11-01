@@ -429,7 +429,7 @@ function DownloadData() {
   };
 
   return (
-    <div className="min-h-screen bg-accent dark:bg-secondary transition-colors duration-300">
+    <div className="h-full bg-accent dark:bg-secondary transition-colors duration-300 overflow-y-auto">
       <div className="max-w-7xl px-6 py-6">
         {/* Header */}
         <div className="mb-8">
