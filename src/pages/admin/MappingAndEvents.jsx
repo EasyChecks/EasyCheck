@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../contexts/LocationContext'
 import { useEvents } from '../../contexts/EventContext'
+import { usersData } from '../../data/usersData'
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl
@@ -227,6 +228,123 @@ function SearchMarker({ position, name, onClick }) {
   )
 }
 
+// Multi-Select Component with Search
+function MultiSelect({ selected, onChange, options, placeholder, label }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const filtered = options.filter(opt => 
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (opt.secondary && opt.secondary.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+
+  const toggleOption = (value) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter(v => v !== value))
+    } else {
+      onChange([...selected, value])
+    }
+  }
+
+  const selectedLabels = selected.map(val => {
+    const opt = options.find(o => o.value === val)
+    return opt ? opt.label : val
+  })
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+      </label>
+      
+      <div 
+        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus-within:border-blue-500 cursor-pointer min-h-[42px] flex flex-wrap gap-2 items-center"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {selected.length === 0 ? (
+          <span className="text-gray-400 text-sm">{placeholder}</span>
+        ) : (
+          selectedLabels.map((label, idx) => (
+            <span key={idx} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              {label}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const opt = options.find(o => o.label === label)
+                  if (opt) toggleOption(opt.value)
+                }}
+                className="hover:bg-blue-200 rounded-full"
+              >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </span>
+          ))
+        )}
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-[2100] w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-hidden">
+          <div className="p-2 border-b border-gray-200">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="ค้นหา..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-500 text-center">ไม่พบข้อมูล</div>
+            ) : (
+              filtered.map(opt => (
+                <div
+                  key={opt.value}
+                  className={`px-4 py-2 cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
+                    selected.includes(opt.value) ? 'bg-blue-100' : ''
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleOption(opt.value)
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(opt.value)}
+                    onChange={() => {}}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900">{opt.label}</div>
+                    {opt.secondary && (
+                      <div className="text-xs text-gray-500">{opt.secondary}</div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Create Form Component
 function CreateForm({ type, position, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
@@ -235,26 +353,28 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
     radius: 100,
     locationName: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    startTime: '09:00',
+    endTime: '17:00',
+    assignedUsers: [],
+    assignedRoles: [],
+    assignedDepartments: [],
+    assignedPositions: []
   })
 
   const startDateRef = useRef(null)
   const endDateRef = useRef(null)
   const formRef = useRef(null)
 
-  // Helper function to pad numbers with zero
   const pad = (n) => n.toString().padStart(2, '0')
 
-  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // ESC to cancel
       if (e.key === 'Escape') {
         e.preventDefault()
         onCancel()
       }
-      // Enter to submit
-      if ((e.key === 'Enter')) {
+      if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'TEXTAREA') {
         e.preventDefault()
         if (formRef.current) {
           formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
@@ -268,7 +388,6 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
     }
   }, [onCancel])
 
-  // Helper function to normalize date input to DD/MM/YYYY
   const normalizeDate = (input) => {
     if (!input) return ''
     const s = input.trim()
@@ -330,6 +449,18 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
       
       if (startDateObj > endDateObj) {
         alert('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
+        return
+      }
+
+      // Validate ผู้รับผิดชอบ - ต้องมีอย่างน้อย 1 เกณฑ์
+      const hasAssignment = 
+        formData.assignedUsers.length > 0 ||
+        formData.assignedRoles.length > 0 ||
+        formData.assignedDepartments.length > 0 ||
+        formData.assignedPositions.length > 0
+
+      if (!hasAssignment) {
+        alert('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
         return
       }
     }
@@ -524,6 +655,92 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
               />
             </div>
           </div>
+
+          {/* Time Selection */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                เวลาเริ่ม <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                เวลาสิ้นสุด <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Assignment Section */}
+          <div className="space-y-4 pt-4 border-t-2 border-gray-200">
+            <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">              
+              กำหนดผู้รับผิดชอบ
+            </h3>
+
+            <MultiSelect
+              label="เลือกพนักงานเฉพาะราย"
+              selected={formData.assignedUsers}
+              onChange={(values) => setFormData({ ...formData, assignedUsers: values })}
+              options={usersData.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => ({
+                value: u.id,
+                label: u.name,
+                secondary: `${u.department} - ${u.position}`
+              }))}
+              placeholder="เลือกพนักงาน..."
+            />
+
+            <MultiSelect
+              label="เลือกตาม Role (บทบาท)"
+              selected={formData.assignedRoles}
+              onChange={(values) => setFormData({ ...formData, assignedRoles: values })}
+              options={[
+                { value: 'user', label: 'User', secondary: 'พนักงานทั่วไป' },
+                { value: 'manager', label: 'Manager', secondary: 'ผู้จัดการ' }
+              ]}
+              placeholder="เลือก Role..."
+            />
+
+            <MultiSelect
+              label="เลือกตาม Department (แผนก)"
+              selected={formData.assignedDepartments}
+              onChange={(values) => setFormData({ ...formData, assignedDepartments: values })}
+              options={[...new Set(usersData.map(u => u.department))].filter(Boolean).map(dept => ({
+                value: dept,
+                label: dept
+              }))}
+              placeholder="เลือกแผนก..."
+            />
+
+            <MultiSelect
+              label="เลือกตาม Position (ตำแหน่ง)"
+              selected={formData.assignedPositions}
+              onChange={(values) => setFormData({ ...formData, assignedPositions: values })}
+              options={[...new Set(usersData.map(u => u.position))].filter(Boolean).map(pos => ({
+                value: pos,
+                label: pos
+              }))}
+              placeholder="เลือกตำแหน่ง..."
+            />
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-800">
+                <strong>💡 หมายเหตุ:</strong> ผู้ใช้จะเห็นกิจกรรมนี้หากตรงกับเงื่อนไข<strong>ใดเงื่อนไขหนึ่ง</strong>ที่กำหนด
+              </p>
+            </div>
+          </div>
         </>
       )}
 
@@ -558,8 +775,15 @@ function EditForm({ type, item, onSubmit, onCancel }) {
     description: item.description || '',
     radius: item.radius || 100,
     locationName: item.locationName || '',
-    startDate: item.startDate || '',
-    endDate: item.endDate || ''
+    startDate: item.startDate || item.date || '',
+    endDate: item.endDate || item.date || '',
+    startTime: item.startTime || '09:00',
+    endTime: item.endTime || '17:00',
+    status: item.status || 'ongoing',
+    assignedUsers: item.assignedUsers || [],
+    assignedRoles: item.assignedRoles || [],
+    assignedDepartments: item.assignedDepartments || [],
+    assignedPositions: item.assignedPositions || []
   })
 
   const startDateRef = useRef(null)
@@ -568,16 +792,13 @@ function EditForm({ type, item, onSubmit, onCancel }) {
 
   const pad = (n) => n.toString().padStart(2, '0')
 
-  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // ESC to cancel
       if (e.key === 'Escape') {
         e.preventDefault()
         onCancel()
       }
-      // Enter to submit
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'TEXTAREA') {
         e.preventDefault()
         if (formRef.current) {
           formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
@@ -646,6 +867,18 @@ function EditForm({ type, item, onSubmit, onCancel }) {
       
       if (startDateObj > endDateObj) {
         alert('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
+        return
+      }
+
+      // Validate ผู้รับผิดชอบ - ต้องมีอย่างน้อย 1 เกณฑ์
+      const hasAssignment = 
+        formData.assignedUsers.length > 0 ||
+        formData.assignedRoles.length > 0 ||
+        formData.assignedDepartments.length > 0 ||
+        formData.assignedPositions.length > 0
+
+      if (!hasAssignment) {
+        alert('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
         return
       }
     }
@@ -820,6 +1053,102 @@ function EditForm({ type, item, onSubmit, onCancel }) {
               />
             </div>
           </div>
+
+          {/* Time Selection */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                เวลาเริ่ม <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                เวลาสิ้นสุด <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Status Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              สถานะกิจกรรม <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              required
+            >
+              <option value="ongoing">● ดำเนินการ</option>
+              <option value="completed">○ สิ้นสุด</option>
+            </select>
+          </div>
+
+          {/* Assignment Section - Edit Mode */}
+          <div className="space-y-4 pt-4 border-t-2 border-gray-200">
+            <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              กำหนดผู้รับผิดชอบ
+            </h3>
+
+            <MultiSelect
+              label="เลือกพนักงาน"
+              selected={formData.assignedUsers}
+              onChange={(values) => setFormData({ ...formData, assignedUsers: values })}
+              options={usersData.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => ({
+                value: u.id,
+                label: u.name,
+                secondary: `${u.department} - ${u.position}`
+              }))}
+              placeholder="เลือกพนักงาน..."
+            />
+
+            <MultiSelect
+              label="เลือกตาม Role (บทบาท)"
+              selected={formData.assignedRoles}
+              onChange={(values) => setFormData({ ...formData, assignedRoles: values })}
+              options={[
+                { value: 'user', label: 'User', secondary: 'พนักงานทั่วไป' },
+                { value: 'manager', label: 'Manager', secondary: 'ผู้จัดการ' }
+              ]}
+              placeholder="เลือก Role..."
+            />
+
+            <MultiSelect
+              label="เลือกตาม Department (แผนก)"
+              selected={formData.assignedDepartments}
+              onChange={(values) => setFormData({ ...formData, assignedDepartments: values })}
+              options={[...new Set(usersData.map(u => u.department))].filter(Boolean).map(dept => ({
+                value: dept,
+                label: dept
+              }))}
+              placeholder="เลือกแผนก..."
+            />
+
+            <MultiSelect
+              label="เลือกตาม Position (ตำแหน่ง)"
+              selected={formData.assignedPositions}
+              onChange={(values) => setFormData({ ...formData, assignedPositions: values })}
+              options={[...new Set(usersData.map(u => u.position))].filter(Boolean).map(pos => ({
+                value: pos,
+                label: pos
+              }))}
+              placeholder="เลือกตำแหน่ง..."
+            />          
+          </div>
         </>
       )}
 
@@ -868,6 +1197,8 @@ function MappingAndEvents() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [detailItem, setDetailItem] = useState(null)
   const mapSearchTimeoutRef = useRef(null)
 
   const defaultCenter = [13.7606, 100.5034]
@@ -1166,6 +1497,15 @@ function MappingAndEvents() {
   const handleCreate = async (formData) => {
     try {
       if (createType === 'location') {
+        // Check duplicate name for locations
+        const isDuplicate = locations.some(loc => 
+          loc.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
+        )
+        if (isDuplicate) {
+          alert('มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          return
+        }
+
         const newId = locations.length > 0 ? Math.max(...locations.map(l => l.id)) + 1 : 1
         addLocation({
           id: newId,
@@ -1175,10 +1515,17 @@ function MappingAndEvents() {
           status: 'active'
         })
       } else if (createType === 'event') {
+        // Check duplicate name for events
+        const isDuplicate = events.some(evt => 
+          evt.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
+        )
+        if (isDuplicate) {
+          alert('มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          return
+        }
+
         const newId = events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1
-        
-        // ถ้าวันที่อยู่ในรูปแบบ DD/MM/YYYY อยู่แล้ว ใช้เลย
-        // ถ้าไม่ใช่ ให้แปลง
+
         let formattedStartDate = formData.startDate
         let formattedEndDate = formData.endDate
         
@@ -1194,6 +1541,9 @@ function MappingAndEvents() {
           formattedEndDate = `${d2}/${m2}/${y2}`
         }
         
+        // Auto-check status based on current date
+        const autoStatus = checkEventStatus(formattedStartDate, formattedEndDate, formData.startTime, formData.endTime)
+        
         addEvent({
           id: newId,
           ...formData,
@@ -1202,8 +1552,12 @@ function MappingAndEvents() {
           date: formattedStartDate, // Keep for compatibility
           latitude: newMarkerPosition[0],
           longitude: newMarkerPosition[1],
-          status: 'ongoing',
-          teams: []
+          status: autoStatus,
+          teams: [],
+          assignedUsers: formData.assignedUsers || [],
+          assignedRoles: formData.assignedRoles || [],
+          assignedDepartments: formData.assignedDepartments || [],
+          assignedPositions: formData.assignedPositions || []
         })
       }
       setShowCreateModal(false)
@@ -1218,15 +1572,73 @@ function MappingAndEvents() {
     }
   }
 
+  // Helper function to check event status based on date/time
+  const checkEventStatus = (startDateStr, endDateStr, startTime, endTime) => {
+    try {
+      const now = new Date()
+      
+      // Parse DD/MM/YYYY format
+      const [startDay, startMonth, startYear] = startDateStr.split('/')
+      const [endDay, endMonth, endYear] = endDateStr.split('/')
+      
+      // Create date objects with times
+      const startDateTime = new Date(`${startYear}-${startMonth}-${startDay}T${startTime}:00`)
+      const endDateTime = new Date(`${endYear}-${endMonth}-${endDay}T${endTime}:00`)
+      
+      if (now < startDateTime) {
+        return 'upcoming' // ยังไม่เริ่ม
+      } else if (now > endDateTime) {
+        return 'completed' // สิ้นสุดแล้ว
+      } else {
+        return 'ongoing' // กำลังดำเนินการ
+      }
+    } catch (error) {
+      console.error('Error checking event status:', error)
+      return 'ongoing' // default
+    }
+  }
+
   // Handle edit location/event
   const handleEdit = async (formData) => {
     try {
       if (editItem.type === 'location') {
+        // Check duplicate name for locations (exclude current item)
+        const isDuplicate = locations.some(loc => 
+          loc.id !== editItem.id && 
+          loc.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
+        )
+        if (isDuplicate) {
+          alert('มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          return
+        }
+
         updateLocation(editItem.id, {
           ...editItem,
           ...formData
         })
       } else if (editItem.type === 'event') {
+        // Check duplicate name for events (exclude current item)
+        const isDuplicate = events.some(evt => 
+          evt.id !== editItem.id && 
+          evt.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
+        )
+        if (isDuplicate) {
+          alert('มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          return
+        }
+
+        // Validate ผู้รับผิดชอบ - ต้องมีอย่างน้อย 1 เกณฑ์
+        const hasAssignment = 
+          formData.assignedUsers.length > 0 ||
+          formData.assignedRoles.length > 0 ||
+          formData.assignedDepartments.length > 0 ||
+          formData.assignedPositions.length > 0
+
+        if (!hasAssignment) {
+          alert('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
+          return
+        }
+
         let formattedStartDate = formData.startDate
         let formattedEndDate = formData.endDate
         
@@ -1243,6 +1655,11 @@ function MappingAndEvents() {
         updateEvent(editItem.id, {
           ...editItem,
           ...formData,
+          status: formData.status,
+          assignedUsers: formData.assignedUsers || [],
+          assignedRoles: formData.assignedRoles || [],
+          assignedDepartments: formData.assignedDepartments || [],
+          assignedPositions: formData.assignedPositions || [],
           startDate: formattedStartDate,
           endDate: formattedEndDate,
           date: formattedStartDate
@@ -1259,8 +1676,240 @@ function MappingAndEvents() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
-      {/* Create Modal */}
-      {showCreateModal && (
+      {/* Detail Modal */}
+      {showDetailModal && detailItem && (
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                {detailItem.type === 'location' ? (
+                  <>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    รายละเอียดพื้นที่อนุญาต
+                  </>
+                ) : (
+                  <>
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    รายละเอียดกิจกรรม
+                  </>
+                )}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false)
+                  setDetailItem(null)
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[calc(90vh-80px)] overflow-y-auto">
+              {/* Basic Info */}
+              <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border-2 border-gray-100">
+                <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  ข้อมูลพื้นฐาน
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">ชื่อ{detailItem.type === 'location' ? 'พื้นที่' : 'กิจกรรม'}</p>
+                    <p className="font-semibold text-gray-800">{detailItem.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">สถานะ</p>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      detailItem.status === 'active' || detailItem.status === 'ongoing'
+                        ? detailItem.type === 'location'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-blue-100 text-blue-700'
+                        : detailItem.status === 'upcoming'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {detailItem.type === 'location' 
+                        ? (detailItem.status === 'active' ? '✓ ใช้งาน' : '✕ ปิด')
+                        : detailItem.status === 'ongoing' 
+                        ? '● ดำเนินการ' 
+                        : detailItem.status === 'upcoming'
+                        ? '◷ ยังไม่เริ่ม'
+                        : '○ สิ้นสุด'
+                      }
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-500 mb-1">คำอธิบาย</p>
+                    <p className="text-gray-700">{detailItem.description || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">รัศมี</p>
+                    <p className="font-semibold text-gray-800">{detailItem.radius} เมตร</p>
+                  </div>
+                  {detailItem.type === 'event' && detailItem.locationName && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">ชื่อสถานที่</p>
+                      <p className="font-semibold text-gray-800">{detailItem.locationName}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Date & Time Info (Events only) */}
+              {detailItem.type === 'event' && (
+                <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-5 border-2 border-blue-100">
+                  <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    วันที่และเวลา
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">วันที่เริ่ม</p>
+                      <p className="font-semibold text-gray-800">{detailItem.startDate || detailItem.date || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">วันที่สิ้นสุด</p>
+                      <p className="font-semibold text-gray-800">{detailItem.endDate || detailItem.date || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">เวลาเริ่ม</p>
+                      <p className="font-semibold text-gray-800">{detailItem.startTime || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">เวลาสิ้นสุด</p>
+                      <p className="font-semibold text-gray-800">{detailItem.endTime || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Location Info */}
+              <div className="bg-gradient-to-br from-green-50 to-white rounded-xl p-5 border-2 border-green-100">
+                <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  พิกัดที่ตั้ง
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">ละติจูด (Latitude)</p>
+                    <p className="font-mono font-semibold text-gray-800">{detailItem.latitude?.toFixed(6) || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">ลองจิจูด (Longitude)</p>
+                    <p className="font-mono font-semibold text-gray-800">{detailItem.longitude?.toFixed(6) || '-'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Assignment Info (Events only) */}
+              {detailItem.type === 'event' && (
+                <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl p-5 border-2 border-purple-100">
+                  <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    ผู้รับผิดชอบ
+                  </h3>
+                  <div className="space-y-3">
+                    {detailItem.assignedUsers && detailItem.assignedUsers.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-2">พนักงานที่ถูกมอบหมาย</p>
+                        <div className="flex flex-wrap gap-2">
+                          {detailItem.assignedUsers.map(userId => {
+                            const user = usersData.find(u => u.id === userId)
+                            return user ? (
+                              <span key={userId} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                                {user.name}
+                              </span>
+                            ) : null
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {detailItem.assignedRoles && detailItem.assignedRoles.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-2">บทบาทที่ถูกมอบหมาย</p>
+                        <div className="flex flex-wrap gap-2">
+                          {detailItem.assignedRoles.map(role => (
+                            <span key={role} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                              {role === 'user' ? 'User' : role === 'manager' ? 'Manager' : role}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailItem.assignedDepartments && detailItem.assignedDepartments.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-2">แผนกที่ถูกมอบหมาย</p>
+                        <div className="flex flex-wrap gap-2">
+                          {detailItem.assignedDepartments.map(dept => (
+                            <span key={dept} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                              {dept}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailItem.assignedPositions && detailItem.assignedPositions.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-2">ตำแหน่งที่ถูกมอบหมาย</p>
+                        <div className="flex flex-wrap gap-2">
+                          {detailItem.assignedPositions.map(pos => (
+                            <span key={pos} className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-medium">
+                              {pos}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {(!detailItem.assignedUsers || detailItem.assignedUsers.length === 0) &&
+                     (!detailItem.assignedRoles || detailItem.assignedRoles.length === 0) &&
+                     (!detailItem.assignedDepartments || detailItem.assignedDepartments.length === 0) &&
+                     (!detailItem.assignedPositions || detailItem.assignedPositions.length === 0) && (
+                      <p className="text-gray-500 text-sm italic">ไม่มีการกำหนดผู้รับผิดชอบ (เปิดให้ทุกคนเข้าถึงได้)</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false)
+                    setDetailItem(null)
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                >
+                  ปิด
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false)
+                    setEditItem(detailItem)
+                    setShowEditModal(true)
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  แก้ไข
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help Modal */}
+      {showHelpModal && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
@@ -1392,9 +2041,9 @@ function MappingAndEvents() {
 
       {/* Edit Modal */}
       {showEditModal && editItem && (
-        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
                 แก้ไข{editItem.type === 'location' ? 'พื้นที่อนุญาต' : 'กิจกรรม'}
               </h2>
@@ -1411,7 +2060,7 @@ function MappingAndEvents() {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 max-h-[calc(90vh-80px)] overflow-y-auto">
               <EditForm
                 type={editItem.type}
                 item={editItem}
@@ -1428,10 +2077,10 @@ function MappingAndEvents() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
                 {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
               </h2>
@@ -1452,7 +2101,7 @@ function MappingAndEvents() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6">
+            <div className="p-6 max-h-[calc(90vh-80px)] overflow-y-auto">
               {!createType ? (
                 // Type Selection
                 <div className="space-y-4">
@@ -1881,11 +2530,13 @@ function MappingAndEvents() {
                           ? isLocation 
                             ? 'bg-green-100 text-green-700' 
                             : 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-red-100 text-red-700'
                       }`}>
                         {isLocation 
                           ? (item.status === 'active' ? '✓ ใช้งาน' : '✕ ปิด')
-                          : (item.status === 'ongoing' ? '● ดำเนินการ' : '○ สิ้นสุด')
+                          : item.status === 'ongoing' 
+                          ? '● ดำเนินการ' 
+                          : '○ สิ้นสุด'
                         }
                       </span>
                     </div>
@@ -1904,25 +2555,37 @@ function MappingAndEvents() {
                       )}
                       {!isLocation && item.date && (
                         <div className="flex items-center gap-1">
-                          <span className="font-medium">วันที่:</span>
+                          <span className="font-medium">วันที่เริ่ม:</span>
                           <span>{item.date}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setDetailItem(item);
+                          setShowDetailModal(true);
+                        }}
+                        className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        title="ดูรายละเอียด"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        </svg>
+                        ดู
+                      </button>
                       <button
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           setEditItem(item);
                           setShowEditModal(true);
                         }}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                          isLocation
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-blue-500 hover:bg-blue-600 text-white'
-                        }`}
+                        className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        title="แก้ไข"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -1931,7 +2594,8 @@ function MappingAndEvents() {
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.type); }}
-                        className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
+                        title="ลบ"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
