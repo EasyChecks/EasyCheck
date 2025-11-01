@@ -46,7 +46,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-6 py-8 overflow-hidden">
+        <div className="relative bg-primary px-6 py-8 overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
           
@@ -65,7 +65,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => onEdit(user)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -76,9 +76,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 <button 
                   onClick={() => onDelete(user)}
                   disabled={currentUser?.role === 'admin' && user?.role === 'superadmin'}
-                  className={`px-4 py-2 rounded-xl transition-all duration-200 transform flex items-center gap-2 font-medium shadow-lg ${
+                  className={`px-4 py-2 rounded-xl transition-colors transform flex items-center gap-2 font-medium shadow-lg ${
                     currentUser?.role === 'admin' && user?.role === 'superadmin'
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-accent text-secondary cursor-not-allowed'
                       : 'bg-red-500 hover:bg-red-600 text-white hover:scale-105'
                   }`}
                   title={currentUser?.role === 'admin' && user?.role === 'superadmin' ? 'ไม่สามารถลบ Super Admin ได้' : 'ลบผู้ใช้'}
@@ -91,7 +91,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
               <button 
                 onClick={onDownloadPDF} 
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -101,7 +101,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.attendanceRecords && (
                 <button 
                   onClick={onToggleAttendance} 
-                  className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                  className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -111,7 +111,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
               <button 
                 onClick={onClose} 
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 font-medium shadow-lg"
+                className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 font-medium shadow-lg"
               >
                 ปิด
               </button>
@@ -229,7 +229,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                                 <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
                               </select>
                             ) : (
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
                                 {record.checkIn.location}
                               </span>
                             )}
@@ -237,7 +237,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                           
                           <div>
                             <div className="text-xs text-gray-500">GPS</div>
-                            <a href={`https://maps.google.com/?q=${record.checkIn.gps}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">{record.checkIn.gps}</a>
+                            <a href={`https://maps.google.com/?q=${record.checkIn.gps}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">{record.checkIn.gps}</a>
                           </div>
                         </div>
                       </div>
@@ -296,7 +296,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                                   <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
                                 </select>
                               ) : (
-                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
                                   {record.checkOut.location}
                                 </span>
                               )}
@@ -304,7 +304,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                             
                             <div>
                               <div className="text-xs text-gray-500">GPS</div>
-                              <a href={`https://maps.google.com/?q=${record.checkOut.gps}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">{record.checkOut.gps}</a>
+                              <a href={`https://maps.google.com/?q=${record.checkOut.gps}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">{record.checkOut.gps}</a>
                             </div>
                           </div>
                         </div>
@@ -321,9 +321,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
             {/* Left Column - Profile */}
             <div className="lg:col-span-1 space-y-5">
               {/* Profile Card */}
-              <div className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl p-6 border-2 border-sky-200 shadow-lg">
+              <div className="bg-accent rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
                 <div className="flex flex-col items-center">
-                  <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-xl ring-4 ring-white">
+                  <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-xl ">
                     <img src={user.profileImage || `https://i.pravatar.cc/300?u=${user.id}`} alt="avatar" className="w-full h-full object-cover" />
                   </div>
                   
@@ -343,7 +343,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {/* ข้อมูลส่วนตัว */}
               <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                 <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   ข้อมูลส่วนตัว
@@ -380,7 +380,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {/* ข้อมูลบัญชี */}
               <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                 <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                   ข้อมูลบัญชี
@@ -403,9 +403,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   {/* Show Admin Account if user is admin or superadmin */}
                   {(user.role === 'admin' || user.role === 'superadmin') && user.adminAccount && (
                     <>
-                      <div className="pt-3 border-t-2 border-blue-200">
-                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 mb-3">
-                          <p className="text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1">
+                      <div className="pt-3 border-t-2 border-gray-200">
+                        <div className="bg-accent rounded-lg p-3 mb-3">
+                          <p className="text-xs font-semibold text-primary mb-1 flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                             </svg>
@@ -415,11 +415,11 @@ const UserDetailModal = React.memo(function UserDetailModal({
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-100">
                         <span className="text-gray-600">Username (Admin)</span>
-                        <span className="font-medium text-blue-600">{user.adminAccount}</span>
+                        <span className="font-medium text-primary">{user.adminAccount}</span>
                       </div>
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Password (Admin)</span>
-                        <span className="font-medium text-blue-600">{user.adminPassword || '••••••••'}</span>
+                        <span className="font-medium text-primary">{user.adminPassword || '••••••••'}</span>
                       </div>
                     </>
                   )}
@@ -432,7 +432,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {/* ข้อมูลการทำงาน */}
               <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                 <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   ข้อมูลการทำงาน
@@ -470,7 +470,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.emergencyContact && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                     ผู้ติดต่อฉุกเฉิน
@@ -497,7 +497,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.address && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -511,7 +511,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.timeSummary && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     สรุปเวลาทำงาน
@@ -541,7 +541,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.workHistory && user.workHistory.length > 0 && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     ประวัติการทำงาน
@@ -549,7 +549,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   <div className="space-y-3">
                     {user.workHistory.map((work, index) => (
                       <div key={index} className="flex gap-3 text-sm">
-                        <div className="w-2 h-2 bg-sky-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="w-2 h-2 bg-accent0 rounded-full mt-2 flex-shrink-0"></div>
                         <div>
                           <div className="font-medium text-gray-800">{work.position}</div>
                           <div className="text-gray-600">{work.company}</div>
@@ -565,7 +565,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.education && user.education.length > 0 && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path d="M12 14l9-5-9-5-9 5 9 5z" />
                       <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
@@ -575,7 +575,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   <div className="space-y-2">
                     {user.education.map((edu, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-accent0 rounded-full"></div>
                         <span className="text-gray-700">{edu}</span>
                       </div>
                     ))}
@@ -587,14 +587,14 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.skills && user.skills.length > 0 && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     ทักษะ
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {user.skills.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-gradient-to-r from-sky-100 to-cyan-100 text-sky-700 rounded-full text-xs font-medium">
+                      <span key={index} className="px-3 py-1 bg-accent text-primary rounded-full text-xs font-medium">
                         {skill}
                       </span>
                     ))}

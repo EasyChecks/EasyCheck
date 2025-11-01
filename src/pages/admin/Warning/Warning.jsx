@@ -13,7 +13,7 @@ export function AttachmentModal({ data, onClose }) {
       <div className="bg-white rounded-lg p-4 max-w-3xl w-full mx-4 z-50 shadow-2xl">
         <div className="flex justify-between items-center mb-3">
           <div className="font-semibold">{att.name} — {item.name}</div>
-          <button onClick={onClose} className="px-3 py-1 bg-gray-100 rounded">ปิด</button>
+          <button onClick={onClose} className="px-3 py-1 bg-accent rounded">ปิด</button>
         </div>
         <div>
           {att.type === 'image' ? (
@@ -23,7 +23,7 @@ export function AttachmentModal({ data, onClose }) {
               <div className="font-semibold mb-2">ไฟล์เอกสาร</div>
               <div>ชื่อไฟล์: {att.name}</div>
               <div className="mt-3">
-                <a href={att.url} target="_blank" rel="noreferrer" className="text-blue-600 underline">ดาวน์โหลดไฟล์</a>
+                <a href={att.url} target="_blank" rel="noreferrer" className="text-primary underline">ดาวน์โหลดไฟล์</a>
               </div>
             </div>
           )}
@@ -329,17 +329,12 @@ export default function Warning() {
   })
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen" style={{ overflowY: 'auto', scrollbarGutter: 'stable' }}>
-      <div className="w-full pl-4 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-4">
+    <div className="w-full bg-gray-50 ">
+      <div className="">
         <div
-          className="w-full mx-auto bg-white rounded-2xl p-6 shadow-xl border border-gray-200"
-          style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)' }}
+          className="w-full mx-auto p-6"
         >
-        <div className="max-w-auto mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-[#0f172a]">การแจ้งเตือน</h1>
-            <p className="text-sm text-slate-500">ตรวจสอบสาเหตุการลา / มาสายของพนักงาน</p>
-          </div>
+        <div className="max-w-auto mx-auto min-h-screen">
 
           {/* Search and Filter Section */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -355,12 +350,12 @@ export default function Warning() {
                 placeholder="ค้นหาชื่อหรือแผนก..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors text-sm"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-secondary"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
@@ -374,7 +369,7 @@ export default function Warning() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm bg-white cursor-pointer"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors text-sm bg-white cursor-pointer"
               >
                 <option value="ทั้งหมด">ทั้งหมด (ประเภท)</option>
                 <option value="ลาป่วย">ลาป่วย</option>
@@ -389,7 +384,7 @@ export default function Warning() {
               <select
                 value={combinedFilter}
                 onChange={(e) => setCombinedFilter(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm bg-blue-50 cursor-pointer font-medium text-blue-700"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors text-sm bg-accent cursor-pointer font-medium text-black"
               >
                 {getCombinedFilterOptions().map(option => (
                   <option key={option} value={option}>
@@ -404,12 +399,12 @@ export default function Warning() {
           <div className="mb-4 text-sm text-slate-600">
             แสดง {filteredItems.length} จาก {items.length} รายการ
             {searchQuery && (
-              <span className="ml-2 text-blue-600 font-medium">
+              <span className="ml-2 text-primary font-medium">
                 ผลการค้นหา: "{searchQuery}"
               </span>
             )}
             {statusFilter !== 'ทั้งหมด' && (
-              <span className="ml-2 text-blue-600 font-medium">
+              <span className="ml-2 text-primary font-medium">
                 • ประเภท: {statusFilter}
               </span>
             )}
@@ -468,7 +463,7 @@ export default function Warning() {
           </div>
         </div>
       </div>
-      </div>
+    </div>
       {modalData && <AttachmentModal data={modalData} onClose={() => setModalData(null)} />}
       
       {/* Approve Confirm Dialog */}
@@ -511,16 +506,16 @@ export default function Warning() {
             <div className="p-6">
               {/* Employee Info */}
               <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-xs text-gray-600 mb-1">รายการที่จะไม่อนุมัติ:</p>
+                <p className="text-xs text-secondary mb-1">รายการที่จะไม่อนุมัติ:</p>
                 <p className="text-gray-900 font-bold text-lg">
                   {selectedItem?.name}
                 </p>
-                <p className="text-gray-600 text-sm mt-1">{selectedItem?.role}</p>
+                <p className="text-secondary text-sm mt-1">{selectedItem?.role}</p>
               </div>
               
               {/* Reason Input */}
               <div className="mb-2">
-                <label className="block text-sm font-bold text-gray-800 mb-3">
+                <label className="block text-sm font-bold text-secondary mb-3">
                   เหตุผลที่ไม่อนุมัติ <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -529,7 +524,7 @@ export default function Warning() {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="ระบุเหตุผล เช่น มีงานเร่งด่วน, ไม่สามารถอนุมัติได้เนื่องจาก..."
                   rows="4"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none resize-none text-sm"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 200 focus:outline-none resize-none text-sm"
                   style={{ transition: 'all 0.2s ease' }}
                 />
               </div>
@@ -546,14 +541,14 @@ export default function Warning() {
                   setRejectReason('')
                   setSelectedItem(null)
                 }}
-                className="flex-1 px-5 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                className="flex-1 px-5 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-accent hover:border-primary transition-colors"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={confirmReject}
                 disabled={!rejectReason.trim()}
-                className="flex-1 px-5 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 shadow-md hover:shadow-lg"
+                className="flex-1 px-5 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 shadow-md hover:shadow-lg"
               >
                 ยืนยันไม่อนุมัติ
               </button>
@@ -629,39 +624,36 @@ export default function Warning() {
 
 function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapperRefCallback, innerRefCallback }) {
   return (
-    <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-5 mb-6 shadow-md">
+    <div className="relative rounded-2xl p-5 mb-6 border text-black border-gray-200">
       <div className="flex items-start gap-4">
-        <img src={item.avatar} alt="avatar" className="w-28 h-28 rounded-full object-cover border-4 border-white/20" />
+        <img src={item.avatar} alt="avatar" className="w-28 h-28 rounded-full object-cover border-4" />
 
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold">{item.name}</h3>
-              <p className="text-sm text-white/90 mt-1">{item.role}</p>
-              <p className="text-sm text-white/90">{item.department}</p>
-              <p className="text-sm text-white/90">{item.branch}</p>
-              <p className="text-sm text-white/90">{item.type}</p>
-              <p className="text-sm text-white/90">{item.file}</p>
+              <p className="text-sm text-black mt-1">{item.role}</p>
+              <p className="text-sm text-black">{item.department}</p>
             </div>
           </div>
 
           <div className="flex gap-3 mt-4">
             <button
               onClick={() => onApprove?.(item)}
-              className="inline-flex items-center justify-center text-base font-semibold bg-gradient-to-br from-sky-400 to-blue-500 text-white min-w-screen h-10 px-5 leading-none hover:from-sky-600 hover:to-cyan-700 rounded-xl shadow-md transition-all duration-200"
+              className="inline-flex items-center justify-center text-base font-semibold bg-primary text-white min-w-screen h-10 px-5 leading-none hover:bg-primary/90 rounded-xl shadow-md transition-colors"
             >
               อนุมัติ
             </button>
             <button
               onClick={() => onReject?.(item)}
-              className="inline-flex items-center justify-center px-5 py-2 bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white rounded-xl text-base font-semibold shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-all duration-200"
+              className="inline-flex items-center justify-center px-5 py-2 bg-secondary text-white rounded-xl text-base font-semibold shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-colors"
             >
               ไม่อนุมัติ
             </button>
             <button
               onClick={() => onToggle(item.id)}
               aria-expanded={expanded}
-              className="relative inline-flex items-center justify-center px-5 py-2 bg-white text-[#0b2b57] rounded-xl text-base font-semibold border-2 border-white/50 hover:bg-white/90 transition-all duration-200 shadow-sm overflow-hidden"
+              className="relative inline-flex items-center justify-center px-5 py-2 bg-accent text-secondary rounded-xl text-base font-semibold border-2 border-white/50 hover:bg-accent/90 transition-colors shadow-sm overflow-hidden"
               style={{ minWidth: 120 }}
             >
               <span
