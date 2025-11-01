@@ -80,7 +80,7 @@ function SuccessDialog({ isOpen, message, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#22C55E">
@@ -91,7 +91,7 @@ function SuccessDialog({ isOpen, message, onClose }) {
           <p className="text-gray-600 mb-6">{message}</p>
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="w-full bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
           >
             ตกลง (Enter)
           </button>
@@ -107,7 +107,7 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#EF4444">
@@ -125,7 +125,7 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+              className="flex-1 bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
             >
               ยืนยัน (Enter)
             </button>
@@ -142,7 +142,7 @@ function ErrorDialog({ isOpen, message, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#F97316">
@@ -153,7 +153,7 @@ function ErrorDialog({ isOpen, message, onClose }) {
           <p className="text-gray-600 mb-6">{message}</p>
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="w-full bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
           >
             ตกลง (Enter)
           </button>
@@ -588,16 +588,16 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
           block: 'center'
         })
         // Add highlight effect
-        element.classList.add('ring-4', 'ring-blue-400')
+        element.classList.add('ring-4', 'ring-orange-400')
         setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-blue-400')
+          element.classList.remove('ring-4', 'ring-orange-400')
         }, 2000)
       }
     }, 100)
   }
 
   return (
-    <div className={hideHeader ? "" : "min-h-screen bg-[#F5F7FA]"}>
+    <div className={hideHeader ? "" : "min-h-screen bg-[#FAFBFC]"}>
       {/* Page Header */}
       {!hideHeader && (
         <div className="bg-white border-b border-gray-200 px-6 py-5">
@@ -613,17 +613,17 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
 
         {/* Section 1: Map with all locations */}
         {!hideMap && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-800">พื้นที่อนุญาตทั้งหมด</h2>
             </div>
-            <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+            <div className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium">
               {locations.length} สถานที่
             </div>
           </div>
 
-          <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-blue-200">
+          <div className="relative h-[550px] rounded-xl overflow-hidden border-2 border-orange-200">
             <MapContainer
               center={defaultCenter}
               zoom={13}
@@ -659,7 +659,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                     <Popup>
                       <div className="p-2 min-w-[200px]">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-3 h-3 rounded-full ${location.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          <div className={`w-3 h-3 rounded-full ${location.status === 'active' ? 'bg-gray-600' : 'bg-gray-600'}`}></div>
                           <h3 className="font-bold text-gray-800">{location.name}</h3>
                         </div>
                         <p className={`text-xs font-medium mb-2 ${location.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
@@ -668,17 +668,21 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                         <p className="text-xs text-gray-600 mb-2">{location.description}</p>
                         <div className="text-xs text-gray-500 space-y-1">
                           <div className="flex items-center gap-1">
-                            <span>📍</span>
+                            <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                            </svg>
                             <span>พื้นที่อนุญาต</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span>🎯</span>
+                            <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                            </svg>
                             <span>รัศมี: {location.radius} เมตร</span>
                           </div>
                         </div>
                         <button
                           onClick={() => handleViewDetails(location.id)}
-                          className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors"
+                          className="mt-3 w-full bg-gray-600 hover:hover:bg-gray-700 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors"
                         >
                           ดูรายละเอียด
                         </button>
@@ -702,7 +706,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
         )}
 
         {/* Section 2: Location List */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-800">รายการสถานที่ทั้งหมด</h2>
             {/* Action Buttons */}
@@ -711,7 +715,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={handleAddLocation}
-                  className="flex items-center gap-3 bg-[#085EC5] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                  className="flex items-center gap-3 bg-brand-primary text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all hover:scale-105"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                     <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
@@ -722,7 +726,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                 {!isMultiDeleteMode ? (
                   <button
                     onClick={handleToggleMultiDelete}
-                    className="flex items-center gap-3 bg-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-600 hover:shadow-xl transition-all hover:scale-105"
+                    className="flex items-center gap-3 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-sm transition-all hover:scale-105"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                       <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z" />
@@ -733,7 +737,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   <>
                     <button
                       onClick={handleDeleteSelected}
-                      className="flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 hover:shadow-xl transition-all hover:scale-105"
+                      className="flex items-center gap-3 bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-sm transition-all hover:scale-105"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                         <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Z" />
@@ -742,7 +746,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                     </button>
                     <button
                       onClick={handleToggleMultiDelete}
-                      className="flex items-center gap-3 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-xl transition-all hover:scale-105"
+                      className="flex items-center gap-3 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 hover:shadow-sm transition-all hover:scale-105"
                     >
                       ยกเลิก
                     </button>
@@ -754,7 +758,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
 
           {/* Add Location Form */}
         {isAddingLocation && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-blue-300">
+          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 border-2 border-orange-300">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-800">เพิ่มพื้นที่ใหม่</h3>
               <button
@@ -779,7 +783,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="เช่น สำนักใหญ่ TGS"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                 />
               </div>
 
@@ -793,7 +797,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   value={formData.radius}
                   onChange={handleInputChange}
                   placeholder="เช่น 200"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                 />
               </div>
 
@@ -807,7 +811,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                   onChange={handleInputChange}
                   placeholder="เช่น ศูนย์การประชุมหลักของหัสรักดี"
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-brand-primary focus:outline-none transition-all"
                 />
               </div>
 
@@ -845,7 +849,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                         alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
                       }
                     }}
-                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    className="flex items-center gap-2 bg-gray-600 hover:hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
                       <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
@@ -882,7 +886,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                       </>
                     )}
                   </MapContainer>
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg z-[1000] pointer-events-none">
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm z-[1000] pointer-events-none">
                     คลิกบนแผนที่เพื่อเลือกตำแหน่ง
                   </div>
                 </div>
@@ -900,7 +904,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
             <div className="flex gap-4">
               <button
                 onClick={handleSubmitLocation}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                className="flex-1 bg-brand-primary  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all hover:scale-105"
               >
                 ยืนยัน
               </button>
@@ -917,7 +921,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
           {/* Location List - Show max 3 items, scrollable */}
           {locations.length === 0 ? (
             <div className="text-center py-12">
-              <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#D1D5DB" className="mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#E5E7EB" className="mx-auto mb-4">
                 <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
               </svg>
               <p className="text-gray-500 text-lg">ยังไม่มีพื้นที่อนุญาต</p>
@@ -935,8 +939,8 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                     key={location.id}
                     ref={(el) => (locationRefs.current[location.id] = el)}
                     className={`rounded-xl p-5 transition-all ${isEditing
-                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 shadow-xl'
-                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 hover:shadow-lg'
+                        ? 'bg-green-50 border-2 border-green-400 shadow-sm'
+                        : 'bg-orange-50 border-2 border-orange-200 hover:shadow-sm'
                       }`}
                   >
                     <div className="flex items-start justify-between">
@@ -948,15 +952,15 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                               type="checkbox"
                               checked={selectedLocations.includes(location.id)}
                               onChange={() => handleCheckboxChange(location.id)}
-                              className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                              className="w-5 h-5 text-brand-primary border-2 border-gray-300 rounded focus:ring-2 focus:ring-brand-primary cursor-pointer"
                             />
                           </div>
                         )}
 
                         {/* Location Icon */}
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isEditing
-                            ? 'bg-gradient-to-br from-green-500 to-green-600'
-                            : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${isEditing
+                            ? 'bg-gray-600 to-green-600'
+                            : 'bg-brand-primary to-orange-600'
                           }`}>
                           <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="white">
                             <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Z" />
@@ -969,7 +973,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                             /* Edit Form */
                             <div className="space-y-4">
                               <div className="flex items-center gap-2 mb-4">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <div className="w-2 h-2 bg-gray-600 rounded-full animate-pulse"></div>
                                 <span className="text-sm font-semibold text-green-700">กำลังแก้ไข...</span>
                               </div>
 
@@ -1071,7 +1075,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                         alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
                                       }
                                     }}
-                                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                                    className="flex items-center gap-2 bg-gray-600 hover:hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
                                       <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
@@ -1113,7 +1117,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                     )}
                                   </MapContainer>
                                   {mapClickEnabled && (
-                                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg z-[1000] pointer-events-none">
+                                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm z-[1000] pointer-events-none">
                                       คลิกบนแผนที่เพื่อเลือกตำแหน่ง
                                     </div>
                                   )}
@@ -1124,7 +1128,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                               <div className="flex gap-3 pt-2">
                                 <button
                                   onClick={handleUpdateLocation}
-                                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-105"
+                                  className="flex-1 bg-gray-600  text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all hover:scale-105"
                                 >
                                   บันทึกการแก้ไข
                                 </button>
@@ -1150,7 +1154,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                 <div className="bg-white rounded-lg p-3 md:col-span-2">
                                   <p className="text-xs text-gray-600 mb-1">พิกัด</p>
                                   <div className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#6B7280">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#9CA3AF">
                                       <path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Z" />
                                     </svg>
                                     <p className="text-sm text-gray-700">
@@ -1169,7 +1173,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                         <div className="flex gap-2 ml-4">
                           <button
                             onClick={() => handleEditLocation(location)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-all hover:scale-110 shadow-md"
+                            className="bg-brand-primary hover:bg-gray-700 text-white p-3 rounded-lg transition-all hover:scale-110 shadow-sm"
                             title="แก้ไข"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
@@ -1178,7 +1182,7 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                           </button>
                           <button
                             onClick={() => handleDeleteLocation(location.id)}
-                            className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-all hover:scale-110 shadow-md"
+                            className="bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-lg transition-all hover:scale-110 shadow-sm"
                             title="ลบ"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">

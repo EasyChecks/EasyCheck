@@ -58,8 +58,8 @@ const AlertDialog = ({
             </svg>
           ),
           color: 'text-red-500',
-          bgColor: 'from-red-50 to-rose-50',
-          buttonColor: 'from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700'
+          bgColor: 'from-red-50 to-orange-50',
+          buttonColor: 'from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700'
         };
       case 'warning':
         return {
@@ -79,9 +79,9 @@ const AlertDialog = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          color: 'text-purple-500',
-          bgColor: 'from-purple-50 to-pink-50',
-          buttonColor: 'from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
+          color: 'text-orange-500',
+          bgColor: 'from-orange-50 to-orange-100',
+          buttonColor: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
         };
       default: // info
         return {
@@ -90,9 +90,9 @@ const AlertDialog = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          color: 'text-blue-500',
-          bgColor: 'from-blue-50 to-cyan-50',
-          buttonColor: 'from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700'
+          color: 'text-brand-primary',
+          bgColor: 'from-orange-50 to-amber-50',
+          buttonColor: 'from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700'
         };
     }
   };

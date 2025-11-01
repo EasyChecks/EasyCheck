@@ -8,7 +8,7 @@ const ErrorMessage = memo(function ErrorMessage({
   title = 'เกิดข้อผิดพลาด',
   message,
   onRetry,
-  icon = '⚠️'
+  icon = <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-amber-500" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
 }) {
   return (
     <div className="flex items-center justify-center min-h-[200px] p-6">
@@ -19,7 +19,7 @@ const ErrorMessage = memo(function ErrorMessage({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 font-medium"
+            className="px-6 py-2 bg-brand-primary hover:bg-orange-600 text-white rounded-lg transition-colors duration-200 font-medium"
           >
             ลองอีกครั้ง
           </button>

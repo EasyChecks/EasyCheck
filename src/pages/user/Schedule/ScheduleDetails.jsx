@@ -41,7 +41,7 @@ export default function ScheduleDetails() {
           <p className="text-gray-600 mb-4">ตารางงานที่คุณค้นหาไม่มีในระบบ</p>
           <button
             onClick={() => navigate('/user/dashboard')}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-6 py-2 bg-brand-primary text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
             กลับหน้าหลัก
           </button>
@@ -58,7 +58,7 @@ export default function ScheduleDetails() {
       <div className="p-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+          className="flex items-center space-x-2 text-gray-700 hover:text-brand-primary transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -68,7 +68,7 @@ export default function ScheduleDetails() {
       </div>
 
       {/* Schedule Header */}
-      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
+      <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3 flex-1">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -78,8 +78,8 @@ export default function ScheduleDetails() {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold mb-2">{schedule.team}</h1>
-              <p className="text-blue-100 text-sm mb-1">{schedule.date}</p>
-              <p className="text-blue-100 text-sm">เวลา: {schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</p>
+              <p className="text-orange-100 text-sm mb-1">{schedule.date}</p>
+              <p className="text-orange-100 text-sm">เวลา: {schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</p>
             </div>
           </div>
           
@@ -97,8 +97,8 @@ export default function ScheduleDetails() {
             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">ข้อมูลทั่วไป</h3>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -122,8 +122,8 @@ export default function ScheduleDetails() {
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
@@ -138,8 +138,8 @@ export default function ScheduleDetails() {
           {/* Tasks Section */}
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -238,9 +238,10 @@ export default function ScheduleDetails() {
           )}
 
           {/* Info Banner */}
-          <div className="p-6 bg-blue-50 border-t border-blue-100">
-            <p className="text-sm text-blue-800 text-center">
-              💡 <span className="font-medium">เคล็ดลับ:</span> อย่าลืมเตรียมอุปกรณ์ให้พร้อมก่อนถึงสถานที่
+          <div className="p-6 bg-orange-50 border-t border-orange-100">
+            <p className="text-sm text-orange-800 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+              <span><span className="font-medium">เคล็ดลับ:</span> อย่าลืมเตรียมอุปกรณ์ให้พร้อมก่อนถึงสถานที่</span>
             </p>
           </div>
         </div>

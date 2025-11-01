@@ -4,9 +4,9 @@ import { useAuth } from './contexts/AuthContext'
 
 // Loading Component - Memoized เพื่อป้องกัน re-render
 const LoadingScreen = memo(() => (
-  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
     <div className="text-center">
-      <div className="w-16 h-16 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-16 h-16 mx-auto mb-4 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
       <p className="text-gray-700 font-medium">กำลังโหลด...</p>
     </div>
   </div>
