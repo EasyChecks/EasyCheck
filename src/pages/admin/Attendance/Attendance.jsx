@@ -297,7 +297,7 @@ function Attendance() {
             <div className="flex items-center gap-3 flex-wrap">
               <button 
                 onClick={() => setShowCreate(true)} 
-                className="inline-flex items-center justify-center text-base font-semibold bg-gradient-to-br from-sky-500 to-blue-500 text-white min-w-[120px] h-10 px-5 leading-none hover:from-sky-600 hover:to-cyan-600 rounded-xl shadow-md transition-all duration-200"
+                className="inline-flex items-center justify-center text-base font-semibold bg-primary text-white min-w-[120px] h-10 px-5 leading-none hover:bg-primary/90 rounded-xl shadow-md transition-colors"
               >
                 สร้างตารางใหม่
               </button>
@@ -306,7 +306,7 @@ function Attendance() {
                 // ปกติ: แสดงปุ่มเข้าสู่โหมดลบ
                 <button 
                   onClick={toggleSelectMode} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white rounded-lg shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-all duration-200 font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#ef4444] to-[#dc2626] text-white rounded-lg shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-colors font-medium text-sm"
                 >
 
                   ลบตาราง
@@ -317,7 +317,7 @@ function Attendance() {
                   <button
                     onClick={() => setShowDeleteAllConfirm(true)}
                     disabled={schedules.length === 0}
-                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm ${
+                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-colors font-medium text-sm ${
                       schedules.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                         : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
@@ -329,7 +329,7 @@ function Attendance() {
                   <button
                     onClick={() => setShowDeleteSelectedConfirm(true)}
                     disabled={selectedIds.length === 0}
-                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm ${
+                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-colors font-medium text-sm ${
                       selectedIds.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                         : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:bg-red-500'
@@ -340,7 +340,7 @@ function Attendance() {
 
                   <button 
                     onClick={toggleSelectMode} 
-                    className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+                    className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-accent hover:border-primary transition-colors font-medium text-sm"
                   >
                     ยกเลิก
                   </button>
@@ -362,15 +362,15 @@ function Attendance() {
               <div
                 key={item.id}
                 onClick={() => selectMode && toggleSelect(item.id)}
-                className={`relative rounded-xl p-4 text-[#0b2b57] border-2 shadow-inner h-fit transition-all duration-200 ${
+                className={`relative rounded-xl p-4 text-[#0b2b57] border-2 shadow-inner h-fit transition-colors ${
                   selectMode 
-                    ? `cursor-pointer ${checked ? 'border-blue-500 bg-blue-50' : 'border-blue-100 hover:border-blue-300 hover:bg-blue-50/50'}` 
-                    : 'border-blue-100'
+                    ? `cursor-pointer ${checked ? 'border-primary bg-accent' : 'border-gray-200 hover:border-primary hover:bg-accent'}` 
+                    : 'border-gray-200'
                 }`}
               >
                 {/* top-right: checkbox (in select mode) + time pill (always shown) */}
                 <div className="absolute top-3 right-3 flex items-center space-x-2">
-                  <div className="bg-white/20 text-[#0b2b57] px-2.5 py-1 rounded-full text-xs border-2 border-blue-100 shadow-sm">
+                  <div className="bg-white/20 text-[#0b2b57] px-2.5 py-1 rounded-full text-xs border-2 border-gray-200 shadow-sm">
                     {item.time}
                   </div>
                   {selectMode && (
@@ -399,7 +399,7 @@ function Attendance() {
                       {!selectMode && (
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowEdit(true); }}
-                          className="inline-flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-sky-400 to-blue-500 text-white min-w-[100px] h-8 px-4 leading-none hover:from-sky-600 hover:to-cyan-700 rounded-lg shadow-md transition-all duration-200"
+                          className="inline-flex items-center justify-center text-sm font-semibold bg-primary text-white min-w-[100px] h-8 px-4 leading-none hover:bg-primary/90 rounded-lg shadow-md transition-colors"
                         >
                           ปรับตาราง
                         </button>
@@ -410,7 +410,7 @@ function Attendance() {
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleDetails(item.id); }}
                           aria-expanded={isOpen}
-                          className="relative inline-flex items-center justify-center text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 overflow-hidden bg-white text-[#0b2b57] border-2 border-blue-100 min-w-[100px] h-8 px-4 leading-none hover:bg-gray-50"
+                          className="relative inline-flex items-center justify-center text-sm font-semibold rounded-lg shadow-sm transition-colors overflow-hidden bg-white text-[#0b2b57] border-2 border-gray-200 min-w-[100px] h-8 px-4 leading-none hover:bg-gray-50"
                         >
                         <span
                           aria-hidden={isOpen}
@@ -497,7 +497,7 @@ function Attendance() {
                                     </svg>
                                     แผนที่ตำแหน่ง
                                   </h4>
-                                  <div className="relative h-[250px] rounded-lg overflow-hidden border-2 border-blue-200 shadow-md">
+                                  <div className="relative h-[250px] rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
                                     <MapContainer
                                       center={[locationData.latitude, locationData.longitude]}
                                       zoom={15}
@@ -616,14 +616,14 @@ function Attendance() {
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteAllConfirm(false)} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-accent hover:border-primary transition-colors font-medium text-sm"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   type="button" 
                   onClick={deleteAll} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-all duration-200 font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-colors font-medium text-sm"
                 >
                   ลบทั้งหมด
                 </button>
@@ -654,14 +654,14 @@ function Attendance() {
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteSelectedConfirm(false)} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-accent hover:border-primary transition-colors font-medium text-sm"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   type="button" 
                   onClick={confirmDelete} 
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-all duration-200 font-medium text-sm"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-500 transition-colors font-medium text-sm"
                 >
                   ลบที่เลือก
                 </button>
