@@ -6,11 +6,11 @@ import { useAuth } from "../../../contexts/useAuth";
 const EventCard = React.memo(({ event }) => (
   <Link to={`/user/event/${event.id}`} className="block">
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-200 overflow-hidden group">
-      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
+      <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="text-xl font-bold text-white mb-2">{event.name}</h3>
-            <p className="text-blue-100 text-sm">{event.date}</p>
+            <p className="text-orange-100 text-sm">{event.date}</p>
           </div>
         </div>
         <p className="text-white/90 text-sm mb-4">{event.description}</p>
@@ -34,8 +34,8 @@ const EventCard = React.memo(({ event }) => (
 
         {event.startTime && event.endTime && (
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -57,7 +57,7 @@ const EventCard = React.memo(({ event }) => (
               <h4 className="text-sm font-semibold text-gray-500 mb-2">ทีมที่เข้าร่วม</h4>
               <div className="flex flex-wrap gap-2">
                 {event.teams.map((team, idx) => (
-                  <span key={idx} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">{team}</span>
+                  <span key={idx} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-medium">{team}</span>
                 ))}
               </div>
             </div>
@@ -66,7 +66,7 @@ const EventCard = React.memo(({ event }) => (
       </div>
 
       <div className="px-6 py-4 bg-white border-t border-gray-100">
-        <div className="flex items-center justify-between text-blue-600 font-semibold group-hover:text-blue-700 transition-colors">
+        <div className="flex items-center justify-between text-brand-primary font-semibold group-hover:text-orange-700 transition-colors">
           <span>ดูรายละเอียดเพิ่มเติม</span>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

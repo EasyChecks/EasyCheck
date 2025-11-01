@@ -109,8 +109,8 @@ function TakePhoto() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-gradient-to-b from-blue-50 to-white">
-      <div className="bg-[#48CBFF] text-white p-4 shadow-lg sticky top-0 z-50">
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-gradient-to-b from-orange-50 to-white">
+      <div className="bg-brand-primary text-white p-4 shadow-lg sticky top-0 z-50">
         <div className="relative flex items-center justify-center h-full">
           <button onClick={goBackToDashboard} className="absolute p-2 transition-colors rounded-lg left-4 hover:bg-white/20">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
@@ -144,13 +144,13 @@ function TakePhoto() {
             </div>
             <div className="flex justify-center gap-3">
               {!isCameraActive ? (
-                <button onClick={startCamera} className="flex-1 bg-[#48CBFF] text-white py-4 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-[#3AB5E8] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                <button onClick={startCamera} className="flex-1 bg-brand-primary text-white py-4 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="http://www.w3.org/2000/svg" width="24px" fill="currentColor"><path d="M480-260q75 0 127.5-52.5T660-440q0-75-52.5-127.5T480-620q-75 0-127.5 52.5T300-440q0 75 52.5 127.5T480-260Zm0-80q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM160-120q-33 0-56.5-23.5T80-200v-480q0-33 23.5-56.5T160-760h126l74-80h240l74 80h126q33 0 56.5 23.5T880-680v480q0 33-23.5 56.5T800-120H160Zm0-80h640v-480H638l-73-80H395l-73 80H160v480Zm320-240Z"/></svg>
                   เริ่มกล้อง
                 </button>
               ) : (
-                <button onClick={capturePhoto} className="w-20 h-20 bg-white border-4 border-[#48CBFF] rounded-full shadow-lg hover:bg-[#48CBFF] hover:border-white transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center group">
-                  <div className="w-16 h-16 bg-[#48CBFF] rounded-full group-hover:bg-white transition-all duration-300"></div>
+                <button onClick={capturePhoto} className="w-20 h-20 bg-white border-4 border-brand-primary rounded-full shadow-lg hover:bg-brand-primary hover:border-white transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center group">
+                  <div className="w-16 h-16 bg-brand-primary rounded-full group-hover:bg-white transition-all duration-300"></div>
                 </button>
               )}
             </div>
@@ -163,7 +163,7 @@ function TakePhoto() {
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="http://www.w3.org/2000/svg" width="24px" fill="currentColor"><path d="M440-122q-121-15-200.5-105.5T160-440q0-66 26-126.5T260-672l57 57q-38 34-57.5 79T240-440q0 88 56 155.5T440-202v80Zm80 0v-80q87-16 143.5-83T720-440q0-100-70-170t-170-70h-3l44 44-56 56-140-140 140-140 56 56-44 44h3q134 0 227 93t93 227q0 121-79.5 211.5T520-122Z"/></svg>
                 ถ่ายใหม่
               </button>
-              <button onClick={confirmPhoto} disabled={isEarlyCheckout} className={`flex-1 text-white py-4 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg transition-all duration-300 transform flex items-center justify-center gap-2 ${isEarlyCheckout ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#48CBFF] hover:bg-[#3AB5E8] active:scale-95 hover:scale-105'}`}>
+              <button onClick={confirmPhoto} disabled={isEarlyCheckout} className={`flex-1 text-white py-4 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg transition-all duration-300 transform flex items-center justify-center gap-2 ${isEarlyCheckout ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-primary hover:bg-orange-600 active:scale-95 hover:scale-105'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="http://www.w3.org/2000/svg" width="24px" fill="currentColor"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
                 ยืนยัน
               </button>
@@ -186,7 +186,7 @@ function TakePhoto() {
             </div>
             <h2 className="mb-2 text-2xl font-bold text-gray-800">บันทึกสำเร็จ!</h2>
             <p className="mb-8 text-gray-600">{popupMessage}</p>
-            <button onClick={() => navigate('/user/dashboard')} className="w-full bg-[#48CBFF] text-white py-3 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-[#3AB5E8] transition-all duration-300 transform hover:scale-105 active:scale-95">
+            <button onClick={() => navigate('/user/dashboard')} className="w-full bg-brand-primary text-white py-3 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 active:scale-95">
               กลับสู่หน้าหลัก
             </button>
           </div>

@@ -187,7 +187,7 @@ function LeaveApproval() {
   const getLeaveTypeBadge = (type) => {
     const colors = {
       'ลาป่วย': 'bg-red-100 text-red-600',
-      'ลากิจ': 'bg-blue-100 text-blue-600',
+      'ลากิจ': 'bg-orange-100 text-brand-primary',
       'ลาพักร้อน': 'bg-green-100 text-green-600',
       'ลาคลอด': 'bg-purple-100 text-purple-600'
     };
@@ -280,7 +280,7 @@ function LeaveApproval() {
   const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="pb-6">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-800">อนุมัติใบลา</h1>
@@ -288,7 +288,7 @@ function LeaveApproval() {
       </div>
 
       {/* Stats with Calendar Button */}
-      <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-brand-primary to-orange-600 rounded-2xl shadow-lg p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-white/80 text-sm">ใบลารออนุมัติทั้งหมด</p>
@@ -346,7 +346,7 @@ function LeaveApproval() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-white border-[#48CBFF] border rounded-full flex items-center justify-center text-gray-800 font-bold shadow-md">
+                    <div className="w-12 h-12 bg-white border-brand-primary border rounded-full flex items-center justify-center text-gray-800 font-bold shadow-md">
                       {leave.employeeName.charAt(0)}
                     </div>
                     <div>
@@ -453,8 +453,9 @@ function LeaveApproval() {
                   style={{ transition: 'all 0.2s ease' }}
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                💡 ข้อความนี้จะถูกส่งไปยังผู้ขอลา
+              <p className="text-xs text-gray-500 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                ข้อความนี้จะถูกส่งไปยังผู้ขอลา
               </p>
             </div>
 
@@ -528,7 +529,7 @@ function LeaveApproval() {
       {showCalendar && (
         <PageModal onClose={() => setShowCalendar(false)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
-            <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white p-6">
+            <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white p-6">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold">เลือกช่วงวันที่</h2>
                 <button
@@ -553,7 +554,7 @@ function LeaveApproval() {
               {/* Calendar Header */}
               <div className="flex items-center justify-between mb-4">
                 <button onClick={previousMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#48CBFF">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F26623">
                     <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/>
                   </svg>
                 </button>
@@ -561,7 +562,7 @@ function LeaveApproval() {
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear() + 543}
                 </h3>
                 <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#48CBFF">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#F26623">
                     <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
                   </svg>
                 </button>
@@ -592,8 +593,8 @@ function LeaveApproval() {
                       key={day}
                       onClick={() => handleDateClick(day)}
                       className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-all
-                        ${inRange ? 'bg-[#48CBFF] text-white font-bold' : 'hover:bg-gray-100 text-gray-700'}
-                        ${isStart || isEnd ? 'ring-2 ring-[#3AB4E8] ring-offset-2' : ''}
+                        ${inRange ? 'bg-brand-primary text-white font-bold' : 'hover:bg-gray-100 text-gray-700'}
+                        ${isStart || isEnd ? 'ring-2 ring-orange-600 ring-offset-2' : ''}
                       `}
                     >
                       {day}
@@ -623,7 +624,7 @@ function LeaveApproval() {
                 disabled={!selectedStartDate || !selectedEndDate}
                 className={`flex-1 px-4 py-2 rounded-xl transition-colors font-semibold
                   ${selectedStartDate && selectedEndDate 
-                    ? 'bg-[#48CBFF] hover:bg-[#3AB4E8] text-white' 
+                    ? 'bg-brand-primary hover:bg-orange-600 text-white' 
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
                 `}
               >

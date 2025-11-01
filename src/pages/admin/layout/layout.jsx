@@ -86,7 +86,7 @@ function AdminLayout() {
       <aside 
         className={`${
           sidebarCollapsed ? 'w-20' : 'w-64'
-        } bg-[#085EC5] text-white flex flex-col transition-all duration-300 shadow-xl`}
+        } bg-brand-primary text-white flex flex-col transition-all duration-300 shadow-sm`}
       >
         {/* Logo */}
         <div className="p-6 flex items-center justify-between border-b border-white/10">
@@ -123,7 +123,7 @@ function AdminLayout() {
                 className={({ isActive }) =>
                   `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-white text-[#085EC5] shadow-lg'
+                      ? 'bg-white text-brand-primary shadow-sm'
                       : 'text-white/90 hover:bg-white/10'
                   } ${sidebarCollapsed ? 'justify-center' : ''}`
                 }
@@ -142,7 +142,7 @@ function AdminLayout() {
         <div className="p-4 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold flex items-center justify-center space-x-2 transition-all shadow-lg"
+            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold flex items-center justify-center space-x-2 transition-all shadow-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
               <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>

@@ -42,7 +42,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-2xl shadow-sm w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -76,9 +76,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 <button 
                   onClick={() => onDelete(user)}
                   disabled={currentUser?.role === 'admin' && user?.role === 'superadmin'}
-                  className={`px-4 py-2 rounded-xl transition-colors transform flex items-center gap-2 font-medium shadow-lg ${
+                  className={`px-4 py-2 rounded-xl transition-colors transform flex items-center gap-2 font-medium shadow-sm ${
                     currentUser?.role === 'admin' && user?.role === 'superadmin'
-                      ? 'bg-accent text-secondary cursor-not-allowed'
+                      ? 'bg-brand-accent text-secondary cursor-not-allowed'
                       : 'bg-red-500 hover:bg-red-600 text-white hover:scale-105'
                   }`}
                   title={currentUser?.role === 'admin' && user?.role === 'superadmin' ? 'ไม่สามารถลบ Super Admin ได้' : 'ลบผู้ใช้'}
@@ -91,7 +91,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
               <button 
                 onClick={onDownloadPDF} 
-                className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                className="px-4 py-2 bg-white/20 hover:bg-brand-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -101,7 +101,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.attendanceRecords && (
                 <button 
                   onClick={onToggleAttendance} 
-                  className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                  className="px-4 py-2 bg-white/20 hover:bg-brand-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -111,7 +111,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
               <button 
                 onClick={onClose} 
-                className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 font-medium shadow-lg"
+                className="px-4 py-2 bg-white/20 hover:bg-brand-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 font-medium shadow-lg"
               >
                 ปิด
               </button>
@@ -123,10 +123,10 @@ const UserDetailModal = React.memo(function UserDetailModal({
         <div className="p-6 overflow-y-auto flex-1">
           {/* Attendance Verification Section - Collapsible */}
           {showAttendance && user.attendanceRecords && getFilteredAttendanceRecords && (
-            <div className="mb-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 shadow-lg">
+            <div className="mb-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border-2 border-orange-200 shadow-lg">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   ตรวจสอบการเข้า-ออกงาน
@@ -137,7 +137,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                       type="date" 
                       value={selectedDate}
                       onChange={(e) => onSetSelectedDate(e.target.value)}
-                      className="px-3 py-2 pr-8 border-2 border-purple-300 rounded-lg text-sm focus:border-purple-500 focus:outline-none"
+                      className="px-3 py-2 pr-8 border-2 border-orange-300 rounded-lg text-sm focus:border-orange-500 focus:outline-none"
                       placeholder="กรองตามวันที่"
                     />
                     {selectedDate && (
@@ -152,7 +152,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                       </button>
                     )}
                   </div>
-                  <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                  <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
                     {selectedDate ? '1 วัน' : '3 วันล่าสุด'}
                   </div>
                 </div>
@@ -167,8 +167,8 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 </div>
               ) : (
                 getFilteredAttendanceRecords().map((record, idx) => (
-                  <div key={idx} className="bg-white rounded-xl p-4 mb-3 shadow-md border border-purple-100">
-                    <div className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
+                  <div key={idx} className="bg-white rounded-xl p-4 mb-3 shadow-md border border-orange-100">
+                    <div className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -229,7 +229,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                                 <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
                               </select>
                             ) : (
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
                                 {record.checkIn.location}
                               </span>
                             )}
@@ -244,7 +244,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
 
                       {/* Check Out */}
                       {record.checkOut && (
-                        <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-lg p-4 border border-red-200">
+                        <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg p-4 border border-red-200">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-bold text-red-700 flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -255,13 +255,13 @@ const UserDetailModal = React.memo(function UserDetailModal({
                             {editingAttendance?.record === record && editingAttendance?.type === 'checkOut' ? (
                               <button onClick={onSaveAttendanceEdit} className="text-xs px-2 py-1 bg-red-500 text-white rounded">บันทึก</button>
                             ) : (
-                              <button onClick={() => onAttendanceEdit(record, 'checkOut')} className="text-xs px-2 py-1 bg-white border border-red-300 rounded hover:bg-red-100">แก้ไข</button>
+                              <button onClick={() => onAttendanceEdit(record, 'checkOut')} className="text-xs px-2 py-1 bg-white border border-orange-300 rounded hover:bg-red-100">แก้ไข</button>
                             )}
                           </div>
                           
                           <div className="space-y-2 text-sm">
                             <div className="flex items-center gap-2">
-                              <img src={record.checkOut.photo} alt="check-out" className="w-16 h-16 rounded-lg object-cover border-2 border-red-300" />
+                              <img src={record.checkOut.photo} alt="check-out" className="w-16 h-16 rounded-lg object-cover border-2 border-orange-300" />
                               <div className="flex-1">
                                 <div className="text-xs text-gray-500">เวลา</div>
                                 {editingAttendance?.record === record && editingAttendance?.type === 'checkOut' ? (
@@ -296,7 +296,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                                   <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
                                 </select>
                               ) : (
-                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
                                   {record.checkOut.location}
                                 </span>
                               )}
@@ -321,9 +321,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
             {/* Left Column - Profile */}
             <div className="lg:col-span-1 space-y-5">
               {/* Profile Card */}
-              <div className="bg-accent rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+              <div className="bg-brand-accent rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
                 <div className="flex flex-col items-center">
-                  <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-xl ">
+                  <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-sm ">
                     <img src={user.profileImage || `https://i.pravatar.cc/300?u=${user.id}`} alt="avatar" className="w-full h-full object-cover" />
                   </div>
                   
@@ -404,7 +404,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   {(user.role === 'admin' || user.role === 'superadmin') && user.adminAccount && (
                     <>
                       <div className="pt-3 border-t-2 border-gray-200">
-                        <div className="bg-accent rounded-lg p-3 mb-3">
+                        <div className="bg-brand-accent rounded-lg p-3 mb-3">
                           <p className="text-xs font-semibold text-primary mb-1 flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -549,7 +549,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   <div className="space-y-3">
                     {user.workHistory.map((work, index) => (
                       <div key={index} className="flex gap-3 text-sm">
-                        <div className="w-2 h-2 bg-accent0 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
                         <div>
                           <div className="font-medium text-gray-800">{work.position}</div>
                           <div className="text-gray-600">{work.company}</div>
@@ -575,7 +575,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   <div className="space-y-2">
                     {user.education.map((edu, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-accent0 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                         <span className="text-gray-700">{edu}</span>
                       </div>
                     ))}
@@ -594,7 +594,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {user.skills.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-accent text-primary rounded-full text-xs font-medium">
+                      <span key={index} className="px-3 py-1 bg-brand-accent text-primary rounded-full text-xs font-medium">
                         {skill}
                       </span>
                     ))}

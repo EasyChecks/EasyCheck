@@ -10,10 +10,10 @@ export function AttachmentModal({ data, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="bg-white rounded-lg p-4 max-w-3xl w-full mx-4 z-50 shadow-2xl">
+      <div className="bg-white rounded-lg p-4 max-w-3xl w-full mx-4 z-50 shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <div className="font-semibold">{att.name} — {item.name}</div>
-          <button onClick={onClose} className="px-3 py-1 bg-accent rounded">ปิด</button>
+          <button onClick={onClose} className="px-3 py-1 bg-brand-accent rounded">ปิด</button>
         </div>
         <div>
           {att.type === 'image' ? (
@@ -384,7 +384,7 @@ export default function Warning() {
               <select
                 value={combinedFilter}
                 onChange={(e) => setCombinedFilter(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors text-sm bg-accent cursor-pointer font-medium text-black"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none transition-colors text-sm bg-brand-accent cursor-pointer font-medium text-black"
               >
                 {getCombinedFilterOptions().map(option => (
                   <option key={option} value={option}>
@@ -491,13 +491,13 @@ export default function Warning() {
           }}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            className="bg-white rounded-2xl shadow-sm max-w-md w-full overflow-hidden"
             style={{
               animation: 'modalSlideUp 0.3s ease-out'
             }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+            <div className="bg-destructive to-destructive/90 p-6 text-white">
               <h2 className="text-2xl font-bold mb-1">ไม่อนุมัติใบลา</h2>
               <p className="text-red-100 text-sm">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
             </div>
@@ -505,17 +505,17 @@ export default function Warning() {
             {/* Content */}
             <div className="p-6">
               {/* Employee Info */}
-              <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-xs text-secondary mb-1">รายการที่จะไม่อนุมัติ:</p>
+              <div className="mb-5 p-4 bg-brand-accent-soft border border-orange-200 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">รายการที่จะไม่อนุมัติ:</p>
                 <p className="text-gray-900 font-bold text-lg">
                   {selectedItem?.name}
                 </p>
-                <p className="text-secondary text-sm mt-1">{selectedItem?.role}</p>
+                <p className="text-gray-600 text-sm mt-1">{selectedItem?.role}</p>
               </div>
               
               {/* Reason Input */}
               <div className="mb-2">
-                <label className="block text-sm font-bold text-secondary mb-3">
+                <label className="block text-sm font-bold text-gray-900 mb-3">
                   เหตุผลที่ไม่อนุมัติ <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -524,12 +524,13 @@ export default function Warning() {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="ระบุเหตุผล เช่น มีงานเร่งด่วน, ไม่สามารถอนุมัติได้เนื่องจาก..."
                   rows="4"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 200 focus:outline-none resize-none text-sm"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-brand-primary focus:outline-none resize-none text-sm"
                   style={{ transition: 'all 0.2s ease' }}
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                💡 ข้อความนี้จะถูกส่งไปยังผู้ขอลา
+              <p className="text-xs text-gray-500 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                ข้อความนี้จะถูกส่งไปยังผู้ขอลา
               </p>
             </div>
 
@@ -541,14 +542,14 @@ export default function Warning() {
                   setRejectReason('')
                   setSelectedItem(null)
                 }}
-                className="flex-1 px-5 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-accent hover:border-primary transition-colors"
+                className="flex-1 px-5 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-brand-accent transition-colors"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={confirmReject}
                 disabled={!rejectReason.trim()}
-                className="flex-1 px-5 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 shadow-md hover:shadow-lg"
+                className="flex-1 px-5 py-3 bg-destructive text-white rounded-lg font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 ยืนยันไม่อนุมัติ
               </button>
@@ -640,20 +641,20 @@ function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapp
           <div className="flex gap-3 mt-4">
             <button
               onClick={() => onApprove?.(item)}
-              className="inline-flex items-center justify-center text-base font-semibold bg-primary text-white min-w-screen h-10 px-5 leading-none hover:bg-primary/90 rounded-xl shadow-md transition-colors"
+              className="inline-flex items-center justify-center text-base font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-screen h-10 px-5 leading-none rounded-xl shadow-sm transition-colors"
             >
               อนุมัติ
             </button>
             <button
               onClick={() => onReject?.(item)}
-              className="inline-flex items-center justify-center px-5 py-2 bg-secondary text-white rounded-xl text-base font-semibold shadow-md hover:shadow-lg hover:from-[#dc2626] hover:to-[#b91c1c] transition-colors"
+              className="inline-flex items-center justify-center px-5 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-xl text-base font-semibold shadow-sm transition-colors"
             >
               ไม่อนุมัติ
             </button>
             <button
               onClick={() => onToggle(item.id)}
               aria-expanded={expanded}
-              className="relative inline-flex items-center justify-center px-5 py-2 bg-accent text-secondary rounded-xl text-base font-semibold border-2 border-white/50 hover:bg-accent/90 transition-colors shadow-sm overflow-hidden"
+              className="relative inline-flex items-center justify-center px-5 py-2 bg-brand-accent text-gray-900 rounded-xl text-base font-semibold border-2 border-gray-300 hover:bg-gray-200 transition-colors shadow-sm overflow-hidden"
               style={{ minWidth: 120 }}
             >
               <span

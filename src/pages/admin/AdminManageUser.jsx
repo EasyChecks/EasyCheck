@@ -371,10 +371,10 @@ function AdminManageUser() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      'active': 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md',
-      'leave': 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow-md',
-      'suspended': 'bg-gradient-to-r from-gray-400 to-slate-500 text-white shadow-md',
-      'pending': 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md'
+      'active': 'bg-green-500 text-white shadow-sm',
+      'leave': 'bg-red-500 text-white shadow-sm',
+      'suspended': 'bg-gray-500 text-white shadow-sm',
+      'pending': 'bg-amber-500 text-white shadow-sm'
     };
     return badges[status.toLowerCase()] || 'bg-gray-100 text-gray-700';
   };
@@ -453,7 +453,7 @@ function AdminManageUser() {
       type: 'success',
       title: 'เพิ่มผู้ใช้สำเร็จ',
       message: `เพิ่ม ${newUser.name} เข้าระบบเรียบร้อยแล้ว\n\n✅ สามารถ Login ได้ทันที!\n\nรหัสพนักงาน: ${newUser.employeeId}\nรหัสผ่าน: ${newUser.password}${
-        newUser.adminAccount ? `\n\n🔐 Admin Account:\nUsername: ${newUser.adminAccount}\nPassword: ${newUser.adminPassword}` : ''
+        newUser.adminAccount ? `\n\n� Admin Account:\nUsername: ${newUser.adminAccount}\nPassword: ${newUser.adminPassword}` : ''
       }`,
       autoClose: false // ไม่ปิดอัตโนมัติเพื่อให้ admin อ่านรหัส
     });
@@ -548,7 +548,7 @@ function AdminManageUser() {
         isOpen: true,
         type: 'error',
         title: `พบข้อมูลซ้ำ (${errorCount} รายการ)`,
-        message: `${errorMessage}${moreErrors}\n\n💡 คำแนะนำ:\n- ตรวจสอบเลขบัตรประชาชนซ้ำกับข้อมูลเดิม\n- ลบข้อมูลเก่าออกก่อนนำเข้าใหม่\n- หรือแก้ไขข้อมูลใน CSV ให้ไม่ซ้ำ`
+        message: `${errorMessage}${moreErrors}\n\nℹ️ คำแนะนำ:\n- ตรวจสอบเลขบัตรประชาชนซ้ำกับข้อมูลเดิม\n- ลบข้อมูลเก่าออกก่อนนำเข้าใหม่\n- หรือแก้ไขข้อมูลใน CSV ให้ไม่ซ้ำ`
       });
       return;
     }
@@ -643,13 +643,13 @@ function AdminManageUser() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-blue-100">
+    <div className="min-h-screen p-4 sm:p-6 bg-slate-50">
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-orange-100">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-[#0E315D] bg-clip-text text-transparent flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#0E315D]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[var(--gray-900, #111827)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               จัดการผู้ใช้
@@ -657,7 +657,7 @@ function AdminManageUser() {
             <p className="text-gray-500 text-sm mt-1">จัดการสิทธิ์การใช้งานและข้อมูลผู้ใช้ในระบบ</p>
           </div>
           <div className="flex items-center gap-2">
-            <label className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold cursor-pointer">
+            <label className="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
@@ -671,7 +671,7 @@ function AdminManageUser() {
             </label>
             <button 
               onClick={() => setShowCreateUser(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
+              className="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -692,13 +692,13 @@ function AdminManageUser() {
               placeholder="ค้นหาชื่อหรืออีเมล..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[#0E315D] focus:outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[#0E315D] focus:outline-none transition-colors bg-white"
+            className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors bg-white"
           >
             <option value="all">ทั้งหมด</option>
             <option value="active">Active</option>
@@ -716,7 +716,7 @@ function AdminManageUser() {
         />
 
         {/* Footer legend */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200">
+        <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -725,22 +725,22 @@ function AdminManageUser() {
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-green-500"></span>
-              <span className="text-emerald-600 font-semibold">Active</span>
+              <span className="w-3 h-3 rounded-full bg-green-500"></span>
+              <span className="text-green-600 font-semibold">Active</span>
               <span className="text-gray-500">: ยังคงทำงานอยู่</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gradient-to-r from-red-400 to-rose-500"></span>
+              <span className="w-3 h-3 rounded-full bg-red-500"></span>
               <span className="text-red-600 font-semibold">leave</span>
               <span className="text-gray-500">: ลาออกแล้ว</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-400 to-slate-500"></span>
+              <span className="w-3 h-3 rounded-full bg-gray-500"></span>
               <span className="text-gray-700 font-semibold">Suspended</span>
               <span className="text-gray-500">: โดนพักงาน</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-500"></span>
+              <span className="w-3 h-3 rounded-full bg-amber-500"></span>
               <span className="text-amber-700 font-semibold">Pending</span>
               <span className="text-gray-500">: รอโปรโมท</span>
             </div>
@@ -749,7 +749,7 @@ function AdminManageUser() {
       </div>
 
       {/* Lazy-loaded Modals พร้อม Suspense fallback */}
-      <Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div></div>}>
+      <Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div></div>}>
         {/* User Detail Modal Component */}
         {showDetail && selectedUser && (
           <UserDetailModal
