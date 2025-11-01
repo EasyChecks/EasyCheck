@@ -40,6 +40,16 @@ export const AuthProvider = ({ children }) => {
         try {
           const userData = JSON.parse(savedUser)
           setUser(userData)
+          
+          // โหลดข้อมูล attendance ของ user คนนี้เท่านั้น
+          const savedRecords = localStorage.getItem('attendanceRecords')
+          if (savedRecords) {
+            const allRecords = JSON.parse(savedRecords)
+            const userRecords = allRecords.filter(r => r.userId === userData.id)
+            setAttendanceRecords(userRecords)
+            const stats = calculateAttendanceStats(userRecords)
+            setAttendanceStats(stats)
+          }
         } catch (parseError) {
           localStorage.removeItem(`user_${tabId}`)
         }
@@ -52,21 +62,6 @@ export const AuthProvider = ({ children }) => {
         } catch (parseError) {
           // Silent error handling
         }
-      }
-      
-      const savedRecords = localStorage.getItem('attendanceRecords')
-      if (savedRecords) {
-        try {
-          const records = JSON.parse(savedRecords)
-          setAttendanceRecords(records)
-          const stats = calculateAttendanceStats(records)
-          setAttendanceStats(stats)
-        } catch (parseError) {
-          // Silent error handling
-        }
-      } else {
-        setAttendanceRecords(mockAttendanceRecords)
-        localStorage.setItem('attendanceRecords', JSON.stringify(mockAttendanceRecords))
       }
     } catch (error) {
       // Silent error handling
@@ -116,18 +111,23 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(`attendance_${tabId}`)
   }
 
-  const checkIn = (time, photo) => {
+  const checkIn = (time, photo, status = 'on_time') => {
+    if (!user) return;
+    
     const newAttendance = {
       checkInTime: time,
       checkOutTime: null,
       status: 'checked_in',
-      checkInPhoto: photo
+      checkInPhoto: photo,
+      shiftStatus: status
     }
     setAttendance(newAttendance)
     localStorage.setItem(`attendance_${tabId}`, JSON.stringify(newAttendance))
   }
 
   const checkOut = (time, photo) => {
+    if (!user) return;
+    
     const today = new Date().toISOString().split('T')[0]
     
     const newAttendance = {
@@ -137,53 +137,46 @@ export const AuthProvider = ({ children }) => {
       checkOutPhoto: photo
     }
     
-    const getShiftStatus = (checkInTime, workTimeStart = '08:00') => {
-      if (!checkInTime) return 'absent'
-      const [checkHour, checkMinute] = checkInTime.split(':').map(Number)
-      const [workHour, workMinute] = workTimeStart.split(':').map(Number)
-      const checkTotalMinutes = checkHour * 60 + checkMinute
-      const workTotalMinutes = workHour * 60 + workMinute
-      return checkTotalMinutes <= workTotalMinutes ? 'on_time' : 'late'
-    }
-    
     const shiftRecord = {
       checkIn: attendance.checkInTime,
       checkOut: time,
       checkInPhoto: attendance.checkInPhoto,
       checkOutPhoto: photo,
-      status: getShiftStatus(attendance.checkInTime, '08:00')
+      status: attendance.shiftStatus || 'on_time',
+      userId: user.id,
+      userName: user.name
     }
     
-    const updatedRecords = [...attendanceRecords]
-    const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
+    // โหลด attendance records ที่มีอยู่
+    const savedRecords = localStorage.getItem('attendanceRecords')
+    let allRecords = savedRecords ? JSON.parse(savedRecords) : []
     
-    if (existingDayIndex >= 0) {
-      const existingDay = updatedRecords[existingDayIndex]
-      if (!existingDay.shifts) {
-        existingDay.shifts = [{
-          checkIn: existingDay.checkIn,
-          checkOut: existingDay.checkOut,
-          status: existingDay.status
-        }]
-        delete existingDay.checkIn
-        delete existingDay.checkOut
-        delete existingDay.status
+    // หา record ของ user คนนี้ในวันนี้
+    let userRecord = allRecords.find(r => r.userId === user.id && r.date === today)
+    
+    if (userRecord) {
+      // มี record อยู่แล้ว เพิ่ม shift
+      if (!userRecord.shifts) {
+        userRecord.shifts = []
       }
-      existingDay.shifts.push(shiftRecord)
-      updatedRecords[existingDayIndex] = existingDay
+      userRecord.shifts.push(shiftRecord)
     } else {
-      updatedRecords.push({
+      // ยังไม่มี record สร้างใหม่
+      userRecord = {
+        userId: user.id,
+        userName: user.name,
         date: today,
         shifts: [shiftRecord]
-      })
+      }
+      allRecords.push(userRecord)
     }
     
-    updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
+    // บันทึกกลับ
+    localStorage.setItem('attendanceRecords', JSON.stringify(allRecords))
     
-    setAttendanceRecords(updatedRecords)
-    localStorage.setItem('attendanceRecords', JSON.stringify(updatedRecords))
-    
-    const stats = calculateAttendanceStats(updatedRecords)
+    // คำนวณสถิติของ user คนนี้เท่านั้น
+    const userRecords = allRecords.filter(r => r.userId === user.id)
+    const stats = calculateAttendanceStats(userRecords)
     setAttendanceStats(stats)
     
     setAttendance(newAttendance)

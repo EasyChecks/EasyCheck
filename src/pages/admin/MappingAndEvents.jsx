@@ -209,16 +209,16 @@ function SearchMarker({ position, name, onClick }) {
         <div className="p-2">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <h3 className="font-bold text-gray-800">{name === 'ตำแหน่งใหม่' ? 'ตำแหน่งที่เลือก' : 'ผลการค้นหา'}</h3>
+            <h3 className="font-bold text-secondary dark:text-white">{name === 'ตำแหน่งใหม่' ? 'ตำแหน่งที่เลือก' : 'ผลการค้นหา'}</h3>
           </div>
-          <p className="text-xs text-gray-600 mb-2">{name}</p>
+          <p className="text-xs text-secondary dark:text-white/70 mb-2">{name}</p>
           <div className="text-xs text-gray-500 mb-3 bg-gray-50 p-2 rounded">
             <div className="font-medium mb-1">พิกัด:</div>
             <div className="font-mono">{position[0].toFixed(6)}, {position[1].toFixed(6)}</div>
           </div>
           <button
             onClick={onClick}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg text-xs font-medium transition-colors"
+            className="w-full bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white px-3 py-2.5 rounded-lg text-xs font-medium transition-colors"
           >
             สร้างพื้นที่/กิจกรรมที่นี่
           </button>
@@ -264,19 +264,19 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
         {label}
       </label>
       
       <div 
-        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus-within:border-blue-500 cursor-pointer min-h-[42px] flex flex-wrap gap-2 items-center"
+        className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus-within:border-primary dark:focus-within:border-primary cursor-pointer min-h-[42px] flex flex-wrap gap-2 items-center"
         onClick={() => setIsOpen(!isOpen)}
       >
         {selected.length === 0 ? (
           <span className="text-gray-400 text-sm">{placeholder}</span>
         ) : (
           selectedLabels.map((label, idx) => (
-            <span key={idx} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+            <span key={idx} className="bg-accent dark:bg-accent-orange text-primary dark:text-primary px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
               {label}
               <button
                 type="button"
@@ -285,7 +285,7 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
                   const opt = options.find(o => o.label === label)
                   if (opt) toggleOption(opt.value)
                 }}
-                className="hover:bg-blue-200 rounded-full"
+                className="hover:bg-accent dark:hover:bg-accent-orange/30 rounded-full"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -297,14 +297,14 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
       </div>
 
       {isOpen && (
-        <div className="absolute z-[2100] w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-hidden">
+        <div className="absolute z-[2100] w-full mt-1 bg-white dark:bg-secondary/95 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg shadow-lg max-h-64 overflow-hidden">
           <div className="p-2 border-b border-gray-200">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="ค้นหา..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-white/20 rounded-lg text-sm focus:border-primary dark:focus:border-primary focus:outline-none"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -315,8 +315,8 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
               filtered.map(opt => (
                 <div
                   key={opt.value}
-                  className={`px-4 py-2 cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
-                    selected.includes(opt.value) ? 'bg-blue-100' : ''
+                  className={`px-4 py-2 cursor-pointer hover:bg-accent dark:hover:bg-accent-orange/30 flex items-center gap-2 ${
+                    selected.includes(opt.value) ? 'bg-accent dark:bg-accent-orange' : ''
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -327,7 +327,7 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
                     type="checkbox"
                     checked={selected.includes(opt.value)}
                     onChange={() => {}}
-                    className="w-4 h-4 text-blue-600"
+                    className="w-4 h-4 text-primary dark:text-primary"
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900">{opt.label}</div>
@@ -482,14 +482,14 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
 
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
           ชื่อ{type === 'location' ? 'พื้นที่' : 'กิจกรรม'} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
           placeholder={`ระบุชื่อ${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}`}
           required
         />
@@ -497,13 +497,13 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
           คำอธิบาย
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors resize-none"
           rows="3"
           placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
         />
@@ -511,7 +511,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
 
       {/* Radius */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
           รัศมี (เมตร) <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-4">
@@ -530,7 +530,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
             max="1000"
             value={formData.radius}
             onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 100 })}
-            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center font-medium"
+            className="w-24 px-3 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none text-center font-medium"
           />
         </div>
         <p className="text-xs text-gray-500 mt-1">ระยะทางที่อนุญาตให้เช็คอินได้จากจุดนี้</p>
@@ -540,20 +540,20 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
       {type === 'event' && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               ชื่อสถานที่
             </label>
             <input
               type="text"
               value={formData.locationName}
               onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
               placeholder="เช่น โรงแรม ABC, งานเทศกาล XYZ"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               วันที่เริ่มกิจกรรม <span className="text-red-500">*</span>
             </label>
             <div className="relative w-full">
@@ -564,7 +564,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                     startDateRef.current.showPicker?.() || startDateRef.current.click()
                   }
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary dark:text-white hover:text-primary dark:hover:text-primary z-10"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
@@ -586,7 +586,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                     setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -605,7 +605,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               วันที่สิ้นสุดกิจกรรม <span className="text-red-500">*</span>
             </label>
             <div className="relative w-full">
@@ -616,7 +616,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                     endDateRef.current.showPicker?.() || endDateRef.current.click()
                   }
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary dark:text-white hover:text-primary dark:hover:text-primary z-10"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
@@ -638,7 +638,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
                     setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -659,26 +659,26 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
           {/* Time Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
                 เวลาเริ่ม <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
                 เวลาสิ้นสุด <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -686,7 +686,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
 
           {/* Assignment Section */}
           <div className="space-y-4 pt-4 border-t-2 border-gray-200">
-            <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">              
+            <h3 className="text-base font-bold text-secondary dark:text-white flex items-center gap-2">              
               กำหนดผู้รับผิดชอบ
             </h3>
 
@@ -735,8 +735,8 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
               placeholder="เลือกตำแหน่ง..."
             />
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-800">
+            <div className="bg-accent dark:bg-accent-orange border border-gray-200 dark:border-white/10 rounded-lg p-3">
+              <p className="text-xs text-secondary dark:text-white">
                 <strong>💡 หมายเหตุ:</strong> ผู้ใช้จะเห็นกิจกรรมนี้หากตรงกับเงื่อนไข<strong>ใดเงื่อนไขหนึ่ง</strong>ที่กำหนด
               </p>
             </div>
@@ -749,7 +749,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+          className="flex-1 px-4 py-2.5 bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 text-secondary dark:text-white rounded-lg font-medium transition-colors"
         >
           ย้อนกลับ
         </button>
@@ -758,7 +758,7 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
           className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
             type === 'location'
               ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-blue-500 hover:bg-blue-600'
+              : 'bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80'
           }`}
         >
           สร้าง{type === 'location' ? 'พื้นที่' : 'กิจกรรม'}
@@ -889,32 +889,32 @@ function EditForm({ type, item, onSubmit, onCancel }) {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
           ชื่อ{type === 'location' ? 'พื้นที่' : 'กิจกรรม'} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
           คำอธิบาย
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors resize-none"
           rows="3"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
           รัศมี (เมตร) <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-4">
@@ -933,7 +933,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
             max="1000"
             value={formData.radius}
             onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 100 })}
-            className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center font-medium"
+            className="w-24 px-3 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none text-center font-medium"
           />
         </div>
       </div>
@@ -941,19 +941,19 @@ function EditForm({ type, item, onSubmit, onCancel }) {
       {type === 'event' && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               ชื่อสถานที่
             </label>
             <input
               type="text"
               value={formData.locationName}
               onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               วันที่เริ่มกิจกรรม <span className="text-red-500">*</span>
             </label>
             <div className="relative w-full">
@@ -964,7 +964,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                     startDateRef.current.showPicker?.() || startDateRef.current.click()
                   }
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary dark:text-white hover:text-primary dark:hover:text-primary z-10"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
@@ -985,7 +985,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                     setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -1004,7 +1004,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               วันที่สิ้นสุดกิจกรรม <span className="text-red-500">*</span>
             </label>
             <div className="relative w-full">
@@ -1015,7 +1015,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                     endDateRef.current.showPicker?.() || endDateRef.current.click()
                   }
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary dark:text-white hover:text-primary dark:hover:text-primary z-10"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
@@ -1036,7 +1036,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
                     setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
                   }
                 }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
 
@@ -1057,26 +1057,26 @@ function EditForm({ type, item, onSubmit, onCancel }) {
           {/* Time Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
                 เวลาเริ่ม <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
                 เวลาสิ้นสุด <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -1084,13 +1084,13 @@ function EditForm({ type, item, onSubmit, onCancel }) {
 
           {/* Status Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary dark:text-white mb-2">
               สถานะกิจกรรม <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
               required
             >
               <option value="ongoing">● ดำเนินการ</option>
@@ -1100,7 +1100,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
 
           {/* Assignment Section - Edit Mode */}
           <div className="space-y-4 pt-4 border-t-2 border-gray-200">
-            <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+            <h3 className="text-base font-bold text-secondary dark:text-white flex items-center gap-2">
               กำหนดผู้รับผิดชอบ
             </h3>
 
@@ -1156,7 +1156,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+          className="flex-1 px-4 py-2.5 bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 text-secondary dark:text-white rounded-lg font-medium transition-colors"
         >
           ยกเลิก
         </button>
@@ -1165,7 +1165,7 @@ function EditForm({ type, item, onSubmit, onCancel }) {
           className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
             type === 'location'
               ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-blue-500 hover:bg-blue-600'
+              : 'bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80'
           }`}
         >
           บันทึก
@@ -1238,11 +1238,11 @@ function MappingAndEvents() {
 
   // Combined items for display
   const getFilteredItems = () => {
-    if (activeTab === 'locations') return filteredLocations.map(loc => ({ ...loc, type: 'location' }))
-    if (activeTab === 'events') return filteredEvents.map(evt => ({ ...evt, type: 'event' }))
+    if (activeTab === 'locations') return filteredLocations.map((loc, index) => ({ ...loc, type: 'location', uniqueKey: `loc-${loc.id}-${index}` }))
+    if (activeTab === 'events') return filteredEvents.map((evt, index) => ({ ...evt, type: 'event', uniqueKey: `evt-${evt.id}-${evt.date}-${index}` }))
     return [
-      ...filteredLocations.map(loc => ({ ...loc, type: 'location' })),
-      ...filteredEvents.map(evt => ({ ...evt, type: 'event' }))
+      ...filteredLocations.map((loc, index) => ({ ...loc, type: 'location', uniqueKey: `loc-${loc.id}-${index}` })),
+      ...filteredEvents.map((evt, index) => ({ ...evt, type: 'event', uniqueKey: `evt-${evt.id}-${evt.date}-${index}` }))
     ]
   }
 
@@ -1681,7 +1681,7 @@ function MappingAndEvents() {
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-secondary dark:text-white flex items-center gap-2">
                 {detailItem.type === 'location' ? (
                   <>
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -1689,7 +1689,7 @@ function MappingAndEvents() {
                   </>
                 ) : (
                   <>
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-primary dark:bg-primary"></div>
                     รายละเอียดกิจกรรม
                   </>
                 )}
@@ -1699,7 +1699,7 @@ function MappingAndEvents() {
                   setShowDetailModal(false)
                   setDetailItem(null)
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-secondary dark:text-white/70 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1710,8 +1710,8 @@ function MappingAndEvents() {
             <div className="p-6 space-y-6 max-h-[calc(90vh-80px)] overflow-y-auto">
               {/* Basic Info */}
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border-2 border-gray-100">
-                <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <h3 className="font-bold text-lg text-secondary dark:text-white mb-4 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   ข้อมูลพื้นฐาน
@@ -1719,7 +1719,7 @@ function MappingAndEvents() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500 mb-1">ชื่อ{detailItem.type === 'location' ? 'พื้นที่' : 'กิจกรรม'}</p>
-                    <p className="font-semibold text-gray-800">{detailItem.name}</p>
+                    <p className="font-semibold text-secondary dark:text-white">{detailItem.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 mb-1">สถานะ</p>
@@ -1727,7 +1727,7 @@ function MappingAndEvents() {
                       detailItem.status === 'active' || detailItem.status === 'ongoing'
                         ? detailItem.type === 'location'
                           ? 'bg-green-100 text-green-700'
-                          : 'bg-blue-100 text-blue-700'
+                          : 'bg-accent dark:bg-accent-orange text-primary dark:text-primary'
                         : detailItem.status === 'upcoming'
                         ? 'bg-purple-100 text-purple-700'
                         : 'bg-red-100 text-red-700'
@@ -1748,12 +1748,12 @@ function MappingAndEvents() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 mb-1">รัศมี</p>
-                    <p className="font-semibold text-gray-800">{detailItem.radius} เมตร</p>
+                    <p className="font-semibold text-secondary dark:text-white">{detailItem.radius} เมตร</p>
                   </div>
                   {detailItem.type === 'event' && detailItem.locationName && (
                     <div>
                       <p className="text-sm text-gray-500 mb-1">ชื่อสถานที่</p>
-                      <p className="font-semibold text-gray-800">{detailItem.locationName}</p>
+                      <p className="font-semibold text-secondary dark:text-white">{detailItem.locationName}</p>
                     </div>
                   )}
                 </div>
@@ -1761,9 +1761,9 @@ function MappingAndEvents() {
 
               {/* Date & Time Info (Events only) */}
               {detailItem.type === 'event' && (
-                <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-5 border-2 border-blue-100">
-                  <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white dark:bg-secondary transition-colors duration-300/95 rounded-xl p-5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10">
+                  <h3 className="font-bold text-lg text-secondary dark:text-white mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     วันที่และเวลา
@@ -1771,27 +1771,27 @@ function MappingAndEvents() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">วันที่เริ่ม</p>
-                      <p className="font-semibold text-gray-800">{detailItem.startDate || detailItem.date || '-'}</p>
+                      <p className="font-semibold text-secondary dark:text-white">{detailItem.startDate || detailItem.date || '-'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 mb-1">วันที่สิ้นสุด</p>
-                      <p className="font-semibold text-gray-800">{detailItem.endDate || detailItem.date || '-'}</p>
+                      <p className="font-semibold text-secondary dark:text-white">{detailItem.endDate || detailItem.date || '-'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 mb-1">เวลาเริ่ม</p>
-                      <p className="font-semibold text-gray-800">{detailItem.startTime || '-'}</p>
+                      <p className="font-semibold text-secondary dark:text-white">{detailItem.startTime || '-'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 mb-1">เวลาสิ้นสุด</p>
-                      <p className="font-semibold text-gray-800">{detailItem.endTime || '-'}</p>
+                      <p className="font-semibold text-secondary dark:text-white">{detailItem.endTime || '-'}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Location Info */}
-              <div className="bg-gradient-to-br from-green-50 to-white rounded-xl p-5 border-2 border-green-100">
-                <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+              <div className="bg-white dark:bg-secondary transition-colors duration-300/95 rounded-xl p-5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10">
+                <h3 className="font-bold text-lg text-secondary dark:text-white mb-4 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1801,11 +1801,11 @@ function MappingAndEvents() {
                 <div className="space-y-2">
                   <div>
                     <p className="text-sm text-gray-500 mb-1">ละติจูด (Latitude)</p>
-                    <p className="font-mono font-semibold text-gray-800">{detailItem.latitude?.toFixed(6) || '-'}</p>
+                    <p className="font-mono font-semibold text-secondary dark:text-white">{detailItem.latitude?.toFixed(6) || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 mb-1">ลองจิจูด (Longitude)</p>
-                    <p className="font-mono font-semibold text-gray-800">{detailItem.longitude?.toFixed(6) || '-'}</p>
+                    <p className="font-mono font-semibold text-secondary dark:text-white">{detailItem.longitude?.toFixed(6) || '-'}</p>
                   </div>
                 </div>
               </div>
@@ -1813,7 +1813,7 @@ function MappingAndEvents() {
               {/* Assignment Info (Events only) */}
               {detailItem.type === 'event' && (
                 <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl p-5 border-2 border-purple-100">
-                  <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                  <h3 className="font-bold text-lg text-secondary dark:text-white mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
@@ -1840,7 +1840,7 @@ function MappingAndEvents() {
                         <p className="text-sm text-gray-500 mb-2">บทบาทที่ถูกมอบหมาย</p>
                         <div className="flex flex-wrap gap-2">
                           {detailItem.assignedRoles.map(role => (
-                            <span key={role} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                            <span key={role} className="bg-accent dark:bg-accent-orange text-primary dark:text-primary px-3 py-1 rounded-full text-sm font-medium">
                               {role === 'user' ? 'User' : role === 'manager' ? 'Manager' : role}
                             </span>
                           ))}
@@ -1888,7 +1888,7 @@ function MappingAndEvents() {
                     setShowDetailModal(false)
                     setDetailItem(null)
                   }}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 text-secondary dark:text-white rounded-lg font-medium transition-colors"
                 >
                   ปิด
                 </button>
@@ -1914,7 +1914,7 @@ function MappingAndEvents() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-secondary dark:text-white">
                 {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
               </h2>
               <button
@@ -1925,7 +1925,7 @@ function MappingAndEvents() {
                   setSearchMarkerPosition(null)
                   setSearchMarkerName('')
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-secondary dark:text-white/70 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1934,29 +1934,29 @@ function MappingAndEvents() {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">1</span>
+              <div className="bg-accent dark:bg-accent-orange rounded-xl p-4 border border-gray-200 dark:border-white/10">
+                <h3 className="font-bold text-secondary dark:text-white mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-primary dark:bg-primary text-white rounded-full flex items-center justify-center text-sm">1</span>
                   การสร้างพื้นที่/กิจกรรมใหม่
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-primary dark:text-primary mt-1">•</span>
                     <span><strong>คลิกที่แผนที่</strong> เพื่อปักหมุดและสร้างพื้นที่/กิจกรรมใหม่</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-primary dark:text-primary mt-1">•</span>
                     <span><strong>ค้นหาสถานที่</strong> ด้วยช่องค้นหาบนแผนที่ แล้วคลิกผลลัพธ์</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-primary dark:text-primary mt-1">•</span>
                     <span>คลิกปุ่ม <strong>"สร้างพื้นที่/กิจกรรมที่นี่"</strong> ใน popup ที่ปรากฏ</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <div className="bg-accent dark:bg-accent-orange rounded-xl p-4 border border-gray-200 dark:border-white/10">
+                <h3 className="font-bold text-secondary dark:text-white mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">2</span>
                   การจัดการรายการ
                 </h3>
@@ -1977,7 +1977,7 @@ function MappingAndEvents() {
               </div>
 
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <h3 className="font-bold text-secondary dark:text-white mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
                   สัญลักษณ์บนแผนที่
                 </h3>
@@ -1987,7 +1987,7 @@ function MappingAndEvents() {
                     <span><strong>หมุดสีเขียว</strong> = พื้นที่อนุญาตให้เช็คอิน</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-primary dark:bg-primary rounded-full"></div>
                     <span><strong>หมุดสีน้ำเงิน</strong> = กิจกรรมพิเศษ</span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1998,7 +1998,7 @@ function MappingAndEvents() {
               </div>
 
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <h3 className="font-bold text-secondary dark:text-white mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm">💡</span>
                   เคล็ดลับ
                 </h3>
@@ -2018,18 +2018,18 @@ function MappingAndEvents() {
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-gray-300">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-gray-300 dark:border-white/20">
+                <h3 className="font-bold text-secondary dark:text-white mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm">⌨️</span>
                   คีย์ลัด (Keyboard Shortcuts)
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700 ml-8">
                   <div className="flex items-center gap-3">
-                    <kbd className="px-2 py-1 bg-white border-2 border-gray-300 rounded text-xs font-mono shadow-sm">ESC</kbd>
+                    <kbd className="px-2 py-1 bg-white border-2 border-gray-300 dark:border-white/20 rounded text-xs font-mono shadow-sm">ESC</kbd>
                     <span>ยกเลิกการแก้ไข/สร้าง</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <kbd className="px-2 py-1 bg-white border-2 border-gray-300 rounded text-xs font-mono shadow-sm">Enter</kbd>
+                    <kbd className="px-2 py-1 bg-white border-2 border-gray-300 dark:border-white/20 rounded text-xs font-mono shadow-sm">Enter</kbd>
                     <span>บันทึกการแก้ไข/สร้าง</span>
                   </div>
                 </div>
@@ -2044,7 +2044,7 @@ function MappingAndEvents() {
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-secondary dark:text-white">
                 แก้ไข{editItem.type === 'location' ? 'พื้นที่อนุญาต' : 'กิจกรรม'}
               </h2>
               <button
@@ -2052,7 +2052,7 @@ function MappingAndEvents() {
                   setShowEditModal(false)
                   setEditItem(null)
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-secondary dark:text-white/70 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2081,7 +2081,7 @@ function MappingAndEvents() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-secondary dark:text-white">
                 {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
               </h2>
               <button
@@ -2092,7 +2092,7 @@ function MappingAndEvents() {
                   setSearchMarkerPosition(null)
                   setSearchMarkerName('')
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-secondary dark:text-white/70 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2105,14 +2105,14 @@ function MappingAndEvents() {
               {!createType ? (
                 // Type Selection
                 <div className="space-y-4">
-                  <p className="text-gray-600 mb-6">เลือกประเภทที่ต้องการสร้างสำหรับตำแหน่งนี้:</p>
+                  <p className="text-secondary dark:text-white/70 mb-6">เลือกประเภทที่ต้องการสร้างสำหรับตำแหน่งนี้:</p>
                   <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg mb-6">
                     <div className="font-medium mb-1">พิกัด:</div>
                     <div className="font-mono">{newMarkerPosition ? `${newMarkerPosition[0].toFixed(6)}, ${newMarkerPosition[1].toFixed(6)}` : 'N/A'}</div>
                   </div>
                   <button
                     onClick={() => setCreateType('location')}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl"
+                    className="w-full bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white px-6 py-4 rounded-xl font-medium transition-all shadow-lg hover:shadow-lg"
                   >
                     <div className="text-center">
                       <div className="font-bold text-lg mb-1">พื้นที่อนุญาต</div>
@@ -2121,7 +2121,7 @@ function MappingAndEvents() {
                   </button>
                   <button
                     onClick={() => setCreateType('event')}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl"
+                    className="w-full bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white px-6 py-4 rounded-xl font-medium transition-all shadow-lg hover:shadow-lg"
                   >
                     <div className="text-center">
                       <div className="font-bold text-lg mb-1">กิจกรรม</div>
@@ -2149,14 +2149,14 @@ function MappingAndEvents() {
       <div className="bg-white border-b border-gray-200 px-6 py-5">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">ตั้งค่าพื้นที่และกิจกรรม</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-secondary dark:text-white">ตั้งค่าพื้นที่และกิจกรรม</h1>
+            <p className="text-sm text-secondary dark:text-white/70 mt-1">
               กำหนดพื้นที่อนุญาตและกิจกรรมต่างๆที่พนักงานต้องเช็คเข้างาน
             </p>
           </div>
           <button
             onClick={() => setShowHelpModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors font-medium text-sm border border-blue-200"
+            className="flex items-center gap-2 px-4 py-2 bg-accent dark:bg-accent-orange hover:bg-accent dark:bg-accent-orange text-primary dark:text-primary rounded-lg transition-colors font-medium text-sm border border-gray-200 dark:border-white/10"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2190,7 +2190,7 @@ function MappingAndEvents() {
                 {searchMarkerName && (
                   <div className="bg-white rounded-lg shadow-lg px-3 py-2 border border-gray-200 max-w-[160px]">
                     <p className="text-xs text-gray-500 mb-1 font-medium">ตำแหน่งปัจจุบัน</p>
-                    <p className="text-xs text-gray-800 font-medium line-clamp-2">{searchMarkerName.split(',')[0]}</p>
+                    <p className="text-xs text-secondary dark:text-white font-medium line-clamp-2">{searchMarkerName.split(',')[0]}</p>
                   </div>
                 )}
               </div>
@@ -2204,7 +2204,7 @@ function MappingAndEvents() {
                   value={mapSearchQuery}
                   onChange={(e) => setMapSearchQuery(e.target.value)}
                   placeholder="ค้นหาสถานที่บนแผนที่..."
-                  className="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-gray-200 rounded-xl shadow-lg focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                  className="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl shadow-lg focus:border-primary dark:focus:border-primary focus:outline-none transition-colors text-sm"
                 />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2217,7 +2217,7 @@ function MappingAndEvents() {
                 </svg>
                 {isSearchingMap && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary dark:border-primary"></div>
                   </div>
                 )}
                 {mapSearchQuery && !isSearchingMap && (
@@ -2226,7 +2226,7 @@ function MappingAndEvents() {
                       setMapSearchQuery('')
                       setMapSearchResults([])
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-secondary dark:text-white/70"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
@@ -2237,7 +2237,7 @@ function MappingAndEvents() {
 
               {/* Search Results Dropdown */}
               {mapSearchResults.length > 0 && (
-                <div className="mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-64 overflow-y-auto">
+                <div className="mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
                   {mapSearchResults.map((result, index) => (
                     <button
                       key={index}
@@ -2253,9 +2253,9 @@ function MappingAndEvents() {
                         setMapSearchQuery('')
                         setMapSearchResults([])
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      className="w-full text-left px-4 py-3 hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors border-b border-gray-100 last:border-b-0"
                     >
-                      <div className="font-medium text-sm text-gray-800">{result.formatted_name || result.display_name}</div>
+                      <div className="font-medium text-sm text-secondary dark:text-white">{result.formatted_name || result.display_name}</div>
                       <div className="text-xs text-gray-500 mt-1">
                         พิกัด: {parseFloat(result.lat).toFixed(6)}, {parseFloat(result.lon).toFixed(6)}
                       </div>
@@ -2269,7 +2269,7 @@ function MappingAndEvents() {
             <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
               <button
                 onClick={() => setMapType(mapType === 'default' ? 'satellite' : 'default')}
-                className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg font-medium text-sm transition-all flex items-center gap-2 border border-gray-200"
+                className="bg-white hover:bg-accent dark:hover:bg-accent-orange text-secondary dark:text-white px-4 py-2 rounded-lg shadow-lg font-medium text-sm transition-all flex items-center gap-2 border border-gray-200"
                 title={mapType === 'default' ? 'สลับเป็นมุมมองดาวเทียม' : 'สลับเป็นมุมมองแผนที่'}
               >
                 {mapType === 'default' ? (
@@ -2301,11 +2301,11 @@ function MappingAndEvents() {
                       <span className="text-lg font-bold text-green-700">{locations.length}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-blue-50 px-2 py-1.5 rounded-md">
-                    <span className="w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0"></span>
+                  <div className="flex items-center gap-2 bg-accent dark:bg-accent-orange px-2 py-1.5 rounded-md">
+                    <span className="w-2.5 h-2.5 bg-primary dark:bg-primary rounded-full flex-shrink-0"></span>
                     <div className="flex flex-col">
-                      <span className="text-xs text-blue-600 font-medium">กิจกรรม</span>
-                      <span className="text-lg font-bold text-blue-700">{events.length}</span>
+                      <span className="text-xs text-primary dark:text-primary font-medium">กิจกรรม</span>
+                      <span className="text-lg font-bold text-primary dark:text-primary">{events.length}</span>
                     </div>
                   </div>
                 </div>
@@ -2427,7 +2427,7 @@ function MappingAndEvents() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="ค้นหาพื้นที่หรือกิจกรรม..."
-                  className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                  className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-colors text-sm"
                 />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2441,7 +2441,7 @@ function MappingAndEvents() {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-secondary dark:text-white/70"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
@@ -2456,8 +2456,8 @@ function MappingAndEvents() {
                   onClick={() => setActiveTab('all')}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'all'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary dark:bg-primary text-white'
+                      : 'bg-accent dark:bg-accent-orange text-secondary dark:text-white hover:bg-accent/80 dark:hover:bg-accent-orange/80'
                   }`}
                 >
                   ทั้งหมด ({locations.length + events.length})
@@ -2467,7 +2467,7 @@ function MappingAndEvents() {
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'locations'
                       ? 'bg-green-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-accent dark:bg-accent-orange text-secondary dark:text-white hover:bg-accent/80 dark:hover:bg-accent-orange/80'
                   }`}
                 >
                   พื้นที่ ({locations.length})
@@ -2476,8 +2476,8 @@ function MappingAndEvents() {
                   onClick={() => setActiveTab('events')}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'events'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary dark:bg-primary text-white'
+                      : 'bg-accent dark:bg-accent-orange text-secondary dark:text-white hover:bg-accent/80 dark:hover:bg-accent-orange/80'
                   }`}
                 >
                   กิจกรรม ({events.length})
@@ -2502,12 +2502,12 @@ function MappingAndEvents() {
                 
                 return (
                   <div
-                    key={`${item.type}-${item.id}`}
+                    key={item.uniqueKey}
                     data-item-id={`${item.type}-${item.id}`}
-                    className={`relative rounded-xl p-4 border-2 shadow-sm transition-all duration-200 ${
+                    className={`relative rounded-xl p-4 border-2 shadow-sm transition-colors ${
                       isLocation 
-                        ? 'border-green-100 bg-gradient-to-br from-green-50/50 to-white' 
-                        : 'border-blue-100 bg-gradient-to-br from-blue-50/50 to-white'
+                        ? 'border-gray-200 dark:border-white/10 bg-white dark:bg-secondary/95' 
+                        : 'border-gray-200 dark:border-white/10 bg-white dark:bg-secondary/95'
                     }`}
                   >
                     {/* Header */}
@@ -2516,12 +2516,12 @@ function MappingAndEvents() {
                         <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold mb-2 ${
                           isLocation 
                             ? 'bg-green-100 text-green-700' 
-                            : 'bg-blue-100 text-blue-700'
+                            : 'bg-accent dark:bg-accent-orange text-primary dark:text-primary'
                         }`}>
                           {isLocation ? 'พื้นที่' : 'กิจกรรม'}
                         </div>
-                        <h3 className="font-bold text-lg text-gray-800 mb-1">{item.name}</h3>
-                        <p className="text-xs text-gray-600 line-clamp-2">{item.description}</p>
+                        <h3 className="font-bold text-lg text-secondary dark:text-white mb-1">{item.name}</h3>
+                        <p className="text-xs text-secondary dark:text-white/70 line-clamp-2">{item.description}</p>
                       </div>
                       
                       {/* Status Badge */}
@@ -2529,7 +2529,7 @@ function MappingAndEvents() {
                         item.status === 'active' || item.status === 'ongoing'
                           ? isLocation 
                             ? 'bg-green-100 text-green-700' 
-                            : 'bg-blue-100 text-blue-700'
+                            : 'bg-accent dark:bg-accent-orange text-primary dark:text-primary'
                           : 'bg-red-100 text-red-700'
                       }`}>
                         {isLocation 
@@ -2542,7 +2542,7 @@ function MappingAndEvents() {
                     </div>
 
                     {/* Quick Info */}
-                    <div className="flex items-center gap-4 text-xs text-gray-600 mb-3 flex-wrap">
+                    <div className="flex items-center gap-4 text-xs text-secondary dark:text-white/70 mb-3 flex-wrap">
                       <div className="flex items-center gap-1">
                         <span className="font-medium">รัศมี:</span>
                         <span>{item.radius}ม.</span>
@@ -2569,7 +2569,7 @@ function MappingAndEvents() {
                           setDetailItem(item);
                           setShowDetailModal(true);
                         }}
-                        className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        className="px-3 py-2 bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         title="ดูรายละเอียด"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -2695,7 +2695,7 @@ function MappingAndEvents() {
                           className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                             isLocation
                               ? 'bg-green-100 hover:bg-green-200 text-green-700'
-                              : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                              : 'bg-accent dark:bg-accent-orange hover:bg-accent dark:hover:bg-accent-orange/50 text-primary dark:text-primary'
                           }`}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

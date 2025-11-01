@@ -20,7 +20,7 @@ const EmptyState = memo(function EmptyState({
         {actionLabel && onAction && (
           <button
             onClick={onAction}
-            className="px-6 py-2 bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 text-white rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+            className="px-6 py-2 bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white rounded-lg transition-colors font-medium shadow-md hover:shadow-lg "
           >
             {actionLabel}
           </button>

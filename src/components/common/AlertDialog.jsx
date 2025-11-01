@@ -90,9 +90,9 @@ const AlertDialog = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          color: 'text-blue-500',
-          bgColor: 'from-blue-50 to-cyan-50',
-          buttonColor: 'from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700'
+          color: 'text-primary dark:text-primary',
+          bgColor: 'bg-accent dark:bg-accent-orange',
+          buttonColor: 'bg-primary dark:bg-primary hover:bg-primary/90'
         };
     }
   };
@@ -128,13 +128,13 @@ const AlertDialog = ({
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-200 transform hover:scale-[1.02]"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-colors transform hover:scale-[1.02]"
               >
                 {cancelText}
               </button>
               <button
                 onClick={handleConfirm}
-                className={`flex-1 bg-gradient-to-r ${buttonColor} text-white font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg transition-all duration-200 transform hover:scale-[1.02]`}
+                className={`flex-1 bg-gradient-to-r ${buttonColor} text-white font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg transition-colors transform hover:scale-[1.02]`}
               >
                 {confirmText}
               </button>
@@ -142,7 +142,7 @@ const AlertDialog = ({
           ) : (
             <button
               onClick={onClose}
-              className={`w-full bg-gradient-to-r ${buttonColor} text-white font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg transition-all duration-200 transform hover:scale-[1.02]`}
+              className={`w-full bg-gradient-to-r ${buttonColor} text-white font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg transition-colors transform hover:scale-[1.02]`}
             >
               {confirmText}
             </button>

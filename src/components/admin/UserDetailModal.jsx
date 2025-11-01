@@ -46,7 +46,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 px-6 py-8 overflow-hidden">
+        <div className="relative bg-primary dark:bg-primary px-6 py-8 overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
           
@@ -65,7 +65,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => onEdit(user)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -76,9 +76,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 <button 
                   onClick={() => onDelete(user)}
                   disabled={currentUser?.role === 'admin' && user?.role === 'superadmin'}
-                  className={`px-4 py-2 rounded-xl transition-all duration-200 transform flex items-center gap-2 font-medium shadow-lg ${
+                  className={`px-4 py-2 rounded-xl transition-colors transform flex items-center gap-2 font-medium shadow-lg ${
                     currentUser?.role === 'admin' && user?.role === 'superadmin'
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-accent dark:bg-accent-orange text-secondary dark:text-white/70 cursor-not-allowed'
                       : 'bg-red-500 hover:bg-red-600 text-white hover:scale-105'
                   }`}
                   title={currentUser?.role === 'admin' && user?.role === 'superadmin' ? 'ไม่สามารถลบ Super Admin ได้' : 'ลบผู้ใช้'}
@@ -91,7 +91,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
               <button 
                 onClick={onDownloadPDF} 
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -101,7 +101,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               {user.attendanceRecords && (
                 <button 
                   onClick={onToggleAttendance} 
-                  className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+                  className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -111,7 +111,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
               <button 
                 onClick={onClose} 
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl transition-all duration-200 transform hover:scale-105 font-medium shadow-lg"
+                className="px-4 py-2 bg-white/20 hover:bg-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 font-medium shadow-lg"
               >
                 ปิด
               </button>
@@ -229,7 +229,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                                 <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
                               </select>
                             ) : (
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-accent dark:bg-accent-orange text-primary dark:text-primary' : 'bg-orange-100 text-orange-700'}`}>
                                 {record.checkIn.location}
                               </span>
                             )}
@@ -237,7 +237,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                           
                           <div>
                             <div className="text-xs text-gray-500">GPS</div>
-                            <a href={`https://maps.google.com/?q=${record.checkIn.gps}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">{record.checkIn.gps}</a>
+                            <a href={`https://maps.google.com/?q=${record.checkIn.gps}`} target="_blank" rel="noreferrer" className="text-xs text-primary dark:text-primary hover:underline">{record.checkIn.gps}</a>
                           </div>
                         </div>
                       </div>
@@ -296,7 +296,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                                   <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
                                 </select>
                               ) : (
-                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-accent dark:bg-accent-orange text-primary dark:text-primary' : 'bg-orange-100 text-orange-700'}`}>
                                   {record.checkOut.location}
                                 </span>
                               )}
@@ -304,7 +304,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                             
                             <div>
                               <div className="text-xs text-gray-500">GPS</div>
-                              <a href={`https://maps.google.com/?q=${record.checkOut.gps}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">{record.checkOut.gps}</a>
+                              <a href={`https://maps.google.com/?q=${record.checkOut.gps}`} target="_blank" rel="noreferrer" className="text-xs text-primary dark:text-primary hover:underline">{record.checkOut.gps}</a>
                             </div>
                           </div>
                         </div>
@@ -321,9 +321,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
             {/* Left Column - Profile */}
             <div className="lg:col-span-1 space-y-5">
               {/* Profile Card */}
-              <div className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl p-6 border-2 border-sky-200 shadow-lg">
+              <div className="bg-accent dark:bg-accent-orange rounded-2xl p-6 border-2 border-gray-200 dark:border-white/10 shadow-lg">
                 <div className="flex flex-col items-center">
-                  <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-xl ring-4 ring-white">
+                  <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-xl ">
                     <img src={user.profileImage || `https://i.pravatar.cc/300?u=${user.id}`} alt="avatar" className="w-full h-full object-cover" />
                   </div>
                   
@@ -403,9 +403,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   {/* Show Admin Account if user is admin or superadmin */}
                   {(user.role === 'admin' || user.role === 'superadmin') && user.adminAccount && (
                     <>
-                      <div className="pt-3 border-t-2 border-blue-200">
-                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 mb-3">
-                          <p className="text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1">
+                      <div className="pt-3 border-t-2 border-gray-200 dark:border-white/10">
+                        <div className="bg-accent dark:bg-accent-orange rounded-lg p-3 mb-3">
+                          <p className="text-xs font-semibold text-primary dark:text-primary mb-1 flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                             </svg>
@@ -415,11 +415,11 @@ const UserDetailModal = React.memo(function UserDetailModal({
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-100">
                         <span className="text-gray-600">Username (Admin)</span>
-                        <span className="font-medium text-blue-600">{user.adminAccount}</span>
+                        <span className="font-medium text-primary dark:text-primary">{user.adminAccount}</span>
                       </div>
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Password (Admin)</span>
-                        <span className="font-medium text-blue-600">{user.adminPassword || '••••••••'}</span>
+                        <span className="font-medium text-primary dark:text-primary">{user.adminPassword || '••••••••'}</span>
                       </div>
                     </>
                   )}
@@ -594,7 +594,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {user.skills.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-gradient-to-r from-sky-100 to-cyan-100 text-sky-700 rounded-full text-xs font-medium">
+                      <span key={index} className="px-3 py-1 bg-accent dark:bg-accent-orange text-primary dark:text-primary rounded-full text-xs font-medium">
                         {skill}
                       </span>
                     ))}

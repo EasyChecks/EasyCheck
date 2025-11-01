@@ -55,9 +55,9 @@ const ConfirmDialog = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          color: 'text-blue-500',
-          bgColor: 'from-blue-50 to-cyan-50',
-          buttonColor: 'from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700'
+          color: 'text-primary dark:text-primary',
+          bgColor: 'bg-accent dark:bg-accent-orange',
+          buttonColor: 'bg-primary dark:bg-primary hover:bg-primary/90'
         };
     }
   };
@@ -106,7 +106,7 @@ const ConfirmDialog = ({
         <div className="px-6 pb-6 sm:px-8 sm:pb-8 flex gap-3 sm:gap-4">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 sm:px-6 sm:py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl sm:rounded-2xl transition-all duration-200 text-sm sm:text-base"
+            className="flex-1 px-4 py-3 sm:px-6 sm:py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl sm:rounded-2xl transition-colors text-sm sm:text-base"
           >
             {cancelText}
           </button>
@@ -115,7 +115,7 @@ const ConfirmDialog = ({
               onConfirm();
               onClose();
             }}
-            className={`flex-1 px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r ${buttonColor} text-white font-semibold rounded-xl sm:rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg text-sm sm:text-base`}
+            className={`flex-1 px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r ${buttonColor} text-white font-semibold rounded-xl sm:rounded-2xl transition-colors transform hover:scale-105 shadow-lg text-sm sm:text-base`}
           >
             {confirmText}
           </button>

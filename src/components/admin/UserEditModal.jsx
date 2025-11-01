@@ -34,7 +34,7 @@ const UserEditModal = React.memo(function UserEditModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-sky-500 to-cyan-600 px-6 py-4 flex justify-between items-center flex-shrink-0">
+        <div className="bg-primary dark:bg-primary px-6 py-4 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -43,7 +43,7 @@ const UserEditModal = React.memo(function UserEditModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-white hover:bg-white/20 rounded-lg p-1 transition-colors"
+            className="text-white hover:bg-accent/20 rounded-lg p-1 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -92,7 +92,7 @@ const UserEditModal = React.memo(function UserEditModal({
                               reader.readAsDataURL(file);
                             }
                           }}
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
                         />
                       </div>
                       <p className="text-xs text-gray-500">
@@ -102,7 +102,7 @@ const UserEditModal = React.memo(function UserEditModal({
                         type="text"
                         value={editForm.profileImage || ''}
                         onChange={(e) => onChange({ ...editForm, profileImage: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent text-sm"
                         placeholder="หรือกรอก URL รูปภาพ (เช่น https://...)"
                       />
                     </div>
@@ -118,7 +118,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.name || editingUser.name || ''}
                     onChange={(e) => onChange({ ...editForm, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="กรอกชื่อ-นามสกุล"
                   />
                 </div>
@@ -132,7 +132,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="email"
                     value={editForm.email || editingUser.email || ''}
                     onChange={(e) => onChange({ ...editForm, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="example@email.com"
                   />
                 </div>
@@ -146,7 +146,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="tel"
                     value={editForm.phone || editingUser.phone || ''}
                     onChange={(e) => onChange({ ...editForm, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="081-234-5678"
                   />
                 </div>
@@ -160,7 +160,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="date"
                     value={editForm.birthDate || editingUser.birthDate || ''}
                     onChange={(e) => onChange({ ...editForm, birthDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   />
                 </div>
 
@@ -173,7 +173,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="number"
                     value={editForm.age || editingUser.age || ''}
                     onChange={(e) => onChange({ ...editForm, age: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="35"
                   />
                 </div>
@@ -187,7 +187,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.nationalId || editingUser.nationalId || ''}
                     onChange={(e) => onChange({ ...editForm, nationalId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="1234567890123"
                     maxLength="13"
                   />
@@ -201,7 +201,7 @@ const UserEditModal = React.memo(function UserEditModal({
                   <select
                     value={editForm.bloodType || editingUser.bloodType || ''}
                     onChange={(e) => onChange({ ...editForm, bloodType: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   >
                     <option value="">เลือกหมู่เลือด</option>
                     <option value="A">A</option>
@@ -231,7 +231,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.username || editingUser.username || ''}
                     disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-accent dark:bg-accent-orange cursor-not-allowed text-secondary dark:text-white/70"
                   />
                   <p className="text-xs text-gray-500 mt-1">สร้างอัตโนมัติเมื่อเพิ่มผู้ใช้ใหม่</p>
                 </div>
@@ -245,7 +245,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.password || editingUser.password || ''}
                     onChange={(e) => onChange({ ...editForm, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="เลขบัตรประชาชน 13 หลัก"
                   />
                   <p className="text-xs text-gray-500 mt-1">แสดงแบบไม่เข้ารหัส</p>
@@ -271,7 +271,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.employeeId || editingUser.employeeId || editingUser.username || ''}
                     disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-accent dark:bg-accent-orange cursor-not-allowed text-secondary dark:text-white/70"
                   />
                   <p className="text-xs text-gray-500 mt-1">ไม่สามารถแก้ไขได้</p>
                 </div>
@@ -285,7 +285,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.position || editingUser.position || ''}
                     onChange={(e) => onChange({ ...editForm, position: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="Senior Software Engineer"
                   />
                 </div>
@@ -298,7 +298,7 @@ const UserEditModal = React.memo(function UserEditModal({
                   <select
                     value={editForm.department || editingUser.department || ''}
                     onChange={(e) => onChange({ ...editForm, department: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   >
                     <option value="">เลือกแผนก</option>
                     <option value="IT">IT</option>
@@ -321,7 +321,7 @@ const UserEditModal = React.memo(function UserEditModal({
                         type="text"
                         value="Super Admin"
                         disabled
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600 font-medium"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-accent dark:bg-accent-orange cursor-not-allowed text-secondary dark:text-white/70 font-medium"
                       />
                       <p className="text-xs text-red-500 mt-1">Admin ไม่สามารถปรับ Role ของ Super Admin ได้ (แต่แก้ข้อมูลอื่นได้)</p>
                     </div>
@@ -329,7 +329,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     <select
                       value={editForm.role || editingUser.role || ''}
                       onChange={(e) => onChange({ ...editForm, role: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     >
                       <option value="">เลือกบทบาท</option>
                       <option value="user">User</option>
@@ -350,7 +350,7 @@ const UserEditModal = React.memo(function UserEditModal({
                   <select
                     value={editForm.status || editingUser.status || ''}
                     onChange={(e) => onChange({ ...editForm, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   >
                     <option value="active">Active (ทำงานปกติ)</option>
                     <option value="leave">Leave (ลาออก)</option>
@@ -368,7 +368,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="date"
                     value={editForm.startDate || editingUser.startDate || ''}
                     onChange={(e) => onChange({ ...editForm, startDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   />
                 </div>
 
@@ -381,7 +381,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="number"
                     value={editForm.salary || editingUser.salary || ''}
                     onChange={(e) => onChange({ ...editForm, salary: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="45000"
                   />
                 </div>
@@ -405,7 +405,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="text"
                     value={editForm.emergencyContactName || editingUser.emergencyContact?.name || ''}
                     onChange={(e) => onChange({ ...editForm, emergencyContactName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="นายสมชาย รัตนา"
                   />
                 </div>
@@ -418,7 +418,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     type="tel"
                     value={editForm.emergencyContactPhone || editingUser.emergencyContact?.phone || ''}
                     onChange={(e) => onChange({ ...editForm, emergencyContactPhone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                     placeholder="089-888-4357"
                   />
                 </div>
@@ -430,7 +430,7 @@ const UserEditModal = React.memo(function UserEditModal({
                   <select
                     value={editForm.emergencyContactRelation || editingUser.emergencyContact?.relation || ''}
                     onChange={(e) => onChange({ ...editForm, emergencyContactRelation: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                   >
                     <option value="">เลือกความสัมพันธ์</option>
                     <option value="บิดา">บิดา</option>
@@ -459,7 +459,7 @@ const UserEditModal = React.memo(function UserEditModal({
               <textarea
                 value={editForm.address || editingUser.address || ''}
                 onChange={(e) => onChange({ ...editForm, address: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 500 focus:border-transparent"
                 rows="3"
                 placeholder="กรอกที่อยู่"
               />
@@ -473,7 +473,7 @@ const UserEditModal = React.memo(function UserEditModal({
               {editForm.workHistory && editForm.workHistory.length > 0 ? (
                 <div className="space-y-2">
                   {editForm.workHistory.map((work, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div key={index} className="flex items-start gap-3 p-3 bg-accent dark:bg-accent-orange rounded-lg border border-gray-200 dark:border-white/10">
                       <div className="flex-1">
                         <div className="font-medium text-gray-800">{work.position}</div>
                         <div className="text-sm text-gray-600">{work.company}</div>
@@ -565,13 +565,13 @@ const UserEditModal = React.memo(function UserEditModal({
         <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            className="px-6 py-2.5 bg-accent dark:bg-accent-orange text-secondary dark:text-white rounded-lg hover:bg-accent/80 dark:hover:bg-accent-orange/80 transition-colors font-medium"
           >
             ยกเลิก
           </button>
           <button
             onClick={onSave}
-            className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-cyan-600 text-white rounded-lg hover:from-sky-600 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+            className="px-6 py-2.5 bg-primary dark:bg-primary text-white rounded-lg hover:bg-primary/90 dark:hover:bg-primary/80 transition-all shadow-lg hover:  font-medium"
           >
             บันทึกการแก้ไข
           </button>

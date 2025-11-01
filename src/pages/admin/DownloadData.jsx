@@ -378,7 +378,7 @@ function DownloadData() {
 
   const getIconColor = (color) => {
     const colors = {
-      blue: 'bg-blue-100 text-blue-600',
+      blue: 'bg-accent dark:bg-accent-orange text-primary dark:text-primary',
       purple: 'bg-purple-100 text-purple-600',
       green: 'bg-green-100 text-green-600',
       pink: 'bg-pink-100 text-pink-600',
@@ -429,21 +429,21 @@ function DownloadData() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
+    <div className="min-h-screen bg-accent dark:bg-secondary transition-colors duration-300">
       <div className="max-w-7xl px-6 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-secondary dark:text-white">
                 ดาวน์โหลดข้อมูล
               </h1>
-              <p className="text-gray-500 text-sm mt-1">
+              <p className="text-gray-500 dark:text-white/70 text-sm mt-1">
                 {isSuperAdmin ? 'เลือกสาขาและข้อมูลที่ต้องการดาวน์โหลด' : 'เลือกข้อมูลที่ต้องการดาวน์โหลด'}
               </p>
             </div>
@@ -455,10 +455,10 @@ function DownloadData() {
           {reports.map((report) => (
             <div 
               key={report.id}
-              className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]"
+              className="bg-white dark:bg-secondary/95 rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden hover:border-primary transition-colors"
             >
               {/* Card Header */}
-              <div className={`bg-gradient-to-r ${report.color} p-6 relative overflow-hidden`}>
+              <div className={`bg-primary dark:bg-primary/90 p-6 relative overflow-hidden`}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
                 
@@ -477,11 +477,11 @@ function DownloadData() {
 
               {/* Card Body */}
               <div className="p-6">
-                <p className="text-gray-600 mb-4">{report.description}</p>
+                <p className="text-gray-600 dark:text-white/70 mb-4">{report.description}</p>
                 
                 <button
                   onClick={() => openModal(report)}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 font-semibold"
+                  className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl transition-colors flex items-center justify-center gap-2 font-semibold"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -497,9 +497,9 @@ function DownloadData() {
       {/* Modal */}
       {showModal && selectedReport && !showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden transform animate-slideUp max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-3xl bg-white dark:bg-secondary/95 rounded-3xl overflow-hidden transform animate-slideUp max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 relative overflow-hidden">
+            <div className="bg-primary dark:bg-primary/90 p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
               
               <div className="relative flex items-center justify-between">
@@ -516,7 +516,7 @@ function DownloadData() {
                 </div>
                 <button
                   onClick={closeModal}
-                  className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl flex items-center justify-center text-white transition-all duration-200 transform hover:scale-110"
+                  className="w-10 h-10 bg-white/20 hover:bg-accent/30 backdrop-blur-md rounded-xl flex items-center justify-center text-white transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -531,7 +531,7 @@ function DownloadData() {
               {isSuperAdmin && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                     เลือกสาขา
@@ -540,17 +540,17 @@ function DownloadData() {
                     {branches.map((branch) => (
                       <label
                         key={branch.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
                           selectedBranches.includes(branch.id)
-                            ? 'bg-blue-50 border-blue-300 shadow-md'
-                            : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                            ? 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 shadow-md'
+                            : 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary hover:shadow-sm'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={selectedBranches.includes(branch.id)}
                           onChange={() => handleBranchToggle(branch.id)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                          className="w-5 h-5 text-primary dark:text-primary border-gray-300 dark:border-white/20 rounded focus:ring-primary focus:ring-2 cursor-pointer"
                         />
                         <div className="flex-1">
                           <div className="font-semibold text-gray-800 text-sm">{branch.name}</div>
@@ -565,7 +565,7 @@ function DownloadData() {
               {/* Date Range */}
               <div className="mb-6">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   ช่วงเวลา
@@ -577,7 +577,7 @@ function DownloadData() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
@@ -586,7 +586,7 @@ function DownloadData() {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -595,7 +595,7 @@ function DownloadData() {
               {/* Data Options */}
               <div className="mb-6">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   ประเภทข้อมูลที่ต้องการ
@@ -604,17 +604,17 @@ function DownloadData() {
                   {dataOptions.map((option) => (
                     <label
                       key={option.id}
-                      className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
                         selectedOptions[option.id]
-                          ? 'bg-blue-50 border-blue-300 shadow-md'
-                          : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                          ? 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 shadow-md'
+                          : 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary hover:shadow-sm'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={selectedOptions[option.id]}
                         onChange={() => handleOptionToggle(option.id)}
-                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                        className="w-5 h-5 text-primary dark:text-primary border-gray-300 dark:border-white/20 rounded focus:ring-primary focus:ring-2 cursor-pointer"
                       />
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconColor(option.color)}`}>
                         {option.id === 'attendanceData' && icons.clock}
@@ -635,7 +635,7 @@ function DownloadData() {
               {/* File Format Selection */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   รูปแบบไฟล์
@@ -643,10 +643,10 @@ function DownloadData() {
                 <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => setSelectedFormat('excel')}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`p-4 rounded-xl border-2 transition-colors ${
                       selectedFormat === 'excel'
                         ? 'bg-green-50 border-green-400 shadow-md'
-                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                        : 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary'
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -668,10 +668,10 @@ function DownloadData() {
 
                   <button
                     onClick={() => setSelectedFormat('pdf')}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`p-4 rounded-xl border-2 transition-colors ${
                       selectedFormat === 'pdf'
                         ? 'bg-red-50 border-red-400 shadow-md'
-                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                        : 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary'
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -693,22 +693,22 @@ function DownloadData() {
 
                   <button
                     onClick={() => setSelectedFormat('csv')}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`p-4 rounded-xl border-2 transition-colors ${
                       selectedFormat === 'csv'
-                        ? 'bg-blue-50 border-blue-400 shadow-md'
-                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                        ? 'bg-accent dark:bg-accent-orange border-primary dark:border-primary shadow-md'
+                        : 'bg-accent dark:bg-accent-orange border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary'
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2">
                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        selectedFormat === 'csv' ? 'bg-blue-100' : 'bg-gray-100'
+                        selectedFormat === 'csv' ? 'bg-accent dark:bg-accent-orange' : 'bg-gray-100'
                       }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 ${selectedFormat === 'csv' ? 'text-blue-600' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 ${selectedFormat === 'csv' ? 'text-primary dark:text-primary' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                       <span className={`font-semibold text-sm ${
-                        selectedFormat === 'csv' ? 'text-blue-700' : 'text-gray-700'
+                        selectedFormat === 'csv' ? 'text-primary dark:text-primary' : 'text-gray-700'
                       }`}>
                         CSV
                       </span>
@@ -724,13 +724,13 @@ function DownloadData() {
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={closeModal}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+                  className="px-6 py-3 bg-gray-200 dark:bg-accent hover:bg-gray-300 dark:hover:bg-primary/80 text-gray-700 dark:text-white rounded-xl font-semibold transition-colors"
                 >
                   ยกเลิก
                 </button>
                 <button
                   onClick={handlePreview}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                  className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors flex items-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -740,7 +740,7 @@ function DownloadData() {
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl shadow-lg hover:shadow-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                  className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors flex items-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -770,7 +770,7 @@ function DownloadData() {
                 </div>
                 <button
                   onClick={closePreview}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 transition-colors"
+                  className="w-10 h-10 bg-accent dark:bg-accent-orange hover:bg-accent/80 dark:hover:bg-accent-orange/80 rounded-lg flex items-center justify-center text-secondary dark:text-white transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -781,7 +781,7 @@ function DownloadData() {
 
             {/* Preview Body - Table View */}
             <div className="flex-1 overflow-auto p-6">
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -815,8 +815,8 @@ function DownloadData() {
               {/* Format-specific preview info */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-10 h-10 bg-accent dark:bg-accent-orange rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary dark:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -839,7 +839,7 @@ function DownloadData() {
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={closePreview}
-                  className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg font-medium border border-gray-300 transition-colors text-sm"
+                  className="px-4 py-2 bg-white hover:bg-accent dark:hover:bg-accent-orange text-secondary dark:text-white rounded-lg font-medium border border-gray-300 dark:border-white/20 transition-colors text-sm"
                 >
                   ปิด
                 </button>
