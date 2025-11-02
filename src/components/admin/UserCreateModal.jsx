@@ -38,7 +38,11 @@ const UserCreateModal = memo(function UserCreateModal({
     // การศึกษา
     education: [],
     // ทักษะ
-    skills: []
+    skills: [],
+    // 🆕 ข้อมูลสวัสดิการ (Benefits) - เพิ่มใหม่ตาม Bug #7
+    socialSecurityNumber: '', // เลขประกันสังคม
+    providentFund: '', // กองทุนสำรองเลี้ยงชีพ
+    healthInsurance: '' // ประกันสุขภาพ
   });
 
   const [errors, setErrors] = useState({});
@@ -275,12 +279,27 @@ const UserCreateModal = memo(function UserCreateModal({
         phone: formData.emergencyContactPhone,
         relation: formData.emergencyContactRelation
       } : null,
+      // 🆕 ข้อมูลสวัสดิการ (Benefits)
+      socialSecurityNumber: formData.socialSecurityNumber.trim() || undefined,
+      providentFund: formData.providentFund.trim() || undefined,
+      healthInsurance: formData.healthInsurance.trim() || undefined,
       // ประวัติการทำงาน
       workHistory: formData.workHistory.length > 0 ? formData.workHistory : undefined,
       // การศึกษา
       education: formData.education.length > 0 ? formData.education : undefined,
       // ทักษะ
       skills: formData.skills.length > 0 ? formData.skills : undefined,
+      // เริ่มต้น timeSummary เป็น 0
+      timeSummary: {
+        totalWorkDays: 0,
+        onTime: 0,
+        late: 0,
+        absent: 0,
+        leave: 0,
+        totalHours: '0 ชม.',
+        avgCheckIn: '08:00',
+        avgCheckOut: '17:30'
+      },
       createdAt: new Date().toISOString(),
     };
 
@@ -699,6 +718,60 @@ const UserCreateModal = memo(function UserCreateModal({
                   onChange={(e) => handleInputChange('emergencyContactRelation', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                   placeholder="เช่น บิดา มารดา พี่ น้อง"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 🆕 ข้อมูลสวัสดิการ (Benefits) */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              ข้อมูลสวัสดิการ
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* เลขประกันสังคม */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  เลขประกันสังคม
+                </label>
+                <input
+                  type="text"
+                  value={formData.socialSecurityNumber}
+                  onChange={(e) => handleInputChange('socialSecurityNumber', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  placeholder="1-2345-67890-12-3"
+                  maxLength={17}
+                />
+              </div>
+
+              {/* กองทุนสำรองเลี้ยงชีพ */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  กองทุนสำรองเลี้ยงชีพ
+                </label>
+                <input
+                  type="text"
+                  value={formData.providentFund}
+                  onChange={(e) => handleInputChange('providentFund', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  placeholder="เช่น 5% หรือ ไม่มี"
+                />
+              </div>
+
+              {/* ประกันสุขภาพ */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  ประกันสุขภาพ
+                </label>
+                <input
+                  type="text"
+                  value={formData.healthInsurance}
+                  onChange={(e) => handleInputChange('healthInsurance', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  placeholder="เช่น OPD 3000 บาท/ปี หรือ ไม่มี"
                 />
               </div>
             </div>

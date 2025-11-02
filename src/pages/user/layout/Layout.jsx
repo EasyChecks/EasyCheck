@@ -13,6 +13,23 @@ function Layout() {
     return saved ? JSON.parse(saved) : getLegacyUserData()
   })
 
+  // ✅ อัพเดตรูป Profile ทันทีเมื่อ user เปลี่ยน (Login คนใหม่)
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        position: user.position || prev.position,
+        department: user.department || prev.department,
+        profilePic: user.profileImage || prev.profilePic,
+        workInfo: {
+          ...prev.workInfo,
+          employeeId: user.employeeId || user.username || prev.workInfo?.employeeId
+        }
+      }))
+    }
+  }, [user]) // dependency: user เพื่อรู้ว่า user เปลี่ยน
+
   // อัพเดตข้อมูลเมื่อ localStorage เปลี่ยน
   useEffect(() => {
     const handleStorageChange = (e) => {
