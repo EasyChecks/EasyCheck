@@ -12,6 +12,15 @@ const getOrCreateTabId = () => {
   return tabId
 }
 
+// Helper: ดึงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD (เวลาไทย)
+const getTodayDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -270,7 +279,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const checkOut = (time, photo) => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getTodayDate()
     
     const newAttendance = {
       ...attendance,

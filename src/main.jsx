@@ -184,22 +184,20 @@ const router = createBrowserRouter([
 ])
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    {/* 🔥 Error Boundary ครอบทั้งแอพ */}
-    <ErrorBoundary>
-      <LoadingProvider>
-        <AuthProvider>
-          <TeamProvider>
-            <LeaveProvider>
-              <LocationProvider>
-                <EventProvider>
-                  <RouterProvider router={router} />
-                </EventProvider>
-              </LocationProvider>
-            </LeaveProvider>
-          </TeamProvider>
-        </AuthProvider>
-      </LoadingProvider>
-    </ErrorBoundary>
-  </React.StrictMode>
+  // 🔥 Error Boundary ครอบทั้งแอพ
+  <ErrorBoundary>
+    <LoadingProvider>
+      <AuthProvider>
+        <TeamProvider>
+          <LeaveProvider>
+            <LocationProvider>
+              <EventProvider>
+                <RouterProvider router={router} />
+              </EventProvider>
+            </LocationProvider>
+          </LeaveProvider>
+        </TeamProvider>
+      </AuthProvider>
+    </LoadingProvider>
+  </ErrorBoundary>
 );
