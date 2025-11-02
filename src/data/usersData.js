@@ -407,14 +407,6 @@ export const getUserForAuth = (employeeId) => {
     isAdminAccount: false
   };
   
-  // 🔍 Debug log
-  console.log('🔐 getUserForAuth() result:', {
-    employeeId,
-    originalRole: user.role,
-    finalRole: normalUserData.role,
-    isAdminAccount: false
-  });
-  
   return normalUserData;
 };
 

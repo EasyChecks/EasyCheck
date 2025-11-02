@@ -74,14 +74,6 @@ function Auth() {
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
-        // 🔍 Debug: ตรวจสอบ role ก่อน login
-        console.log('✅ Login Success:', {
-          username,
-          name: response.user.name,
-          role: response.user.role,
-          isAdminAccount: response.user.isAdminAccount
-        });
-        
         if (rememberMe) {
           localStorage.setItem('rememberedUsername', username)
           localStorage.setItem('rememberedPassword', password)
