@@ -36,8 +36,10 @@ class ErrorBoundary extends React.Component {
       error: null,
       errorInfo: null
     });
-    // Reload the page to reset the app state
-    window.location.href = '/';
+    // Clear all state and navigate to home
+    setTimeout(() => {
+      window.location.href = '/auth';
+    }, 100);
   };
 
   handleReload = () => {

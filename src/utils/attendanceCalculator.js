@@ -12,8 +12,7 @@
 export const calculateAttendanceStats = (attendanceRecords = [], options = {}) => {
   const {
     startDate = null,
-    endDate = null,
-    workTimeStart = '08:00' // เวลาเริ่มงานมาตรฐาน
+    endDate = null
   } = options;
 
   // กรองข้อมูลตามช่วงวันที่ถ้ามีการระบุ
@@ -33,8 +32,8 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
 
   const stats = {
     totalWorkDays: 0,    // จำนวนวันทำงานทั้งหมด
-    onTime: 0,           // จำนวนวันมาตรงเวลา
-    late: 0,             // จำนวนวันมาสาย
+    onTime: 0,           // จำนวนครั้งมาตรงเวลา (นับทุก shift)
+    late: 0,             // จำนวนครั้งมาสาย (นับทุก shift)
     absent: 0,           // จำนวนวันขาดงาน
     leave: 0,            // จำนวนวันลา
     totalWorkHours: 0,   // ชั่วโมงทำงานรวม
@@ -50,33 +49,67 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
   let checkInCount = 0;
 
   filteredRecords.forEach(record => {
+    // นับวันทำงาน (1 วัน = 1 record ไม่ว่าจะมีกี่ shift)
     stats.totalWorkDays++;
 
-    // นับสถานะต่างๆ
-    if (record.status === 'absent') {
-      stats.absent++;
-    } else if (record.status === 'leave') {
-      stats.leave++;
-    } else if (record.status === 'late') {
-      stats.late++;
-    } else if (record.status === 'on-time' || record.status === 'present') {
-      stats.onTime++;
-    }
-
-    // คำนวณชั่วโมงทำงาน
-    if (record.checkIn && record.checkOut) {
-      const checkInTime = parseTime(record.checkIn);
-      const checkOutTime = parseTime(record.checkOut);
-      
-      if (checkInTime && checkOutTime) {
-        const workMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
-        if (workMinutes > 0) {
-          stats.totalWorkHours += workMinutes / 60;
+    // ถ้ามี shifts (โครงสร้างใหม่)
+    if (record.shifts && Array.isArray(record.shifts)) {
+      record.shifts.forEach(shift => {
+        // นับสถานะต่างๆ ตาม shift
+        if (shift.status === 'absent') {
+          stats.absent++;
+        } else if (shift.status === 'leave') {
+          stats.leave++;
+        } else if (shift.status === 'late') {
+          stats.late++;
+        } else if (shift.status === 'on_time' || shift.status === 'on-time' || shift.status === 'present') {
+          stats.onTime++;
         }
 
-        // คำนวณเวลาเข้างานเฉลี่ย
-        totalMinutes += checkInTime.getHours() * 60 + checkInTime.getMinutes();
-        checkInCount++;
+        // คำนวณชั่วโมงทำงาน
+        if (shift.checkIn && shift.checkOut) {
+          const checkInTime = parseTime(shift.checkIn);
+          const checkOutTime = parseTime(shift.checkOut);
+          
+          if (checkInTime && checkOutTime) {
+            const workMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+            if (workMinutes > 0) {
+              stats.totalWorkHours += workMinutes / 60;
+            }
+
+            // คำนวณเวลาเข้างานเฉลี่ย
+            totalMinutes += checkInTime.getHours() * 60 + checkInTime.getMinutes();
+            checkInCount++;
+          }
+        }
+      });
+    } else {
+      // โครงสร้างเก่า (ไม่มี shifts)
+      if (record.status === 'absent') {
+        stats.absent++;
+      } else if (record.status === 'leave') {
+        stats.leave++;
+      } else if (record.status === 'late') {
+        stats.late++;
+      } else if (record.status === 'on-time' || record.status === 'present') {
+        stats.onTime++;
+      }
+
+      // คำนวณชั่วโมงทำงาน
+      if (record.checkIn && record.checkOut) {
+        const checkInTime = parseTime(record.checkIn);
+        const checkOutTime = parseTime(record.checkOut);
+        
+        if (checkInTime && checkOutTime) {
+          const workMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+          if (workMinutes > 0) {
+            stats.totalWorkHours += workMinutes / 60;
+          }
+
+          // คำนวณเวลาเข้างานเฉลี่ย
+          totalMinutes += checkInTime.getHours() * 60 + checkInTime.getMinutes();
+          checkInCount++;
+        }
       }
     }
   });

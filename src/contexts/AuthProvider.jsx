@@ -12,6 +12,15 @@ const getOrCreateTabId = () => {
   return tabId
 }
 
+// Helper: ดึงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD (เวลาไทย)
+const getTodayDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -61,7 +70,6 @@ export const AuthProvider = ({ children }) => {
           
           if (savedAttendanceState) {
             setAttendance(JSON.parse(savedAttendanceState))
-            console.log(`โหลด attendance state: ${userAttendanceStateKey}`)
           } else {
             setAttendance({ status: 'not_checked_in' })
           }
@@ -101,13 +109,6 @@ export const AuthProvider = ({ children }) => {
             const mergedUser = user.isAdminAccount === false
               ? { ...user, ...updatedUser, role: user.role } // Keep converted role
               : { ...user, ...updatedUser } // Normal merge
-            
-            console.log('🔄 Storage sync - user updated:', {
-              originalRole: updatedUser.role,
-              currentRole: user.role,
-              finalRole: mergedUser.role,
-              isAdminAccount: user.isAdminAccount
-            })
             
             setUser(mergedUser)
             localStorage.setItem(`user_${tabId}`, JSON.stringify(mergedUser))
@@ -271,7 +272,6 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
       localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
-      console.log(`✅ Check-in บันทึก: ${userAttendanceKey}`)
     }
     
     // ✅ อัพเดตข้อมูลใน usersData.js ทันที
@@ -279,9 +279,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const checkOut = (time, photo) => {
-    if (!user) return;
-    
-    const today = new Date().toISOString().split('T')[0]
+    const today = getTodayDate()
     
     const newAttendance = {
       ...attendance,
@@ -331,14 +329,18 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
       localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
-      console.log(`💾 บันทึกประวัติการลงเวลา: ${userAttendanceKey}`)
     }
     
     const stats = calculateAttendanceStats(updatedRecords)
     setAttendanceStats(stats)
     
     setAttendance(newAttendance)
-    localStorage.setItem(`attendance_${tabId}`, JSON.stringify(newAttendance))
+    
+    // 🔥 บันทึก attendance state แยกตาม user (ให้ตรงกับตอนโหลด)
+    if (user) {
+      const userAttendanceStateKey = `attendance_user_${user.id}_${tabId}`
+      localStorage.setItem(userAttendanceStateKey, JSON.stringify(newAttendance))
+    }
     
     // ✅ อัพเดตข้อมูลใน usersData.js ทันที
     updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status)
@@ -365,23 +367,16 @@ export const AuthProvider = ({ children }) => {
   }
 
   const getDashboardPath = (role) => {
-    console.log('🎯 getDashboardPath() called with role:', role)
-    
     switch (role) {
       case 'superadmin':
-        console.log('→ Redirecting to /superadmin')
         return '/superadmin'
       case 'admin':
-        console.log('→ Redirecting to /admin')
         return '/admin'
       case 'manager':
-        console.log('→ Redirecting to /user/dashboard (manager)')
         return '/user/dashboard'
       case 'user':
-        console.log('→ Redirecting to /user/dashboard (user)')
         return '/user/dashboard'
       default:
-        console.log('→ Redirecting to /user/dashboard (default)')
         return '/user/dashboard'
     }
   }
