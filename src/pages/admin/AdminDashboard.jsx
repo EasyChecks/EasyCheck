@@ -49,9 +49,41 @@ function AdminDashboard() {
   const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
   const locationRefs = useRef({}) // Refs for scrolling to location cards
+  
+  // ✅ เพิ่ม state สำหรับ real-time attendance data
+  const [realtimeStats, setRealtimeStats] = useState(mockAttendanceStats)
 
   // ใช้ Mock Data จาก usersData.js
-  const attendanceStats = mockAttendanceStats
+  const attendanceStats = realtimeStats
+
+  // ✅ ฟังการเปลี่ยนแปลงของ attendance แบบ real-time
+  useEffect(() => {
+    const handleAttendanceUpdate = (event) => {
+      if (event.detail && event.detail.stats) {
+        // อัพเดตสถิติแบบ real-time โดยไม่ต้องรีเฟรช
+        setRealtimeStats(prev => ({
+          ...prev,
+          totalToday: prev.totalToday + 1, // เพิ่มจำนวนคนที่เข้างานวันนี้
+        }))
+      }
+    }
+
+    const handleStorageChange = (e) => {
+      // ฟังการเปลี่ยนแปลงจาก localStorage
+      if (e.key === 'usersData' || e.key === 'attendanceRecords') {
+        // Trigger re-render โดยไม่กระพริบ
+        setRealtimeStats(prev => ({ ...prev }))
+      }
+    }
+
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate)
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('attendanceUpdated', handleAttendanceUpdate)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   // Calculate real event stats from EventContext
   const eventStats = {
@@ -156,7 +188,7 @@ function AdminDashboard() {
     statusColor: 'text-green-600'
   }))
 
-  const eventLocations = events.map((evt, index) => ({
+  const eventLocations = events.map((evt) => ({
     id: `event-${evt.id}`,
     name: evt.locationName,
     description: `งาน: ${evt.name}`,
@@ -345,7 +377,7 @@ function AdminDashboard() {
                 </div>
 
                 {/* Today Events - RIGHT */}
-                <div className="bg-yellow-500 rounded-2xl shadow-sm p-6 text-white">
+                <div className="bg-gray-600 rounded-2xl shadow-sm p-6 text-white">
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">

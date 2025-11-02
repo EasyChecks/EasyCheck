@@ -340,6 +340,20 @@ function UserDashboard() {
     hideLoading()
   }, [hideLoading])
 
+  // ✅ ฟังการเปลี่ยนแปลงของ attendance แบบ real-time
+  useEffect(() => {
+    const handleAttendanceUpdate = (event) => {
+      // อัพเดต UI ทันทีเมื่อมีการเช็คชื่อสำเร็จ
+      if (event.detail && event.detail.userId === user?.id) {
+        // Force re-render โดยไม่ต้องรีเฟรชหน้า
+        window.dispatchEvent(new Event('storage'))
+      }
+    }
+
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate)
+    return () => window.removeEventListener('attendanceUpdated', handleAttendanceUpdate)
+  }, [user])
+
   // ล็อกการเลื่อนเมื่อ Modal เปิด
   useEffect(() => {
     if (showBuddyCheckIn || showAttendanceHistory) {
@@ -474,7 +488,7 @@ function UserDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Welcome Section */}
       <div className="p-6 bg-white shadow-md rounded-2xl">
         <div className="flex items-center justify-between">

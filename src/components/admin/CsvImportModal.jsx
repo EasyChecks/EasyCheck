@@ -55,20 +55,36 @@ const CsvImportModal = memo(function CsvImportModal({
           </div>
 
           {/* CSV Data Preview Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-xs">
+          <div className="overflow-x-auto border border-gray-300 rounded-lg">
+            <table className="w-full min-w-max border-collapse text-xs">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">#</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">รหัสพนักงาน (Auto)</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">ชื่อ-นามสกุล</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">อีเมล</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">จังหวัด</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">สาขา</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">แผนก</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">ตำแหน่ง</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">บทบาท</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">เบอร์โทร</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">#</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">รหัสพนักงาน (Auto)</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ชื่อ-นามสกุล</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">อีเมล</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">บทบาท</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">สถานะ</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เบอร์โทร</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">แผนก</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ตำแหน่ง</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">วันเกิด</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เลขบัตรประชาชน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">กรุ๊ปเลือด</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เงินเดือน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ที่อยู่</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ผู้ติดต่อฉุกเฉิน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เบอร์ฉุกเฉิน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ความสัมพันธ์</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">วันเริ่มงาน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">จังหวัด</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">สาขา</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เลขประกันสังคม</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">กองทุนสำรองเลี้ยงชีพ</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ประกันสุขภาพ</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">การศึกษา</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ประวัติการทำงาน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ทักษะ</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,28 +95,46 @@ const CsvImportModal = memo(function CsvImportModal({
 
                   return (
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border border-gray-300 px-2 py-2 text-center">{index + 1}</td>
-                      <td className="border border-gray-300 px-2 py-2">
+                      <td className="border border-gray-300 px-3 py-2 text-center whitespace-nowrap">{index + 1}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">
                         <span className="font-semibold text-brand-primary">{previewEmployeeId}</span>
                       </td>
-                      <td className="border border-gray-300 px-2 py-2">{row.name || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2 text-xs">{row.email || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.provinceCode || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.branchCode || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.department || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.position || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.name || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-xs whitespace-nowrap">{row.email || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           row.role === 'admin' ? 'bg-orange-50 text-orange-700' :
                           row.role === 'superadmin' ? 'bg-red-100 text-red-700' :
+                          row.role === 'manager' ? 'bg-blue-100 text-blue-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
                           {row.role === 'admin' ? 'Admin' : 
-                           row.role === 'superadmin' ? 'Super Admin' : 
+                           row.role === 'superadmin' ? 'Super Admin' :
+                           row.role === 'manager' ? 'Manager' : 
                            'User'}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-2 py-2">{row.phone || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.status || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.phone || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.department || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.position || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.birthDate || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.nationalId || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-center whitespace-nowrap">{row.bloodType || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-right whitespace-nowrap">{row.salary || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">{row.address || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.emergencyContactName || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.emergencyContactPhone || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.emergencyContactRelation || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.startDate || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.provinceCode || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.branchCode || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.socialSecurityNumber || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.providentFund || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.healthInsurance || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-md overflow-hidden text-ellipsis">{row.education || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-md overflow-hidden text-ellipsis">{row.workHistory || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">{row.skills || ''}</td>
                     </tr>
                   );
                 })}

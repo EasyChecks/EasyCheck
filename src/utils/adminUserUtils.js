@@ -157,12 +157,22 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
       address: row.address || '',
       provinceCode: provinceCode,
       branchCode: branchCode,
+      // 🆕 Benefits - เพิ่มข้อมูลสวัสดิการ
       socialSecurityNumber: row.socialSecurityNumber || '',
+      providentFund: row.providentFund || '',
+      healthInsurance: row.healthInsurance || '',
       profileImage: row.profileImage || '',
       skills: row.skills ? row.skills.split('|').map(s => s.trim()) : [],
       education: row.education ? row.education.split('|').map(e => e.trim()) : [],
-      workHistory: row.workHistory ? row.workHistory.split('|').map(w => w.trim()) : [],
-      certifications: row.certifications ? row.certifications.split('|').map(c => c.trim()) : [],
+      workHistory: row.workHistory ? 
+        row.workHistory.split('|').map(w => {
+          const parts = w.trim().split(';');
+          return parts.length === 3 ? {
+            period: parts[0].trim(),
+            position: parts[1].trim(),
+            company: parts[2].trim()
+          } : w.trim();
+        }) : [],
       emergencyContact: row.emergencyContactName ? {
         name: row.emergencyContactName || '',
         phone: row.emergencyContactPhone || '',
