@@ -54,8 +54,36 @@ function AdminManageUser() {
       }
     };
 
+    const handleAttendanceUpdate = (event) => {
+      // ✅ ฟังการอัพเดต attendance แบบ real-time
+      if (event.detail && event.detail.userId) {
+        try {
+          const storedUsers = localStorage.getItem('usersData');
+          if (storedUsers) {
+            const updatedUsers = JSON.parse(storedUsers);
+            setUsers(updatedUsers);
+            
+            // อัพเดต selectedUser ถ้าเปิดอยู่
+            if (selectedUser && selectedUser.id === event.detail.userId) {
+              const updatedSelectedUser = updatedUsers.find(u => u.id === event.detail.userId);
+              if (updatedSelectedUser) {
+                setSelectedUser(updatedSelectedUser);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to update users from attendance event:', e);
+        }
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('attendanceUpdated', handleAttendanceUpdate);
+    };
   }, [selectedUser]);
   
 

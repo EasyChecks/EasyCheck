@@ -471,13 +471,43 @@ const UserEditModal = React.memo(function UserEditModal({
                 ประวัติการทำงาน
               </h3>
               {editForm.workHistory && editForm.workHistory.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2 mb-3">
                   {editForm.workHistory.map((work, index) => (
                     <div key={index} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
                       <div className="flex-1">
-                        <div className="font-medium text-gray-800">{work.position}</div>
-                        <div className="text-sm text-gray-600">{work.company}</div>
-                        <div className="text-xs text-gray-500">{work.period}</div>
+                        <input
+                          type="text"
+                          value={work.position}
+                          onChange={(e) => {
+                            const newWorkHistory = [...editForm.workHistory];
+                            newWorkHistory[index] = { ...work, position: e.target.value };
+                            onChange({ ...editForm, workHistory: newWorkHistory });
+                          }}
+                          className="w-full px-2 py-1 mb-1 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 text-sm font-medium"
+                          placeholder="ตำแหน่ง"
+                        />
+                        <input
+                          type="text"
+                          value={work.company}
+                          onChange={(e) => {
+                            const newWorkHistory = [...editForm.workHistory];
+                            newWorkHistory[index] = { ...work, company: e.target.value };
+                            onChange({ ...editForm, workHistory: newWorkHistory });
+                          }}
+                          className="w-full px-2 py-1 mb-1 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 text-sm"
+                          placeholder="บริษัท"
+                        />
+                        <input
+                          type="text"
+                          value={work.period}
+                          onChange={(e) => {
+                            const newWorkHistory = [...editForm.workHistory];
+                            newWorkHistory[index] = { ...work, period: e.target.value };
+                            onChange({ ...editForm, workHistory: newWorkHistory });
+                          }}
+                          className="w-full px-2 py-1 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 text-xs"
+                          placeholder="ช่วงเวลา (เช่น 2020-2023)"
+                        />
                       </div>
                       <button
                         type="button"
@@ -495,8 +525,21 @@ const UserEditModal = React.memo(function UserEditModal({
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">ไม่มีประวัติการทำงาน</p>
+                <p className="text-gray-500 text-sm mb-3">ไม่มีประวัติการทำงาน</p>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  const newWorkHistory = [...(editForm.workHistory || []), { period: '', position: '', company: '' }];
+                  onChange({ ...editForm, workHistory: newWorkHistory });
+                }}
+                className="w-full px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                เพิ่มประวัติการทำงาน
+              </button>
             </div>
 
             {/* การศึกษา */}
@@ -505,10 +548,20 @@ const UserEditModal = React.memo(function UserEditModal({
                 การศึกษา
               </h3>
               {editForm.education && editForm.education.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2 mb-3">
                   {editForm.education.map((edu, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex-1 text-gray-700">{edu}</div>
+                      <input
+                        type="text"
+                        value={edu}
+                        onChange={(e) => {
+                          const newEducation = [...editForm.education];
+                          newEducation[index] = e.target.value;
+                          onChange({ ...editForm, education: newEducation });
+                        }}
+                        className="flex-1 px-2 py-1 border border-green-300 rounded focus:ring-2 focus:ring-green-500 text-sm"
+                        placeholder="เช่น ปริญญาตรี, มหาวิทยาลัยเกษตรศาสตร์, วิทยาการคอมพิวเตอร์, 3.45"
+                      />
                       <button
                         type="button"
                         onClick={() => {
@@ -525,8 +578,21 @@ const UserEditModal = React.memo(function UserEditModal({
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">ไม่มีข้อมูลการศึกษา</p>
+                <p className="text-gray-500 text-sm mb-3">ไม่มีข้อมูลการศึกษา</p>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  const newEducation = [...(editForm.education || []), ''];
+                  onChange({ ...editForm, education: newEducation });
+                }}
+                className="w-full px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                เพิ่มข้อมูลการศึกษา
+              </button>
             </div>
 
             {/* ทักษะ */}
@@ -535,10 +601,20 @@ const UserEditModal = React.memo(function UserEditModal({
                 ทักษะ
               </h3>
               {editForm.skills && editForm.skills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-3">
                   {editForm.skills.map((skill, index) => (
-                    <div key={index} className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm">
-                      <span>{skill}</span>
+                    <div key={index} className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-sm">
+                      <input
+                        type="text"
+                        value={skill}
+                        onChange={(e) => {
+                          const newSkills = [...editForm.skills];
+                          newSkills[index] = e.target.value;
+                          onChange({ ...editForm, skills: newSkills });
+                        }}
+                        className="bg-transparent border-none focus:outline-none focus:ring-0 text-orange-700 w-24"
+                        placeholder="ทักษะ"
+                      />
                       <button
                         type="button"
                         onClick={() => {
@@ -555,8 +631,21 @@ const UserEditModal = React.memo(function UserEditModal({
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">ไม่มีข้อมูลทักษะ</p>
+                <p className="text-gray-500 text-sm mb-3">ไม่มีข้อมูลทักษะ</p>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  const newSkills = [...(editForm.skills || []), ''];
+                  onChange({ ...editForm, skills: newSkills });
+                }}
+                className="w-full px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                เพิ่มทักษะ
+              </button>
             </div>
           </div>
         </div>

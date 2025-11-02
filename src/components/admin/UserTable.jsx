@@ -87,8 +87,10 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
 
   return (
     <div className="bg-white dark:bg-secondary/95 transition-colors duration-300 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-white/10">
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      {/* 🔥 Scroll แนวนอนเมื่อตารางกว้างเกิน + Scroll แนวตั้งเมื่อข้อมูลเยอะ */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
+        {/* เพิ่ม min-width เพื่อให้ตารางกว้างพอ มี scroll แนวนอนได้ */}
+        <table className="w-full min-w-[1200px]">
           <thead className="bg-brand-accent dark:bg-orange-100 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-12">
