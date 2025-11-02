@@ -54,8 +54,36 @@ function AdminManageUser() {
       }
     };
 
+    const handleAttendanceUpdate = (event) => {
+      // ✅ ฟังการอัพเดต attendance แบบ real-time
+      if (event.detail && event.detail.userId) {
+        try {
+          const storedUsers = localStorage.getItem('usersData');
+          if (storedUsers) {
+            const updatedUsers = JSON.parse(storedUsers);
+            setUsers(updatedUsers);
+            
+            // อัพเดต selectedUser ถ้าเปิดอยู่
+            if (selectedUser && selectedUser.id === event.detail.userId) {
+              const updatedSelectedUser = updatedUsers.find(u => u.id === event.detail.userId);
+              if (updatedSelectedUser) {
+                setSelectedUser(updatedSelectedUser);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to update users from attendance event:', e);
+        }
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('attendanceUpdated', handleAttendanceUpdate);
+    };
   }, [selectedUser]);
   
 
@@ -371,10 +399,10 @@ function AdminManageUser() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      'active': 'bg-green-500 text-white',
-      'leave': 'bg-red-500 text-white',
-      'suspended': 'bg-gray-500 text-white',
-      'pending': 'bg-primary text-white'
+      'active': 'bg-green-500 text-white shadow-sm',
+      'leave': 'bg-red-500 text-white shadow-sm',
+      'suspended': 'bg-gray-500 text-white shadow-sm',
+      'pending': 'bg-amber-500 text-white shadow-sm'
     };
     return badges[status.toLowerCase()] || 'bg-accent text-secondary';
   };
@@ -453,7 +481,7 @@ function AdminManageUser() {
       type: 'success',
       title: 'เพิ่มผู้ใช้สำเร็จ',
       message: `เพิ่ม ${newUser.name} เข้าระบบเรียบร้อยแล้ว\n\n✅ สามารถ Login ได้ทันที!\n\nรหัสพนักงาน: ${newUser.employeeId}\nรหัสผ่าน: ${newUser.password}${
-        newUser.adminAccount ? `\n\n🔐 Admin Account:\nUsername: ${newUser.adminAccount}\nPassword: ${newUser.adminPassword}` : ''
+        newUser.adminAccount ? `\n\n� Admin Account:\nUsername: ${newUser.adminAccount}\nPassword: ${newUser.adminPassword}` : ''
       }`,
       autoClose: false // ไม่ปิดอัตโนมัติเพื่อให้ admin อ่านรหัส
     });
@@ -548,7 +576,7 @@ function AdminManageUser() {
         isOpen: true,
         type: 'error',
         title: `พบข้อมูลซ้ำ (${errorCount} รายการ)`,
-        message: `${errorMessage}${moreErrors}\n\n💡 คำแนะนำ:\n- ตรวจสอบเลขบัตรประชาชนซ้ำกับข้อมูลเดิม\n- ลบข้อมูลเก่าออกก่อนนำเข้าใหม่\n- หรือแก้ไขข้อมูลใน CSV ให้ไม่ซ้ำ`
+        message: `${errorMessage}${moreErrors}\n\nℹ️ คำแนะนำ:\n- ตรวจสอบเลขบัตรประชาชนซ้ำกับข้อมูลเดิม\n- ลบข้อมูลเก่าออกก่อนนำเข้าใหม่\n- หรือแก้ไขข้อมูลใน CSV ให้ไม่ซ้ำ`
       });
       return;
     }
@@ -643,13 +671,21 @@ function AdminManageUser() {
   };
 
   return (
-    <div className=" bg-accent dark:bg-secondary">
-      <div className="bg-white dark:bg-secondary/95 p-6 border border-gray-200 dark:border-white/10">
+    <div className="min-h-screen p-4 sm:p-6 bg-slate-50">
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-orange-100">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end mb-6 gap-4">
-        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[var(--gray-900, #111827)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              จัดการผู้ใช้
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">จัดการสิทธิ์การใช้งานและข้อมูลผู้ใช้ในระบบ</p>
+          </div>
           <div className="flex items-center gap-2">
-            <label className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl transition-colors flex items-center gap-2 text-sm font-semibold cursor-pointer">
+            <label className="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
@@ -663,7 +699,7 @@ function AdminManageUser() {
             </label>
             <button 
               onClick={() => setShowCreateUser(true)}
-              className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl transition-colors flex items-center gap-2 text-sm font-semibold"
+              className="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -684,13 +720,13 @@ function AdminManageUser() {
               placeholder="ค้นหาชื่อหรืออีเมล..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary/50 text-secondary dark:text-white"
+              className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-xl focus:border-primary dark:focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary/50 text-secondary dark:text-white"
+            className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors bg-white"
           >
             <option value="all">ทั้งหมด</option>
             <option value="active">Active</option>
@@ -708,9 +744,9 @@ function AdminManageUser() {
         />
 
         {/* Footer legend */}
-        <div className="mt-6 p-4 bg-accent dark:bg-secondary/50 rounded-xl border border-gray-200 dark:border-white/10">
-          <h3 className="font-semibold text-secondary dark:text-white mb-2 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             คำอธิบายสถานะ
@@ -719,7 +755,7 @@ function AdminManageUser() {
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-green-500"></span>
               <span className="text-green-600 font-semibold">Active</span>
-              <span className="text-gray-500 dark:text-white/70">: ยังคงทำงานอยู่</span>
+              <span className="text-gray-500">: ยังคงทำงานอยู่</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-500"></span>
@@ -728,20 +764,20 @@ function AdminManageUser() {
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-              <span className="text-gray-700 dark:text-white font-semibold">Suspended</span>
-              <span className="text-gray-500 dark:text-white/70">: โดนพักงาน</span>
+              <span className="text-gray-700 font-semibold">Suspended</span>
+              <span className="text-gray-500">: โดนพักงาน</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-primary"></span>
-              <span className="text-primary font-semibold">Pending</span>
-              <span className="text-gray-500 dark:text-white/70">: รอโปรโมท</span>
+              <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+              <span className="text-amber-700 font-semibold">Pending</span>
+              <span className="text-gray-500">: รอโปรโมท</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Lazy-loaded Modals พร้อม Suspense fallback */}
-      <Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div></div>}>
+      <Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div></div>}>
         {/* User Detail Modal Component */}
         {showDetail && selectedUser && (
           <UserDetailModal

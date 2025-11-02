@@ -74,6 +74,14 @@ function Auth() {
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
+        // 🔍 Debug: ตรวจสอบ role ก่อน login
+        console.log('✅ Login Success:', {
+          username,
+          name: response.user.name,
+          role: response.user.role,
+          isAdminAccount: response.user.isAdminAccount
+        });
+        
         if (rememberMe) {
           localStorage.setItem('rememberedUsername', username)
           localStorage.setItem('rememberedPassword', password)
@@ -192,23 +200,23 @@ function Auth() {
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+    <div className="min-h-screen relative bg-gradient-to-br from-brand-accent-soft via-white to-orange-50">
       {loading && <PuffLoader text="กำลังเข้าสู่ระบบ..." />}
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-cyan-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-sky-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
       <section
         className={`font-prompt fixed inset-x-0 bottom-0 left-0 right-0 xl:left-[400px] xl:right-[500px] 2xl:left-[500px] 2xl:right-[500px] bg-white/95 backdrop-blur-sm rounded-t-[28px] shadow-2xl md:px-[60px] lg:px-[80px] xl:px-[40px] px-6 pb-8 pt-6 z-40 overflow-hidden transition-all duration-500 ease-in-out ${
           showReset ? 'opacity-0 scale-95 pointer-events-none translate-y-4' : 'opacity-100 scale-100 translate-y-0'
         }`}
-        style={{ boxShadow: '0 -18px 60px rgba(72,203,255,0.25)' }}
+        style={{ boxShadow: '0 -18px 60px rgba(242,102,35,0.25)' }}
       >
         <div className="space-y-6">
-          <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+          <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-brand-primary to-orange-600 bg-clip-text text-transparent">
             Login
           </header>
 
@@ -219,13 +227,13 @@ function Auth() {
           )}
 
           <div className="flex flex-col gap-2 group">
-            <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
+            <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-orange-500">
               Username
             </label>
             <input
               type="text"
               placeholder="กรอกชื่อผู้ใช้"
-              className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
+              className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
               value={username}
               onChange={e => setUsername(e.target.value)}
             />
@@ -233,14 +241,14 @@ function Auth() {
 
           {/* 🔒 ช่องกรอกรหัสผ่าน (Password input field) */}
           <div className="flex flex-col gap-2 group">
-            <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
+            <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-orange-500">
               Password
             </label>
             <div className="relative">
               <input
                 type={showPwd ? 'text' : 'password'}
                 placeholder="กรอกรหัสผ่าน"
-                className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
+                className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
@@ -248,7 +256,7 @@ function Auth() {
               <button
                 type="button"
                 onClick={() => setShowPwd((s) => !s)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-500 transition-colors duration-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200"
                 aria-label="toggle password"
               >
                 {showPwd ? (
@@ -272,7 +280,7 @@ function Auth() {
               id="rememberMe"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 text-cyan-500 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+              className="w-4 h-4 text-orange-500 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
             />
             <label
               htmlFor="rememberMe"
@@ -285,7 +293,7 @@ function Auth() {
           {/* ✅ ปุ่มหลัก (Primary button) - เข้าสู่ระบบ */}
           <div className="flex justify-center pt-2">
             <button
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold rounded-xl py-3 px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="bg-gradient-to-r from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold rounded-xl py-3 px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               onClick={handleLogin}
               disabled={loading}
             >
@@ -298,7 +306,7 @@ function Auth() {
             <button
               type="button"
               onClick={() => setShowReset(true)}
-              className="text-gray-500 hover:text-cyan-500 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] transition-colors duration-200 hover:underline underline-offset-4"
+              className="text-gray-500 hover:text-orange-500 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] transition-colors duration-200 hover:underline underline-offset-4"
             >
               เปลี่ยนรหัสผ่าน
             </button>
@@ -312,10 +320,10 @@ function Auth() {
           className={`font-prompt fixed inset-x-0 bottom-0 left-0 right-0 xl:left-[400px] xl:right-[500px] 2xl:left-[500px] 2xl:right-[500px] bg-white/95 backdrop-blur-sm rounded-t-[28px] shadow-2xl md:px-[60px] lg:px-[80px] xl:px-[40px] px-6 pb-8 pt-6 z-50 overflow-hidden transition-all duration-500 ease-in-out ${
             showReset ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
           }`}
-          style={{ boxShadow: '0 -18px 60px rgba(72,203,255,0.25)' }}
+          style={{ boxShadow: '0 -18px 60px rgba(242,102,35,0.25)' }}
         >
           <div className="space-y-6 relative z-10">
-            <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+            <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-brand-primary to-orange-600 bg-clip-text text-transparent">
               Reset Password
             </header>
 
@@ -335,7 +343,7 @@ function Auth() {
 
             {/* 📝 ช่องกรอกชื่อผู้ใช้ (Username input field) */}
             <div className="flex flex-col gap-2 group">
-              <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
+              <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-orange-500">
                 Username <span className="text-red-500">*</span>
               </label>
               <input
@@ -346,13 +354,13 @@ function Auth() {
                 }}
                 type="text"
                 placeholder="กรอกชื่อผู้ใช้"
-                className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
+                className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
               />
             </div>
 
             {/* 🔒 ช่องกรอกรหัสผ่านเดิม (Current Password input field) */}
             <div className="flex flex-col gap-2 group">
-              <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
+              <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-orange-500">
                 Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -364,12 +372,12 @@ function Auth() {
                   }}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="กรอกรหัสผ่านเดิม"
-                  className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
+                  className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-500 transition-colors duration-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200"
                   aria-label="toggle password"
                 >
                   {showPassword ? (
@@ -388,7 +396,7 @@ function Auth() {
 
             {/* 🔑 ช่องกรอกรหัสผ่านใหม่ (New Password input field) */}
             <div className="flex flex-col gap-2 group">
-              <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-cyan-500">
+              <label className="sm:text-[18px] md:text-[18px] lg:text-[18px] xl:text-[24px] text-[16px] font-medium text-gray-700 transition-colors group-focus-within:text-orange-500">
                 New Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -400,12 +408,12 @@ function Auth() {
                   }}
                   type={showNewPassword ? 'text' : 'password'}
                   placeholder="กรอกรหัสผ่านใหม่"
-                  className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-cyan-400 focus:bg-white focus:shadow-md"
+                  className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none pr-12 placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword((s) => !s)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-500 transition-colors duration-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200"
                   aria-label="toggle password"
                 >
                   {showNewPassword ? (
@@ -425,7 +433,7 @@ function Auth() {
             {/* ✅ ปุ่มยืนยันการเปลี่ยนรหัสผ่าน (Confirm button) */}
             <div className='flex justify-center pt-2'>
               <button
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl py-3 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="bg-gradient-to-r from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl py-3 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px] font-semibold px-8 min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 onClick={handleResetConfirm}
                 disabled={!Username || !Password || !NewPassword || resetSuccess}
               >
@@ -443,7 +451,7 @@ function Auth() {
                   setResetSuccess('')
                   navigate('/auth', { replace: true })
                 }}
-                className="text-gray-500 hover:text-cyan-500 transition-colors duration-200 hover:underline underline-offset-4"
+                className="text-gray-500 hover:text-orange-500 transition-colors duration-200 hover:underline underline-offset-4"
               >
                 กลับหน้า Login
               </button>

@@ -16,9 +16,9 @@ const CsvImportModal = memo(function CsvImportModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm max-w-6xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="bg-primary dark:bg-primary text-white p-6">
+        <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -35,35 +35,56 @@ const CsvImportModal = memo(function CsvImportModal({
               </svg>
             </button>
           </div>
-          <p className="text-sky-100 mt-2">ตรวจสอบข้อมูลก่อนนำเข้าระบบ</p>
+          <p className="text-orange-100 mt-2">ตรวจสอบข้อมูลก่อนนำเข้าระบบ</p>
         </div>
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="mb-4 bg-accent dark:bg-accent-orange border border-gray-200 dark:border-white/10 rounded-lg p-4">
-            <p className="text-sm text-secondary dark:text-white">
-              <span className="font-semibold">📋 จำนวนข้อมูล:</span> {csvData.length} รายการ
+          <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <p className="text-sm text-orange-800">
+              <span className="font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 16H9v-2h4v2zm3-4H9v-2h7v2z"/>
+                </svg>
+                จำนวนข้อมูล:
+              </span> {csvData.length} รายการ
             </p>
-            <p className="text-sm text-primary dark:text-primary mt-1">
+            <p className="text-sm text-brand-primary mt-1">
               กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการนำเข้า
             </p>
           </div>
 
           {/* CSV Data Preview Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-xs">
+          <div className="overflow-x-auto border border-gray-300 rounded-lg">
+            <table className="w-full min-w-max border-collapse text-xs">
               <thead>
-                <tr className="bg-accent dark:bg-accent-orange">
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">#</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">รหัสพนักงาน (Auto)</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">ชื่อ-นามสกุล</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">อีเมล</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">จังหวัด</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">สาขา</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">แผนก</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">ตำแหน่ง</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">บทบาท</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold">เบอร์โทร</th>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">#</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">รหัสพนักงาน (Auto)</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ชื่อ-นามสกุล</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">อีเมล</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">บทบาท</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">สถานะ</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เบอร์โทร</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">แผนก</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ตำแหน่ง</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">วันเกิด</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เลขบัตรประชาชน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">กรุ๊ปเลือด</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เงินเดือน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ที่อยู่</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ผู้ติดต่อฉุกเฉิน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เบอร์ฉุกเฉิน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ความสัมพันธ์</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">วันเริ่มงาน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">จังหวัด</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">สาขา</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">เลขประกันสังคม</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">กองทุนสำรองเลี้ยงชีพ</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ประกันสุขภาพ</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">การศึกษา</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ประวัติการทำงาน</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ทักษะ</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,28 +95,46 @@ const CsvImportModal = memo(function CsvImportModal({
 
                   return (
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border border-gray-300 px-2 py-2 text-center">{index + 1}</td>
-                      <td className="border border-gray-300 px-2 py-2">
-                        <span className="font-semibold text-primary dark:text-primary">{previewEmployeeId}</span>
+                      <td className="border border-gray-300 px-3 py-2 text-center whitespace-nowrap">{index + 1}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">
+                        <span className="font-semibold text-brand-primary">{previewEmployeeId}</span>
                       </td>
-                      <td className="border border-gray-300 px-2 py-2">{row.name || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2 text-xs">{row.email || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.provinceCode || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.branchCode || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.department || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">{row.position || ''}</td>
-                      <td className="border border-gray-300 px-2 py-2">
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.name || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-xs whitespace-nowrap">{row.email || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          row.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                          row.role === 'admin' ? 'bg-orange-50 text-orange-700' :
                           row.role === 'superadmin' ? 'bg-red-100 text-red-700' :
-                          'bg-accent dark:bg-accent-orange text-secondary dark:text-white'
+                          row.role === 'manager' ? 'bg-blue-100 text-blue-700' :
+                          'bg-gray-100 text-gray-700'
                         }`}>
                           {row.role === 'admin' ? 'Admin' : 
-                           row.role === 'superadmin' ? 'Super Admin' : 
+                           row.role === 'superadmin' ? 'Super Admin' :
+                           row.role === 'manager' ? 'Manager' : 
                            'User'}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-2 py-2">{row.phone || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.status || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.phone || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.department || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.position || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.birthDate || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.nationalId || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-center whitespace-nowrap">{row.bloodType || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-right whitespace-nowrap">{row.salary || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">{row.address || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.emergencyContactName || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.emergencyContactPhone || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.emergencyContactRelation || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.startDate || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.provinceCode || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.branchCode || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.socialSecurityNumber || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.providentFund || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.healthInsurance || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-md overflow-hidden text-ellipsis">{row.education || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-md overflow-hidden text-ellipsis">{row.workHistory || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">{row.skills || ''}</td>
                     </tr>
                   );
                 })}
@@ -105,7 +144,12 @@ const CsvImportModal = memo(function CsvImportModal({
 
           {/* CSV Format Example */}
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-secondary dark:text-white mb-2">📄 ตัวอย่างรูปแบบไฟล์ CSV:</h3>
+            <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+              </svg>
+              ตัวอย่างรูปแบบไฟล์ CSV:
+            </h3>
             <div className="bg-white border border-gray-300 rounded p-3 text-xs overflow-x-auto">
               <code className="text-gray-800">
                 name,email,provinceCode,branchCode,role,department,position,nationalId,phone,skills<br/>
@@ -126,7 +170,7 @@ const CsvImportModal = memo(function CsvImportModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-2.5 bg-primary dark:bg-primary hover:bg-primary/90 dark:hover:bg-primary/80 text-white rounded-xl shadow-lg hover: transition-all font-medium"
+            className="px-6 py-2.5 bg-gradient-to-r from-brand-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl shadow-sm hover:shadow-sm transition-all font-medium"
           >
             ยืนยันนำเข้า ({csvData.length} รายการ)
           </button>

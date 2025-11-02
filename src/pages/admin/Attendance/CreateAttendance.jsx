@@ -694,13 +694,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     >
       <div className="absolute inset-0" onClick={onClose} />
       <div 
-        className="relative w-[92%] max-w-4xl bg-white rounded-lg border-4 border-[#1877F2] p-6 shadow-lg"
+        className="relative w-[92%] max-w-4xl bg-white rounded-lg border-4 border-[#F26623] p-6 shadow-sm"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-semibold text-[#0b2b57] mb-2">จัดตารางการทำงาน</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">จัดตารางการทำงาน</h2>
         <p className="text-sm text-gray-600 mb-4">กรอกข้อมูลเพื่อสร้างตารางงานใหม่</p>
 
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-auto pr-2">
@@ -729,7 +729,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             <button
               type="button"
               onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
-              className="w-full border-2 border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 bg-white hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary /30 transition-all flex items-center justify-between"
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-orange-400 focus:border-brand-primary focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between"
             >
               <span className="text-gray-700">
                 {selectedTeams.length === 0 
@@ -750,17 +750,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
             {/* Dropdown Menu */}
             {showTeamsDropdown && (
-              <div className="absolute z-50 w-full mt-1 bg-white dark:bg-secondary/95 border-2 border-gray-300 dark:border-white/20 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-y-auto">
                 {availableTeams.map((teamOption) => (
                   <label
                     key={teamOption}
-                    className="flex items-center px-4 py-2 hover:bg-accent dark:hover:bg-accent-orange/30 cursor-pointer transition-colors"
+                    className="flex items-center px-4 py-2 hover:bg-orange-50 cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={selectedTeams.includes(teamOption)}
                       onChange={() => toggleTeam(teamOption)}
-                      className="w-4 h-4 text-primary dark:text-primary border-gray-300 dark:border-white/20 rounded focus:ring-primary focus:ring-2 mr-3"
+                      className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 mr-3"
                     />
                     <span className="text-gray-700">{teamOption}</span>
                   </label>
@@ -772,12 +772,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             {selectedTeams.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedTeams.map(team => (
-                  <span key={team} className="inline-flex items-center gap-1 bg-accent dark:bg-accent-orange text-primary dark:text-primary px-3 py-1 rounded-full text-sm font-medium">
+                  <span key={team} className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                     {team}
                     <button
                       type="button"
                       onClick={() => toggleTeam(team)}
-                      className="hover:text-primary dark:hover:text-primary ml-1 font-bold"
+                      className="hover:text-orange-900 ml-1 font-bold"
                     >
                       ×
                     </button>
@@ -843,7 +843,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     onFocus={() => setShowTimeStartPicker(true)}
                     onKeyDown={(e) => handleKeyDown(e, 'timeStart')}
                     placeholder="เช่น 09:00"
-                    className="w-full border rounded px-3 py-2 pr-10 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
+                    className="w-full border rounded px-3 py-2 pr-10 hover:border-orange-400 focus:border-brand-primary focus:outline-none transition-colors"
                   />
                   
                   <button
@@ -852,7 +852,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setShowTimeStartPicker(!showTimeStartPicker)
                       setShowTimeEndPicker(false)
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary dark:text-primary transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brand-primary transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -862,11 +862,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                   {/* Custom Time Picker Dropdown */}
                   {showTimeStartPicker && (
-                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-secondary/95 border-2 border-primary dark:border-primary rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-orange-400 rounded-lg shadow-sm max-h-64 overflow-hidden">
                       <div className="flex">
                         {/* Hours Column */}
                         <div className="flex-1 border-r border-gray-200">
-                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -878,8 +878,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentMinute = timeStart?.split(':')[1] || '00'
                                   handleTimeSelect(hour, currentMinute, true)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
-                                  timeStart?.startsWith(hour) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                  timeStart?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                 }`}
                               >
                                 {hour}
@@ -890,7 +890,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         
                         {/* Minutes Column */}
                         <div className="flex-1">
-                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -902,8 +902,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentHour = timeStart?.split(':')[0] || '00'
                                   handleTimeSelect(currentHour, minute, true)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
-                                  timeStart?.endsWith(minute) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                  timeStart?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                 }`}
                               >
                                 {minute}
@@ -931,7 +931,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     onFocus={() => setShowTimeEndPicker(true)}
                     onKeyDown={(e) => handleKeyDown(e, 'timeEnd')}
                     placeholder="เช่น 17:00"
-                    className="w-full border rounded px-3 py-2 pr-10 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none transition-colors"
+                    className="w-full border rounded px-3 py-2 pr-10 hover:border-orange-400 focus:border-brand-primary focus:outline-none transition-colors"
                   />
                   
                   <button
@@ -940,7 +940,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setShowTimeEndPicker(!showTimeEndPicker)
                       setShowTimeStartPicker(false)
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary dark:text-primary transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brand-primary transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -950,11 +950,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                   {/* Custom Time Picker Dropdown */}
                   {showTimeEndPicker && (
-                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-secondary/95 border-2 border-primary dark:border-primary rounded-lg shadow-2xl max-h-64 overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-orange-400 rounded-lg shadow-sm max-h-64 overflow-hidden">
                       <div className="flex">
                         {/* Hours Column */}
                         <div className="flex-1 border-r border-gray-200">
-                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -966,8 +966,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentMinute = timeEnd?.split(':')[1] || '00'
                                   handleTimeSelect(hour, currentMinute, false)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
-                                  timeEnd?.startsWith(hour) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                  timeEnd?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                 }`}
                               >
                                 {hour}
@@ -978,7 +978,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         
                         {/* Minutes Column */}
                         <div className="flex-1">
-                          <div className="bg-primary dark:bg-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -990,8 +990,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentHour = timeEnd?.split(':')[0] || '00'
                                   handleTimeSelect(currentHour, minute, false)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
-                                  timeEnd?.endsWith(minute) ? 'bg-accent dark:bg-accent-orange font-semibold text-primary dark:text-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
+                                  timeEnd?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                 }`}
                               >
                                 {minute}
@@ -1016,7 +1016,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 type="button"
                 onClick={handleOpenMapModal}
                 aria-label="เปิดแผนที่เลือกสถานที่"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary dark:text-primary hover:text-primary dark:text-primary z-10"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-primary hover:text-orange-700 z-10"
               >
                 {/* Map icon */}
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
@@ -1054,7 +1054,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               <button
                 type="button"
                 onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-                className="w-full border-2 border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 bg-white hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary /30 transition-all flex items-center justify-between"
+                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-orange-400 focus:border-brand-primary focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between"
               >
                 <span className={type ? "text-gray-700" : "text-gray-400"}>
                   {type || 'เลือกประเภทงาน...'}
@@ -1072,7 +1072,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
               {/* Dropdown Menu */}
               {showTypeDropdown && (
-                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-secondary/95 border-2 border-gray-300 dark:border-white/20 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-hidden">
                   {/* Existing Types */}
                   <div className="max-h-48 overflow-y-auto">
                     {workTypes.map((workType) => (
@@ -1080,8 +1080,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         key={workType}
                         type="button"
                         onClick={() => selectWorkType(workType)}
-                        className={`w-full text-left px-4 py-2 hover:bg-accent dark:hover:bg-accent-orange/30 transition-colors ${
-                          type === workType ? 'bg-accent dark:bg-accent-orange text-primary dark:text-primary font-semibold' : 'text-gray-700'
+                        className={`w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors ${
+                          type === workType ? 'bg-orange-100 text-orange-700 font-semibold' : 'text-gray-700'
                         }`}
                       >
                         {workType}
@@ -1104,14 +1104,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                             }
                           }}
                           placeholder="ชื่อประเภทงานใหม่..."
-                          className="w-full px-3 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none mb-2"
+                          className="w-full px-3 py-2 border-2 border-orange-300 rounded-lg focus:border-brand-primary focus:outline-none mb-2"
                           autoFocus
                         />
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={handleAddNewType}
-                            className="flex-1 bg-primary dark:bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 dark:hover:bg-primary/80 transition-colors"
+                            className="flex-1 bg-brand-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
                           >
                             เพิ่ม
                           </button>
@@ -1146,12 +1146,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               {/* Selected Type Badge */}
               {type && (
                 <div className="mt-2">
-                  <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                     {type}
                     <button
                       type="button"
                       onClick={() => setType('')}
-                      className="hover:text-purple-900 ml-1 font-bold"
+                      className="hover:text-orange-900 ml-1 font-bold"
                     >
                       ×
                     </button>
@@ -1203,7 +1203,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           <div className="flex items-center gap-3 pt-2 flex-wrap">
             <button 
               type="submit" 
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-b from-[#2b78d3] to-[#1877F2] text-white rounded-full shadow-md hover:shadow-lg hover:from-[#2466c2] hover:to-[#166fe0] transition-colors font-medium text-sm"
+              className="inline-flex items-center justify-center px-5 py-2.5 bg-[#F26623] to-[#F26623] text-white rounded-full shadow-sm hover:shadow-sm[#F26623][#F26623] transition-all duration-200 font-medium text-sm"
             >
               บันทึก
             </button>
@@ -1224,14 +1224,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         <PageModal onClose={() => setShowMapModal(false)}>
           <div 
             key="map-modal" 
-            className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden" 
+            className="relative w-full max-w-6xl bg-white rounded-2xl shadow-sm overflow-hidden" 
             style={{ maxHeight: '90vh' }}
           >
             {/* Header */}
-            <div className="bg-primary dark:bg-primary px-6 py-4 flex items-center justify-between">
+            <div className="bg-brand-primary  px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">เลือกสถานที่จากแผนที่</h3>
-                <p className="text-sm text-white/80 mt-1">คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่</p>
+                <p className="text-sm text-orange-100 mt-1">คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่</p>
               </div>
               <button
                 onClick={() => setShowMapModal(false)}
@@ -1261,7 +1261,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000]">
                     <button
                       onClick={() => setMapClickEnabled(true)}
-                      className="bg-primary dark:bg-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-primary/90 dark:hover:bg-primary/80 transition-all flex items-center gap-2"
+                      className="bg-brand-primary text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-gray-700 transition-all flex items-center gap-2"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -1272,7 +1272,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 )}
 
                 {mapClickEnabled && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg z-[1000] pointer-events-none">
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm z-[1000] pointer-events-none">
                     คลิกบนแผนที่เพื่อเลือกตำแหน่ง
                   </div>
                 )}
@@ -1295,7 +1295,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           value={newLocationForm.name}
                           onChange={(e) => setNewLocationForm(prev => ({ ...prev, name: e.target.value }))}
                           placeholder="เช่น สำนักใหญ่ TGS"
-                          className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-brand-primary focus:outline-none"
                         />
                       </div>
 
@@ -1308,7 +1308,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           value={newLocationForm.description}
                           onChange={(e) => setNewLocationForm(prev => ({ ...prev, description: e.target.value }))}
                           placeholder="เช่น ศูนย์การประชุมหลัก"
-                          className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-brand-primary focus:outline-none"
                         />
                       </div>
 
@@ -1321,7 +1321,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           value={newLocationForm.radius}
                           onChange={(e) => setNewLocationForm(prev => ({ ...prev, radius: e.target.value }))}
                           placeholder="100"
-                          className="w-full px-4 py-2 border-2 border-gray-300 dark:border-white/20 rounded-lg focus:border-primary dark:focus:border-primary focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-brand-primary focus:outline-none"
                         />
                       </div>
 
@@ -1352,7 +1352,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       <div className="flex gap-3 pt-4">
                         <button
                           onClick={handleCreateNewLocation}
-                          className="flex-1 bg-primary dark:bg-primary text-white px-4 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                          className="flex-1 bg-brand-primary  text-white px-4 py-3 rounded-lg font-semibold hover:shadow-sm transition-all"
                         >
                           สร้างและเลือก
                         </button>
@@ -1376,7 +1376,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           placeholder="ค้นหาสถานที่..."
                           value={searchLocation}
                           onChange={(e) => setSearchLocation(e.target.value)}
-                          className="w-full px-4 py-2 pr-20 rounded-lg border-2 border-gray-300 dark:border-white/20 focus:border-primary dark:focus:border-primary focus:outline-none bg-white"
+                          className="w-full px-4 py-2 pr-20 rounded-lg border-2 border-gray-300 focus:border-brand-primary focus:outline-none bg-white"
                         />
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
@@ -1422,10 +1422,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           <button
                             key={loc.id}
                             onClick={() => handleSelectLocation(loc.name)}
-                            className="w-full text-left bg-white border-2 border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary rounded-lg p-4 transition-all hover:shadow-md"
+                            className="w-full text-left bg-white border-2 border-gray-200 hover:border-orange-400 rounded-lg p-4 transition-all hover:shadow-sm"
                           >
                             <div className="flex items-start gap-3">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary dark:text-primary flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-brand-primary flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                               </svg>
                               <div className="flex-1">
@@ -1462,14 +1462,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform"
+            className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform"
             style={{
               animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
           >
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-transparent animate-pulse"></div>
+                <div className="absolute inset-0 bg-orange-400/20 animate-pulse"></div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                 </svg>
@@ -1498,10 +1498,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           </div>
         </div>, document.body) : (
           <div className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto' }}>
-              <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+              <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
                 <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-transparent animate-pulse"></div>
+                  <div className="absolute inset-0 bg-orange-400/20 animate-pulse"></div>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                   </svg>
@@ -1529,14 +1529,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           onClick={() => setShowErrorPopup(false)}
         >
           <div onClick={(e) => e.stopPropagation()} 
-            className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform"
+            className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform"
             style={{
               animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
           >
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-transparent animate-pulse"></div>
+                <div className="absolute inset-0 bg-red-400/20 animate-pulse"></div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
@@ -1563,10 +1563,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           </div>
         </div>, document.body) : (
           <div className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto' }}>
-            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-transparent animate-pulse"></div>
+                  <div className="absolute inset-0 bg-red-400/20 animate-pulse"></div>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                   </svg>

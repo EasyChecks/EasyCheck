@@ -113,7 +113,7 @@ function AdminLayout() {
       <aside 
         className={`${
           sidebarCollapsed ? 'w-20' : 'w-64'
-        } bg-white dark:bg-secondary/95 border-r border-gray-200 dark:border-white/10 flex flex-col transition-all duration-300`}
+        } bg-brand-primary text-white flex flex-col transition-all duration-300 shadow-sm`}
       >
         {/* Logo */}
         <div className="p-6 flex items-center justify-between border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
@@ -150,9 +150,9 @@ function AdminLayout() {
                 className={({ isActive }) =>
                   `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all${
                     isActive
-                      ? 'bg-accent-orange text-primary border-l-4 border-primary dark:bg-primary/10'
-                      : 'text-gray-700 dark:text-white/90 hover:bg-accent dark:hover:bg-accent-orange/50 border-l-4 border-transparent'
-                  } ${sidebarCollapsed ? 'justify-center px-3' : ''}`
+                      ? 'bg-white text-brand-primary shadow-sm'
+                      : 'text-white/90 hover:bg-white/10'
+                  } ${sidebarCollapsed ? 'justify-center' : ''}`
                 }
                 title={sidebarCollapsed ? item.label : ''}
               >
@@ -169,9 +169,7 @@ function AdminLayout() {
         <div className="p-4 border-t border-gray-200 dark:border-white/10 transition-colors duration-300">
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-orange-50 dark:hover:bg-primary/20 rounded-lg transition-colors ${
-              sidebarCollapsed ? 'justify-center' : ''
-            }`}
+            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold flex items-center justify-center space-x-2 transition-all shadow-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
               <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>

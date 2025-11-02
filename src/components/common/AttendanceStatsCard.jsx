@@ -14,7 +14,7 @@ export const AttendanceStatsCard = ({ className = '' }) => {
       <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-5 w-5 text-sky-500" 
+          className="h-5 w-5 text-brand-primary" 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"
@@ -59,14 +59,14 @@ export const AttendanceStatsCard = ({ className = '' }) => {
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">เวลาเข้างานเฉลี่ย:</span>
-            <span className="font-bold text-sky-600">
+            <span className="font-bold text-orange-600">
               {attendanceStats.averageCheckInTime} น.
             </span>
           </div>
           {attendanceStats.totalWorkHours > 0 && (
             <div className="flex justify-between items-center text-sm mt-2">
               <span className="text-gray-600">ชั่วโมงทำงานรวม:</span>
-              <span className="font-bold text-sky-600">
+              <span className="font-bold text-orange-600">
                 {attendanceStats.totalWorkHours.toFixed(1)} ชม.
               </span>
             </div>
@@ -111,11 +111,11 @@ export const AttendanceStatsRow = ({ className = '' }) => {
   ];
 
   return (
-    <div className={`${className}`}>
+    <div className={` ${className}`}>
       <div className="flex items-center gap-2 text-gray-700 font-medium">
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-5 w-5 text-sky-500" 
+          className="h-5 w-5 text-brand-primary" 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"

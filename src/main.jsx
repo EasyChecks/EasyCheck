@@ -11,6 +11,12 @@ import { LoadingProvider } from "./contexts/LoadingContext.jsx";
 import { LocationProvider } from "./contexts/LocationContext.jsx";
 import { EventProvider } from "./contexts/EventContext.jsx";
 import PuffLoader from "./components/common/PuffLoader.jsx";
+import { initializeUsersData } from "./data/usersData.js";
+import ErrorBoundary from "./components/common/ErrorBoundary.jsx"; // 🔥 เพิ่ม ErrorBoundary
+import NotFoundPage from "./pages/NotFound.jsx"; // 🔥 เพิ่ม 404 Page
+
+// ✅ Initialize usersData ใน localStorage ตอนเริ่มต้น
+initializeUsersData();
 
 // Import Auth และ Layout แบบปกติเพื่อความเร็ว (ใช้บ่อย)
 import Auth from "./pages/Auth/Auth.jsx";
@@ -175,12 +181,18 @@ const router = createBrowserRouter([
         <Suspense fallback={<PageLoader />}><LeaveDetail /></Suspense>
       </ProtectedRoute>
     )
+  },
+  // 🔥 404 Page - จับทุก route ที่ไม่ตรงกับด้านบน
+  {
+    path: '*',
+    element: <NotFoundPage />
   }
 ])
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider>
+    {/* Error Boundary ครอบทั้งแอพ */}
+    <ErrorBoundary>
       <LoadingProvider>
         <AuthProvider>
           <TeamProvider>
@@ -194,6 +206,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           </TeamProvider>
         </AuthProvider>
       </LoadingProvider>
-    </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

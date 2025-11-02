@@ -176,7 +176,7 @@ function UserDashboard() {
     upcomingEvents.forEach(event => {
       notifs.push({
         id: `event-${event.id}`,
-        title: `🎯 กิจกรรมใหม่: ${event.name}`,
+        title: `📌 กิจกรรมใหม่: ${event.name}`,
         description: `${event.date} เวลา ${event.startTime} - ${event.endTime}`,
         date: event.date,
         type: 'info',
@@ -340,6 +340,20 @@ function UserDashboard() {
     hideLoading()
   }, [hideLoading])
 
+  // ✅ ฟังการเปลี่ยนแปลงของ attendance แบบ real-time
+  useEffect(() => {
+    const handleAttendanceUpdate = (event) => {
+      // อัพเดต UI ทันทีเมื่อมีการเช็คชื่อสำเร็จ
+      if (event.detail && event.detail.userId === user?.id) {
+        // Force re-render โดยไม่ต้องรีเฟรชหน้า
+        window.dispatchEvent(new Event('storage'))
+      }
+    }
+
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate)
+    return () => window.removeEventListener('attendanceUpdated', handleAttendanceUpdate)
+  }, [user])
+
   // ล็อกการเลื่อนเมื่อ Modal เปิด
   useEffect(() => {
     if (showBuddyCheckIn || showAttendanceHistory) {
@@ -373,9 +387,9 @@ function UserDashboard() {
   // ใช้ attendance จาก context แทน mock data
   const isCheckedIn = attendance.status === 'checked_in'
   const buttonColor = isCheckedIn 
-    ? 'bg-[#FF6666] hover:bg-[#FF5555] shadow-[0_4px_12px_rgba(255,102,102,0.4)]' 
-    : 'bg-white hover:shadow-xl'
-  const buttonTextColor = isCheckedIn ? 'text-white' : 'text-[#48CBFF]'
+    ? 'bg-destructive hover:bg-destructive/90 shadow-lg' 
+    : 'bg-white hover:shadow-xl border-2 border-brand-primary'
+  const buttonTextColor = isCheckedIn ? 'text-white' : 'text-brand-primary'
   const buttonText = isCheckedIn ? 'ออกงาน' : 'เข้างาน'
   
   // ปิดการใช้งานปุ่มถ้าไม่ได้อยู่ในพื้นที่อนุญาต
@@ -474,7 +488,7 @@ function UserDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Welcome Section */}
       <div className="p-6 bg-white shadow-md rounded-2xl">
         <div className="flex items-center justify-between">
@@ -484,13 +498,13 @@ function UserDashboard() {
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">{formatDate(currentTime)}</p>
-            <p className="text-2xl font-bold text-[#48CBFF]">{formatTime(currentTime)}</p>
+            <p className="text-2xl font-bold text-brand-primary">{formatTime(currentTime)}</p>
           </div>
         </div>
       </div>
 
       {/* Check In/Out Card */}
-      <div className="bg-gradient-to-br from-[#48CBFF] to-[#3AB4E8] rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-gradient-to-br from-brand-primary to-orange-600 rounded-2xl shadow-lg p-6 text-white">
         <h3 className="mb-4 text-xl font-bold">บันทึกเวลา</h3>
         
         {/* Location Status Banner */}
@@ -588,7 +602,7 @@ function UserDashboard() {
           <h3 className="text-lg font-bold text-gray-800">สรุปการทำงาน</h3>
           <button
             onClick={() => setShowAttendanceHistory(true)}
-            className="px-4 py-2 bg-[#48CBFF] hover:bg-[#3AB4E8] text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-brand-primary hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -611,7 +625,7 @@ function UserDashboard() {
           <div className="space-y-3">
             {allSchedules.map((schedule) => (
               <Link key={schedule.id} to={`/user/schedule/${schedule.id}`} className="block">
-                <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] rounded-xl p-4 text-white transform transition-all hover:scale-[1.02] hover:shadow-lg">
+                <div className="bg-gradient-to-r from-brand-primary to-orange-600 rounded-xl p-4 text-white transform transition-all hover:scale-[1.02] hover:shadow-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold">{schedule.team}</h4>
@@ -667,36 +681,7 @@ function UserDashboard() {
       {/* Manager Section - แสดงเฉพาะหัวหน้า */}
       {isManager && teamStats && (
         <div className="space-y-4">
-          {/* Team Stats */}
-          <div className="p-6 bg-white shadow-lg rounded-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">สถิติทีมวันนี้</h3>
-              <Link 
-                to="/user/team-attendance"
-                className="px-4 py-2 bg-[#48CBFF] hover:bg-[#3AB4E8] text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                ดูทั้งหมด →
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              <div className="bg-[#48CBFF] rounded-xl p-4 text-center text-white">
-                <p className="text-2xl font-bold">{teamStats.total}</p>
-                <p className="mt-1 text-sm">ทั้งหมด</p>
-              </div>
-              <div className="p-4 text-center bg-green-50 rounded-xl">
-                <p className="text-2xl font-bold text-green-600">{teamStats.checkedIn}</p>
-                <p className="mt-1 text-sm text-gray-600">เข้างาน</p>
-              </div>
-              <div className="p-4 text-center bg-yellow-50 rounded-xl">
-                <p className="text-2xl font-bold text-yellow-600">{teamStats.late}</p>
-                <p className="mt-1 text-sm text-gray-600">สาย</p>
-              </div>
-              <div className="p-4 text-center bg-red-50 rounded-xl">
-                <p className="text-2xl font-bold text-red-600">{teamStats.absent}</p>
-                <p className="mt-1 text-sm text-gray-600">ขาด</p>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Pending Leaves */}
           {notifications && notifications.pendingLeaveCount > 0 && (
@@ -736,7 +721,7 @@ function UserDashboard() {
           }`}
           style={userNotifications.length > 3 ? {
             scrollbarWidth: 'thin',
-            scrollbarColor: '#CBD5E1 #F1F5F9'
+            scrollbarColor: '#D1D5DB #F9FAFB'
           } : {}}
         >
           {userNotifications.length === 0 ? (
@@ -748,7 +733,7 @@ function UserDashboard() {
                   notification.type === 'success' ? 'bg-green-500' : 
                   notification.type === 'error' ? 'bg-red-500' :
                   notification.type === 'warning' ? 'bg-orange-500' :
-                  'bg-blue-500'
+                  'bg-brand-primary'
                 }`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium leading-snug text-gray-800">{notification.title}</p>
@@ -758,9 +743,9 @@ function UserDashboard() {
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-xs text-gray-500">{notification.date}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      notification.category === 'leave' ? 'bg-blue-100 text-blue-700' :
+                      notification.category === 'leave' ? 'bg-orange-100 text-orange-700' :
                       notification.category === 'event' ? 'bg-orange-100 text-orange-700' :
-                      notification.category === 'attendance' ? 'bg-purple-100 text-purple-700' :
+                      notification.category === 'attendance' ? 'bg-orange-50 text-orange-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
                       {notification.category === 'leave' ? 'การลา' :
@@ -786,7 +771,7 @@ function UserDashboard() {
             className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
+            <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white">ประวัติการลงเวลา</h2>
@@ -847,7 +832,7 @@ function UserDashboard() {
                           }`}>
                             {shifts.some(s => s.status === 'late') ? '⏰ มาสาย' :
                              shifts.some(s => s.status === 'on_time') ? '✅ ตรงเวลา' :
-                             '📝 บันทึกแล้ว'}
+                             '� บันทึกแล้ว'}
                           </div>
                         </div>
                         
@@ -931,7 +916,7 @@ function UserDashboard() {
             <div className="p-6 bg-gray-50 border-t border-gray-200">
               <button
                 onClick={() => setShowAttendanceHistory(false)}
-                className="w-full bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="w-full bg-gradient-to-r from-brand-primary to-orange-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
               >
                 ปิด
               </button>
@@ -955,7 +940,7 @@ function UserDashboard() {
             className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] p-6">
+            <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-6">
               <h2 className="text-2xl font-bold text-white">เช็คชื่อแทนเพื่อน</h2>
               <p className="mt-1 text-sm text-white/90">กรุณากรอกข้อมูลเพื่อนของคุณ</p>
             </div>
@@ -982,7 +967,7 @@ function UserDashboard() {
                       value={buddyData.employeeId}
                       onChange={(e) => handleBuddyInputChange('employeeId', e.target.value)}
                       placeholder="กรอกรหัสพนักงานเพื่อน"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#48CBFF] focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none transition-all"
                     />
                   </div>
 
@@ -996,7 +981,7 @@ function UserDashboard() {
                       onChange={(e) => handleBuddyInputChange('phone', e.target.value)}
                       placeholder="0812345678"
                       maxLength="10"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#48CBFF] focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none transition-all"
                     />
                     <p className="mt-1 text-xs text-gray-500">กรอกเบอร์โทรศัพท์ 10 หลัก</p>
                   </div>
@@ -1023,7 +1008,7 @@ function UserDashboard() {
                     </button>
                     <button
                       onClick={handleBuddyCheckIn}
-                      className="flex-1 bg-gradient-to-r from-[#48CBFF] to-[#3AB4E8] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
+                      className="flex-1 bg-gradient-to-r from-brand-primary to-orange-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105"
                     >
                       ยืนยัน
                     </button>
@@ -1048,7 +1033,7 @@ function UserDashboard() {
             <p className="mb-8 text-gray-600">{popupInfoMessage}</p>
             <button
               onClick={() => setShowInfoPopup(false)}
-              className="w-full bg-[#48CBFF] text-white py-3 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-[#3AB5E8] transition-all duration-300 transform hover:scale-105 active:scale-95"
+              className="w-full bg-brand-primary text-white py-3 px-6 rounded-xl font-prompt font-medium text-lg shadow-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 active:scale-95"
             >
               ตกลง
             </button>

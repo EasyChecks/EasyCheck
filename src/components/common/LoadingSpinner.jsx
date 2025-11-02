@@ -24,7 +24,7 @@ const LoadingSpinner = memo(function LoadingSpinner({ size = 'md', text = '‡∏Å‡∏
     <div className="flex items-center justify-center min-h-[200px]">
       <div className="text-center">
         <div 
-          className={`${sizeClasses[size]} mx-auto mb-4 border-b-2 border-primary dark:border-primary rounded-full animate-spin`}
+          className={`${sizeClasses[size]} mx-auto mb-4 border-b-2 border-brand-primary rounded-full animate-spin`}
           aria-label="Loading"
           role="status"
         />
