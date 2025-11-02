@@ -94,7 +94,7 @@ export default function CheckInApproval() {
       {/* Header */}
       <div className="bg-white dark:bg-secondary transition-colors duration-300 border-b border-gray-200 dark:border-white/10 p-6 sticky top-0 z-40 shadow-sm">
         <h1 className="text-2xl font-bold text-secondary dark:text-white font-prompt">อนุมัติคำขอเช็คชื่อแทน</h1>
-        <p className="text-sm text-gray-600 mt-1 font-prompt">จัดการคำขอเช็คชื่อแทนเพื่อน</p>
+        <p className="text-sm text-gray-600 mt-1 font-prompt">จัดการคำขอเช็คชื่อแทน</p>
       </div>
 
       {/* Filter Tabs */}

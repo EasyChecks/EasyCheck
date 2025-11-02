@@ -440,7 +440,7 @@ function UserDashboard() {
     setBuddySuccess(true)
 
     // แสดงข้อความสำเร็จพร้อมชื่อเพื่อน
-    console.log(`✅ เช็คชื่อแทนเพื่อนสำเร็จ: ${validBuddy.name} (${validBuddy.employeeId})`)
+    console.log(`✅ เช็คชื่อแทนสำเร็จ: ${validBuddy.name} (${validBuddy.employeeId})`)
 
     // รีเซ็ตและปิด modal หลัง 2 วินาที
     setTimeout(() => {
@@ -579,7 +579,7 @@ function UserDashboard() {
             <button
               onClick={() => {
                 if (isButtonDisabled) {
-                  setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คชื่อแทนเพื่อนได้');
+                  setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คชื่อแทนได้');
                   setShowInfoPopup(true);
                 } else {
                   setShowBuddyCheckIn(true)
@@ -590,7 +590,7 @@ function UserDashboard() {
                 isButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/30'
               }`}
             >
-              เช็คชื่อแทนเพื่อน
+              เช็คชื่อแทน
             </button>
           </div>
         </div>
@@ -941,7 +941,7 @@ function UserDashboard() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-6">
-              <h2 className="text-2xl font-bold text-white">เช็คชื่อแทนเพื่อน</h2>
+              <h2 className="text-2xl font-bold text-white">เช็คชื่อแทน</h2>
               <p className="mt-1 text-sm text-white/90">กรุณากรอกข้อมูลเพื่อนของคุณ</p>
             </div>
             
@@ -954,7 +954,7 @@ function UserDashboard() {
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold text-gray-800">บันทึกสำเร็จ!</h3>
-                  <p className="mt-2 text-gray-600">เช็คชื่อแทนเพื่อนเรียบร้อยแล้ว</p>
+                  <p className="mt-2 text-gray-600">เช็คชื่อแทนเรียบร้อยแล้ว</p>
                 </div>
               ) : (
                 <>

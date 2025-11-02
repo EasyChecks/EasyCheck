@@ -1333,7 +1333,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           type="text"
                           value={newLocationForm.latitude}
                           readOnly
-                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg bg-gray-100"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-white/10 rounded-lg bg-gray-100"
                         />
                       </div>
 
@@ -1345,7 +1345,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           type="text"
                           value={newLocationForm.longitude}
                           readOnly
-                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-white/10 dark:border-white/10 rounded-lg bg-gray-100"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-white/10 rounded-lg bg-gray-100"
                         />
                       </div>
 

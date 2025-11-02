@@ -430,7 +430,7 @@ export const getUserByUsername = (username) => {
 };
 
 // ==================== Buddy Check-in Functions ====================
-// สำหรับระบบเช็คชื่อแทนเพื่อน (Buddy Check-in)
+// สำหรับระบบเช็คชื่อแทน (Buddy Check-in)
 
 // ฟังก์ชันตรวจสอบข้อมูลเพื่อน - ใช้ข้อมูลจาก usersData
 export const validateBuddy = (employeeId, phone) => {

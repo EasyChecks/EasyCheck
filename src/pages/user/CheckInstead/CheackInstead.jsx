@@ -134,7 +134,7 @@ export default function CheackInstead() {
             </svg>
           </button>
           <div className="text-center">
-            <h1 className="text-xl font-bold font-prompt">เช็คชื่อแทนเพื่อน</h1>
+            <h1 className="text-xl font-bold font-prompt">เช็คชื่อแทน</h1>
             <p className="text-xs mt-0.5 opacity-90">ยื่นคำขอเพื่อรอการอนุมัติ</p>
           </div>
         </div>
