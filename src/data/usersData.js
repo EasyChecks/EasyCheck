@@ -401,11 +401,21 @@ export const getUserForAuth = (employeeId) => {
   }
 
   // ถ้าเป็นบัญชีพนักงานธรรมดา
-  return {
+  const normalUserData = {
     ...user,
     role: (user.role === 'admin' || user.role === 'superadmin') ? 'user' : user.role, // แสดงเป็น user ตอนเช็คชื่อ
     isAdminAccount: false
   };
+  
+  // 🔍 Debug log
+  console.log('🔐 getUserForAuth() result:', {
+    employeeId,
+    originalRole: user.role,
+    finalRole: normalUserData.role,
+    isAdminAccount: false
+  });
+  
+  return normalUserData;
 };
 
 // Helper function: Get all users สำหรับ dropdown, select, etc.
@@ -1273,6 +1283,15 @@ export const mockLoginAPI = async (username, password) => {
   // 1. ลองหา user จาก usersData เดิมก่อน (getUserForAuth จะดู localStorage อยู่แล้ว)
   let user = getUserForAuth(normalizedUsername);
   
+  // 🔍 Debug: ตรวจสอบ role ที่ได้จาก getUserForAuth
+  if (user) {
+    console.log(`🔐 Login: ${normalizedUsername}`, {
+      name: user.name,
+      role: user.role,
+      isAdminAccount: user.isAdminAccount || false
+    });
+  }
+  
   // 2. ถ้าไม่เจอ ให้ลองหาจาก usersData ที่บันทึกใน localStorage (user ที่เพิ่มใหม่)
   if (!user) {
     try {
@@ -1315,6 +1334,20 @@ export const mockLoginAPI = async (username, password) => {
   }
 
   return { success: false };
+};
+
+// ✅ ฟังก์ชัน initialize ข้อมูล usersData ลง localStorage
+export const initializeUsersData = () => {
+  try {
+    const storedUsers = localStorage.getItem('usersData');
+    if (!storedUsers) {
+      // ถ้ายังไม่มีข้อมูลใน localStorage ให้บันทึกข้อมูลเริ่มต้น
+      localStorage.setItem('usersData', JSON.stringify(usersData));
+      console.log('✅ Initialized usersData in localStorage');
+    }
+  } catch (error) {
+    console.error('Failed to initialize usersData:', error);
+  }
 };
 
 // Export default สำหรับ compatibility กับ import userData แบบเดิม

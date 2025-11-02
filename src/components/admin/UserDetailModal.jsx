@@ -1,4 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+
+// ✅ ฟังก์ชันแปลงวันที่ ISO (YYYY-MM-DD) เป็นรูปแบบไทย (DD/MM/YYYY พ.ศ.)
+const formatThaiDate = (isoDate) => {
+  if (!isoDate) return 'ไม่ระบุ';
+  
+  try {
+    const date = new Date(isoDate);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const yearBE = date.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
+    
+    return `${day}/${month}/${yearBE}`;
+  } catch {
+    return isoDate; // ถ้าแปลงไม่ได้ ให้แสดงค่าเดิม
+  }
+};
 
 const UserDetailModal = React.memo(function UserDetailModal({ 
   user, 
@@ -21,6 +37,42 @@ const UserDetailModal = React.memo(function UserDetailModal({
   onSaveAttendanceEdit,
   onAttendanceFormChange
 }) {
+  // 🔥 State สำหรับ sync timeSummary แบบ real-time
+  const [currentTimeSummary, setCurrentTimeSummary] = useState(user?.timeSummary);
+
+  // ฟัง event จาก AuthProvider เมื่อ timeSummary อัพเดต
+  useEffect(() => {
+    const handleTimeSummaryUpdate = (event) => {
+      if (event.detail.userId === user?.id) {
+        setCurrentTimeSummary(event.detail.timeSummary);
+      }
+    };
+
+    window.addEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
+    
+    return () => {
+      window.removeEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
+    };
+  }, [user?.id]);
+
+  // อัพเดต timeSummary จาก localStorage เมื่อ user เปลี่ยน
+  useEffect(() => {
+    if (user) {
+      try {
+        const storedUsers = localStorage.getItem('usersData');
+        if (storedUsers) {
+          const users = JSON.parse(storedUsers);
+          const currentUser = users.find(u => u.id === user.id);
+          if (currentUser?.timeSummary) {
+            setCurrentTimeSummary(currentUser.timeSummary);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load timeSummary:', error);
+      }
+    }
+  }, [user]);
+  
   // ป้องกันการ scroll พื้นหลังเมื่อ modal เปิด
   useEffect(() => {
     if (showDetail) {
@@ -352,7 +404,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-600">วันเกิด</span>
-                    <span className="font-medium text-gray-800">{user.birthDate || 'ไม่ระบุ'}</span>
+                    <span className="font-medium text-gray-800">{formatThaiDate(user.birthDate)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-600">อายุ</span>
@@ -508,30 +560,41 @@ const UserDetailModal = React.memo(function UserDetailModal({
               )}
 
               {/* สรุปเวลาทำงาน */}
-              {user.timeSummary && (
+              {currentTimeSummary && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     สรุปเวลาทำงาน
+                    <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Real-time</span>
                   </h4>
                   <div className="grid grid-cols-4 gap-3">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-800">{user.timeSummary.totalWorkDays}</div>
+                      <div className="text-2xl font-bold text-gray-800">{currentTimeSummary.totalWorkDays || 0}</div>
                       <div className="text-xs text-gray-500 mt-1">วันทำงาน</div>
                     </div>
                     <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">{user.timeSummary.onTime}</div>
+                      <div className="text-2xl font-bold text-green-600">{currentTimeSummary.onTime || 0}</div>
                       <div className="text-xs text-gray-500 mt-1">ตรงเวลา</div>
                     </div>
                     <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600">{user.timeSummary.late}</div>
+                      <div className="text-2xl font-bold text-orange-600">{currentTimeSummary.late || 0}</div>
                       <div className="text-xs text-gray-500 mt-1">มาสาย</div>
                     </div>
                     <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{user.timeSummary.absent}</div>
+                      <div className="text-2xl font-bold text-red-600">{currentTimeSummary.absent || 0}</div>
                       <div className="text-xs text-gray-500 mt-1">ขาดงาน</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">เวลาเข้างานเฉลี่ย:</span>
+                      <span className="font-bold text-primary">{currentTimeSummary.avgCheckIn || '08:00'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">ชั่วโมงทำงานรวม:</span>
+                      <span className="font-bold text-primary">{currentTimeSummary.totalHours || '0 ชม.'}</span>
                     </div>
                   </div>
                 </div>
@@ -601,6 +664,34 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   </div>
                 </div>
               )}
+
+              {/* ข้อมูลสวัสดิการ */}
+              <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
+                <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  ข้อมูลสวัสดิการ
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">เลขประกันสังคม</span>
+                    <span className="font-medium text-gray-800">{user.socialSecurityNumber || 'ไม่ระบุ'}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">สิทธิประกันสังคม</span>
+                    <span className="font-medium text-gray-800">{user.socialSecurityNumber ? 'มี' : 'ไม่มี'}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">กองทุนสำรองเลี้ยงชีพ</span>
+                    <span className="font-medium text-gray-800">{user.salary && Number(user.salary) >= 30000 ? 'มี' : 'ไม่มี'}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600">ประกันสุขภาพกลุ่ม</span>
+                    <span className="font-medium text-gray-800">{user.salary && Number(user.salary) >= 40000 ? 'มี' : 'ไม่มี'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
