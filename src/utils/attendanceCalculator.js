@@ -18,7 +18,7 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
 
   // กรองข้อมูลตามช่วงวันที่ถ้ามีการระบุ
   let filteredRecords = attendanceRecords;
-  
+  // dd
   if (startDate || endDate) {
     filteredRecords = attendanceRecords.filter(record => {
       const recordDate = new Date(record.date);
