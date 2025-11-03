@@ -317,7 +317,12 @@ export default function EventDetails() {
             </div>
           ) : isJoined ? (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-              <p className="text-green-700 font-medium">✅ คุณเช็คอินแล้ว</p>
+              <p className="text-green-700 font-medium flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                คุณเช็คอินแล้ว
+              </p>
             </div>
           ) : canUserJoin ? (
             <button

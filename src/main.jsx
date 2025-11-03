@@ -144,7 +144,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'leave-approval',
-        element: <Suspense fallback={<PageLoader />}><LeaveApproval /></Suspense>
+        element: (
+          <ProtectedRoute allowedRoles={['manager']}>
+            <Suspense fallback={<PageLoader />}><LeaveApproval /></Suspense>
+          </ProtectedRoute>
+        )
       },
       {
         path: 'schedule/:id',
