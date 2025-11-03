@@ -26,8 +26,8 @@ const locationIcon = new L.Icon({
 })
 
 const eventIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjU2M2ViIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
-  iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjU2M2ViIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjZjk3MzE2IiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjZjk3MzE2IiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -734,15 +734,6 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
               }))}
               placeholder="เลือกตำแหน่ง..."
             />
-
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-              <p className="text-xs text-orange-800 flex items-center gap-2">
-                <svg className="w-4 h-4 fill-brand-primary flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-                <span><strong>หมายเหตุ:</strong> ผู้ใช้จะเห็นกิจกรรมนี้หากตรงกับเงื่อนไข<strong>ใดเงื่อนไขหนึ่ง</strong>ที่กำหนด</span>
-              </p>
-            </div>
           </div>
         </>
       )}
@@ -1916,18 +1907,15 @@ function MappingAndEvents() {
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800">
-                {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
+            <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <svg className="w-5 h-5 fill-gray-700" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                </svg>
+                คู่มือการใช้งาน
               </h2>
               <button
-                onClick={() => {
-                  setShowCreateModal(false)
-                  setCreateType(null)
-                  setNewMarkerPosition(null)
-                  setSearchMarkerPosition(null)
-                  setSearchMarkerName('')
-                }}
+                onClick={() => setShowHelpModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1944,15 +1932,21 @@ function MappingAndEvents() {
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
                   <li className="flex items-start gap-2">
-                    <span className="text-brand-primary mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-brand-primary flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span><strong>คลิกที่แผนที่</strong> เพื่อปักหมุดและสร้างพื้นที่/กิจกรรมใหม่</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-brand-primary mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-brand-primary flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span><strong>ค้นหาสถานที่</strong> ด้วยช่องค้นหาบนแผนที่ แล้วคลิกผลลัพธ์</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-brand-primary mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-brand-primary flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span>คลิกปุ่ม <strong>"สร้างพื้นที่/กิจกรรมที่นี่"</strong> ใน popup ที่ปรากฏ</span>
                   </li>
                 </ul>
@@ -1965,15 +1959,21 @@ function MappingAndEvents() {
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-green-500 flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span><strong>คลิกที่หมุด</strong> บนแผนที่จะพาไปยังรายการนั้นในลิสต์</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-green-500 flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span><strong>ปุ่มแก้ไข</strong> สำหรับแก้ไขข้อมูลพื้นที่หรือกิจกรรม</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-green-500 flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span><strong>ปุ่มลบ</strong> สำหรับลบรายการที่ไม่ต้องการ</span>
                   </li>
                 </ul>
@@ -1990,8 +1990,8 @@ function MappingAndEvents() {
                     <span><strong>หมุดสีเขียว</strong> = พื้นที่อนุญาตให้เช็คอิน</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
-                    <span><strong>หมุดสีน้ำเงิน</strong> = กิจกรรมพิเศษ</span>
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span><strong>หมุดสีส้ม</strong> = กิจกรรมพิเศษ</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
@@ -2009,15 +2009,21 @@ function MappingAndEvents() {
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700 ml-8">
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-amber-500 flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span>ใช้ <strong>แท็บกรอง</strong> เพื่อแสดงเฉพาะพื้นที่หรือกิจกรรม</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-amber-500 flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span>สลับ <strong>มุมมองแผนที่/ดาวเทียม</strong> ได้ที่มุมบนขวา</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-1">•</span>
+                    <svg className="w-2 h-2 mt-1.5 fill-amber-500 flex-shrink-0" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4"/>
+                    </svg>
                     <span>คลิก <strong>"ลบหมุดค้นหา"</strong> เพื่อลบหมุดชั่วคราว</span>
                   </li>
                 </ul>
@@ -2025,7 +2031,9 @@ function MappingAndEvents() {
 
               <div className="bg-slate-50 rounded-xl p-4 border border-gray-300">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm">⌨️</span>
+                  <svg className="w-5 h-5 fill-gray-600" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/>
+                  </svg>
                   คีย์ลัด (Keyboard Shortcuts)
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700 ml-8">
@@ -2048,7 +2056,7 @@ function MappingAndEvents() {
       {showEditModal && editItem && (
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full my-8">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
                 แก้ไข{editItem.type === 'location' ? 'พื้นที่อนุญาต' : 'กิจกรรม'}
               </h2>
@@ -2085,7 +2093,7 @@ function MappingAndEvents() {
         <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full my-8">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
                 {createType ? (createType === 'location' ? 'สร้างพื้นที่อนุญาตใหม่' : 'สร้างกิจกรรมใหม่') : 'เลือกประเภท'}
               </h2>
@@ -2300,7 +2308,7 @@ function MappingAndEvents() {
                 <div className="text-xs text-gray-500 mb-2 font-medium">หมุดทั้งหมด</div>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 bg-green-50 px-2 py-1.5 rounded-md">
-                    <span className="w-2.5 h-2.5 bg-gray-600 rounded-full flex-shrink-0"></span>
+                    <span className="w-2.5 h-2.5 bg-green-500 rounded-full flex-shrink-0"></span>
                     <div className="flex flex-col">
                       <span className="text-xs text-green-600 font-medium">พื้นที่อนุญาต</span>
                       <span className="text-lg font-bold text-green-700">{locations.length}</span>
@@ -2411,8 +2419,8 @@ function MappingAndEvents() {
                     center={[event.latitude, event.longitude]}
                     radius={event.radius}
                     pathOptions={{
-                      color: event.status === 'ongoing' ? 'blue' : 'gray',
-                      fillColor: event.status === 'ongoing' ? 'blue' : 'gray',
+                      color: event.status === 'ongoing' ? 'orange' : 'gray',
+                      fillColor: event.status === 'ongoing' ? 'orange' : 'gray',
                       fillOpacity: 0.2
                     }}
                   />
