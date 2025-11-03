@@ -4,8 +4,10 @@
  */
 
 /**
- * คำนวณสถิติการลงเวลาทั้งหมด
- * @param {Array} attendanceRecords - array ของข้อมูลการลงเวลา [{date, checkIn, checkOut, status}]
+ * คำนวณสถิติการลงเวลาทั้งหมด (รองรับหลายกะต่อวัน)
+ * @param {Array} attendanceRecords - array ของข้อมูลการลงเวลา
+ *   รูปแบบ 1: [{date, checkIn, checkOut, status}] - single shift per day (backward compatible)
+ *   รูปแบบ 2: [{date, shifts: [{checkIn, checkOut, status}, ...]}] - multiple shifts per day
  * @param {Object} options - ตัวเลือกการคำนวณ {startDate, endDate, workTimeStart}
  * @returns {Object} สถิติการลงเวลา
  */
@@ -33,12 +35,14 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
 
   const stats = {
     totalWorkDays: 0,    // จำนวนวันทำงานทั้งหมด
+    totalShifts: 0,      // จำนวนกะทั้งหมด (ใหม่!)
     onTime: 0,           // จำนวนวันมาตรงเวลา
     late: 0,             // จำนวนวันมาสาย
     absent: 0,           // จำนวนวันขาดงาน
     leave: 0,            // จำนวนวันลา
-    totalWorkHours: 0,   // ชั่วโมงทำงานรวม
+    totalWorkHours: 0,   // ชั่วโมงทำงานรวม (รวมทุกกะ)
     averageCheckInTime: null, // เวลาเข้างานเฉลี่ย
+    averageShiftsPerDay: 0,   // จำนวนกะเฉลี่ยต่อวัน (ใหม่!)
     records: filteredRecords
   };
 
@@ -52,32 +56,58 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
   filteredRecords.forEach(record => {
     stats.totalWorkDays++;
 
-    // นับสถานะต่างๆ
-    if (record.status === 'absent') {
-      stats.absent++;
-    } else if (record.status === 'leave') {
-      stats.leave++;
-    } else if (record.status === 'late') {
-      stats.late++;
-    } else if (record.status === 'on-time' || record.status === 'present') {
-      stats.onTime++;
-    }
+    // 🔥 รองรับทั้ง single shift และ multiple shifts
+    const shifts = record.shifts || [{
+      checkIn: record.checkIn,
+      checkOut: record.checkOut,
+      status: record.status
+    }];
 
-    // คำนวณชั่วโมงทำงาน
-    if (record.checkIn && record.checkOut) {
-      const checkInTime = parseTime(record.checkIn);
-      const checkOutTime = parseTime(record.checkOut);
-      
-      if (checkInTime && checkOutTime) {
-        const workMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
-        if (workMinutes > 0) {
-          stats.totalWorkHours += workMinutes / 60;
+    let dayStatus = 'absent'; // สถานะของวันนั้นๆ (ดูจาก shift แรก)
+    
+    shifts.forEach((shift, index) => {
+      stats.totalShifts++;
+
+      // ถ้าเป็น shift แรกของวัน ให้นับสถานะ
+      if (index === 0) {
+        if (shift.status === 'absent') {
+          dayStatus = 'absent';
+        } else if (shift.status === 'leave') {
+          dayStatus = 'leave';
+        } else if (shift.status === 'late') {
+          dayStatus = 'late';
+        } else if (shift.status === 'on-time' || shift.status === 'on_time' || shift.status === 'present') {
+          dayStatus = 'on_time';
         }
-
-        // คำนวณเวลาเข้างานเฉลี่ย
-        totalMinutes += checkInTime.getHours() * 60 + checkInTime.getMinutes();
-        checkInCount++;
       }
+
+      // คำนวณชั่วโมงทำงาน (รวมทุกกะ)
+      if (shift.checkIn && shift.checkOut) {
+        const checkInTime = parseTime(shift.checkIn);
+        const checkOutTime = parseTime(shift.checkOut);
+        
+        if (checkInTime && checkOutTime) {
+          const workMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+          if (workMinutes > 0) {
+            stats.totalWorkHours += workMinutes / 60;
+          }
+
+          // คำนวณเวลาเข้างานเฉลี่ย (นับทุก shift)
+          totalMinutes += checkInTime.getHours() * 60 + checkInTime.getMinutes();
+          checkInCount++;
+        }
+      }
+    });
+
+    // นับสถานะของวัน (นับครั้งเดียวต่อวัน)
+    if (dayStatus === 'absent') {
+      stats.absent++;
+    } else if (dayStatus === 'leave') {
+      stats.leave++;
+    } else if (dayStatus === 'late') {
+      stats.late++;
+    } else if (dayStatus === 'on_time') {
+      stats.onTime++;
     }
   });
 
@@ -87,6 +117,11 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
     const hours = Math.floor(avgMinutes / 60);
     const minutes = avgMinutes % 60;
     stats.averageCheckInTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  // คำนวณจำนวนกะเฉลี่ยต่อวัน
+  if (stats.totalWorkDays > 0) {
+    stats.averageShiftsPerDay = (stats.totalShifts / stats.totalWorkDays).toFixed(1);
   }
 
   // ปัดเศษชั่วโมงทำงาน
