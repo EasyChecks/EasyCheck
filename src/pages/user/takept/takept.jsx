@@ -108,15 +108,41 @@ function TakePhoto() {
     const currentTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
     
     if (attendance.status === 'not_checked_in') {
-      const status = (scheduleTimes.start && now > scheduleTimes.start) ? 'late' : 'on_time';
+      // กฎการเข้างาน
+      let status = 'on_time'; // ค่าเริ่มต้น
+      let message = `เข้างานตรงเวลา ${currentTime} น.`;
+      
+      if (scheduleTimes.start) {
+        const lateThresholdMinutes = 30; // สายได้ไม่เกิน 30 นาที (สามารถปรับได้ในหน้า attendance)
+        const timeDiffMs = now - scheduleTimes.start;
+        const timeDiffMinutes = Math.floor(timeDiffMs / (1000 * 60));
+        
+        if (timeDiffMinutes < 0) {
+          // เข้าก่อนเวลา = ตรงเวลา
+          status = 'on_time';
+          message = `เข้างานตรงเวลา ${currentTime} น.`;
+        } else if (timeDiffMinutes <= lateThresholdMinutes) {
+          // สายไม่เกิน 30 นาที = สาย (ปรับได้ในหน้า attendance)
+          status = 'late';
+          message = `เข้างานสาย ${timeDiffMinutes} นาที (${currentTime} น.)`;
+        } else {
+          // สายเกิน 30 นาที = ขาด
+          status = 'absent';
+          message = `ขาดงาน - เข้างานสายเกิน ${timeDiffMinutes} นาที (${currentTime} น.)`;
+        }
+      }
+      
       checkIn(currentTime, photo, status);
-      setPopupMessage(status === 'late' ? `เข้างานสาย เวลา ${currentTime} น.` : `เข้างานเวลา ${currentTime} น.`);
+      setPopupMessage(message);
+      
     } else if (attendance.status === 'checked_in') {
+      // กฎการออกงาน - ต้องถึงเวลาออกงานก่อน
       if (isEarlyCheckout) {
-        setPopupInfoMessage(`ไม่สามารถออกงานก่อนเวลา ${schedule.time.split(' - ')[1]} น.`);
+        setPopupInfoMessage(`⏰ ยังไม่ถึงเวลาออกงาน\nเวลาออกงาน: ${schedule.time.split(' - ')[1]} น.`);
         setShowInfoPopup(true);
         return;
       }
+      
       checkOut(currentTime, photo);
       setPopupMessage(`ออกงานเวลา ${currentTime} น.`);
     }

@@ -363,15 +363,15 @@ function LeaveApproval() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-xl">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">วันที่เริ่มต้น</p>
-                    <p className="font-semibold text-gray-800">{leave.startDate}</p>
+                    <p className="font-semibold text-gray-800 whitespace-nowrap">{leave.startDate}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">วันที่สิ้นสุด</p>
-                    <p className="font-semibold text-gray-800">{leave.endDate}</p>
+                    <p className="font-semibold text-gray-800 whitespace-nowrap">{leave.endDate}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">จำนวนวัน</p>
-                    <p className="font-semibold text-gray-800">
+                    <p className="font-semibold text-gray-800 whitespace-nowrap">
                       {leave.leaveMode === 'hourly' 
                         ? leave.totalDays 
                         : `${leave.totalDays}`
@@ -390,15 +390,21 @@ function LeaveApproval() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleApprove(leave)}
-                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg"
+                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
-                    ✓ อนุมัติ
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    อนุมัติ
                   </button>
                   <button
                     onClick={() => handleReject(leave)}
-                    className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg"
+                    className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
-                    ✕ ไม่อนุมัติ
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    ไม่อนุมัติ
                   </button>
                 </div>
               </div>

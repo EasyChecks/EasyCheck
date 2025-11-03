@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
-import { getLegacyUserData } from '../../../data/usersData' // Updated: merged from userData.js
+import { useAuth } from '../../../contexts/useAuth'
 
 function Nav() {
-  const userData = getLegacyUserData(); // Get user data dynamically
+  const { user } = useAuth() // ใช้ user ที่ login ตอนนี้
   
   // ตรวจสอบว่าเป็น manager หรือไม่
-  const isManager = useMemo(() => userData.role === 'manager', [userData.role])
+  const isManager = useMemo(() => user?.role === 'manager', [user?.role])
 
   // รวมเมนูตามสิทธิ์
   const items = useMemo(() => {
