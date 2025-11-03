@@ -71,6 +71,24 @@ export const AttendanceStatsCard = ({ className = '' }) => {
               </span>
             </div>
           )}
+          {attendanceStats.totalShifts > 0 && (
+            <div className="flex justify-between items-center text-sm mt-2">
+              <span className="text-gray-600 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                กะทั้งหมด:
+              </span>
+              <span className="font-bold text-blue-600">
+                {attendanceStats.totalShifts} กะ
+                {attendanceStats.averageShiftsPerDay && attendanceStats.averageShiftsPerDay > 1 && (
+                  <span className="text-xs text-gray-500 ml-1">
+                    (เฉลี่ย {attendanceStats.averageShiftsPerDay} กะ/วัน)
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>
