@@ -6,7 +6,7 @@ import { useLoading } from '../../contexts/useLoading'
 import { useLocations } from '../../contexts/LocationContext'
 import { useLeave } from '../../contexts/LeaveContext'
 import { useEvents } from '../../contexts/EventContext'
-import { validateBuddy } from '../../data/usersData'
+import { validateBuddy, sampleSchedules } from '../../data/usersData'
 import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 import { useCamera } from '../../hooks/useCamera'
 import { config } from '../../config'
@@ -81,46 +81,65 @@ function UserDashboard() {
   // โหลดตารางงานทั้งหมดจาก localStorage
   const allSchedules = useMemo(() => {
     const savedSchedules = localStorage.getItem('attendanceSchedules')
-    if (savedSchedules) {
-      try {
-        const schedules = JSON.parse(savedSchedules)
-        
-        // กรองตารางตาม teams (แผนก/ตำแหน่ง)
-        const userSchedules = schedules.filter(schedule => {
-          // ถ้าไม่มี teams หรือ teams ว่าง = ทุกคนเห็น
-          if (!schedule.teams || schedule.teams.length === 0) {
-            return true
-          }
-          
-          // ตรวจสอบว่า department หรือ position ของ user ตรงกับ teams หรือไม่
-          return schedule.teams.some(team => 
-            team === user?.department || team === user?.position
+    
+    // ถ้าไม่มีใน localStorage ให้บันทึก sampleSchedules ลงไปก่อน
+    if (!savedSchedules) {
+      localStorage.setItem('attendanceSchedules', JSON.stringify(sampleSchedules))
+    }
+    
+    const schedules = savedSchedules ? JSON.parse(savedSchedules) : sampleSchedules
+    
+    try {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // ตั้งเวลาเป็นเที่ยงคืนเพื่อเปรียบเทียบวันที่
+      
+      // กรองตารางตาม teams (แผนก/ตำแหน่ง) และวันที่
+      const userSchedules = schedules.filter(schedule => {
+        // 1. ตรวจสอบ teams/departments ก่อน
+        // ถ้าไม่มี teams หรือ teams ว่าง = ทุกคนเห็น
+        const hasTeamAccess = !schedule.teams || schedule.teams.length === 0 || 
+          schedule.teams.some(team => 
+            team === user?.department || team === user?.position || team === user?.role
           )
-        })
         
-        // เพิ่ม time field ถ้าไม่มี
-        return userSchedules.map(schedule => ({
-          ...schedule,
-          time: schedule.time || `${schedule.startTime} - ${schedule.endTime}`
-        }))
-      } catch (error) {
-        console.error('Error loading schedules:', error)
-        return []
-      }
+        if (!hasTeamAccess) {
+          return false // ถ้าไม่มีสิทธิ์ตาม role ให้ตัดทิ้งเลย
+        }
+        
+        // 2. ตรวจสอบวันที่
+        // ถ้าไม่มี date (หรือ isPermanent = true) = แสดงตลอด
+        if (!schedule.date || schedule.isPermanent === true) {
+          return true
+        }
+        
+        // ถ้ามี dateEnd = ตารางรายสัปดาห์/ช่วงเวลา
+        if (schedule.dateEnd) {
+          const startDate = new Date(schedule.date)
+          const endDate = new Date(schedule.dateEnd)
+          startDate.setHours(0, 0, 0, 0)
+          endDate.setHours(23, 59, 59, 999)
+          
+          // แสดงถ้าวันนี้อยู่ในช่วง startDate ถึง endDate
+          return today >= startDate && today <= endDate
+        }
+        
+        // ถ้ามีแค่ date เดียว = ตารางวันเดียว
+        const scheduleDate = new Date(schedule.date)
+        scheduleDate.setHours(0, 0, 0, 0)
+        
+        // แสดงเฉพาะวันที่ตรงกับวันที่กำหนด
+        return today.getTime() === scheduleDate.getTime()
+      })
+      
+      // เพิ่ม time field ถ้าไม่มี
+      return userSchedules.map(schedule => ({
+        ...schedule,
+        time: schedule.time || `${schedule.startTime} - ${schedule.endTime}`
+      }))
+    } catch (error) {
+      console.error('Error loading schedules:', error)
+      return []
     }
-    
-    // ถ้าไม่มีตารางจาก localStorage ให้ใช้จาก user profile
-    if (user?.schedule) {
-      return [{
-        id: user.employeeId || 'user-schedule',
-        time: user.schedule,
-        location: user.workLocation || 'Office',
-        team: user.department || 'ทั่วไป',
-        date: new Date().toISOString().split('T')[0]
-      }]
-    }
-    
-    return []
   }, [user])
 
   // สร้างการแจ้งเตือนจากหลายแหล่ง

@@ -160,6 +160,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const { locations, addLocation } = useLocations()
   const [team, setTeam] = useState('')
   const [date, setDate] = useState('')
+  const [dateEnd, setDateEnd] = useState('')
   const [timeStart, setTimeStart] = useState('')
   const [timeEnd, setTimeEnd] = useState('')
   const [location, setLocation] = useState('')
@@ -225,6 +226,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     if (!initialData) return
     setTeam(initialData.team || '')
     setDate(initialData.date || '')
+    setDateEnd(initialData.dateEnd || '')
     // derive month (YYYY-MM) from date if available, or accept initialData.month
     if (initialData.month) setMonth(initialData.month)
     else if (initialData.date && initialData.date.length >= 7) setMonth(initialData.date.slice(0, 7))
@@ -273,6 +275,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   // refs to call native pickers where supported
   const monthRef = useRef(null)
   const dateRef = useRef(null)
+  const dateEndRef = useRef(null)
   const timeStartRef = useRef(null)
   const timeEndRef = useRef(null)
   const timeStartPickerRef = useRef(null)
@@ -309,9 +312,12 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
   // Filter locations based on search - useMemo เพื่อไม่ให้คำนวณซ้ำ
   const filteredLocations = useMemo(() => {
-    if (!searchLocation.trim()) return locations
+    // กรองเฉพาะพื้นที่ที่ active เท่านั้น
+    const activeLocations = locations.filter(loc => loc.status === 'active')
+    
+    if (!searchLocation.trim()) return activeLocations
     const search = searchLocation.toLowerCase()
-    return locations.filter(loc => 
+    return activeLocations.filter(loc => 
       loc.name.toLowerCase().includes(search) || 
       (loc.description && loc.description.toLowerCase().includes(search))
     )
@@ -591,7 +597,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       // Navigate to next field
       const fieldOrder = {
         team: dateRef,
-        date: timeStartRef,
+        date: dateEndRef,
+        dateEnd: timeStartRef,
         timeStart: timeEndRef,
         timeEnd: locationRef,
         location: membersRef,
@@ -610,7 +617,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         nextField.current.focus()
       }
     }
-  }, [timeStart, timeEnd, dateRef, timeStartRef, timeEndRef, locationRef, membersRef, preparationsRef, tasksRef, goalsRef])
+  }, [timeStart, timeEnd, dateRef, dateEndRef, timeStartRef, timeEndRef, locationRef, membersRef, preparationsRef, tasksRef, goalsRef])
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
@@ -624,12 +631,25 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       return
     }
     
-    if (!date.trim()) {
-      setErrorMessage('กรุณากรอกวันที่')
-      setShowErrorPopup(true)
-      setTimeout(() => setShowErrorPopup(false), 3000)
-      dateRef.current?.focus()
-      return
+    // วันที่ไม่บังคับ - ถ้าไม่มีจะเป็นงานแสดงตลอด
+    // if (!date.trim()) {
+    //   setErrorMessage('กรุณากรอกวันที่')
+    //   setShowErrorPopup(true)
+    //   setTimeout(() => setShowErrorPopup(false), 3000)
+    //   dateRef.current?.focus()
+    //   return
+    // }
+    
+    // ตรวจสอบว่าถ้ามีวันที่เริ่ม แต่มีวันที่สิ้นสุด ต้องตรวจสอบว่าวันที่สิ้นสุดไม่น้อยกว่าวันที่เริ่ม
+    if (date.trim() && dateEnd.trim()) {
+      const startDate = new Date(normalizeDate(date))
+      const endDate = new Date(normalizeDate(dateEnd))
+      if (endDate < startDate) {
+        setErrorMessage('วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มต้น')
+        setShowErrorPopup(true)
+        setTimeout(() => setShowErrorPopup(false), 3000)
+        return
+      }
     }
     
     if (!timeStart.trim()) {
@@ -660,12 +680,15 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     const nTimeStart = normalizeTime(timeStart)
     const nTimeEnd = normalizeTime(timeEnd)
     const timeStr = nTimeStart && nTimeEnd ? `${nTimeStart} - ${nTimeEnd}` : (nTimeStart || nTimeEnd || '')
-    const nDate = normalizeDate(date)
+    const nDate = date.trim() ? normalizeDate(date) : ''
+    const nDateEnd = dateEnd.trim() ? normalizeDate(dateEnd) : ''
+    
     const payload = {
       id: initialData?.id ?? Date.now(),
       team: team || 'ทีมใหม่',
       month: month || (nDate ? nDate.slice(0,7) : ''),
       date: nDate || '',
+      dateEnd: nDateEnd || '',
       time: timeStr,
       startTime: nTimeStart || '', // เพิ่มเวลาเริ่มแยก
       endTime: nTimeEnd || '',     // เพิ่มเวลาสิ้นสุดแยก
@@ -676,6 +699,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       tasks: tasks.split('\n').map(s => s.trim()).filter(Boolean),
       goals: goals.split('\n').map(s => s.trim()).filter(Boolean),
       teams: selectedTeams, // เพิ่มแผนก/ตำแหน่งที่จะเห็นตาราง
+      isPermanent: !nDate, // ถ้าไม่มีวันที่ = แสดงตลอด
     }
 
     if (onUpdate) {
@@ -683,53 +707,87 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     } else if (onCreate) {
       onCreate(payload)
     }
-  }, [team, date, timeStart, timeEnd, location, month, members, type, preparations, tasks, goals, selectedTeams, initialData, onUpdate, onCreate, teamRef, locationRef, timeStartRef, timeEndRef])
+  }, [team, date, dateEnd, timeStart, timeEnd, location, month, members, type, preparations, tasks, goals, selectedTeams, initialData, onUpdate, onCreate, teamRef, locationRef, timeStartRef, timeEndRef])
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-8 sm:pt-16 bg-black/60 backdrop-blur-md overflow-y-auto"
       style={{
         animation: 'fadeIn 0.3s ease-out forwards'
       }}
     >
       <div className="absolute inset-0" onClick={onClose} />
       <div 
-        className="relative w-[92%] max-w-4xl bg-white rounded-lg border-4 border-[#F26623] p-6 shadow-sm"
+        className="relative w-[95%] max-w-5xl bg-white rounded-2xl border-4 border-[#F26623] shadow-2xl my-8"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">จัดตารางการทำงาน</h2>
-        <p className="text-sm text-gray-600 mb-4">กรอกข้อมูลเพื่อสร้างตารางงานใหม่</p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#F26623] to-orange-500 px-6 py-5 rounded-t-xl border-b-4 border-orange-600">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">จัดตารางการทำงาน</h2>
+                <p className="text-sm text-orange-100 mt-0.5">กรอกข้อมูลเพื่อสร้างตารางงานใหม่</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-lg transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-auto pr-2">
+        {/* Form Content */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto">
+          {/* ชื่อทีม */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">
-              ชื่อทีม <span className="text-red-500">*</span>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+              </svg>
+              ชื่อทีม
+              <span className="text-red-500">*</span>
             </label>
             <input 
               ref={teamRef}
               value={team} 
               onChange={e => setTeam(e.target.value)} 
               onKeyDown={(e) => handleKeyDown(e, 'team')}
-              className="w-full border rounded px-3 py-2" 
-              placeholder="ทีม" 
+              className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none" 
+              placeholder="ระบุชื่อทีม เช่น ทีมพัฒนา" 
             />
           </div>
 
           {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ */}
           <div className="relative" ref={teamsDropdownRef}>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+              </svg>
               แผนก/ตำแหน่งที่จะเห็นตารางนี้ 
-              <span className="text-xs font-normal text-gray-500 ml-2">(ถ้าไม่เลือก = ทุกคนเห็น)</span>
+              <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
+                ไม่บังคับ
+              </span>
             </label>
             
             {/* Dropdown Button */}
             <button
               type="button"
               onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-orange-400 focus:border-brand-primary focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between"
+              className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 bg-white hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all flex items-center justify-between outline-none"
             >
               <span className="text-gray-700">
                 {selectedTeams.length === 0 
@@ -787,51 +845,142 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-700 mb-1">
-                วันที่ <span className="text-red-500">*</span>
-              </label>
-              <div className="relative w-full">
-                <button
-                  type="button"
-                  onClick={() => openNativePicker(dateRef)}
-                  aria-label="เปิดตัวเลือกวันที่"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {/* calendar icon */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                    <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                  </svg>
-                </button>
+          {/* ช่วงวันที่ทำงาน - ปรับ Layout ใหม่ */}
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-4">
+            <label className="flex items-center gap-2 text-base font-semibold text-gray-800 mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+              </svg>
+              ช่วงวันที่ทำงาน
+              <span className="text-xs font-normal text-gray-500 ml-auto bg-white px-2 py-1 rounded-full border border-orange-200">
+                ไม่บังคับ
+              </span>
+            </label>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                  วันที่เริ่มต้น
+                </label>
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={() => openNativePicker(dateRef)}
+                    aria-label="เปิดตัวเลือกวันที่เริ่ม"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-600 z-10 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
+                      <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
+                    </svg>
+                  </button>
 
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="YYYY-MM-DD or DD/MM/YYYY"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  onBlur={e => setDate(prev => normalizeDate(prev))}
-                  onKeyDown={(e) => handleKeyDown(e, 'date')}
-                  className="w-full border rounded px-3 py-2 pr-10"
-                  aria-label="วันที่ (พิมพ์หรือใช้ปุ่มเลือก)"
-                />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="YYYY-MM-DD"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    onBlur={e => setDate(prev => normalizeDate(prev))}
+                    onKeyDown={(e) => handleKeyDown(e, 'date')}
+                    className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none text-sm"
+                    aria-label="วันที่เริ่มต้น"
+                  />
 
-                {/* hidden native date picker for devices that support it */}
-                <input
-                  ref={dateRef}
-                  type="date"
-                  className="sr-only"
-                  onChange={e => setDate(e.target.value)}
-                />
+                  <input
+                    ref={dateRef}
+                    type="date"
+                    className="sr-only"
+                    onChange={e => setDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                  วันที่สิ้นสุด
+                </label>
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={() => openNativePicker(dateEndRef)}
+                    aria-label="เปิดตัวเลือกวันที่สิ้นสุด"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-600 z-10 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
+                      <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
+                    </svg>
+                  </button>
+
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="YYYY-MM-DD"
+                    value={dateEnd}
+                    onChange={e => setDateEnd(e.target.value)}
+                    onBlur={e => setDateEnd(prev => normalizeDate(prev))}
+                    onKeyDown={(e) => handleKeyDown(e, 'dateEnd')}
+                    className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none text-sm"
+                    aria-label="วันที่สิ้นสุด"
+                  />
+
+                  <input
+                    ref={dateEndRef}
+                    type="date"
+                    className="sr-only"
+                    onChange={e => setDateEnd(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
+            
+            {/* แสดงสถานะงาน */}
+            <div className="mt-3">
+              {!date.trim() && !dateEnd.trim() && (
+                <div className="flex items-center gap-2 text-sm text-green-700 bg-white px-3 py-2.5 rounded-lg border-2 border-green-200 shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">งานนี้จะแสดงตลอดไป (ไม่มีวันหมดอายุ)</span>
+                </div>
+              )}
+              {date.trim() && !dateEnd.trim() && (
+                <div className="flex items-center gap-2 text-sm text-blue-700 bg-white px-3 py-2.5 rounded-lg border-2 border-blue-200 shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">งานวันเดียว: {date}</span>
+                </div>
+              )}
+              {date.trim() && dateEnd.trim() && (
+                <div className="flex items-center gap-2 text-sm text-purple-700 bg-white px-3 py-2.5 rounded-lg border-2 border-purple-200 shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">งานรายสัปดาห์: {date} ถึง {dateEnd}</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2">
+          {/* เวลาทำงาน */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4">
+            <label className="flex items-center gap-2 text-base font-semibold text-gray-800 mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              เวลาทำงาน
+              <span className="text-red-500 text-sm">*</span>
+            </label>
+            
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  เวลาเริ่ม (24 ชม.) <span className="text-red-500">*</span>
+                <label className="text-xs font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                  เวลาเริ่ม (24 ชม.)
                 </label>
                 <div className="relative w-full" ref={timeStartPickerRef}>
                   <input
@@ -842,8 +991,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     onBlur={(e) => setTimeStart(prev => normalizeTime(prev))}
                     onFocus={() => setShowTimeStartPicker(true)}
                     onKeyDown={(e) => handleKeyDown(e, 'timeStart')}
-                    placeholder="เช่น 09:00"
-                    className="w-full border rounded px-3 py-2 pr-10 hover:border-orange-400 focus:border-brand-primary focus:outline-none transition-colors"
+                    placeholder="09:00"
+                    className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm"
                   />
                   
                   <button
@@ -852,7 +1001,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setShowTimeStartPicker(!showTimeStartPicker)
                       setShowTimeEndPicker(false)
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brand-primary transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-600 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -862,11 +1011,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                   {/* Custom Time Picker Dropdown */}
                   {showTimeStartPicker && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-orange-400 rounded-lg shadow-sm max-h-64 overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-blue-400 rounded-lg shadow-lg max-h-64 overflow-hidden">
                       <div className="flex">
                         {/* Hours Column */}
                         <div className="flex-1 border-r border-gray-200">
-                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -878,8 +1027,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentMinute = timeStart?.split(':')[1] || '00'
                                   handleTimeSelect(hour, currentMinute, true)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
-                                  timeStart?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeStart?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
                                 }`}
                               >
                                 {hour}
@@ -890,7 +1039,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         
                         {/* Minutes Column */}
                         <div className="flex-1">
-                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -902,8 +1051,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentHour = timeStart?.split(':')[0] || '00'
                                   handleTimeSelect(currentHour, minute, true)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
-                                  timeStart?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeStart?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
                                 }`}
                               >
                                 {minute}
@@ -918,8 +1067,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               </div>
 
               <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  เวลาสิ้นสุด (24 ชม.) <span className="text-red-500">*</span>
+                <label className="text-xs font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                  เวลาสิ้นสุด (24 ชม.)
                 </label>
                 <div className="relative w-full" ref={timeEndPickerRef}>
                   <input
@@ -930,8 +1080,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     onBlur={(e) => setTimeEnd(prev => normalizeTime(prev))}
                     onFocus={() => setShowTimeEndPicker(true)}
                     onKeyDown={(e) => handleKeyDown(e, 'timeEnd')}
-                    placeholder="เช่น 17:00"
-                    className="w-full border rounded px-3 py-2 pr-10 hover:border-orange-400 focus:border-brand-primary focus:outline-none transition-colors"
+                    placeholder="17:00"
+                    className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm"
                   />
                   
                   <button
@@ -940,7 +1090,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setShowTimeEndPicker(!showTimeEndPicker)
                       setShowTimeStartPicker(false)
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brand-primary transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-600 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -950,11 +1100,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                   {/* Custom Time Picker Dropdown */}
                   {showTimeEndPicker && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-orange-400 rounded-lg shadow-sm max-h-64 overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full bg-white border-2 border-blue-400 rounded-lg shadow-lg max-h-64 overflow-hidden">
                       <div className="flex">
                         {/* Hours Column */}
                         <div className="flex-1 border-r border-gray-200">
-                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -966,8 +1116,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentMinute = timeEnd?.split(':')[1] || '00'
                                   handleTimeSelect(hour, currentMinute, false)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
-                                  timeEnd?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeEnd?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
                                 }`}
                               >
                                 {hour}
@@ -978,7 +1128,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         
                         {/* Minutes Column */}
                         <div className="flex-1">
-                          <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          <div className="bg-blue-500 text-white text-center py-2 text-sm font-semibold">
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
@@ -990,8 +1140,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                                   const currentHour = timeEnd?.split(':')[0] || '00'
                                   handleTimeSelect(currentHour, minute, false)
                                 }}
-                                className={`w-full px-3 py-2 text-center hover:bg-orange-50 transition-colors ${
-                                  timeEnd?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
+                                  timeEnd?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
                                 }`}
                               >
                                 {minute}
@@ -1007,74 +1157,89 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">
-              สถานที่ <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={handleOpenMapModal}
-                aria-label="เปิดแผนที่เลือกสถานที่"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-primary hover:text-orange-700 z-10"
-              >
-                {/* Map icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-              </button>
-
-              <input 
-                ref={locationRef}
-                value={location} 
-                onChange={e => setLocation(e.target.value)} 
-                onKeyDown={(e) => handleKeyDown(e, 'location')}
-                className="w-full border rounded px-3 py-2 pr-12" 
-                placeholder="พิมพ์หรือเลือกจากแผนที่" 
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          {/* สถานที่และข้อมูลเพิ่มเติม */}
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">สมาชิก</label>
-              <input 
-                ref={membersRef}
-                value={members} 
-                onChange={e => setMembers(e.target.value)} 
-                onKeyDown={(e) => handleKeyDown(e, 'members')}
-                className="w-full border rounded px-3 py-2" 
-                placeholder="สมาชิก" 
-              />
-            </div>
-            <div className="relative" ref={typeDropdownRef}>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">ประเภทงาน</label>
-              
-              {/* Dropdown Button */}
-              <button
-                type="button"
-                onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 bg-white hover:border-orange-400 focus:border-brand-primary focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between"
-              >
-                <span className={type ? "text-gray-700" : "text-gray-400"}>
-                  {type || 'เลือกประเภทงาน...'}
-                </span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className={`h-5 w-5 text-gray-400 transition-transform ${showTypeDropdown ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-              </button>
+                สถานที่
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleOpenMapModal}
+                  aria-label="เปิดแผนที่เลือกสถานที่"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 hover:text-red-600 z-10 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </button>
 
-              {/* Dropdown Menu */}
-              {showTypeDropdown && (
-                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-hidden">
-                  {/* Existing Types */}
-                  <div className="max-h-48 overflow-y-auto">
+                <input 
+                  ref={locationRef}
+                  value={location} 
+                  onChange={e => setLocation(e.target.value)} 
+                  onKeyDown={(e) => handleKeyDown(e, 'location')}
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 pr-12 hover:border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all outline-none" 
+                  placeholder="พิมพ์หรือเลือกจากแผนที่" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                  </svg>
+                  สมาชิก
+                </label>
+                <input 
+                  ref={membersRef}
+                  value={members} 
+                  onChange={e => setMembers(e.target.value)} 
+                  onKeyDown={(e) => handleKeyDown(e, 'members')}
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none" 
+                  placeholder="ระบุชื่อสมาชิก" 
+                />
+              </div>
+              <div className="relative" ref={typeDropdownRef}>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                  ประเภทงาน
+                </label>
+                
+                {/* Dropdown Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 bg-white hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all flex items-center justify-between outline-none"
+                >
+                  <span className={type ? "text-gray-700" : "text-gray-400"}>
+                    {type || 'เลือกประเภทงาน...'}
+                  </span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-5 w-5 text-gray-400 transition-transform ${showTypeDropdown ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showTypeDropdown && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                    {/* Existing Types */}
+                    <div className="max-h-48 overflow-y-auto">
                     {workTypes.map((workType) => (
                       <button
                         key={workType}
@@ -1160,58 +1325,82 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               )}
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">สิ่งที่ต้องเตรียม (แต่ละบรรทัดคือรายการ)</label>
-            <textarea 
-              ref={preparationsRef}
-              value={preparations} 
-              onChange={e => setPreparations(e.target.value)} 
-              onKeyDown={(e) => handleKeyDown(e, 'preparations')}
-              className="w-full border rounded px-3 py-2" 
-              rows={3} 
-              placeholder="รายการเตรียม" 
-            />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">ภารกิจหลัก (แต่ละบรรทัดคือภารกิจ)</label>
-            <textarea 
-              ref={tasksRef}
-              value={tasks} 
-              onChange={e => setTasks(e.target.value)} 
-              onKeyDown={(e) => handleKeyDown(e, 'tasks')}
-              className="w-full border rounded px-3 py-2" 
-              rows={3} 
-              placeholder="ภารกิจ" 
-            />
+          {/* ข้อมูลเพิ่มเติม - กรอกรายละเอียด */}
+          <div className="bg-gradient-to-br from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl p-4 space-y-4">
+            <label className="flex items-center gap-2 text-base font-semibold text-gray-800">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+              </svg>
+              รายละเอียดงาน
+            </label>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                สิ่งที่ต้องเตรียม <span className="text-xs text-gray-500">(แต่ละบรรทัดคือรายการ)</span>
+              </label>
+              <textarea 
+                ref={preparationsRef}
+                value={preparations} 
+                onChange={e => setPreparations(e.target.value)} 
+                onKeyDown={(e) => handleKeyDown(e, 'preparations')}
+                className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none resize-none" 
+                rows={3} 
+                placeholder="เช่น: โน๊ตบุ๊ค, เอกสาร, อุปกรณ์" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                ภารกิจหลัก <span className="text-xs text-gray-500">(แต่ละบรรทัดคือภารกิจ)</span>
+              </label>
+              <textarea 
+                ref={tasksRef}
+                value={tasks} 
+                onChange={e => setTasks(e.target.value)} 
+                onKeyDown={(e) => handleKeyDown(e, 'tasks')}
+                className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none resize-none" 
+                rows={3} 
+                placeholder="เช่น: ประชุมทีม, จัดทำรายงาน" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                เป้าหมาย <span className="text-xs text-gray-500">(แต่ละบรรทัด)</span>
+              </label>
+              <textarea 
+                ref={goalsRef}
+                value={goals} 
+                onChange={e => setGoals(e.target.value)} 
+                onKeyDown={(e) => handleKeyDown(e, 'goals')}
+                className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none resize-none" 
+                rows={2} 
+                placeholder="เช่น: เสร็จทันเวลา, คุณภาพงานดี" 
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">เป้าหมาย (แต่ละบรรทัด)</label>
-            <textarea 
-              ref={goalsRef}
-              value={goals} 
-              onChange={e => setGoals(e.target.value)} 
-              onKeyDown={(e) => handleKeyDown(e, 'goals')}
-              className="w-full border rounded px-3 py-2" 
-              rows={2} 
-              placeholder="เป้าหมาย" 
-            />
-          </div>
-
-          <div className="flex items-center gap-3 pt-2 flex-wrap">
+          {/* ปุ่มบันทึก */}
+          <div className="flex items-center gap-3 pt-4 border-t-2 border-gray-200">
             <button 
               type="submit" 
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-[#F26623] to-[#F26623] text-white rounded-full shadow-sm hover:shadow-sm[#F26623][#F26623] transition-all duration-200 font-medium text-sm"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#F26623] to-orange-500 text-white rounded-xl shadow-md hover:shadow-lg hover:from-orange-600 hover:to-[#F26623] transition-all duration-200 font-semibold text-sm"
             >
-              บันทึก
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              บันทึกตาราง
             </button>
             <button 
               type="button" 
               onClick={onClose} 
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-sm"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold text-sm"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
               ยกเลิก
             </button>
           </div>
@@ -1422,20 +1611,32 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                           <button
                             key={loc.id}
                             onClick={() => handleSelectLocation(loc.name)}
-                            className="w-full text-left bg-white border-2 border-gray-200 hover:border-orange-400 rounded-lg p-4 transition-all hover:shadow-sm"
+                            className="w-full text-left bg-white border-2 border-gray-200 hover:border-green-400 rounded-lg p-4 transition-all hover:shadow-md group"
                           >
                             <div className="flex items-start gap-3">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-brand-primary flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                              </svg>
+                              <div className="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                              </div>
                               <div className="flex-1">
-                                <div className="font-semibold text-gray-800">{loc.name}</div>
+                                <div className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors">{loc.name}</div>
                                 {loc.description && (
                                   <div className="text-sm text-gray-500 mt-1">{loc.description}</div>
                                 )}
-                                <div className="text-xs text-gray-400 mt-2">
-                                  รัศมี: {loc.radius} เมตร
+                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                                  <span className="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                    </svg>
+                                    รัศมี: {loc.radius} เมตร
+                                  </span>
                                 </div>
+                              </div>
+                              <div className="text-green-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                </svg>
                               </div>
                             </div>
                           </button>
