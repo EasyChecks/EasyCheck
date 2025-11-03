@@ -1088,11 +1088,14 @@ export const sampleSchedules = [
   {
     id: 1,
     team: 'ทีม A : งานติดตั้ง',
-    date: '32/10/2568',
+    date: null, // ไม่มีวันที่ = แสดงตลอด
+    isPermanent: true, // ตารางถาวร
     location: 'โบเทค บางนา Hall 101',
     members: 'อภิสิทธิ์, พรหมพิริยะ, ธนกร',
     type: 'ติดตั้งระบบไฟฟ้า',
     time: '07.00 - 15.00',
+    startTime: '07:00',
+    endTime: '15:00',
     teams: ['IT', 'Engineering'], // แผนก IT และ Engineering เท่านั้น
     tasks: [
       'เช็คระบบสายไฟ และติดตั้งตัวควบคุม',
@@ -1111,11 +1114,14 @@ export const sampleSchedules = [
   {
     id: 2,
     team: 'ทีม B : งานอีเว้นท์',
-    date: '2/1/2568',
+    date: null, // ไม่มีวันที่ = แสดงตลอด
+    isPermanent: true, // ตารางถาวร
     location: 'CentralWorld ชั้น 3',
     members: 'ฤทธิ์ชัย วรกานต์',
     type: 'ออกบูธงาน',
     time: '10.00 - 22.00',
+    startTime: '10:00',
+    endTime: '22:00',
     teams: ['Marketing', 'Sales'], // แผนก Marketing และ Sales เท่านั้น
     tasks: [
       'ติดตั้งบูธและอุปกรณ์สาธิต',
@@ -1131,11 +1137,14 @@ export const sampleSchedules = [
   {
     id: 3,
     team: 'ทีม C : งาน HR',
-    date: '2/1/2568',
+    date: null, // ไม่มีวันที่ = แสดงตลอด
+    isPermanent: true, // ตารางถาวร
     location: 'สำนักงานใหญ่ ชั้น 5',
     members: 'สมชาย, สมหญิง',
     type: 'สัมภาษณ์พนักงานใหม่',
     time: '09.00 - 17.00',
+    startTime: '09:00',
+    endTime: '17:00',
     teams: ['HR'], // แผนก HR เท่านั้น
     tasks: [
       'เตรียมห้องสัมภาษณ์และเอกสาร',
