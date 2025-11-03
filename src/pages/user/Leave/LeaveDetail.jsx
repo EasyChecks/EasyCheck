@@ -189,7 +189,7 @@ function LeaveDetail() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>ยกเลิกการลา</span>
+                        <span>{isLateArrival ? 'ยกเลิกการขอเข้าสาย' : 'ยกเลิกการลา'}</span>
                     </button>
                 </div>
             )}
@@ -199,8 +199,8 @@ function LeaveDetail() {
                 isOpen={showCancelConfirm}
                 onClose={() => setShowCancelConfirm(false)}
                 onConfirm={handleCancelLeave}
-                title="ยกเลิกการลา"
-                message="คุณต้องการยกเลิกการลานี้หรือไม่?"
+                title={isLateArrival ? 'ยกเลิกการขอเข้าสาย' : 'ยกเลิกการลา'}
+                message={isLateArrival ? 'คุณต้องการยกเลิกการขอเข้างานสายนี้หรือไม่?' : 'คุณต้องการยกเลิกการลานี้หรือไม่?'}
                 confirmText="ตกลง"
                 cancelText="ยกเลิก"
                 type="danger"
@@ -211,7 +211,7 @@ function LeaveDetail() {
                 isOpen={showSuccess}
                 onClose={() => setShowSuccess(false)}
                 title="สำเร็จ!"
-                message="ยกเลิกการลาเรียบร้อยแล้ว"
+                message={isLateArrival ? 'ยกเลิกการขอเข้างานสายเรียบร้อยแล้ว' : 'ยกเลิกการลาเรียบร้อยแล้ว'}
                 autoClose={true}
                 autoCloseDelay={2000}
             />
