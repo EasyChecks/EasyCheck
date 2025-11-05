@@ -55,15 +55,31 @@ export const AuthProvider = ({ children }) => {
             setAttendanceRecords([])
           }
           
-          // 🔥 โหลด attendance state ของ user นี้ (สถานะเข้า/ออกงานวันนี้)
+          // 🔥 โหลด attendance state ของ user นี้และตรวจสอบว่าเป็นวันนี้หรือไม่
           const userAttendanceStateKey = `attendance_user_${userData.id}_${tabId}`
           const savedAttendanceState = localStorage.getItem(userAttendanceStateKey)
           
           if (savedAttendanceState) {
-            setAttendance(JSON.parse(savedAttendanceState))
-            console.log(`📥 โหลด attendance state: ${userAttendanceStateKey}`)
+            const savedState = JSON.parse(savedAttendanceState)
+            const today = new Date().toISOString().split('T')[0]
+            
+            // 🔥 เช็คว่า attendance state นี้เป็นของวันนี้หรือไม่
+            const stateDate = localStorage.getItem(`${userAttendanceStateKey}_date`)
+            
+            if (stateDate === today) {
+              // เป็นวันนี้ - ใช้ state ที่บันทึกไว้
+              setAttendance(savedState)
+              console.log(`📥 โหลด attendance state วันนี้: ${userAttendanceStateKey}`, savedState.status)
+            } else {
+              // เป็นวันอื่น - รีเซ็ตเป็นยังไม่เข้างาน
+              setAttendance({ status: 'not_checked_in' })
+              localStorage.setItem(`${userAttendanceStateKey}_date`, today)
+              console.log(`🔄 รีเซ็ต attendance state (วันใหม่)`)
+            }
           } else {
+            const today = new Date().toISOString().split('T')[0]
             setAttendance({ status: 'not_checked_in' })
+            localStorage.setItem(`${userAttendanceStateKey}_date`, today)
           }
         } catch {
           localStorage.removeItem(`user_${tabId}`)
@@ -89,6 +105,7 @@ export const AuthProvider = ({ children }) => {
           setAttendanceRecords(records)
           const stats = calculateAttendanceStats(records)
           setAttendanceStats(stats)
+          console.log('✅ AttendanceRecords อัพเดต:', records.length, 'records')
         }
       } else if (e.key === 'usersData') {
         if (e.newValue && user) {
@@ -116,9 +133,31 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
+    // 🔥 เพิ่ม interval ตรวจสอบทุก 2 วินาที (สำหรับ same-tab updates)
+    const interval = setInterval(() => {
+      if (user) {
+        const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
+        const savedRecords = localStorage.getItem(userAttendanceKey)
+        
+        if (savedRecords) {
+          const records = JSON.parse(savedRecords)
+          // เปรียบเทียบว่าข้อมูลเปลี่ยนหรือไม่
+          if (JSON.stringify(records) !== JSON.stringify(attendanceRecords)) {
+            setAttendanceRecords(records)
+            const stats = calculateAttendanceStats(records)
+            setAttendanceStats(stats)
+            console.log('🔄 Auto-sync: อัพเดตข้อมูล attendance')
+          }
+        }
+      }
+    }, 2000)
+
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [user, tabId])
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [user, tabId, attendanceRecords])
 
   const login = (userData) => {
     setUser(userData)
@@ -161,7 +200,9 @@ export const AuthProvider = ({ children }) => {
       // อัพเดตข้อมูล time และ attendanceStatus
       if (checkInTime) {
         users[userIndex].time = checkInTime
-        users[userIndex].attendanceStatus = status === 'late' ? 'เข้าทำงานสาย' : 'เข้าทำงานตรงเวลา'
+        users[userIndex].attendanceStatus = status === 'late' ? 'เข้าทำงานสาย' : 
+                                           status === 'absent' ? 'ขาดงาน' : 
+                                           'เข้าทำงานตรงเวลา'
       }
       
       // อัพเดต attendanceRecords
@@ -175,7 +216,7 @@ export const AuthProvider = ({ children }) => {
         date: todayStr,
         checkIn: checkInTime ? {
           time: checkInTime,
-          status: status === 'late' ? 'มาสาย' : 'ตรงเวลา',
+          status: status === 'late' ? 'มาสาย' : status === 'absent' ? 'ขาด' : 'ตรงเวลา',
           location: 'อยู่ในพื้นที่',
           photo: checkInPhoto || users[userIndex].profileImage,
           gps: '13.7563,100.5018',
@@ -258,6 +299,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   const checkIn = (time, photo, status = 'on_time') => {
+    const today = new Date().toISOString().split('T')[0]
+    
     const newAttendance = {
       checkInTime: time,
       checkOutTime: null,
@@ -267,11 +310,12 @@ export const AuthProvider = ({ children }) => {
     }
     setAttendance(newAttendance)
     
-    // 🔥 บันทึก attendance แยกตาม user (ไม่ใช้ tabId อย่างเดียว)
+    // 🔥 บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
     if (user) {
       const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
       localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
-      console.log(`✅ Check-in บันทึก: ${userAttendanceKey}`)
+      localStorage.setItem(`${userAttendanceKey}_date`, today) // 🆕 บันทึกวันที่
+      console.log(`✅ Check-in บันทึก: ${userAttendanceKey} (${today})`)
     }
     
     // ✅ อัพเดตข้อมูลใน usersData.js ทันที
@@ -344,7 +388,14 @@ export const AuthProvider = ({ children }) => {
     setAttendanceStats(stats)
     
     setAttendance(newAttendance)
-    localStorage.setItem(`attendance_${tabId}`, JSON.stringify(newAttendance))
+    
+    // 🔥 รีเซ็ต attendance state หลัง checkout (เพื่อให้วันพรุ่งนี้เริ่มใหม่)
+    if (user) {
+      const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
+      localStorage.removeItem(userAttendanceKey) // ลบ state เพราะออกงานแล้ว
+      localStorage.removeItem(`${userAttendanceKey}_date`) // ลบวันที่ด้วย
+      console.log(`🔄 รีเซ็ต attendance state หลัง checkout`)
+    }
     
     // ✅ อัพเดตข้อมูลใน usersData.js ทันที
     updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status)

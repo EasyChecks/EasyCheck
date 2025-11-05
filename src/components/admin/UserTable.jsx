@@ -14,59 +14,76 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
     return new Date().toISOString().split('T')[0];
   });
 
-  // ฟังก์ชันดึงข้อมูลการเข้างานจริงจาก localStorage
+  // ฟังก์ชันดึงข้อมูลการเข้างานจริงจาก usersData
   // Parameters:
   //   - userId: รหัสพนักงาน
   //   - userName: ชื่อพนักงาน
-  //   - date: วันที่ที่ต้องการดูข้อมูล (YYYY-MM-DD)
+  //   - date: วันที่ที่ต้องการดูข้อมูล (DD/MM/YYYY+543 - รูปแบบไทย)
   // Returns: Object ที่มีข้อมูล checkIn และ checkOut หรือ null ถ้าไม่มีข้อมูล
   const getAttendanceData = useMemo(() => {
     return (userId, userName, date) => {
       try {
-        // ดึงข้อมูลจาก localStorage ตาม key pattern ของระบบ
-        const userKey = `attendanceRecords_user_${userId}_${userName}`;
-        const recordsJson = localStorage.getItem(userKey);
+        // แปลงวันที่จาก YYYY-MM-DD เป็นรูปแบบไทย DD/MM/YYYY+543
+        const [year, month, day] = date.split('-');
+        const thaiYear = parseInt(year) + 543;
+        const thaiDate = `${day}/${month}/${thaiYear}`;
         
-        if (!recordsJson) {
-          console.log(`ไม่พบข้อมูลการเข้างานสำหรับ ${userName} (${userId})`);
+        console.log(`🔍 ค้นหาข้อมูล: userId=${userId}, date=${date} → ${thaiDate}`);
+        
+        // ดึงข้อมูลจาก usersData แทน attendanceRecords
+        const usersDataJson = localStorage.getItem('usersData');
+        
+        if (!usersDataJson) {
+          console.log(`❌ ไม่พบ usersData ใน localStorage`);
           return null;
         }
         
-        const records = JSON.parse(recordsJson);
+        const usersData = JSON.parse(usersDataJson);
+        const userData = usersData.find(u => u.id === userId);
+        
+        if (!userData || !userData.attendanceRecords) {
+          console.log(`❌ ไม่พบข้อมูลผู้ใช้ ${userName} (${userId})`);
+          return null;
+        }
         
         // หาข้อมูลของวันที่ต้องการ
-        const record = records.find(r => r.date === date);
+        const record = userData.attendanceRecords.find(r => r.date === thaiDate);
         
         if (!record) {
-          console.log(`ไม่พบข้อมูลวันที่ ${date} สำหรับ ${userName}`);
+          console.log(`❌ ไม่พบข้อมูลวันที่ ${thaiDate} สำหรับ ${userName}`);
           return null;
         }
         
         // ตรวจสอบว่ามีข้อมูล checkIn หรือไม่
-        if (!record.checkInTime) {
+        if (!record.checkIn || !record.checkIn.time) {
+          console.log(`❌ ไม่มีข้อมูล checkIn ในวันที่ ${thaiDate}`);
           return null;
         }
+        
+        console.log(`✅ พบข้อมูล:`, record);
         
         // สร้างข้อมูลในรูปแบบที่ UI ต้องการ
         return {
           checkIn: {
-            time: record.checkInTime || '-',
-            gpsStatus: record.checkInGPS ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
-            distance: record.checkInDistance || 'ไม่ทราบ',
-            location: record.checkInLocation || 'ไม่มีข้อมูล',
-            photo: record.checkInPhoto || null,
-            status: record.status || 'on_time'
+            time: record.checkIn.time || '-',
+            gpsStatus: record.checkIn.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
+            distance: record.checkIn.distance || 'ไม่ทราบ',
+            location: record.checkIn.address || record.checkIn.location || 'ไม่มีข้อมูล',
+            photo: record.checkIn.photo || null,
+            status: record.checkIn.status === 'ตรงเวลา' ? 'on_time' : 
+                   record.checkIn.status === 'มาสาย' ? 'late' : 
+                   record.checkIn.status === 'ขาด' ? 'absent' : 'on_time'
           },
-          checkOut: record.checkOutTime ? {
-            time: record.checkOutTime || '-',
-            gpsStatus: record.checkOutGPS ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
-            distance: record.checkOutDistance || 'ไม่ทราบ',
-            location: record.checkOutLocation || 'ไม่มีข้อมูล',
-            photo: record.checkOutPhoto || null
+          checkOut: record.checkOut ? {
+            time: record.checkOut.time || '-',
+            gpsStatus: record.checkOut.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
+            distance: record.checkOut.distance || 'ไม่ทราบ',
+            location: record.checkOut.address || record.checkOut.location || 'ไม่มีข้อมูล',
+            photo: record.checkOut.photo || null
           } : null
         };
       } catch (error) {
-        console.error('Error loading attendance data:', error);
+        console.error('❌ Error loading attendance data:', error);
         return null;
       }
     };
@@ -100,6 +117,9 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                 ชื่อ-นามสกุล
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                รหัสพนักงาน
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                 แผนก
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -107,9 +127,6 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                 สถานะ
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                รหัสพนักงาน
               </th>
               <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                 จัดการ
@@ -156,10 +173,13 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{user.department}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{user.employeeId}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user.role}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user.department}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {user.role}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -168,9 +188,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                         {user.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {user.phone}
-                    </td>
+                    
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() => onSelectUser(user)}

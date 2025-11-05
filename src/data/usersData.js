@@ -782,17 +782,17 @@ export const mockReports = [
   {
     id: 1,
     title: 'รายงาน',
-    subtitle: 'ข้อมูลแบบวันต่อวัน',
+    subtitle: 'ข้อมูลรายเดือน',
     description: 'ดาวน์โหลดข้อมูล',
     color: 'from-brand-primary to-orange-600'
   },
-  {
-    id: 2,
-    title: 'รายงาน2',
-    subtitle: 'ข้อมูลแบบเดือน',
-    description: 'ดาวน์โหลดข้อมูล',
-    color: 'from-brand-primary to-orange-600'
-  }
+  // {
+  //   id: 2,
+  //   title: 'รายงาน2',
+  //   subtitle: 'ข้อมูลแบบเดือน',
+  //   description: 'ดาวน์โหลดข้อมูล',
+  //   color: 'from-brand-primary to-orange-600'
+  // }
 ];
 
 // ============================================
@@ -1286,15 +1286,12 @@ export const mockLoginAPI = async (username, password) => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // Normalize username to uppercase for employee ID format
-  const normalizedUsername = username.toUpperCase();
-  
   // 1. ลองหา user จาก usersData เดิมก่อน (getUserForAuth จะดู localStorage อยู่แล้ว)
-  let user = getUserForAuth(normalizedUsername);
+  let user = getUserForAuth(username);
   
   // 🔍 Debug: ตรวจสอบ role ที่ได้จาก getUserForAuth
   if (user) {
-    console.log(`🔐 Login: ${normalizedUsername}`, {
+    console.log(`🔐 Login: ${username}`, {
       name: user.name,
       role: user.role,
       isAdminAccount: user.isAdminAccount || false
@@ -1306,15 +1303,15 @@ export const mockLoginAPI = async (username, password) => {
     try {
       const storedUsers = JSON.parse(localStorage.getItem('usersData') || '[]');
       user = storedUsers.find(u => 
-        u.username?.toUpperCase() === normalizedUsername || 
-        u.employeeId?.toUpperCase() === normalizedUsername ||
-        u.adminAccount?.toUpperCase() === normalizedUsername
+        u.username === username || 
+        u.employeeId === username ||
+        u.adminAccount === username
       );
       
       // ถ้าเจอ user ใหม่จาก localStorage ต้องจัดรูปแบบให้ตรงกับ getUserForAuth
       if (user) {
         // ถ้า login ด้วย admin account
-        if (normalizedUsername === user.adminAccount?.toUpperCase()) {
+        if (username === user.adminAccount) {
           user = {
             ...user,
             username: user.adminAccount,
@@ -1331,8 +1328,7 @@ export const mockLoginAPI = async (username, password) => {
   if (user) {
     // ดึงรหัสผ่านจาก localStorage
     const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
-    const correctPassword = storedPasswords[normalizedUsername.toLowerCase()] || 
-                           storedPasswords[username.toLowerCase()] ||
+    const correctPassword = storedPasswords[username.toLowerCase()] || 
                            user.password;
     
     if (password === correctPassword) {
