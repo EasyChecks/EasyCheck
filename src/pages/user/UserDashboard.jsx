@@ -145,9 +145,9 @@ function UserDashboard() {
           setCheckingLocation(false)
         },
         (error) => {
-          console.warn('Location error:', error)
+          console.warn('Location error:', error.message)
           setCheckingLocation(false)
-          // ในกรณี error ให้อนุญาตใช้งานได้ (เพื่อไม่ให้บล็อกการใช้งาน)
+          // ✅ ไม่แสดง error ให้ user เห็น แต่อนุญาตใช้งานได้
           setIsWithinAllowedArea(true)
         },
         {
@@ -157,7 +157,7 @@ function UserDashboard() {
         }
       )
       
-      // จากนั้นใช้ watchPosition สำหรับอัปเดตต่อเนื่อง
+      // จากนั้นใช้ watchPosition สำหรับอัปเดตต่อเนื่อง (ไม่บังคับ)
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const userLat = position.coords.latitude
@@ -181,7 +181,8 @@ function UserDashboard() {
           setIsWithinAllowedArea(isInside)
         },
         (error) => {
-          console.warn('Location watch error:', error)
+          // Silent - ไม่แสดง error
+          console.warn('Location watch error:', error.message)
         },
         {
           enableHighAccuracy: false,
@@ -205,6 +206,24 @@ function UserDashboard() {
   useEffect(() => {
     hideLoading()
   }, [hideLoading])
+
+  // ✅ บังคับให้โหลดข้อมูล attendance ใหม่เมื่อ component mount หรือ user เปลี่ยน
+  useEffect(() => {
+    if (user) {
+      // Trigger storage event เพื่อให้ AuthProvider โหลดข้อมูลใหม่
+      const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
+      const savedRecords = localStorage.getItem(userAttendanceKey)
+      
+      if (savedRecords) {
+        // Dispatch storage event เพื่อให้ context อัพเดต
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: userAttendanceKey,
+          newValue: savedRecords,
+          url: window.location.href
+        }))
+      }
+    }
+  }, [user])
 
   // ✅ ฟังการเปลี่ยนแปลงของ attendance แบบ real-time
   useEffect(() => {

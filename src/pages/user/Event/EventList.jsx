@@ -16,7 +16,7 @@ const EventCard = React.memo(({ event }) => (
         <p className="text-white/90 text-sm mb-4">{event.description}</p>
       </div>
 
-      <div className="p-6 bg-gray-50">
+      <div className="p-6 bg-white">
         <div className="flex items-start space-x-3 mb-3">
           <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,8 +105,8 @@ function EventList() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+      <div className="flex flex-col gap-6">
+        <div className="bg-white rounded-2xl shadow-md p-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">รายการกิจกรรม</h1>
           <p className="text-gray-600">กิจกรรมและอีเวนท์ที่เกี่ยวข้องกับแผนก {userDepartment} {userPosition && `- ${userPosition}`}</p>
           {sortedEvents.length > 0 && (

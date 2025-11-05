@@ -25,15 +25,29 @@ function TakePhoto() {
   const streamRef = useRef(null);
 
   useEffect(() => {
+    // แปลง "07.00 - 15.00" หรือ "07:00 - 15:00" ให้เป็นเวลาที่ใช้งานได้
     const [startTimeStr, endTimeStr] = schedule.time.split(' - ');
     const now = new Date();
+    
+    // แปลง "07.00" เป็น "07:00" (รองรับทั้งจุดและโคลอน)
+    const normalizeTime = (timeStr) => timeStr.replace('.', ':');
+    
     const startTime = new Date(now);
-    const [startHour, startMinute] = startTimeStr.split(':');
-    startTime.setHours(startHour, startMinute, 0, 0);
+    const [startHour, startMinute] = normalizeTime(startTimeStr).split(':');
+    startTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+    
     const endTime = new Date(now);
-    const [endHour, endMinute] = endTimeStr.split(':');
-    endTime.setHours(endHour, endMinute, 0, 0);
+    const [endHour, endMinute] = normalizeTime(endTimeStr).split(':');
+    endTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
+    
     setScheduleTimes({ start: startTime, end: endTime });
+    
+    console.log('⏰ Schedule Times:', {
+      schedule: schedule.time,
+      start: startTime.toLocaleTimeString('th-TH'),
+      end: endTime.toLocaleTimeString('th-TH'),
+      now: now.toLocaleTimeString('th-TH')
+    });
 
     if (attendance.status === 'checked_in' && now < endTime) {
       setIsEarlyCheckout(true);
@@ -107,13 +121,56 @@ function TakePhoto() {
     const now = new Date();
     const currentTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
     
+    console.log('🔍 Confirm Photo Debug:', {
+      now: now.toLocaleTimeString('th-TH'),
+      currentTime,
+      scheduleStart: scheduleTimes.start?.toLocaleTimeString('th-TH'),
+      scheduleEnd: scheduleTimes.end?.toLocaleTimeString('th-TH'),
+      attendanceStatus: attendance.status
+    });
+    
+    // 🔥 เช็คว่าอยู่นอกช่วงเวลาตารางหรือไม่
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    
+    if (scheduleTimes.start && scheduleTimes.end) {
+      const startTimeInMinutes = scheduleTimes.start.getHours() * 60 + scheduleTimes.start.getMinutes();
+      const endTimeInMinutes = scheduleTimes.end.getHours() * 60 + scheduleTimes.end.getMinutes();
+      const bufferAfterEndMinutes = 30; // หลังเลิกงานได้อีก 30 นาที
+      
+      console.log('⏰ Time Check:', {
+        currentMinutes: currentTimeInMinutes,
+        startMinutes: startTimeInMinutes,
+        endMinutes: endTimeInMinutes,
+        endWithBuffer: endTimeInMinutes + bufferAfterEndMinutes,
+        diff: currentTimeInMinutes - startTimeInMinutes
+      });
+      
+      // ถ้าเลยเวลาตาราง + buffer แล้ว (หลัง end time + 30 นาที)
+      if (currentTimeInMinutes > (endTimeInMinutes + bufferAfterEndMinutes)) {
+        const scheduleEndTime = schedule.time.split(' - ')[1];
+        setPopupInfoMessage(`❌ ไม่สามารถเข้า/ออกงานได้\nเลยเวลาที่กำหนด (หลัง ${scheduleEndTime} น. + 30 นาที)\nกรุณาติดต่อผู้จัดการ`);
+        setShowInfoPopup(true);
+        return;
+      }
+      
+      // ถ้ายังไม่ถึงเวลาเริ่มงาน (ก่อน start time มากกว่า 1 ชั่วโมง)
+      if (currentTimeInMinutes < (startTimeInMinutes - 60)) {
+        const scheduleStartTime = schedule.time.split(' - ')[0];
+        setPopupInfoMessage(`⏰ ยังไม่ถึงเวลาเริ่มงาน\nเวลาเริ่มงาน: ${scheduleStartTime} น.`);
+        setShowInfoPopup(true);
+        return;
+      }
+    }
+    
     if (attendance.status === 'not_checked_in') {
       // กฎการเข้างาน
       let status = 'on_time'; // ค่าเริ่มต้น
       let message = `เข้างานตรงเวลา ${currentTime} น.`;
       
       if (scheduleTimes.start) {
-        const lateThresholdMinutes = 30; // สายได้ไม่เกิน 30 นาที (สามารถปรับได้ในหน้า attendance)
+        const lateThresholdMinutes = 30; // สายได้ไม่เกิน 30 นาที
         const timeDiffMs = now - scheduleTimes.start;
         const timeDiffMinutes = Math.floor(timeDiffMs / (1000 * 60));
         
@@ -121,14 +178,14 @@ function TakePhoto() {
           // เข้าก่อนเวลา = ตรงเวลา
           status = 'on_time';
           message = `เข้างานตรงเวลา ${currentTime} น.`;
-        } else if (timeDiffMinutes <= lateThresholdMinutes) {
-          // สายไม่เกิน 30 นาที = สาย (ปรับได้ในหน้า attendance)
+        } else if (timeDiffMinutes > 0 && timeDiffMinutes <= lateThresholdMinutes) {
+          // สายไม่เกิน 30 นาที = สาย
           status = 'late';
           message = `เข้างานสาย ${timeDiffMinutes} นาที (${currentTime} น.)`;
-        } else {
-          // สายเกิน 30 นาที = ขาด
+        } else if (timeDiffMinutes > lateThresholdMinutes) {
+          // 🔥 สายเกิน 30 นาที = ขาดงาน
           status = 'absent';
-          message = `ขาดงาน - เข้างานสายเกิน ${timeDiffMinutes} นาที (${currentTime} น.)`;
+          message = `❌ ขาดงาน - เข้างานสายเกิน ${timeDiffMinutes} นาที (${currentTime} น.)`;
         }
       }
       
@@ -215,8 +272,11 @@ function TakePhoto() {
               
               {/* Badge แสดงขนาดไฟล์ */}
               {imageSize && (
-                <div className="absolute px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg top-4 right-4 bg-black/60 backdrop-blur-sm">
-                  📸 {imageSize} KB
+                <div className="absolute px-3 py-1 text-xs font-semibold text-white rounded-lg shadow-lg top-4 right-4 bg-black/60 backdrop-blur-sm flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 0 24 24" width="14px" fill="currentColor">
+                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm8-9h-3.17l-1.83-2H9L7.17 6H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                  {imageSize} KB
                 </div>
               )}
               
@@ -274,7 +334,9 @@ function TakePhoto() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm p-8 text-center bg-white shadow-2xl rounded-2xl">
             <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="http://www.w3.org/2000/svg" width="48px" fill="#EF4444"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0-17.65-2.5-34.5T870-546l-78-234q-11-33-40.5-54.5T680-856H280q-35 0-64.5 21.5T175-780l-78 234q-7.5 22-10 38.5T80-480q0 83 31.5 156T197-197q54 54 127 85.5T480-80Zm-40-280h80v-80h-80v80Zm0-160h80v-80h-80v80Z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#EF4444">
+                <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+              </svg>
             </div>
             <h2 className="mb-2 text-2xl font-bold text-gray-800">ไม่สามารถทำรายการได้</h2>
             <p className="mb-8 text-gray-600">{popupInfoMessage}</p>
@@ -308,9 +370,12 @@ function TakePhoto() {
             />
             
             {/* ข้อมูลรูป */}
-            <div className="absolute px-4 py-2 text-center text-white rounded-full shadow-lg bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm">
+            <div className="absolute px-4 py-2 text-center text-white rounded-lg shadow-lg bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="currentColor">
+                <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm8-9h-3.17l-1.83-2H9L7.17 6H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+              </svg>
               <p className="text-sm font-prompt">
-                📸 ขนาด: {imageSize} KB | รูปถ่ายถูกบีบอัดแล้ว
+                ขนาด: {imageSize} KB | รูปถ่ายถูกบีบอัดแล้ว
               </p>
             </div>
           </div>
