@@ -64,30 +64,106 @@ function AdminDashboard() {
   const [detailType, setDetailType] = useState(null) // 'absent', 'leave', 'late'
   const [detailUsers, setDetailUsers] = useState([])
 
-  // Calculate real attendance stats from usersData
+  // Calculate real attendance stats from usersData and localStorage
   const calculateAttendanceStats = () => {
     const today = new Date()
-    const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
+    const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear() + 543}` // Thai year
     
-    const totalEmployees = usersData.filter(u => u.role !== 'admin' && u.role !== 'superadmin').length
+    console.log('🔍 Admin checking date:', todayStr)
     
-    // Mock data - แบ่งพนักงานออกเป็น ขาด, ลา, มาสาย
-    const absentUsers = usersData.filter(u => u.role === 'user' && u.id % 7 === 0).slice(0, 3)
-    const leaveUsers = usersData.filter(u => u.role === 'user' && u.id % 5 === 0 && u.id % 7 !== 0).slice(0, 5)
-    const lateUsers = usersData.filter(u => u.role === 'user' && u.id % 3 === 0 && u.id % 5 !== 0 && u.id % 7 !== 0).slice(0, 4)
+    // ดึงข้อมูลจาก localStorage
+    let users = usersData
+    try {
+      const storedUsers = localStorage.getItem('usersData')
+      if (storedUsers) {
+        users = JSON.parse(storedUsers)
+        console.log('📥 Admin loaded users from localStorage:', users.length)
+      }
+    } catch (e) {
+      console.warn('Failed to load usersData from localStorage:', e)
+    }
+    
+    const totalEmployees = users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').length
+    
+    // 🔥 ดึงข้อมูลจริงจาก attendanceRecords ของแต่ละ user
+    const absentUsers = []
+    const leaveUsers = []
+    const lateUsers = []
+    const onTimeUsers = []
+    
+    users.forEach(user => {
+      if (user.role === 'admin' || user.role === 'superadmin') return
+      
+      // เช็คจาก attendanceRecords
+      const todayRecord = user.attendanceRecords?.find(r => r.date === todayStr)
+      
+      if (!todayRecord || !todayRecord.checkIn) {
+        // ไม่มีข้อมูลเข้างาน = ขาด (เว้นแต่จะลา)
+        if (user.status === 'leave') {
+          leaveUsers.push(user)
+        } else {
+          absentUsers.push(user)
+        }
+      } else {
+        // มีข้อมูลเข้างาน - เช็คสถานะ
+        const checkInStatus = todayRecord.checkIn.status
+        
+        console.log(`👤 ${user.name}: ${checkInStatus}`, todayRecord.checkIn)
+        
+        if (checkInStatus === 'มาสาย') {
+          lateUsers.push(user)
+        } else if (checkInStatus === 'ตรงเวลา') {
+          onTimeUsers.push(user)
+        } else if (checkInStatus === 'ขาด') {
+          // เข้างานแต่สายเกิน = นับเป็นขาด
+          absentUsers.push(user)
+        }
+      }
+    })
+    
+    console.log('📊 Admin Stats:', {
+      total: totalEmployees,
+      onTime: onTimeUsers.length,
+      late: lateUsers.length,
+      absent: absentUsers.length,
+      leave: leaveUsers.length
+    })
     
     return {
       totalEmployees,
       absentCount: absentUsers.length,
       leaveCount: leaveUsers.length,
       lateCount: lateUsers.length,
+      onTimeCount: onTimeUsers.length,
       absentUsers,
       leaveUsers,
-      lateUsers
+      lateUsers,
+      onTimeUsers
     }
   }
 
-  const attendanceStats = calculateAttendanceStats()
+  const [attendanceStats, setAttendanceStats] = useState(calculateAttendanceStats())
+  
+  // 🔥 ฟังการอัปเดตจาก localStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'usersData') {
+        setAttendanceStats(calculateAttendanceStats())
+        console.log('🔄 Admin Dashboard: อัพเดตสถิติจาก localStorage')
+      }
+    }
+    
+    // เช็คทุก 3 วินาที (สำหรับ same-tab updates)
+    const interval = setInterval(() => {
+      setAttendanceStats(calculateAttendanceStats())
+    }, 3000)
+    
+    window.addEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
 
   // Calculate real event stats from EventContext
   const calculateEventStats = () => {

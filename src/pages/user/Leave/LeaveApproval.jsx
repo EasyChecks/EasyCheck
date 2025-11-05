@@ -280,7 +280,7 @@ function LeaveApproval() {
   const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
   return (
-    <div className="pb-6">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-800">อนุมัติใบลา</h1>
@@ -390,7 +390,7 @@ function LeaveApproval() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleApprove(leave)}
-                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 bg-brand-primary hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -399,7 +399,7 @@ function LeaveApproval() {
                   </button>
                   <button
                     onClick={() => handleReject(leave)}
-                    className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 border-2 bg-white hover:bg-gray-100 text-black font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -429,7 +429,7 @@ function LeaveApproval() {
             }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+            <div className="bg-brand-primary p-6 text-white">
               <h2 className="text-2xl font-bold mb-1">ไม่อนุมัติใบลา</h2>
               <p className="text-red-100 text-sm">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
             </div>
@@ -447,7 +447,7 @@ function LeaveApproval() {
               {/* Reason Input */}
               <div className="mb-2">
                 <label className="block text-sm font-bold text-gray-800 mb-3">
-                  เหตุผลที่ไม่อนุมัติ <span className="text-red-500">*</span>
+                  เหตุผลที่ไม่อนุมัติ <span className="text-orange-500">*</span>
                 </label>
                 <textarea
                   ref={rejectReasonRef}
@@ -455,7 +455,7 @@ function LeaveApproval() {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="ระบุเหตุผล เช่น มีงานเร่งด่วน, ไม่สามารถอนุมัติได้เนื่องจาก..."
                   rows="4"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none resize-none text-sm"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-red-200 focus:outline-none resize-none text-sm"
                   style={{ transition: 'all 0.2s ease' }}
                 />
               </div>
@@ -480,7 +480,7 @@ function LeaveApproval() {
               <button
                 onClick={confirmReject}
                 disabled={!rejectReason.trim()}
-                className="flex-1 px-5 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 shadow-md hover:shadow-lg"
+                className="flex-1 px-5 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-500 shadow-md hover:shadow-lg"
               >
                 ยืนยันไม่อนุมัติ
               </button>

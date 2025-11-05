@@ -685,7 +685,7 @@ function AdminManageUser() {
             <p className="text-gray-500 text-sm mt-1">จัดการสิทธิ์การใช้งานและข้อมูลผู้ใช้ในระบบ</p>
           </div>
           <div className="flex items-center gap-2">
-            <label className="px-4 py-2.5 bg-gray-600 hover:bg-brand-primary text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold cursor-pointer">
+            <label className="px-4 py-2.5 bg-brand-primary hover:bg-gray-600 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
@@ -699,7 +699,7 @@ function AdminManageUser() {
             </label>
             <button 
               onClick={() => setShowCreateUser(true)}
-              className="px-4 py-2.5 bg-gray-600 hover:bg-brand-primary text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
+              className="px-4 py-2.5 bg-brand-primary hover:bg-gray-600 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

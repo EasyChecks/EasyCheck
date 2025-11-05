@@ -455,7 +455,7 @@ function DownloadData() {
           {reports.map((report) => (
             <div 
               key={report.id}
-              className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden hover:shadow-sm transition-all duration-300 transform hover:scale-[1.02]"
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden"
             >
               {/* Card Header */}
               <div className={`bg-${report.color} p-6 relative overflow-hidden`}>
@@ -481,7 +481,7 @@ function DownloadData() {
                 
                 <button
                   onClick={() => openModal(report)}
-                  className="w-full px-6 py-3 bg-brand-primary  hover: text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 font-semibold"
+                  className="w-full px-6 py-3 bg-brand-primary  hover: text-white rounded-xl shadow-sm hover:bg-orange-600 flex items-center justify-center gap-2 font-semibold"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
