@@ -59,7 +59,7 @@ function FitBoundsToMarkers({ locations, disabled }) {
   return null
 }
 
-// Component to fly to location when search marker changes
+// Component to fly to specific location
 function FlyToLocation({ position, onFlyStart, onFlyEnd }) {
   const map = useMap()
   const previousPosition = React.useRef(null)
@@ -703,17 +703,6 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
             />
 
             <MultiSelect
-              label="เลือกตาม Role (บทบาท)"
-              selected={formData.assignedRoles}
-              onChange={(values) => setFormData({ ...formData, assignedRoles: values })}
-              options={[
-                { value: 'user', label: 'User', secondary: 'พนักงานทั่วไป' },
-                { value: 'manager', label: 'Manager', secondary: 'ผู้จัดการ' }
-              ]}
-              placeholder="เลือก Role..."
-            />
-
-            <MultiSelect
               label="เลือกตาม Department (แผนก)"
               selected={formData.assignedDepartments}
               onChange={(values) => setFormData({ ...formData, assignedDepartments: values })}
@@ -1111,17 +1100,6 @@ function EditForm({ type, item, onSubmit, onCancel }) {
             />
 
             <MultiSelect
-              label="เลือกตาม Role (บทบาท)"
-              selected={formData.assignedRoles}
-              onChange={(values) => setFormData({ ...formData, assignedRoles: values })}
-              options={[
-                { value: 'user', label: 'User', secondary: 'พนักงานทั่วไป' },
-                { value: 'manager', label: 'Manager', secondary: 'ผู้จัดการ' }
-              ]}
-              placeholder="เลือก Role..."
-            />
-
-            <MultiSelect
               label="เลือกตาม Department (แผนก)"
               selected={formData.assignedDepartments}
               onChange={(values) => setFormData({ ...formData, assignedDepartments: values })}
@@ -1194,8 +1172,21 @@ function MappingAndEvents() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailItem, setDetailItem] = useState(null)
   const mapSearchTimeoutRef = useRef(null)
+  const [flyToPosition, setFlyToPosition] = useState(null)
+  const [selectedMarkerId, setSelectedMarkerId] = useState(null)
+  const markerRefs = useRef({})
 
   const defaultCenter = [13.7606, 100.5034]
+
+  // Auto-open popup when selectedMarkerId changes
+  useEffect(() => {
+    if (selectedMarkerId && markerRefs.current[selectedMarkerId]) {
+      markerRefs.current[selectedMarkerId].openPopup();
+      // Reset selection after opening
+      const timer = setTimeout(() => setSelectedMarkerId(null), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMarkerId]);
 
   // Initialize refs for animations
   useEffect(() => {
@@ -1275,7 +1266,7 @@ function MappingAndEvents() {
     return addressParts.join(', ')
   }
 
-  // Search map locations using Nominatim API
+  // Search map locations using Nominatim API + existing markers
   const searchMapLocation = async (query) => {
     if (!query.trim()) {
       setMapSearchResults([])
@@ -1284,16 +1275,62 @@ function MappingAndEvents() {
 
     setIsSearchingMap(true)
     try {
+      // Search existing markers (locations and events)
+      const queryLower = query.toLowerCase()
+      const existingMarkers = []
+      
+      // Search locations
+      locations.forEach(loc => {
+        if (loc.name.toLowerCase().includes(queryLower) || 
+            loc.description?.toLowerCase().includes(queryLower)) {
+          existingMarkers.push({
+            type: 'existing',
+            markerType: 'location',
+            id: loc.id,
+            name: loc.name,
+            description: loc.description,
+            lat: loc.latitude,
+            lon: loc.longitude,
+            radius: loc.radius
+          })
+        }
+      })
+      
+      // Search events
+      events.forEach(evt => {
+        if (evt.name.toLowerCase().includes(queryLower) || 
+            evt.description?.toLowerCase().includes(queryLower) ||
+            evt.locationName?.toLowerCase().includes(queryLower)) {
+          existingMarkers.push({
+            type: 'existing',
+            markerType: 'event',
+            id: evt.id,
+            name: evt.name,
+            description: evt.description,
+            locationName: evt.locationName,
+            lat: evt.latitude,
+            lon: evt.longitude,
+            radius: evt.radius,
+            date: evt.date || evt.startDate,
+            time: evt.time || evt.startTime
+          })
+        }
+      })
+      
+      // Search new locations from Nominatim API
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=th&accept-language=th`
       )
       const data = await response.json()
-      // Add formatted name to each result
-      const formattedResults = data.map(result => ({
+      
+      // Combine results: existing markers first, then new locations
+      const apiResults = data.map(result => ({
         ...result,
+        type: 'new',
         formatted_name: formatLocationName(result)
       }))
-      setMapSearchResults(formattedResults)
+      
+      setMapSearchResults([...existingMarkers, ...apiResults])
     } catch (error) {
       console.error('Error searching map:', error)
       setMapSearchResults([])
@@ -2251,29 +2288,94 @@ function MappingAndEvents() {
               {/* Search Results Dropdown */}
               {mapSearchResults.length > 0 && (
                 <div className="mt-2 bg-white rounded-lg shadow-sm border border-gray-200 max-h-64 overflow-y-auto">
-                  {mapSearchResults.map((result, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        const lat = parseFloat(result.lat)
-                        const lon = parseFloat(result.lon)
-                        
-                        // Set marker position and name (FlyToLocation component will handle the animation)
-                        setSearchMarkerPosition([lat, lon])
-                        setSearchMarkerName(result.formatted_name || result.display_name)
-                        
-                        // Clear search
-                        setMapSearchQuery('')
-                        setMapSearchResults([])
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="font-medium text-sm text-gray-800">{result.formatted_name || result.display_name}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        พิกัด: {parseFloat(result.lat).toFixed(6)}, {parseFloat(result.lon).toFixed(6)}
-                      </div>
-                    </button>
-                  ))}
+                  {mapSearchResults.map((result, index) => {
+                    // Check if this is an existing marker or new location
+                    const isExisting = result.type === 'existing'
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          if (isExisting) {
+                            // Fly to existing marker and open popup
+                            const markerId = `${result.markerType}-${result.id}`
+                            setFlyToPosition([result.lat, result.lon])
+                            setTimeout(() => {
+                              setSelectedMarkerId(markerId)
+                              setFlyToPosition(null)
+                            }, 1500)
+                          } else {
+                            // Set search marker for new location
+                            const lat = parseFloat(result.lat)
+                            const lon = parseFloat(result.lon)
+                            setSearchMarkerPosition([lat, lon])
+                            setSearchMarkerName(result.formatted_name || result.display_name)
+                          }
+                          
+                          // Clear search
+                          setMapSearchQuery('')
+                          setMapSearchResults([])
+                        }}
+                        className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-100 last:border-b-0 ${
+                          isExisting 
+                            ? (result.markerType === 'location' 
+                                ? 'hover:bg-green-50' 
+                                : 'hover:bg-orange-50')
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {/* Icon indicator */}
+                          <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                            isExisting 
+                              ? (result.markerType === 'location' ? 'bg-green-500' : 'bg-orange-500')
+                              : 'bg-gray-400'
+                          }`}></div>
+                          
+                          <div className="flex-1 min-w-0">
+                            {/* Title with type badge */}
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="font-medium text-sm text-gray-800 truncate">
+                                {isExisting ? result.name : (result.formatted_name || result.display_name)}
+                              </div>
+                              {isExisting && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                                  result.markerType === 'location'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-orange-100 text-orange-700'
+                                }`}>
+                                  {result.markerType === 'location' ? 'พื้นที่' : 'กิจกรรม'}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Description/Details */}
+                            {isExisting ? (
+                              <div className="text-xs text-gray-600 space-y-0.5">
+                                {result.description && (
+                                  <div className="truncate">{result.description}</div>
+                                )}
+                                {result.locationName && (
+                                  <div className="truncate">📍 {result.locationName}</div>
+                                )}
+                                {result.date && (
+                                  <div>📅 {result.date} {result.time && `⏰ ${result.time}`}</div>
+                                )}
+                                <div className="text-gray-400">
+                                  รัศมี: {result.radius}ม. • พิกัด: {result.lat.toFixed(6)}, {result.lon.toFixed(6)}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-500">
+                                <div className="text-gray-400 mb-0.5">สถานที่ใหม่จาก OpenStreetMap</div>
+                                พิกัด: {parseFloat(result.lat).toFixed(6)}, {parseFloat(result.lon).toFixed(6)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -2347,7 +2449,7 @@ function MappingAndEvents() {
 
               {/* Fly to search location when marker position changes */}
               <FlyToLocation 
-                position={searchMarkerPosition}
+                position={searchMarkerPosition || flyToPosition}
                 onFlyStart={() => setIsFlying(true)}
                 onFlyEnd={() => setIsFlying(false)}
               />
@@ -2362,26 +2464,59 @@ function MappingAndEvents() {
               )}
 
               {/* Location Markers (Green) */}
-              {filteredLocations.map((location) => (
-                <React.Fragment key={`location-${location.id}`}>
-                  <Marker
-                    position={[location.latitude, location.longitude]}
-                    icon={locationIcon}
-                    eventHandlers={{
-                      click: () => {
-                        // Scroll to the item in the list and highlight it
-                        const itemElement = document.querySelector(`[data-item-id="location-${location.id}"]`)
-                        if (itemElement) {
-                          itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                          // Add highlight effect
-                          itemElement.classList.add('ring-4', 'ring-green-400', 'ring-opacity-50')
-                          setTimeout(() => {
-                            itemElement.classList.remove('ring-4', 'ring-green-400', 'ring-opacity-50')
-                          }, 2000)
+              {filteredLocations.map((location) => {
+                const markerId = `location-${location.id}`;
+                
+                return (
+                  <React.Fragment key={markerId}>
+                    <Marker
+                      position={[location.latitude, location.longitude]}
+                      icon={locationIcon}
+                      ref={(ref) => {
+                        if (ref) markerRefs.current[markerId] = ref;
+                      }}
+                      eventHandlers={{
+                        click: () => {
+                          // Scroll to the item in the list and highlight it
+                          const itemElement = document.querySelector(`[data-item-id="${markerId}"]`)
+                          if (itemElement) {
+                            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            // Add highlight effect
+                            itemElement.classList.add('ring-4', 'ring-green-400', 'ring-opacity-50')
+                            setTimeout(() => {
+                              itemElement.classList.remove('ring-4', 'ring-green-400', 'ring-opacity-50')
+                            }, 2000)
+                          }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    >
+                    <Popup>
+                      <div className="p-2 min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-green-600"></div>
+                          <h3 className="font-bold text-gray-800">{location.name}</h3>
+                        </div>
+                        {location.description && (
+                          <p className="text-xs text-gray-600 mb-2">{location.description}</p>
+                        )}
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            <span>รัศมี: {location.radius}ม.</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              location.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {location.status === 'active' ? '✓ ใช้งาน' : '✕ ปิด'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
                   <Circle
                     center={[location.latitude, location.longitude]}
                     radius={location.radius}
@@ -2392,29 +2527,81 @@ function MappingAndEvents() {
                     }}
                   />
                 </React.Fragment>
-              ))}
+              );
+              })}
 
-              {/* Event Markers (Blue) */}
-              {filteredEvents.map((event) => (
-                <React.Fragment key={`event-${event.id}`}>
-                  <Marker
-                    position={[event.latitude, event.longitude]}
-                    icon={eventIcon}
-                    eventHandlers={{
-                      click: () => {
-                        // Scroll to the item in the list and highlight it
-                        const itemElement = document.querySelector(`[data-item-id="event-${event.id}"]`)
-                        if (itemElement) {
-                          itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                          // Add highlight effect
-                          itemElement.classList.add('ring-4', 'ring-orange-400', 'ring-opacity-50')
-                          setTimeout(() => {
-                            itemElement.classList.remove('ring-4', 'ring-orange-400', 'ring-opacity-50')
-                          }, 2000)
+              {/* Event Markers (Orange) */}
+              {filteredEvents.map((event) => {
+                const markerId = `event-${event.id}`;
+                
+                return (
+                  <React.Fragment key={markerId}>
+                    <Marker
+                      position={[event.latitude, event.longitude]}
+                      icon={eventIcon}
+                      ref={(ref) => {
+                        if (ref) markerRefs.current[markerId] = ref;
+                      }}
+                      eventHandlers={{
+                        click: () => {
+                          // Scroll to the item in the list and highlight it
+                          const itemElement = document.querySelector(`[data-item-id="${markerId}"]`)
+                          if (itemElement) {
+                            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            // Add highlight effect
+                            itemElement.classList.add('ring-4', 'ring-orange-400', 'ring-opacity-50')
+                            setTimeout(() => {
+                              itemElement.classList.remove('ring-4', 'ring-orange-400', 'ring-opacity-50')
+                            }, 2000)
+                          }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    >
+                    <Popup>
+                      <div className="p-2 min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-orange-600"></div>
+                          <h3 className="font-bold text-gray-800">{event.name}</h3>
+                        </div>
+                        {event.description && (
+                          <p className="text-xs text-gray-600 mb-2">{event.description}</p>
+                        )}
+                        <div className="text-xs text-gray-500 space-y-1">
+                          {event.locationName && (
+                            <div className="flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                              </svg>
+                              <span>{event.locationName}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            <span>{event.startDate || event.date}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            <span>{event.startTime} - {event.endTime}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              event.status === 'ongoing' 
+                                ? 'bg-orange-100 text-orange-700' 
+                                : event.status === 'upcoming'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {event.status === 'ongoing' ? '● ดำเนินการ' : event.status === 'upcoming' ? '◷ ยังไม่เริ่ม' : '○ สิ้นสุด'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
                   <Circle
                     center={[event.latitude, event.longitude]}
                     radius={event.radius}
@@ -2425,7 +2612,8 @@ function MappingAndEvents() {
                     }}
                   />
                 </React.Fragment>
-              ))}
+              );
+              })}
             </MapContainer>
           </div>
 
@@ -2517,11 +2705,21 @@ function MappingAndEvents() {
                   <div
                     key={`${item.type}-${item.id}`}
                     data-item-id={`${item.type}-${item.id}`}
-                    className={`relative rounded-xl p-4 border-2 shadow-sm transition-all duration-200 ${
+                    onClick={() => {
+                      const markerId = `${item.type}-${item.id}`;
+                      setFlyToPosition([item.latitude, item.longitude]);
+                      // Set selected marker to open popup after flying
+                      setTimeout(() => {
+                        setSelectedMarkerId(markerId);
+                        setFlyToPosition(null);
+                      }, 1500); // Wait for fly animation to complete
+                    }}
+                    className={`relative rounded-xl p-4 border-2 shadow-sm transition-all duration-200 cursor-pointer ${
                       isLocation 
-                        ? 'border-green-100 bg-green-50/50 to-white' 
-                        : 'border-orange-100 bg-orange-50/50 to-white'
+                        ? 'border-green-100 bg-green-50/50 hover:bg-green-100/70 hover:border-green-300 hover:shadow-md' 
+                        : 'border-orange-100 bg-orange-50/50 hover:bg-orange-100/70 hover:border-orange-300 hover:shadow-md'
                     }`}
+                    title="คลิกเพื่อบินไปที่หมุดบนแผนที่"
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">

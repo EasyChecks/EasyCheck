@@ -21,7 +21,6 @@ const defaultEvents = [
     endTime: '16:00',
     teams: ['ทีมขาย', 'Marketing', 'การตลาด'],
     assignedUsers: [], // Array of user IDs or user objects
-    assignedRoles: [], // Array of roles
     assignedDepartments: [], // Array of departments  
     assignedPositions: [] // Array of positions
   },
@@ -41,7 +40,6 @@ const defaultEvents = [
     endTime: '17:00',
     teams: ['IT', 'ทีมพัฒนา', 'Software Engineer'],
     assignedUsers: [3], // นายอภิชาติ (IT)
-    assignedRoles: [],
     assignedDepartments: ['IT'],
     assignedPositions: []
   },
@@ -61,7 +59,6 @@ const defaultEvents = [
     endTime: '14:00',
     teams: ['ทีมก่อสร้าง', 'ทีมควบคุมคุณภาพ', 'วิศวกร'],
     assignedUsers: [],
-    assignedRoles: ['manager'],
     assignedDepartments: [],
     assignedPositions: []
   },
@@ -81,7 +78,6 @@ const defaultEvents = [
     endTime: '16:30',
     teams: ['HR', 'ทรัพยากรบุคคล', 'Admin'],
     assignedUsers: [],
-    assignedRoles: [],
     assignedDepartments: ['HR'],
     assignedPositions: []
   },
@@ -101,7 +97,6 @@ const defaultEvents = [
     endTime: '17:00',
     teams: ['ทีมบริการลูกค้า', 'Customer Service', 'ฝ่ายบริการ'],
     assignedUsers: [4], // นางพรทิพย์ (Marketing)
-    assignedRoles: [],
     assignedDepartments: [],
     assignedPositions: []
   }
@@ -216,16 +211,7 @@ export function EventProvider({ children }) {
         if (isAssigned) return true
       }
 
-      // 2. Check if user's role is assigned
-      if (event.assignedRoles && event.assignedRoles.length > 0) {
-        if (event.assignedRoles.some(role => 
-          role.toLowerCase() === userRole?.toLowerCase()
-        )) {
-          return true
-        }
-      }
-
-      // 3. Check if user's department is assigned
+      // 2. Check if user's department is assigned
       if (event.assignedDepartments && event.assignedDepartments.length > 0) {
         if (event.assignedDepartments.some(dept => 
           dept.toLowerCase() === userDepartment?.toLowerCase() ||
@@ -236,7 +222,7 @@ export function EventProvider({ children }) {
         }
       }
 
-      // 4. Check if user's position is assigned
+      // 3. Check if user's position is assigned
       if (event.assignedPositions && event.assignedPositions.length > 0) {
         if (event.assignedPositions.some(pos => 
           pos.toLowerCase() === userPosition?.toLowerCase() ||
@@ -247,7 +233,7 @@ export function EventProvider({ children }) {
         }
       }
 
-      // 5. Fallback to old teams logic for backward compatibility
+      // 4. Fallback to old teams logic for backward compatibility
       if (event.teams && event.teams.length > 0) {
         const userTeams = [userDepartment, userPosition].filter(Boolean).map(t => t.toLowerCase().trim())
         
