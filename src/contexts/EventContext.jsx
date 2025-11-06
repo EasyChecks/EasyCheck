@@ -22,7 +22,13 @@ const defaultEvents = [
     teams: ['ทีมขาย', 'Marketing', 'การตลาด'],
     assignedUsers: [], // Array of user IDs or user objects
     assignedDepartments: [], // Array of departments  
-    assignedPositions: [] // Array of positions
+    assignedPositions: [], // Array of positions
+    // ✅ สาขา BKK - Admin จะเห็นอันนี้
+    createdBy: {
+      userId: 1,
+      username: 'BKK1010001',
+      branch: '101'
+    }
   },
   {
     id: 2,
@@ -41,7 +47,13 @@ const defaultEvents = [
     teams: ['IT', 'ทีมพัฒนา', 'Software Engineer'],
     assignedUsers: [3], // นายอภิชาติ (IT)
     assignedDepartments: ['IT'],
-    assignedPositions: []
+    assignedPositions: [],
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 2,
+      username: 'CNX1020001',
+      branch: '102'
+    }
   },
   {
     id: 3,
@@ -60,7 +72,13 @@ const defaultEvents = [
     teams: ['ทีมก่อสร้าง', 'ทีมควบคุมคุณภาพ', 'วิศวกร'],
     assignedUsers: [],
     assignedDepartments: [],
-    assignedPositions: []
+    assignedPositions: [],
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 5,
+      username: 'PKT2010001',
+      branch: '201'
+    }
   },
   {
     id: 4,
@@ -79,7 +97,13 @@ const defaultEvents = [
     teams: ['HR', 'ทรัพยากรบุคคล', 'Admin'],
     assignedUsers: [],
     assignedDepartments: ['HR'],
-    assignedPositions: []
+    assignedPositions: [],
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 6,
+      username: 'CMI3010001',
+      branch: '301'
+    }
   },
   {
     id: 5,
@@ -98,7 +122,13 @@ const defaultEvents = [
     teams: ['ทีมบริการลูกค้า', 'Customer Service', 'ฝ่ายบริการ'],
     assignedUsers: [4], // นางพรทิพย์ (Marketing)
     assignedDepartments: [],
-    assignedPositions: []
+    assignedPositions: [],
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 2,
+      username: 'CNX1020001',
+      branch: '102'
+    }
   }
 ]
 
@@ -320,6 +350,29 @@ export function EventProvider({ children }) {
     }
   }
 
+  // ✅ Get filtered events based on user role and branch
+  const getFilteredEvents = (user) => {
+    if (!user) return []
+    
+    // SuperAdmin เห็นทุกอย่าง
+    if (user.role === 'superadmin') {
+      return events
+    }
+    
+    // Admin เห็นเฉพาะสาขาของตัวเอง
+    if (user.role === 'admin') {
+      return events.filter(evt => {
+        // ถ้ายังไม่มี branch (event เก่า) ให้แสดงทุกอัน
+        if (!evt.createdBy?.branch) return true
+        // ถ้ามี branch ให้แสดงเฉพาะที่ตรงกับสาขาของ admin
+        return evt.createdBy.branch === user.branchCode
+      })
+    }
+    
+    // Manager และ User ใช้ getEventsForUser แทน
+    return getEventsForUser(user.id, user.role, user.department, user.position)
+  }
+
   const value = {
     events,
     setEvents,
@@ -328,6 +381,7 @@ export function EventProvider({ children }) {
     deleteEvent,
     getEvent,
     getEventsForUser,
+    getFilteredEvents,
     canJoinEvent,
     getTimeRemainingToJoin
   }

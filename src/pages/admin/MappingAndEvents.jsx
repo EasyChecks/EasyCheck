@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../contexts/LocationContext'
 import { useEvents } from '../../contexts/EventContext'
+import { useAuth } from '../../contexts/useAuth'
 import { usersData } from '../../data/usersData'
 
 // Fix for default marker icon
@@ -1148,8 +1149,14 @@ function EditForm({ type, item, onSubmit, onCancel }) {
 }
 
 function MappingAndEvents() {
-  const { locations, deleteLocation, addLocation, updateLocation } = useLocations()
-  const { events, deleteEvent, addEvent, updateEvent } = useEvents()
+  const { user } = useAuth()
+  const { getFilteredLocations, deleteLocation, addLocation, updateLocation } = useLocations()
+  const { getFilteredEvents, deleteEvent, addEvent, updateEvent } = useEvents()
+  
+  // ✅ ใช้ฟังก์ชันกรองตาม branch
+  const locations = getFilteredLocations(user)
+  const events = getFilteredEvents(user)
+  
   const [activeTab, setActiveTab] = useState('all') // 'all', 'locations' or 'events'
   const [mapType, setMapType] = useState('default') // 'default' or 'satellite'
   const [searchQuery, setSearchQuery] = useState('')
@@ -1543,7 +1550,13 @@ function MappingAndEvents() {
           ...formData,
           latitude: newMarkerPosition[0],
           longitude: newMarkerPosition[1],
-          status: 'active'
+          status: 'active',
+          // ✅ เพิ่มข้อมูลผู้สร้างและสาขา
+          createdBy: {
+            userId: user.id,
+            username: user.username,
+            branch: user.branchCode
+          }
         })
       } else if (createType === 'event') {
         // Check duplicate name for events
@@ -1588,7 +1601,13 @@ function MappingAndEvents() {
           assignedUsers: formData.assignedUsers || [],
           assignedRoles: formData.assignedRoles || [],
           assignedDepartments: formData.assignedDepartments || [],
-          assignedPositions: formData.assignedPositions || []
+          assignedPositions: formData.assignedPositions || [],
+          // ✅ เพิ่มข้อมูลผู้สร้างและสาขา
+          createdBy: {
+            userId: user.id,
+            username: user.username,
+            branch: user.branchCode
+          }
         })
       }
       setShowCreateModal(false)
