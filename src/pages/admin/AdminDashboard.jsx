@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../contexts/LocationContext'
 import { useEvents } from '../../contexts/EventContext'
+import { useAuth } from '../../contexts/useAuth'
 import { usersData } from '../../data/usersData'
 
 // Fix for default marker icon issue in Leaflet with webpack
@@ -50,10 +51,14 @@ function MapRefSetter({ mapRef }) {
 }
 
 function AdminDashboard() {
-  // Use Location Context (for Mapping locations)
-  const { locations } = useLocations()
-  // Use Event Context (for Event locations)
-  const { events } = useEvents()
+  const { user } = useAuth()
+  
+  // ✅ ใช้ฟังก์ชันกรองตาม branch
+  const { getFilteredLocations } = useLocations()
+  const { getFilteredEvents } = useEvents()
+  
+  const locations = getFilteredLocations(user)
+  const events = getFilteredEvents(user)
 
   const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded

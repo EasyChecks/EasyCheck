@@ -12,7 +12,13 @@ const initialLocations = [
     radius: 150,
     latitude: 13.7596,
     longitude: 100.5008,
-    status: 'active'
+    status: 'active',
+    // ✅ สาขา BKK - Admin จะเห็นอันนี้
+    createdBy: {
+      userId: 1,
+      username: 'BKK1010001',
+      branch: '101'
+    }
   },
   {
     id: 2,
@@ -21,7 +27,13 @@ const initialLocations = [
     radius: 150,
     latitude: 13.7650,
     longitude: 100.5050,
-    status: 'active'
+    status: 'active',
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 2,
+      username: 'CNX1020001',
+      branch: '102'
+    }
   },
   {
     id: 3,
@@ -30,7 +42,13 @@ const initialLocations = [
     radius: 100,
     latitude: 13.7580,
     longitude: 100.5100,
-    status: 'active'
+    status: 'active',
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 5,
+      username: 'PKT2010001',
+      branch: '201'
+    }
   },
   {
     id: 4,
@@ -39,7 +57,13 @@ const initialLocations = [
     radius: 200,
     latitude: 13.6709,
     longitude: 100.6311,
-    status: 'active'
+    status: 'active',
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 6,
+      username: 'CMI3010001',
+      branch: '301'
+    }
   },
   {
     id: 5,
@@ -48,7 +72,13 @@ const initialLocations = [
     radius: 150,
     latitude: 13.7469,
     longitude: 100.5397,
-    status: 'active'
+    status: 'active',
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 2,
+      username: 'CNX1020001',
+      branch: '102'
+    }
   },
   {
     id: 6,
@@ -57,7 +87,13 @@ const initialLocations = [
     radius: 100,
     latitude: 13.7563,
     longitude: 100.5018,
-    status: 'active'
+    status: 'active',
+    // สาขาอื่น - Admin BKK จะไม่เห็น
+    createdBy: {
+      userId: 5,
+      username: 'PKT2010001',
+      branch: '201'
+    }
   }
 ]
 
@@ -127,6 +163,29 @@ export function LocationProvider({ children }) {
     return locations.find(loc => loc.id === id)
   }
 
+  // ✅ Get filtered locations based on user role and branch
+  const getFilteredLocations = (user) => {
+    if (!user) return []
+    
+    // SuperAdmin เห็นทุกอย่าง
+    if (user.role === 'superadmin') {
+      return locations
+    }
+    
+    // Admin เห็นเฉพาะสาขาของตัวเอง
+    if (user.role === 'admin') {
+      return locations.filter(loc => {
+        // ถ้ายังไม่มี branch (location เก่า) ให้แสดงทุกอัน
+        if (!loc.createdBy?.branch) return true
+        // ถ้ามี branch ให้แสดงเฉพาะที่ตรงกับสาขาของ admin
+        return loc.createdBy.branch === user.branchCode
+      })
+    }
+    
+    // Role อื่นๆ ไม่เห็น
+    return []
+  }
+
   const value = {
     locations,
     setLocations,
@@ -134,7 +193,8 @@ export function LocationProvider({ children }) {
     updateLocation,
     deleteLocation,
     deleteLocations,
-    getLocation
+    getLocation,
+    getFilteredLocations
   }
 
   return (
