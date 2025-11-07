@@ -329,12 +329,20 @@ export default function Warning() {
   })
 
   return (
-    <div className="w-full bg-gray-50 ">
-      <div className="">
+    <div className="w-full bg-gray-50 min-h-screen overflow-y-auto" 
+      style={{ scrollbarGutter: 'stable' }}
+    >
+      <div className="w-full pl-3 pr-2 md:pl-4 md:pr-2 lg:pl-6 lg:pr-3 py-6">
         <div
-          className="w-full mx-auto p-6"
+          className="w-full mx-auto bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
+          style={{ boxShadow: '0 12px 28px rgba(11,43,87,0.08)' }}
         >
-        <div className="max-w-auto mx-auto min-h-screen">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">คำขออนุมัติการลา</h2>
+              <p className="text-sm text-gray-600 mt-1">ตรวจสอบและอนุมัติคำขอลาของพนักงาน</p>
+            </div>
+          </div>
 
           {/* Search and Filter Section */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -415,9 +423,9 @@ export default function Warning() {
             )}
           </div>
 
-          <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
             {filteredItems.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="col-span-full text-center py-12">
                 <div className="text-gray-400 mb-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -463,7 +471,7 @@ export default function Warning() {
           </div>
         </div>
       </div>
-    </div>
+    
       {modalData && <AttachmentModal data={modalData} onClose={() => setModalData(null)} />}
       
       {/* Approve Confirm Dialog */}
@@ -625,134 +633,124 @@ export default function Warning() {
 
 function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapperRefCallback, innerRefCallback }) {
   return (
-    <div className="relative rounded-2xl p-5 mb-6 border text-black border-gray-200">
-      <div className="flex items-start gap-4">
-        <img src={item.avatar} alt="avatar" className="w-28 h-28 rounded-full object-cover border-4" />
+    <div className="relative rounded-xl p-4 text-gray-900 border-2 shadow-sm h-fit transition-colors border-gray-200">
+      {/* top-right: time pill (always shown) */}
+      <div className="absolute top-3 right-3 flex items-center space-x-2">
+        <div className="bg-brand-accent text-gray-900 px-2.5 py-1 rounded-full text-xs border border-gray-300 shadow-sm">
+          {item.time}
+        </div>
+      </div>
 
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold">{item.name}</h3>
-              <p className="text-sm text-black mt-1">{item.role}</p>
-              <p className="text-sm text-black">{item.department}</p>
+      <div className="flex items-start">
+        <div className="flex-1 min-w-0">
+          {/* Avatar + Info */}
+          <div className="flex items-start gap-3 mb-4">
+            <img src={item.avatar} alt="avatar" className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 flex-shrink-0" />
+            <div className="flex-1 pr-16">
+              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <div className="text-sm text-gray-600 mt-0.5 space-y-0.5">
+                <div className="leading-tight">{item.role}</div>
+                <div className="leading-tight">{item.department}</div>
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-3 mt-4">
+          {/* Action Buttons */}
+          <div className="mt-4 mb-2 flex items-center gap-2 flex-wrap">
             <button
               onClick={() => onApprove?.(item)}
-              className="inline-flex items-center justify-center text-base font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-screen h-10 px-5 leading-none rounded-xl shadow-sm transition-colors"
+              className="inline-flex items-center justify-center text-sm font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-[100px] h-8 px-4 leading-none rounded-lg shadow-sm transition-colors"
             >
               อนุมัติ
             </button>
             <button
               onClick={() => onReject?.(item)}
-              className="inline-flex items-center justify-center px-5 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-xl text-base font-semibold shadow-sm transition-colors"
+              className="inline-flex items-center justify-center text-sm font-semibold bg-destructive hover:bg-destructive/90 text-white min-w-[100px] h-8 px-4 leading-none rounded-lg shadow-sm transition-colors"
             >
               ไม่อนุมัติ
             </button>
             <button
               onClick={() => onToggle(item.id)}
               aria-expanded={expanded}
-              className="relative inline-flex items-center justify-center px-5 py-2 bg-brand-accent text-gray-900 rounded-xl text-base font-semibold border-2 border-gray-300 hover:bg-gray-200 transition-colors shadow-sm overflow-hidden"
-              style={{ minWidth: 120 }}
+              className="relative inline-flex items-center justify-center text-sm font-semibold rounded-lg shadow-sm transition-colors overflow-hidden bg-white text-gray-900 border-2 border-gray-300 min-w-[100px] h-8 px-4 leading-none hover:bg-brand-accent"
             >
               <span
                 aria-hidden={expanded}
-                style={{
-                  position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: expanded ? 0 : 1,
-                  transition: 'opacity 220ms ease',
-                  pointerEvents: 'none'
-                }}
+                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-[220ms] ease-in-out pointer-events-none ${expanded ? 'opacity-0' : 'opacity-100'}`}
               >
                 รายละเอียด
               </span>
 
               <span
                 aria-hidden={!expanded}
-                style={{
-                  position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: expanded ? 1 : 0,
-                  transition: 'opacity 220ms ease',
-                  pointerEvents: 'none'
-                }}
+                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-[220ms] ease-in-out pointer-events-none ${expanded ? 'opacity-100' : 'opacity-0'}`}
               >
-                ซ่อนรายละเอียด
+                ซ่อน
               </span>
 
               <span className="sr-only">{expanded ? 'ซ่อนรายละเอียด' : 'รายละเอียด'}</span>
             </button>
           </div>
 
+          {/* Expandable Details */}
           <div
             ref={el => wrapperRefCallback?.(item.id, el)}
             aria-hidden={!expanded}
-            className="mt-6"
+            className="mt-3"
           >
             <div
               ref={el => innerRefCallback?.(item.id, el)}
-              className="bg-white text-slate-800 rounded-lg p-6 shadow-inner border border-white/40"
+              className="bg-white text-gray-800 rounded-lg p-3 border border-gray-200"
             >
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-3">
-                  <div className="text-sm mb-4">
-                    <div className="font-semibold mb-2">
-                      ช่วงเวลา: {item.leaveMode === 'hourly' ? 'ลาเป็นชั่วโมง' : 'ลาเป็นวัน'}
-                    </div>
-                    <ul className="list-disc pl-5 text-sm text-slate-700">
-                      <li>
-                        {item.leaveMode === 'hourly' 
-                          ? `วันที่ ${item.startDate} เวลา ${item.startTime} - ${item.endTime} (${item.days})`
-                          : `ตั้งแต่ ${item.startDate} - ${item.endDate} (${item.days})`
-                        }
-                      </li>
-                    </ul>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold mb-1.5 text-base">ช่วงเวลา:</h4>
+                  <div className="text-sm text-gray-700">
+                    {item.leaveMode === 'hourly' ? 'ลาเป็นชั่วโมง' : 'ลาเป็นวัน'}
                   </div>
-
-                  <div className="text-sm mb-4">
-                    <div className="font-semibold">เหตุผลการลา:</div>
-                    <div className="text-slate-700 mt-1">{item.reason}</div>
-                  </div>
+                  <ul className="list-disc pl-5 text-sm text-gray-700 space-y-0.5">
+                    <li>
+                      {item.leaveMode === 'hourly' 
+                        ? `วันที่ ${item.startDate} เวลา ${item.startTime} - ${item.endTime} (${item.days})`
+                        : `ตั้งแต่ ${item.startDate} - ${item.endDate} (${item.days})`
+                      }
+                    </li>
+                  </ul>
                 </div>
 
-                <div className="md:col-span-1 flex items-start">
-                  <div className="w-full">
+                <div>
+                  <h4 className="font-semibold mb-1.5 text-base">เหตุผลการลา:</h4>
+                  <div className="text-sm text-gray-700">{item.reason}</div>
+                </div>
+
+                {/* Attachments */}
+                {item.attachments && item.attachments.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2 text-base">เอกสารแนบ:</h4>
                     <div className="grid grid-cols-1 gap-3">
-                      {item.attachments && item.attachments.length > 0 ? (
-                        item.attachments.map(att => (
-                          <button
-                            key={att.id}
-                            onClick={() => window.dispatchEvent(new CustomEvent('showAttachment', { detail: { att, item } }))}
-                            className="bg-slate-100 rounded-lg h-72 overflow-hidden flex items-center justify-center border border-dashed border-slate-200"
-                          >
-                            {att.type === 'image' ? (
-                              <img src={att.url} alt={att.name} className="object-cover w-full h-full" />
-                            ) : (
-                              <div className="text-center text-sm text-slate-600 px-2">
-                                <div className="font-semibold">{att.name}</div>
-                                <div className="text-xs mt-1">ไฟล์</div>
-                              </div>
-                            )}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="w-full bg-slate-100 rounded-lg h-32 flex items-center justify-center text-slate-400 border border-dashed border-slate-200">
-                          <div className="text-center">
-                            <div className="mb-2">ไม่มีไฟล์แนบ</div>
-                          </div>
-                        </div>
-                      )}
+                      {item.attachments.map(att => (
+                        <button
+                          key={att.id}
+                          onClick={() => window.dispatchEvent(new CustomEvent('showAttachment', { detail: { att, item } }))}
+                          className="bg-slate-100 rounded-lg h-48 overflow-hidden flex items-center justify-center border border-dashed border-slate-200 hover:border-brand-primary transition-colors"
+                        >
+                          {att.type === 'image' ? (
+                            <img src={att.url} alt={att.name} className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="text-center text-sm text-slate-600 px-2">
+                              <div className="font-semibold">{att.name}</div>
+                              <div className="text-xs mt-1">ไฟล์เอกสาร</div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="ml-4">
-          <div className="bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold">{item.time}</div>
         </div>
       </div>
     </div>

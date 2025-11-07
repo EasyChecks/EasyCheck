@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } 
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../../contexts/LocationContext'
+import { usersData } from '../../../data/usersData'
 import PageModal from '../../../components/common/PageModal'
 
 // Inline styles for animations
@@ -175,6 +176,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const teamsDropdownRef = useRef(null) // ref สำหรับปิด dropdown เมื่อคลิกนอก
   const [showTypeDropdown, setShowTypeDropdown] = useState(false) // แสดง/ซ่อน dropdown ประเภทงาน
   const typeDropdownRef = useRef(null) // ref สำหรับปิด dropdown ประเภทงาน
+  const [showMembersDropdown, setShowMembersDropdown] = useState(false) // แสดง/ซ่อน dropdown สมาชิก
+  const membersDropdownRef = useRef(null) // ref สำหรับปิด dropdown สมาชิก
+  const [selectedMembers, setSelectedMembers] = useState([]) // สมาชิกที่เลือก
   const [workTypes, setWorkTypes] = useState(() => [
     'งานประจำ',
     'โครงการพิเศษ',
@@ -264,13 +268,16 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         setShowTypeDropdown(false)
         setShowAddTypeForm(false)
       }
+      if (membersDropdownRef.current && !membersDropdownRef.current.contains(event.target)) {
+        setShowMembersDropdown(false)
+      }
     }
     
-    if (showTeamsDropdown || showTypeDropdown) {
+    if (showTeamsDropdown || showTypeDropdown || showMembersDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showTeamsDropdown, showTypeDropdown])
+  }, [showTeamsDropdown, showTypeDropdown, showMembersDropdown])
 
   // refs to call native pickers where supported
   const monthRef = useRef(null)
@@ -322,6 +329,44 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       (loc.description && loc.description.toLowerCase().includes(search))
     )
   }, [locations, searchLocation])
+
+  // Filter members based on search - useMemo เพื่อไม่ให้คำนวณซ้ำ
+  const filteredMembers = useMemo(() => {
+    const search = members.toLowerCase()
+    
+    return usersData
+      .filter(user => {
+        // ไม่แสดง admin
+        if (user.role === 'admin') return false
+        
+        // ถ้าเลือกแผนก/ตำแหน่งแล้ว ให้กรองตามแผนก/ตำแหน่งที่เลือก
+        if (selectedTeams.length > 0) {
+          const userDepartment = user.department?.toLowerCase() || ''
+          const userPosition = user.position?.toLowerCase() || ''
+          const userRole = user.role?.toLowerCase() || ''
+          
+          // ตรวจสอบว่า user อยู่ในแผนก/ตำแหน่งที่เลือกหรือไม่
+          const matchesTeam = selectedTeams.some(team => {
+            const teamLower = team.toLowerCase()
+            return userDepartment.includes(teamLower) || 
+                   userPosition.includes(teamLower) ||
+                   userRole.includes(teamLower)
+          })
+          
+          if (!matchesTeam) return false
+        }
+        
+        // ถ้าไม่มีคำค้นหา แสดงทุกคน (ที่ผ่านการกรองแผนกแล้ว)
+        if (!search.trim()) return true
+        
+        // กรองตามคำค้นหา
+        return user.name.toLowerCase().includes(search) || 
+               user.department?.toLowerCase().includes(search) ||
+               user.position?.toLowerCase().includes(search) ||
+               user.employeeId?.toLowerCase().includes(search)
+      })
+      .slice(0, 15) // เพิ่มจำนวนเป็น 15 คน
+  }, [members, selectedTeams])
 
   // Handle map click to create new location - useCallback เพื่อป้องกัน re-render
   const handleMapClick = useCallback((latlng) => {
@@ -435,6 +480,35 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       } else {
         return [...prev, teamName]
       }
+    })
+  }, [])
+
+  // Toggle member selection - useCallback
+  const toggleMember = useCallback((user) => {
+    setSelectedMembers(prev => {
+      const exists = prev.find(m => m.id === user.id)
+      if (exists) {
+        // ลบออก
+        const newMembers = prev.filter(m => m.id !== user.id)
+        // อัพเดท members string
+        setMembers('')
+        return newMembers
+      } else {
+        // เพิ่มเข้า
+        const newMembers = [...prev, user]
+        // เคลียร์ช่องค้นหา
+        setMembers('')
+        return newMembers
+      }
+    })
+  }, [])
+
+  // Remove member from selected - useCallback
+  const removeMember = useCallback((userId) => {
+    setSelectedMembers(prev => {
+      const newMembers = prev.filter(m => m.id !== userId)
+      setMembers('')
+      return newMembers
     })
   }, [])
 
@@ -1191,21 +1265,95 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="relative" ref={membersDropdownRef}>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                   </svg>
                   สมาชิก
                 </label>
+
+                {/* Selected Members Tags */}
+                {selectedMembers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    {selectedMembers.map(member => (
+                      <div 
+                        key={member.id}
+                        className="flex items-center gap-1 bg-brand-primary text-white px-3 py-1 rounded-full text-sm"
+                      >
+                        <span>{member.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeMember(member.id)}
+                          className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <input 
                   ref={membersRef}
                   value={members} 
-                  onChange={e => setMembers(e.target.value)} 
+                  onChange={e => {
+                    setMembers(e.target.value)
+                    setShowMembersDropdown(true)
+                  }} 
                   onKeyDown={(e) => handleKeyDown(e, 'members')}
+                  onFocus={() => setShowMembersDropdown(true)}
                   className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none" 
-                  placeholder="ระบุชื่อสมาชิก" 
+                  placeholder="ค้นหาชื่อสมาชิก หรือคลิกเพื่อดูทั้งหมด..." 
                 />
+
+                {/* Dropdown Menu */}
+                {showMembersDropdown && filteredMembers.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredMembers.map((user) => {
+                      const isSelected = selectedMembers.some(m => m.id === user.id)
+                      return (
+                        <button
+                          key={user.id}
+                          type="button"
+                          onClick={() => {
+                            toggleMember(user)
+                            // ช่องค้นหาจะถูกเคลียร์ใน toggleMember แล้ว
+                            // เปิด dropdown ต่อไปเพื่อเลือกคนถัดไป
+                            setTimeout(() => {
+                              membersRef.current?.focus()
+                              setShowMembersDropdown(true)
+                            }, 100)
+                          }}
+                          className={`w-full px-4 py-3 text-left hover:bg-brand-accent transition-colors flex items-center justify-between border-b border-gray-100 last:border-0 ${
+                            isSelected ? 'bg-brand-accent-soft' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={user.profileImage || 'https://i.pravatar.cc/150?u=default'} 
+                              alt={user.name}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {user.position} • {user.department}
+                              </div>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
               <div className="relative" ref={typeDropdownRef}>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
