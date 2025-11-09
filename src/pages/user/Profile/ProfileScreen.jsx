@@ -199,6 +199,34 @@ function ProfileScreen() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [user]);
 
+  // 🔥 ฟังการอัปเดต timeSummary real-time
+  useEffect(() => {
+    const handleTimeSummaryUpdate = (e) => {
+      if (e.detail.userId === user?.id) {
+        const newTimeSummary = e.detail.timeSummary;
+        const attendanceText = newTimeSummary.totalWorkDays 
+          ? `ทำงาน ${newTimeSummary.totalWorkDays} วัน (ตรงเวลา ${newTimeSummary.onTime} วัน, สาย ${newTimeSummary.late} วัน, ลา ${newTimeSummary.leave} วัน, ขาด ${newTimeSummary.absent} วัน)`
+          : 'ไม่มีข้อมูล';
+        
+        setProfileData(prev => ({
+          ...prev,
+          additionalInfo: {
+            ...prev.additionalInfo,
+            attendance: attendanceText,
+            totalHours: newTimeSummary.totalHours || '',
+            avgCheckIn: newTimeSummary.avgCheckIn || '',
+            avgCheckOut: newTimeSummary.avgCheckOut || ''
+          }
+        }));
+      }
+    };
+
+    window.addEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
+    return () => {
+      window.removeEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
+    };
+  }, [user]);
+
   // ล็อกการเลื่อนหน้าเมื่อ Modal เปิด
   useEffect(() => {
     if (isEditing) {

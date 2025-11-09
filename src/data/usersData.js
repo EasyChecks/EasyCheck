@@ -407,14 +407,6 @@ export const getUserForAuth = (employeeId) => {
     isAdminAccount: false
   };
   
-  // 🔍 Debug log
-  console.log('🔐 getUserForAuth() result:', {
-    employeeId,
-    originalRole: user.role,
-    finalRole: normalUserData.role,
-    isAdminAccount: false
-  });
-  
   return normalUserData;
 };
 
@@ -1289,15 +1281,6 @@ export const mockLoginAPI = async (username, password) => {
   // 1. ลองหา user จาก usersData เดิมก่อน (getUserForAuth จะดู localStorage อยู่แล้ว)
   let user = getUserForAuth(username);
   
-  // 🔍 Debug: ตรวจสอบ role ที่ได้จาก getUserForAuth
-  if (user) {
-    console.log(`🔐 Login: ${username}`, {
-      name: user.name,
-      role: user.role,
-      isAdminAccount: user.isAdminAccount || false
-    });
-  }
-  
   // 2. ถ้าไม่เจอ ให้ลองหาจาก usersData ที่บันทึกใน localStorage (user ที่เพิ่มใหม่)
   if (!user) {
     try {
@@ -1348,7 +1331,6 @@ export const initializeUsersData = () => {
     if (!storedUsers) {
       // ถ้ายังไม่มีข้อมูลใน localStorage ให้บันทึกข้อมูลเริ่มต้น
       localStorage.setItem('usersData', JSON.stringify(usersData));
-      console.log('✅ Initialized usersData in localStorage');
     }
   } catch (error) {
     console.error('Failed to initialize usersData:', error);

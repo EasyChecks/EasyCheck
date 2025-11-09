@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useAuth } from '../../contexts/useAuth';
 
 
 /**
  * AttendanceStatsCard - แสดงสถิติการลงเวลาแบบ real-time
  * ข้อมูล sync กับระบบการลงเวลาจริง
+ * Optimized with React.memo to prevent unnecessary re-renders
  */
-export const AttendanceStatsCard = ({ className = '' }) => {
+export const AttendanceStatsCard = memo(function AttendanceStatsCard({ className = '' }) {
   const { attendanceStats } = useAuth();
 
   return (
@@ -93,12 +94,13 @@ export const AttendanceStatsCard = ({ className = '' }) => {
       )}
     </div>
   );
-};
+});
 
 /**
  * AttendanceStatsRow - แสดงสถิติแบบแถวเดียว (สำหรับ Dashboard)
+ * Optimized with React.memo to prevent unnecessary re-renders
  */
-export const AttendanceStatsRow = ({ className = '' }) => {
+export const AttendanceStatsRow = memo(function AttendanceStatsRow({ className = '' }) {
   const { attendanceStats } = useAuth();
 
   const stats = [
@@ -162,12 +164,13 @@ export const AttendanceStatsRow = ({ className = '' }) => {
       </div>
     </div>
   );
-};
+});
 
 /**
  * AttendanceProgressBar - แสดงความคืบหน้าเป็น % (เช่น % มาตรงเวลา)
+ * Optimized with React.memo to prevent unnecessary re-renders
  */
-export const AttendanceProgressBar = ({ className = '' }) => {
+export const AttendanceProgressBar = memo(function AttendanceProgressBar({ className = '' }) {
   const { attendanceStats } = useAuth();
   
   const total = attendanceStats.totalWorkDays || 1;
@@ -224,6 +227,6 @@ export const AttendanceProgressBar = ({ className = '' }) => {
       </div>
     </div>
   );
-};
+});
 
 export default AttendanceStatsCard;

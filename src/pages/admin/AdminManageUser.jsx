@@ -91,6 +91,7 @@ function AdminManageUser() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterBranch, setFilterBranch] = useState('all'); // 🆕 Branch filter
   
   // CSV Import States
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -130,15 +131,41 @@ function AdminManageUser() {
 
   // Filter and search users - ใช้ debouncedSearchTerm แทน searchTerm
   const filteredUsers = useMemo(() => {
-    return users.filter(user => {
+    let filtered = users;
+    
+    // 🔥 ถ้าเป็น admin (ไม่ใช่ superadmin) ให้เห็นเฉพาะสาขาตัวเอง
+    if (currentUser?.role === 'admin') {
+      // Extract branch จาก employeeId, provinceCode, หรือ branch field
+      const adminBranch = currentUser.branch || currentUser.provinceCode || currentUser.employeeId?.substring(0, 3);
+      
+      if (adminBranch) {
+        filtered = filtered.filter(user => {
+          const userBranch = user.branch || user.provinceCode || user.employeeId?.substring(0, 3);
+          return userBranch === adminBranch;
+        });
+      }
+    }
+    
+    // Search filter
+    filtered = filtered.filter(user => {
       const matchesSearch = user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                            user.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                            user.employeeId?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                            user.username?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
-      const matchesFilter = filterStatus === 'all' || user.status === filterStatus;
-      return matchesSearch && matchesFilter;
+      const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
+      
+      // 🆕 Branch filter - ใช้ provinceCode, branch, หรือ employeeId
+      let matchesBranch = true;
+      if (filterBranch !== 'all') {
+        const userBranch = user.branch || user.provinceCode || user.employeeId?.substring(0, 3);
+        matchesBranch = userBranch === filterBranch;
+      }
+      
+      return matchesSearch && matchesStatus && matchesBranch;
     });
-  }, [users, debouncedSearchTerm, filterStatus]); // ใช้ debouncedSearchTerm แทน searchTerm
+    
+    return filtered;
+  }, [users, debouncedSearchTerm, filterStatus, filterBranch, currentUser]); // เพิ่ม filterBranch และ currentUser
 
   const openDetail = (user) => {
     setSelectedUser(user);
@@ -329,7 +356,7 @@ function AdminManageUser() {
       (userToDelete.adminAccount ? `• บัญชี Admin (${userToDelete.adminAccount})\n` : '') +
       `• ประวัติการเข้างาน\n` +
       `• ข้อมูลการลา\n\n` +
-      `⚠️ การดำเนินการนี้ไม่สามารถย้อนกลับได้!`
+      `การดำเนินการนี้ไม่สามารถย้อนกลับได้!`
     );
 
     if (!confirmDelete) return;
@@ -728,12 +755,26 @@ function AdminManageUser() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="cursor-pointer px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors bg-white"
           >
-            <option value="all">ทั้งหมด</option>
+            <option value="all">สถานะ: ทั้งหมด</option>
             <option value="active">Active</option>
             <option value="leave">Leave</option>
             <option value="suspended">Suspended</option>
             <option value="pending">Pending</option>
           </select>
+          
+          {/* 🆕 Branch Filter - แสดงเฉพาะ Super Admin */}
+          {currentUser?.role === 'superadmin' && (
+            <select
+              value={filterBranch}
+              onChange={(e) => setFilterBranch(e.target.value)}
+              className="cursor-pointer px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors bg-white"
+            >
+              <option value="all">สาขา: ทั้งหมด</option>
+              <option value="BKK">กรุงเทพฯ (BKK)</option>
+              <option value="CNX">เชียงใหม่ (CNX)</option>
+              <option value="PKT">ภูเก็ต (PKT)</option>
+            </select>
+          )}
         </div>
 
         {/* User Table Component */}
@@ -745,32 +786,59 @@ function AdminManageUser() {
 
         {/* Footer legend */}
         <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            คำอธิบายสถานะ
+            คำอธิบาย
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-green-500"></span>
-              <span className="text-green-600 font-semibold">Active</span>
-              <span className="text-gray-500">: ยังคงทำงานอยู่</span>
+          
+          {/* สถานะพนักงาน */}
+          <div className="mb-3">
+            <h4 className="text-xs font-semibold text-gray-600 mb-2">สถานะพนักงาน:</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                <span className="text-green-600 font-semibold">Active</span>
+                <span className="text-gray-500">: ยังคงทำงานอยู่</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                <span className="text-red-600 font-semibold">leave</span>
+                <span className="text-gray-500">: ลาออกแล้ว</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-gray-500"></span>
+                <span className="text-gray-700 font-semibold">Suspended</span>
+                <span className="text-gray-500">: โดนพักงาน</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                <span className="text-amber-700 font-semibold">Pending</span>
+                <span className="text-gray-500">: รอโปรโมท</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-500"></span>
-              <span className="text-red-600 font-semibold">leave</span>
-              <span className="text-gray-500">: ลาออกแล้ว</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-              <span className="text-gray-700 font-semibold">Suspended</span>
-              <span className="text-gray-500">: โดนพักงาน</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-500"></span>
-              <span className="text-amber-700 font-semibold">Pending</span>
-              <span className="text-gray-500">: รอโปรโมท</span>
+          </div>
+          
+          {/* 🆕 สาขา */}
+          <div>
+            <h4 className="text-xs font-semibold text-gray-600 mb-2">สาขา:</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                <span className="text-blue-600 font-semibold">BKK</span>
+                <span className="text-gray-500">: กรุงเทพมหานคร</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                <span className="text-purple-600 font-semibold">CNX</span>
+                <span className="text-gray-500">: เชียงใหม่</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-teal-500"></span>
+                <span className="text-teal-600 font-semibold">PKT</span>
+                <span className="text-gray-500">: ภูเก็ต</span>
+              </div>
             </div>
           </div>
         </div>

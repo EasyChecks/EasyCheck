@@ -225,7 +225,6 @@ export default function Warning() {
     if (!selectedItem) return
     
     // อัพเดทสถานะเป็น "อนุมัติ"
-    console.log('Approving leave:', selectedItem.id, 'Status will be: อนุมัติ')
     updateLeaveStatus(selectedItem.id, 'อนุมัติ')
     
     setExpandedIds(prev => prev.filter(x => x !== selectedItem.id))
@@ -256,7 +255,6 @@ export default function Warning() {
     }
     
     // อัพเดทสถานะเป็น "ไม่อนุมัติ"
-    console.log('Rejecting leave:', selectedItem.id, 'Status will be: ไม่อนุมัติ')
     updateLeaveStatus(selectedItem.id, 'ไม่อนุมัติ')
     
     setExpandedIds(prev => prev.filter(x => x !== selectedItem.id))

@@ -3,12 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import { useLoading } from '../../contexts/useLoading'
 import { useLocations } from '../../contexts/LocationContext'
-import { useLeave } from '../../contexts/LeaveContext'
-import { useEvents } from '../../contexts/EventContext'
 import { validateBuddy, sampleSchedules } from '../../data/usersData'
 import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 import { useCamera } from '../../hooks/useCamera'
 import { config } from '../../config'
+import { getCheckInStatus } from '../../utils/attendanceCalculator'
 
 function UserDashboard() {
   const { attendance, user, attendanceRecords } = useAuth()
@@ -239,6 +238,22 @@ function UserDashboard() {
     return () => window.removeEventListener('attendanceUpdated', handleAttendanceUpdate)
   }, [user])
 
+  // 🔥 ฟังการอัปเดต timeSummary real-time (สำหรับ AttendanceStatsRow)
+  useEffect(() => {
+    const handleTimeSummaryUpdate = (e) => {
+      if (e.detail.userId === user?.id) {
+        // Force re-render โดยการอัปเดต state (ถ้ามี)
+        // AttendanceStatsRow จะดึงข้อมูลใหม่จาก useAuth() อัตโนมัติ
+        window.dispatchEvent(new Event('storage')); // trigger storage event
+      }
+    };
+
+    window.addEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
+    return () => {
+      window.removeEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
+    };
+  }, [user]);
+
   // ล็อกการเลื่อนเมื่อ Modal เปิด
   useEffect(() => {
     if (showBuddyCheckIn || showAttendanceHistory) {
@@ -277,27 +292,113 @@ function UserDashboard() {
       return
     }
 
-    // ตรวจสอบข้อมูลพนักงานจาก Mock Data
-    const validBuddy = validateBuddy(buddyData.employeeId, buddyData.phone)
-    
-    if (!validBuddy) {
-      setBuddyError('ไม่พบข้อมูลพนักงาน หรือรหัสพนักงานกับเบอร์โทรไม่ตรงกัน')
-      return
+    try {
+      // ตรวจสอบข้อมูลพนักงานจาก Mock Data
+      const validBuddy = validateBuddy(buddyData.employeeId, buddyData.phone)
+      
+      if (!validBuddy) {
+        setBuddyError('ไม่พบข้อมูลพนักงาน หรือรหัสพนักงานกับเบอร์โทรไม่ตรงกัน')
+        return
+      }
+
+      // ตรวจสอบว่าเพื่อนมีตารางงานวันนี้หรือไม่
+      const buddySchedule = allSchedules.find(s => 
+        (!s.teams || s.teams.length === 0 || 
+         s.teams.some(team => 
+           team === validBuddy.department || 
+           team === validBuddy.position || 
+           team === validBuddy.role
+         ))
+      )
+
+      if (!buddySchedule) {
+        setBuddyError(`${validBuddy.name} ไม่มีตารางงานวันนี้`)
+        return
+      }
+
+      // ดึงข้อมูล user จาก localStorage
+      const storedUsers = localStorage.getItem('usersData')
+      if (!storedUsers) {
+        setBuddyError('ไม่พบข้อมูลระบบ')
+        return
+      }
+
+      const users = JSON.parse(storedUsers)
+      const buddyIndex = users.findIndex(u => u.id === validBuddy.id)
+      
+      if (buddyIndex === -1) {
+        setBuddyError('ไม่พบข้อมูลพนักงานในระบบ')
+        return
+      }
+
+      // ตรวจสอบสถานะการเช็คอินของเพื่อน
+      const today = new Date()
+      const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear() + 543}`
+      
+      const buddyAttendance = users[buddyIndex].attendanceRecords?.find(r => r.date === todayStr)
+      
+      if (buddyAttendance?.checkIn?.time) {
+        setBuddyError(`${validBuddy.name} เช็คอินไปแล้วเมื่อ ${buddyAttendance.checkIn.time} น.`)
+        return
+      }
+
+      // ใช้ percentage-based late detection
+      const currentTime = `${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`
+      const [startTimeStr, endTimeStr] = buddySchedule.time.split(' - ')
+      const workTimeStart = startTimeStr.replace('.', ':')
+      const workTimeEnd = endTimeStr.replace('.', ':')
+      
+      const statusResult = getCheckInStatus(currentTime, workTimeStart, workTimeEnd)
+      const status = statusResult.status
+
+      // บันทึกการเช็คอินแทน
+      const checkInData = {
+        time: currentTime,
+        status: status,
+        location: user?.department || 'Unknown',
+        photo: null,
+        gps: null,
+        checkedByBuddy: true,
+        buddyName: user?.name || 'Unknown'
+      }
+
+      // อัปเดตข้อมูล
+      if (!users[buddyIndex].attendanceRecords) {
+        users[buddyIndex].attendanceRecords = []
+      }
+
+      const existingRecordIndex = users[buddyIndex].attendanceRecords.findIndex(r => r.date === todayStr)
+      
+      if (existingRecordIndex >= 0) {
+        users[buddyIndex].attendanceRecords[existingRecordIndex].checkIn = checkInData
+      } else {
+        users[buddyIndex].attendanceRecords.push({
+          date: todayStr,
+          checkIn: checkInData,
+          checkOut: null
+        })
+      }
+
+      // บันทึกลง localStorage
+      localStorage.setItem('usersData', JSON.stringify(users))
+      
+      // Dispatch event เพื่อ sync ข้อมูล
+      window.dispatchEvent(new Event('storage'))
+
+      // บันทึกสำเร็จ
+      setBuddyError('')
+      setBuddySuccess(true)
+
+      // รีเซ็ตและปิด modal หลัง 2 วินาที
+      setTimeout(() => {
+        setShowBuddyCheckIn(false)
+        setBuddySuccess(false)
+        setBuddyData({ employeeId: '', phone: '' })
+      }, 2000)
+    } catch (error) {
+      console.error('Buddy check-in error:', error)
+      setBuddyError('เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง')
     }
-
-    // บันทึกสำเร็จ
-    setBuddyError('')
-    setBuddySuccess(true)
-
-    // แสดงข้อความสำเร็จพร้อมชื่อเพื่อน
-    console.log(`✅ เช็คชื่อแทนเพื่อนสำเร็จ: ${validBuddy.name} (${validBuddy.employeeId})`)
-
-    // รีเซ็ตและปิด modal หลัง 2 วินาที
-    setTimeout(() => {
-      setShowBuddyCheckIn(false)
-      setBuddySuccess(false)
-      setBuddyData({ employeeId: '', phone: '' })
-    }, 2000)
   }
 
   const handleBuddyInputChange = (field, value) => {
@@ -354,7 +455,7 @@ function UserDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="black">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <span className="text-sm text-black">⚠️ คุณอยู่นอกพื้นที่อนุญาต - ไม่สามารถเช็คอินได้</span>
+            <span className="text-sm text-black">คุณอยู่นอกพื้นที่อนุญาต - ไม่สามารถเช็คอินได้</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 p-3 mb-4 border bg-green-500/30 backdrop-blur-sm rounded-xl border-green-300/50">
@@ -578,7 +679,7 @@ function UserDashboard() {
                               {shifts.length} {shifts.length === 1 ? 'กะ' : 'กะ'}
                             </p>
                           </div>
-                          <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          {/* <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             shifts.some(s => s.status === 'late') ? 'bg-yellow-100 text-yellow-700' :
                             shifts.some(s => s.status === 'on_time') ? 'bg-green-100 text-green-700' :
                             'bg-gray-100 text-gray-700'
@@ -598,7 +699,7 @@ function UserDashboard() {
                                 ตรงเวลา
                               </span>
                             ) : '📝 บันทึกแล้ว'}
-                          </div>
+                          </div> */}
                         </div>
                         
                         <div className="space-y-3">

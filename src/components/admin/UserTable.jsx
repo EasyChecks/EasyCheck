@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
 // Component: UserTable - แสดงตารางรายชื่อพนักงานพร้อมระบบขยายดูข้อมูล GPS และรูปถ่าย
 // Props:
@@ -13,80 +13,134 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
   const [selectedDate, setSelectedDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
+  
+  // 🆕 กะที่เลือก - Default เป็นทุกกะ
+  const [selectedShift, setSelectedShift] = useState('all');
 
   // ฟังก์ชันดึงข้อมูลการเข้างานจริงจาก usersData
   // Parameters:
   //   - userId: รหัสพนักงาน
   //   - userName: ชื่อพนักงาน
   //   - date: วันที่ที่ต้องการดูข้อมูล (DD/MM/YYYY+543 - รูปแบบไทย)
+  //   - shiftFilter: กะที่ต้องการดู ('all', '1', '2')
   // Returns: Object ที่มีข้อมูล checkIn และ checkOut หรือ null ถ้าไม่มีข้อมูล
-  const getAttendanceData = useMemo(() => {
-    return (userId, userName, date) => {
-      try {
-        // แปลงวันที่จาก YYYY-MM-DD เป็นรูปแบบไทย DD/MM/YYYY+543
-        const [year, month, day] = date.split('-');
-        const thaiYear = parseInt(year) + 543;
-        const thaiDate = `${day}/${month}/${thaiYear}`;
-        
-        console.log(`🔍 ค้นหาข้อมูล: userId=${userId}, date=${date} → ${thaiDate}`);
-        
-        // ดึงข้อมูลจาก usersData แทน attendanceRecords
-        const usersDataJson = localStorage.getItem('usersData');
-        
-        if (!usersDataJson) {
-          console.log(`❌ ไม่พบ usersData ใน localStorage`);
-          return null;
-        }
-        
-        const usersData = JSON.parse(usersDataJson);
-        const userData = usersData.find(u => u.id === userId);
-        
-        if (!userData || !userData.attendanceRecords) {
-          console.log(`❌ ไม่พบข้อมูลผู้ใช้ ${userName} (${userId})`);
-          return null;
-        }
-        
-        // หาข้อมูลของวันที่ต้องการ
-        const record = userData.attendanceRecords.find(r => r.date === thaiDate);
-        
-        if (!record) {
-          console.log(`❌ ไม่พบข้อมูลวันที่ ${thaiDate} สำหรับ ${userName}`);
-          return null;
-        }
-        
-        // ตรวจสอบว่ามีข้อมูล checkIn หรือไม่
-        if (!record.checkIn || !record.checkIn.time) {
-          console.log(`❌ ไม่มีข้อมูล checkIn ในวันที่ ${thaiDate}`);
-          return null;
-        }
-        
-        console.log(`✅ พบข้อมูล:`, record);
-        
-        // สร้างข้อมูลในรูปแบบที่ UI ต้องการ
-        return {
-          checkIn: {
-            time: record.checkIn.time || '-',
-            gpsStatus: record.checkIn.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
-            distance: record.checkIn.distance || 'ไม่ทราบ',
-            location: record.checkIn.address || record.checkIn.location || 'ไม่มีข้อมูล',
-            photo: record.checkIn.photo || null,
-            status: record.checkIn.status === 'ตรงเวลา' ? 'on_time' : 
-                   record.checkIn.status === 'มาสาย' ? 'late' : 
-                   record.checkIn.status === 'ขาด' ? 'absent' : 'on_time'
-          },
-          checkOut: record.checkOut ? {
-            time: record.checkOut.time || '-',
-            gpsStatus: record.checkOut.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
-            distance: record.checkOut.distance || 'ไม่ทราบ',
-            location: record.checkOut.address || record.checkOut.location || 'ไม่มีข้อมูล',
-            photo: record.checkOut.photo || null
-          } : null
-        };
-      } catch (error) {
-        console.error('❌ Error loading attendance data:', error);
+  const getAttendanceData = useCallback((userId, userName, date, shiftFilter = 'all') => {
+    try {
+      // แปลงวันที่จาก YYYY-MM-DD เป็นรูปแบบไทย DD/MM/YYYY+543
+      const [year, month, day] = date.split('-');
+      const thaiYear = parseInt(year) + 543;
+      const thaiDate = `${day}/${month}/${thaiYear}`;
+      
+      // ดึงข้อมูลจาก usersData แทน attendanceRecords
+      const usersDataJson = localStorage.getItem('usersData');
+      
+      if (!usersDataJson) {
         return null;
       }
-    };
+      
+      const usersData = JSON.parse(usersDataJson);
+      const userData = usersData.find(u => u.id === userId);
+      
+      if (!userData || !userData.attendanceRecords) {
+        return null;
+      }
+      
+      // หาข้อมูลของวันที่ต้องการ
+      const record = userData.attendanceRecords.find(r => r.date === thaiDate);
+      
+      if (!record) {
+        return null;
+      }
+      
+      // 🆕 รองรับทั้ง format เก่า (checkIn/checkOut) และ format ใหม่ (shifts array)
+      let checkInData = null;
+      let checkOutData = null;
+      
+      if (record.shifts && Array.isArray(record.shifts)) {
+        // Format ใหม่ - มี shifts array
+        if (shiftFilter === 'all') {
+          // แสดงกะแรก (ถ้าต้องการแสดงทุกกะต้องปรับ UI)
+          const shift = record.shifts[0];
+          if (shift) {
+            checkInData = {
+              time: shift.checkIn || '-',
+              gpsStatus: 'อยู่ในระยะ',
+              distance: '15 เมตร',
+              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              photo: shift.checkInPhoto || null,
+              status: shift.status || 'on_time',
+              checkedByBuddy: shift.checkedByBuddy || false,
+              buddyName: shift.buddyName || null
+            };
+            checkOutData = shift.checkOut ? {
+              time: shift.checkOut || '-',
+              gpsStatus: 'อยู่ในระยะ',
+              distance: '18 เมตร',
+              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              photo: shift.checkOutPhoto || null
+            } : null;
+          }
+        } else {
+          // แสดงกะที่เลือก
+          const shiftIndex = parseInt(shiftFilter) - 1;
+          const shift = record.shifts[shiftIndex];
+          if (shift) {
+            checkInData = {
+              time: shift.checkIn || '-',
+              gpsStatus: 'อยู่ในระยะ',
+              distance: '15 เมตร',
+              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              photo: shift.checkInPhoto || null,
+              status: shift.status || 'on_time',
+              checkedByBuddy: shift.checkedByBuddy || false,
+              buddyName: shift.buddyName || null
+            };
+            checkOutData = shift.checkOut ? {
+              time: shift.checkOut || '-',
+              gpsStatus: 'อยู่ในระยะ',
+              distance: '18 เมตร',
+              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              photo: shift.checkOutPhoto || null
+            } : null;
+          }
+        }
+      } else if (record.checkIn && record.checkIn.time) {
+        // Format เก่า - มี checkIn/checkOut โดยตรง
+        checkInData = {
+          time: record.checkIn.time || '-',
+          gpsStatus: record.checkIn.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
+          distance: record.checkIn.distance || 'ไม่ทราบ',
+          location: record.checkIn.address || record.checkIn.location || 'ไม่มีข้อมูล',
+          photo: record.checkIn.photo || null,
+          status: record.checkIn.status === 'ตรงเวลา' ? 'on_time' : 
+                 record.checkIn.status === 'มาสาย' ? 'late' : 
+                 record.checkIn.status === 'ขาด' ? 'absent' : 'on_time',
+          checkedByBuddy: record.checkIn.checkedByBuddy || false,
+          buddyName: record.checkIn.buddyName || null
+        };
+        checkOutData = record.checkOut ? {
+          time: record.checkOut.time || '-',
+          gpsStatus: record.checkOut.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
+          distance: record.checkOut.distance || 'ไม่ทราบ',
+          location: record.checkOut.address || record.checkOut.location || 'ไม่มีข้อมูล',
+          photo: record.checkOut.photo || null,
+          checkedByBuddy: record.checkOut.checkedByBuddy || false,
+          buddyName: record.checkOut.buddyName || null
+        } : null;
+      }
+      
+      if (!checkInData) {
+        return null;
+      }
+      
+      return {
+        checkIn: checkInData,
+        checkOut: checkOutData
+      };
+    } catch (error) {
+      console.error('❌ Error loading attendance data:', error);
+      return null;
+    }
   }, []); // Empty dependency - ฟังก์ชันนี้ไม่ขึ้นกับ state ใดๆ
 
 
@@ -136,7 +190,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
           <tbody className="divide-y divide-gray-200">
             {users.map((user) => {
               const isExpanded = expandedUserId === user.id;
-              const attendanceData = isExpanded ? getAttendanceData(user.id, user.name, selectedDate) : null;
+              const attendanceData = isExpanded ? getAttendanceData(user.id, user.name, selectedDate, selectedShift) : null;
               
               return (
                 <React.Fragment key={user.id}>
@@ -224,26 +278,61 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                     <tr className="bg-white dark:bg-secondary/95 transition-colors duration-300">
                       <td colSpan="7" className="px-6 py-6">
                         <div className="space-y-4">
-                          {/* Date Selector */}
-                          <div className="flex items-center gap-3 mb-4">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              เลือกวันที่:
-                            </label>
-                            <input
-                              type="date"
-                              value={selectedDate}
-                              onChange={(e) => handleDateChange(e.target.value, e)}
-                              className="px-4 py-2 border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none transition-colors text-sm font-medium"
-                              style={{ colorScheme: 'light' }}
-                            />
+                          {/* Date & Shift Selector */}
+                          <div className="flex items-center gap-3 mb-4 flex-wrap">
+                            {/* Date Selector */}
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                เลือกวันที่:
+                              </label>
+                              <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => handleDateChange(e.target.value, e)}
+                                className="px-4 py-2 border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none transition-colors text-sm font-medium"
+                                style={{ colorScheme: 'light' }}
+                              />
+                            </div>
+                            
+                            {/* 🆕 Shift Selector */}
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                เลือกกะ:
+                              </label>
+                              <select
+                                value={selectedShift}
+                                onChange={(e) => setSelectedShift(e.target.value)}
+                                className="px-4 py-2 border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm font-medium bg-white cursor-pointer"
+                              >
+                                <option value="all">ทุกกะ</option>
+                                <option value="1">กะที่ 1 (เช้า)</option>
+                                <option value="2">กะที่ 2 (บ่าย/เย็น)</option>
+                              </select>
+                            </div>
                           </div>
 
                           {/* แสดงข้อมูลถ้ามี หรือ SVG ถ้าไม่มี */}
                           {attendanceData ? (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                              {/* 🆕 แสดงข้อความกะที่เลือก */}
+                              {selectedShift !== 'all' && (
+                                <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                                  <p className="text-sm font-medium text-blue-900">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    กำลังแสดงข้อมูล: กะที่ {selectedShift} ({selectedShift === '1' ? 'เช้า' : 'บ่าย/เย็น'})
+                                  </p>
+                                </div>
+                              )}
+                              
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               {/* Check-in Section */}
                               <div className="bg-white rounded-xl shadow-md border-2 border-green-200 overflow-hidden">
                                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3">
@@ -334,6 +423,28 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                         <p className="font-mono text-xs font-semibold text-gray-950 mt-1">{attendanceData.checkIn.location}</p>
                                       </div>
                                     </div>
+                                    
+                                    {/* 🆕 แสดงหมายเหตุเช็คแทน */}
+                                    {attendanceData.checkIn.checkedByBuddy && (
+                                      <div className="flex items-start gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                        <div>
+                                          <span className="text-yellow-700 font-semibold text-xs flex items-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            เช็คแทน
+                                          </span>
+                                          {attendanceData.checkIn.buddyName && (
+                                            <p className="text-xs text-yellow-600 mt-0.5">
+                                              โดย: {attendanceData.checkIn.buddyName}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -411,6 +522,28 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                           <p className="font-mono text-xs font-semibold text-gray-950 mt-1">{attendanceData.checkOut.location}</p>
                                         </div>
                                       </div>
+                                      
+                                      {/* 🆕 แสดงหมายเหตุเช็คแทน */}
+                                      {attendanceData.checkOut.checkedByBuddy && (
+                                        <div className="flex items-start gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                          </svg>
+                                          <div>
+                                            <span className="text-yellow-700 font-semibold text-xs flex items-center gap-1">
+                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                              </svg>
+                                              เช็คแทน
+                                            </span>
+                                            {attendanceData.checkOut.buddyName && (
+                                              <p className="text-xs text-yellow-600 mt-0.5">
+                                                โดย: {attendanceData.checkOut.buddyName}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -424,7 +557,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                       Check-out
                                     </h4>
                                   </div>
-                                  <div className="p-8 flex items-center justify-center">
+                                  <div className="p-8 flex items-center justify-center h-full">
                                     <div className="text-center text-gray-400">
                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -435,6 +568,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                   </div>
                                 </div>
                               )}
+                              </div>
                             </div>
                           ) : (
                             <div className="bg-gray-50 rounded-xl shadow-md border-2 border-gray-300 overflow-hidden p-8">

@@ -4,8 +4,11 @@ import { useAuth } from '../../../contexts/useAuth'
 
 function AdminLayout() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  
+  // 🔥 กำหนด title ตาม role
+  const adminPanelTitle = user?.role === 'superadmin' ? 'Super Admin Panel' : 'Admin Panel'
 
   const handleLogout = () => {
     if (logout) {
@@ -93,7 +96,7 @@ function AdminLayout() {
           {!sidebarCollapsed && (
             <div>
               <h1 className="text-2xl font-bold">Easy Check</h1>
-              <p className="text-xs text-white/70 mt-1">Admin Panel</p>
+              <p className="text-xs text-white/70 mt-1">{adminPanelTitle}</p>
             </div>
           )}
           <button
