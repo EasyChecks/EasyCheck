@@ -22,21 +22,18 @@ const loadImageAsBase64 = async (imageUrl) => {
   return new Promise((resolve) => {
     // ถ้าเป็น base64 อยู่แล้ว
     if (imageUrl && imageUrl.startsWith('data:image')) {
-      console.log('Image is already base64');
       resolve(imageUrl);
       return;
     }
 
     // ถ้าไม่มี URL ให้ส่ง null กลับไปใช้ placeholder
     if (!imageUrl) {
-      console.log('No image URL provided');
       resolve(null);
       return;
     }
 
     // ถ้าเป็น URL ภายนอก ให้ใช้ placeholder เลย (เพราะ CORS จะ block)
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      console.warn('External URL detected, will use placeholder:', imageUrl);
       resolve(null);
       return;
     }
@@ -55,7 +52,6 @@ const loadImageAsBase64 = async (imageUrl) => {
           ctx.drawImage(img, 0, 0);
           
           const base64 = canvas.toDataURL('image/png');
-          console.log('Image converted to base64 successfully');
           resolve(base64);
         } catch (error) {
           console.error('Canvas conversion error:', error);
@@ -243,7 +239,7 @@ const createPage1HTML = (user, profileImageBase64, statusInfo) => {
       <!-- ผู้ติดต่อฉุกเฉิน -->
       <div>
         <div style="background: #fef3c7; padding: 12px 20px; border-radius: 8px 8px 0 0;">
-          <h3 style="margin: 0; font-size: 18px; color: #92400e; font-weight: bold;">⚠️ ผู้ติดต่อฉุกเฉิน</h3>
+          <h3 style="margin: 0; font-size: 18px; color: #92400e; font-weight: bold;">📞 ผู้ติดต่อฉุกเฉิน</h3>
         </div>
         <div style="background: white; padding: 20px; border: 2px solid #fef3c7; border-top: none; border-radius: 0 0 8px 8px;">
           <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
@@ -408,44 +404,26 @@ const htmlToCanvas = async (htmlString, width = 800) => {
 // ฟังก์ชันหลักสำหรับสร้าง PDF
 export const generateUserPDF = async (user) => {
   try {
-    console.log('=== Starting PDF Generation ===');
-    console.log('User:', user.name);
-    console.log('Profile Image URL:', user.profileImage);
-
     // โหลดรูปภาพโปรไฟล์
     let profileImageBase64 = null;
     
     if (user.profileImage) {
-      console.log('Loading profile image...');
       profileImageBase64 = await loadImageAsBase64(user.profileImage);
     }
     
     // ถ้าโหลดไม่สำเร็จ ใช้ placeholder
     if (!profileImageBase64) {
-      console.log('Creating placeholder avatar...');
       profileImageBase64 = createPlaceholderAvatar(user.name || 'User');
     }
-    
-    console.log('Image ready:', profileImageBase64 ? 'Yes' : 'No');
 
     // ข้อมูล status
     const statusInfo = getStatusInfo(user.status);
-    
-    console.log('User data check:');
-    console.log('- Work History:', user.workHistory ? user.workHistory.length : 0);
-    console.log('- Education:', user.education ? user.education.length : 0);
-    console.log('- Skills:', user.skills ? user.skills.length : 0);
-    
-    if (user.education && user.education.length > 0) {
-      console.log('Education data sample:', JSON.stringify(user.education[0], null, 2));
-    }
 
     // สร้าง PDF
     const pdf = new jsPDF('p', 'mm', 'a4');
   const pdfWidth = pdf.internal.pageSize.getWidth();
 
     // สร้างและแปลงหน้า 1
-    console.log('Generating page 1...');
     const page1HTML = createPage1HTML(user, profileImageBase64, statusInfo);
     const canvas1 = await htmlToCanvas(page1HTML);
     
@@ -454,7 +432,6 @@ export const generateUserPDF = async (user) => {
     const imgHeight1 = (canvas1.height * pdfWidth) / canvas1.width;
     
     pdf.addImage(imgData1, 'PNG', 0, 0, imgWidth1, imgHeight1);
-    console.log('Page 1 complete');
 
     // ตรวจสอบว่ามีข้อมูลหน้า 2 หรือไม่
     const hasWorkHistory = user.workHistory && user.workHistory.length > 0;
@@ -462,8 +439,6 @@ export const generateUserPDF = async (user) => {
     const hasSkills = user.skills && user.skills.length > 0;
 
     if (hasWorkHistory || hasEducation || hasSkills) {
-      console.log('Generating page 2...');
-      
       // สร้างและแปลงหน้า 2
       const page2HTML = createPage2HTML(user);
       const canvas2 = await htmlToCanvas(page2HTML);
@@ -474,15 +449,11 @@ export const generateUserPDF = async (user) => {
       const imgHeight2 = (canvas2.height * pdfWidth) / canvas2.width;
       
       pdf.addImage(imgData2, 'PNG', 0, 0, imgWidth2, imgHeight2);
-      console.log('Page 2 complete');
     }
 
     // บันทึก PDF
     const fileName = `${user.name || 'employee'}_${user.employeeId || 'unknown'}.pdf`;
     pdf.save(fileName);
-    
-    console.log('=== PDF Generated Successfully ===');
-    console.log('File name:', fileName);
     
     return true;
   } catch (error) {

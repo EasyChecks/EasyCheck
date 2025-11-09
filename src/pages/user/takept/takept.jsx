@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/useAuth';
 import { compressImage, getBase64Size } from '../../../utils/imageCompressor';
+import { getCheckInStatus } from '../../../utils/attendanceCalculator';
 
 function TakePhoto() {
   const navigate = useNavigate();
@@ -150,7 +151,7 @@ function TakePhoto() {
       // ถ้าเลยเวลาตาราง + buffer แล้ว (หลัง end time + 30 นาที)
       if (currentTimeInMinutes > (endTimeInMinutes + bufferAfterEndMinutes)) {
         const scheduleEndTime = schedule.time.split(' - ')[1];
-        setPopupInfoMessage(`❌ ไม่สามารถเข้า/ออกงานได้\nเลยเวลาที่กำหนด (หลัง ${scheduleEndTime} น. + 30 นาที)\nกรุณาติดต่อผู้จัดการ`);
+        setPopupInfoMessage(`ไม่สามารถเข้า/ออกงานได้\nเลยเวลาที่กำหนด (หลัง ${scheduleEndTime} น. + 30 นาที)\nกรุณาติดต่อผู้จัดการ`);
         setShowInfoPopup(true);
         return;
       }
@@ -158,50 +159,50 @@ function TakePhoto() {
       // ถ้ายังไม่ถึงเวลาเริ่มงาน (ก่อน start time มากกว่า 1 ชั่วโมง)
       if (currentTimeInMinutes < (startTimeInMinutes - 60)) {
         const scheduleStartTime = schedule.time.split(' - ')[0];
-        setPopupInfoMessage(`⏰ ยังไม่ถึงเวลาเริ่มงาน\nเวลาเริ่มงาน: ${scheduleStartTime} น.`);
+        setPopupInfoMessage(`ยังไม่ถึงเวลาเริ่มงาน\nเวลาเริ่มงาน: ${scheduleStartTime} น.`);
         setShowInfoPopup(true);
         return;
       }
     }
     
-    if (attendance.status === 'not_checked_in') {
-      // กฎการเข้างาน
-      let status = 'on_time'; // ค่าเริ่มต้น
-      let message = `เข้างานตรงเวลา ${currentTime} น.`;
-      
-      if (scheduleTimes.start) {
-        const lateThresholdMinutes = 30; // สายได้ไม่เกิน 30 นาที
-        const timeDiffMs = now - scheduleTimes.start;
-        const timeDiffMinutes = Math.floor(timeDiffMs / (1000 * 60));
+    try {
+      if (attendance.status === 'not_checked_in') {
+        // 🆕 ใช้ percentage-based late detection
+        const [startTimeStr, endTimeStr] = schedule.time.split(' - ');
+        const workTimeStart = startTimeStr.replace('.', ':'); // แปลง "07.00" เป็น "07:00"
+        const workTimeEnd = endTimeStr.replace('.', ':');
         
-        if (timeDiffMinutes < 0) {
-          // เข้าก่อนเวลา = ตรงเวลา
-          status = 'on_time';
+        const statusResult = getCheckInStatus(currentTime, workTimeStart, workTimeEnd);
+        const status = statusResult.status; // 'on_time', 'late', 'absent'
+        
+        let message = '';
+        if (status === 'on_time') {
           message = `เข้างานตรงเวลา ${currentTime} น.`;
-        } else if (timeDiffMinutes > 0 && timeDiffMinutes <= lateThresholdMinutes) {
-          // สายไม่เกิน 30 นาที = สาย
-          status = 'late';
-          message = `เข้างานสาย ${timeDiffMinutes} นาที (${currentTime} น.)`;
-        } else if (timeDiffMinutes > lateThresholdMinutes) {
-          // 🔥 สายเกิน 30 นาที = ขาดงาน
-          status = 'absent';
-          message = `❌ ขาดงาน - เข้างานสายเกิน ${timeDiffMinutes} นาที (${currentTime} น.)`;
+        } else if (status === 'late') {
+          message = `เข้างานสาย (${currentTime} น.)`;
+        } else {
+          message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)`;
         }
+        
+        checkIn(currentTime, photo, workTimeStart, workTimeEnd);
+        setPopupMessage(message);
+        
+      } else if (attendance.status === 'checked_in') {
+        // กฎการออกงาน - ต้องถึงเวลาออกงานก่อน
+        if (isEarlyCheckout) {
+          setPopupInfoMessage(`ยังไม่ถึงเวลาออกงาน\nเวลาออกงาน: ${schedule.time.split(' - ')[1]} น.`);
+          setShowInfoPopup(true);
+          return;
+        }
+        
+        checkOut(currentTime, photo);
+        setPopupMessage(`ออกงานเวลา ${currentTime} น.`);
       }
-      
-      checkIn(currentTime, photo, status);
-      setPopupMessage(message);
-      
-    } else if (attendance.status === 'checked_in') {
-      // กฎการออกงาน - ต้องถึงเวลาออกงานก่อน
-      if (isEarlyCheckout) {
-        setPopupInfoMessage(`⏰ ยังไม่ถึงเวลาออกงาน\nเวลาออกงาน: ${schedule.time.split(' - ')[1]} น.`);
-        setShowInfoPopup(true);
-        return;
-      }
-      
-      checkOut(currentTime, photo);
-      setPopupMessage(`ออกงานเวลา ${currentTime} น.`);
+    } catch (error) {
+      console.error('Error during check in/out:', error);
+      setPopupInfoMessage(error.message || 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง');
+      setShowInfoPopup(true);
+      return;
     }
     
     stopCamera();

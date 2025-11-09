@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Circle, LayersControl, useMap, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -70,11 +70,10 @@ function AdminDashboard() {
   const [detailUsers, setDetailUsers] = useState([])
 
   // Calculate real attendance stats from usersData and localStorage
-  const calculateAttendanceStats = () => {
+  // Wrapped in useCallback to avoid re-creating the function on every render
+  const calculateAttendanceStats = useCallback(() => {
     const today = new Date()
     const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear() + 543}` // Thai year
-    
-    console.log('🔍 Admin checking date:', todayStr)
     
     // ดึงข้อมูลจาก localStorage
     let users = usersData
@@ -82,7 +81,6 @@ function AdminDashboard() {
       const storedUsers = localStorage.getItem('usersData')
       if (storedUsers) {
         users = JSON.parse(storedUsers)
-        console.log('📥 Admin loaded users from localStorage:', users.length)
       }
     } catch (e) {
       console.warn('Failed to load usersData from localStorage:', e)
@@ -113,8 +111,6 @@ function AdminDashboard() {
         // มีข้อมูลเข้างาน - เช็คสถานะ
         const checkInStatus = todayRecord.checkIn.status
         
-        console.log(`👤 ${user.name}: ${checkInStatus}`, todayRecord.checkIn)
-        
         if (checkInStatus === 'มาสาย') {
           lateUsers.push(user)
         } else if (checkInStatus === 'ตรงเวลา') {
@@ -124,14 +120,6 @@ function AdminDashboard() {
           absentUsers.push(user)
         }
       }
-    })
-    
-    console.log('📊 Admin Stats:', {
-      total: totalEmployees,
-      onTime: onTimeUsers.length,
-      late: lateUsers.length,
-      absent: absentUsers.length,
-      leave: leaveUsers.length
     })
     
     return {
@@ -145,7 +133,7 @@ function AdminDashboard() {
       lateUsers,
       onTimeUsers
     }
-  }
+  }, [])
 
   const [attendanceStats, setAttendanceStats] = useState(calculateAttendanceStats())
   
@@ -154,7 +142,6 @@ function AdminDashboard() {
     const handleStorageChange = (e) => {
       if (e.key === 'usersData') {
         setAttendanceStats(calculateAttendanceStats())
-        console.log('🔄 Admin Dashboard: อัพเดตสถิติจาก localStorage')
       }
     }
     
@@ -168,7 +155,7 @@ function AdminDashboard() {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
     }
-  }, [])
+  }, [calculateAttendanceStats])
 
   // Calculate real event stats from EventContext
   const calculateEventStats = () => {

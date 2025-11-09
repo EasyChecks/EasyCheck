@@ -9,7 +9,6 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
   const handleViewHistory = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('View history clicked:', title);
     navigate('/user/leave/list', { state: { leaveType: title } });
   };
 

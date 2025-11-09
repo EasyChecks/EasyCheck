@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { AuthContext } from './AuthContextValue'
-import { calculateAttendanceStats } from '../utils/attendanceCalculator'
-import { mockAttendanceRecords } from '../data/usersData'
+import { calculateAttendanceStats, getCheckInStatus } from '../utils/attendanceCalculator'
 
 const getOrCreateTabId = () => {
   let tabId = sessionStorage.getItem('tabId')
@@ -69,12 +68,10 @@ export const AuthProvider = ({ children }) => {
             if (stateDate === today) {
               // เป็นวันนี้ - ใช้ state ที่บันทึกไว้
               setAttendance(savedState)
-              console.log(`📥 โหลด attendance state วันนี้: ${userAttendanceStateKey}`, savedState.status)
             } else {
               // เป็นวันอื่น - รีเซ็ตเป็นยังไม่เข้างาน
               setAttendance({ status: 'not_checked_in' })
               localStorage.setItem(`${userAttendanceStateKey}_date`, today)
-              console.log(`🔄 รีเซ็ต attendance state (วันใหม่)`)
             }
           } else {
             const today = new Date().toISOString().split('T')[0]
@@ -105,7 +102,6 @@ export const AuthProvider = ({ children }) => {
           setAttendanceRecords(records)
           const stats = calculateAttendanceStats(records)
           setAttendanceStats(stats)
-          console.log('✅ AttendanceRecords อัพเดต:', records.length, 'records')
         }
       } else if (e.key === 'usersData') {
         if (e.newValue && user) {
@@ -118,13 +114,6 @@ export const AuthProvider = ({ children }) => {
             const mergedUser = user.isAdminAccount === false
               ? { ...user, ...updatedUser, role: user.role } // Keep converted role
               : { ...user, ...updatedUser } // Normal merge
-            
-            console.log('🔄 Storage sync - user updated:', {
-              originalRole: updatedUser.role,
-              currentRole: user.role,
-              finalRole: mergedUser.role,
-              isAdminAccount: user.isAdminAccount
-            })
             
             setUser(mergedUser)
             localStorage.setItem(`user_${tabId}`, JSON.stringify(mergedUser))
@@ -146,7 +135,6 @@ export const AuthProvider = ({ children }) => {
             setAttendanceRecords(records)
             const stats = calculateAttendanceStats(records)
             setAttendanceStats(stats)
-            console.log('🔄 Auto-sync: อัพเดตข้อมูล attendance')
           }
         }
       }
@@ -220,7 +208,10 @@ export const AuthProvider = ({ children }) => {
           location: 'อยู่ในพื้นที่',
           photo: checkInPhoto || users[userIndex].profileImage,
           gps: '13.7563,100.5018',
-          address: 'บริษัท GGS จำกัด'
+          address: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+          distance: '15 เมตร',
+          checkedByBuddy: false, // 🆕 เพิ่ม flag เช็คแทน
+          buddyName: null // 🆕 ชื่อคนที่เช็คแทน
         } : (recordIndex >= 0 ? users[userIndex].attendanceRecords[recordIndex].checkIn : undefined),
         checkOut: checkOutTime ? {
           time: checkOutTime,
@@ -228,7 +219,10 @@ export const AuthProvider = ({ children }) => {
           location: 'อยู่ในพื้นที่',
           photo: checkOutPhoto || users[userIndex].profileImage,
           gps: '13.7563,100.5018',
-          address: 'บริษัท GGS จำกัด'
+          address: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+          distance: '18 เมตร',
+          checkedByBuddy: false, // 🆕 เพิ่ม flag เช็คแทน
+          buddyName: null // 🆕 ชื่อคนที่เช็คแทน
         } : undefined
       }
       
@@ -298,112 +292,123 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkIn = (time, photo, status = 'on_time') => {
-    const today = new Date().toISOString().split('T')[0]
-    
-    const newAttendance = {
-      checkInTime: time,
-      checkOutTime: null,
-      status: 'checked_in',
-      checkInPhoto: photo,
-      checkInStatus: status
+  const checkIn = (time, photo, workTimeStart = '08:00', workTimeEnd = '17:00') => {
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      // 🆕 ใช้ percentage-based late detection
+      const statusResult = getCheckInStatus(time, workTimeStart, workTimeEnd)
+      const status = statusResult.status // 'on_time', 'late', 'absent'
+      
+      const newAttendance = {
+        checkInTime: time,
+        checkOutTime: null,
+        status: 'checked_in',
+        checkInPhoto: photo,
+        checkInStatus: status
+      }
+      setAttendance(newAttendance)
+      
+      // 🔥 บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
+      if (user) {
+        const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
+        localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
+        localStorage.setItem(`${userAttendanceKey}_date`, today) // 🆕 บันทึกวันที่
+      }
+      
+      // ✅ อัพเดตข้อมูลใน usersData.js ทันที
+      updateUserAttendanceInUsersData(time, null, photo, null, status)
+    } catch (error) {
+      console.error('Error in checkIn:', error)
+      throw new Error('ไม่สามารถบันทึกเวลาเข้างานได้ กรุณาลองใหม่อีกครั้ง')
     }
-    setAttendance(newAttendance)
-    
-    // 🔥 บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
-    if (user) {
-      const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
-      localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
-      localStorage.setItem(`${userAttendanceKey}_date`, today) // 🆕 บันทึกวันที่
-      console.log(`✅ Check-in บันทึก: ${userAttendanceKey} (${today})`)
-    }
-    
-    // ✅ อัพเดตข้อมูลใน usersData.js ทันที
-    updateUserAttendanceInUsersData(time, null, photo, null, status)
   }
 
   const checkOut = (time, photo) => {
-    const today = new Date().toISOString().split('T')[0]
-    
-    const newAttendance = {
-      ...attendance,
-      checkOutTime: time,
-      status: 'not_checked_in',
-      checkOutPhoto: photo
-    }
-    
-    const getShiftStatus = (checkInTime, workTimeStart = '08:00') => {
-      if (!checkInTime) return 'absent'
-      const [checkHour, checkMinute] = checkInTime.split(':').map(Number)
-      const [workHour, workMinute] = workTimeStart.split(':').map(Number)
-      const checkTotalMinutes = checkHour * 60 + checkMinute
-      const workTotalMinutes = workHour * 60 + workMinute
-      return checkTotalMinutes <= workTotalMinutes ? 'on_time' : 'late'
-    }
-    
-    const shiftRecord = {
-      checkIn: attendance.checkInTime,
-      checkOut: time,
-      checkInPhoto: attendance.checkInPhoto,
-      checkOutPhoto: photo,
-      status: attendance.checkInStatus || getShiftStatus(attendance.checkInTime, '08:00')
-    }
-    
-    const updatedRecords = [...attendanceRecords]
-    const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
-    
-    if (existingDayIndex >= 0) {
-      const existingDay = updatedRecords[existingDayIndex]
-      if (!existingDay.shifts) {
-        existingDay.shifts = [{
-          checkIn: existingDay.checkIn,
-          checkOut: existingDay.checkOut,
-          status: existingDay.status
-        }]
-        delete existingDay.checkIn
-        delete existingDay.checkOut
-        delete existingDay.status
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      const newAttendance = {
+        ...attendance,
+        checkOutTime: time,
+        status: 'not_checked_in',
+        checkOutPhoto: photo
       }
-      existingDay.shifts.push(shiftRecord)
-      updatedRecords[existingDayIndex] = existingDay
-    } else {
-      updatedRecords.push({
-        date: today,
-        shifts: [shiftRecord]
-      })
+      
+      const getShiftStatus = (checkInTime, workTimeStart = '08:00') => {
+        if (!checkInTime) return 'absent'
+        const [checkHour, checkMinute] = checkInTime.split(':').map(Number)
+        const [workHour, workMinute] = workTimeStart.split(':').map(Number)
+        const checkTotalMinutes = checkHour * 60 + checkMinute
+        const workTotalMinutes = workHour * 60 + workMinute
+        return checkTotalMinutes <= workTotalMinutes ? 'on_time' : 'late'
+      }
+      
+      const shiftRecord = {
+        checkIn: attendance.checkInTime,
+        checkOut: time,
+        checkInPhoto: attendance.checkInPhoto,
+        checkOutPhoto: photo,
+        status: attendance.checkInStatus || getShiftStatus(attendance.checkInTime, '08:00')
+      }
+      
+      const updatedRecords = [...attendanceRecords]
+      const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
+      
+      if (existingDayIndex >= 0) {
+        const existingDay = updatedRecords[existingDayIndex]
+        if (!existingDay.shifts) {
+          existingDay.shifts = [{
+            checkIn: existingDay.checkIn,
+            checkOut: existingDay.checkOut,
+            status: existingDay.status
+          }]
+          delete existingDay.checkIn
+          delete existingDay.checkOut
+          delete existingDay.status
+        }
+        existingDay.shifts.push(shiftRecord)
+        updatedRecords[existingDayIndex] = existingDay
+      } else {
+        updatedRecords.push({
+          date: today,
+          shifts: [shiftRecord]
+        })
+      }
+      
+      updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
+      
+      setAttendanceRecords(updatedRecords)
+      
+      // 🔥 บันทึก attendanceRecords แยกตาม user (ชื่อชัดเจน)
+      if (user) {
+        const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
+        localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
+      }
+      
+      const stats = calculateAttendanceStats(updatedRecords)
+      setAttendanceStats(stats)
+      
+      setAttendance(newAttendance)
+      
+      // 🔥 รีเซ็ต attendance state หลัง checkout (เพื่อให้วันพรุ่งนี้เริ่มใหม่)
+      if (user) {
+        const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
+        localStorage.removeItem(userAttendanceKey) // ลบ state เพราะออกงานแล้ว
+        localStorage.removeItem(`${userAttendanceKey}_date`) // ลบวันที่ด้วย
+      }
+      
+      // ✅ อัพเดตข้อมูลใน usersData.js ทันที
+      updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status)
+      
+      // ✅ Trigger custom event สำหรับ real-time sync
+      window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
+        detail: { userId: user?.id, stats, records: updatedRecords } 
+      }))
+    } catch (error) {
+      console.error('Error in checkOut:', error)
+      throw new Error('ไม่สามารถบันทึกเวลาออกงานได้ กรุณาลองใหม่อีกครั้ง')
     }
-    
-    updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
-    
-    setAttendanceRecords(updatedRecords)
-    
-    // 🔥 บันทึก attendanceRecords แยกตาม user (ชื่อชัดเจน)
-    if (user) {
-      const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
-      localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
-      console.log(`💾 บันทึกประวัติการลงเวลา: ${userAttendanceKey}`)
-    }
-    
-    const stats = calculateAttendanceStats(updatedRecords)
-    setAttendanceStats(stats)
-    
-    setAttendance(newAttendance)
-    
-    // 🔥 รีเซ็ต attendance state หลัง checkout (เพื่อให้วันพรุ่งนี้เริ่มใหม่)
-    if (user) {
-      const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
-      localStorage.removeItem(userAttendanceKey) // ลบ state เพราะออกงานแล้ว
-      localStorage.removeItem(`${userAttendanceKey}_date`) // ลบวันที่ด้วย
-      console.log(`🔄 รีเซ็ต attendance state หลัง checkout`)
-    }
-    
-    // ✅ อัพเดตข้อมูลใน usersData.js ทันที
-    updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status)
-    
-    // ✅ Trigger custom event สำหรับ real-time sync
-    window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
-      detail: { userId: user?.id, stats, records: updatedRecords } 
-    }))
   }
 
   const resetAttendance = () => {
@@ -422,23 +427,16 @@ export const AuthProvider = ({ children }) => {
   }
 
   const getDashboardPath = (role) => {
-    console.log('🎯 getDashboardPath() called with role:', role)
-    
     switch (role) {
       case 'superadmin':
-        console.log('→ Redirecting to /superadmin')
         return '/superadmin'
       case 'admin':
-        console.log('→ Redirecting to /admin')
         return '/admin'
       case 'manager':
-        console.log('→ Redirecting to /user/dashboard (manager)')
         return '/user/dashboard'
       case 'user':
-        console.log('→ Redirecting to /user/dashboard (user)')
         return '/user/dashboard'
       default:
-        console.log('→ Redirecting to /user/dashboard (default)')
         return '/user/dashboard'
     }
   }

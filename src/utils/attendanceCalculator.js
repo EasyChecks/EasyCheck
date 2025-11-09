@@ -70,14 +70,25 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
 
       // ถ้าเป็น shift แรกของวัน ให้นับสถานะ
       if (index === 0) {
-        if (shift.status === 'absent') {
+        // 🔥 ตรวจสอบสถานะแบบละเอียด - ให้ความสำคัญกับการตรวจสอบจริง
+        if (shift.status === 'absent' || !shift.checkIn) {
           dayStatus = 'absent';
         } else if (shift.status === 'leave') {
           dayStatus = 'leave';
-        } else if (shift.status === 'late') {
-          dayStatus = 'late';
-        } else if (shift.status === 'on-time' || shift.status === 'on_time' || shift.status === 'present') {
-          dayStatus = 'on_time';
+        } else {
+          // ตรวจสอบว่ามาสายหรือไม่จริงๆ โดยเปรียบเทียบเวลา
+          const isActuallyLate = shift.checkIn && workTimeStart && isLate(shift.checkIn, workTimeStart);
+          
+          if (isActuallyLate && shift.status === 'late') {
+            dayStatus = 'late';
+          } else if (!isActuallyLate || shift.status === 'on-time' || shift.status === 'on_time' || shift.status === 'ตรงเวลา') {
+            dayStatus = 'on_time';
+          } else if (shift.status === 'late' || shift.status === 'มาสาย') {
+            dayStatus = 'late';
+          } else {
+            // Default: ถ้ามี checkIn แต่ไม่ระบุสถานะ ให้ตรวจสอบเวลา
+            dayStatus = isActuallyLate ? 'late' : 'on_time';
+          }
         }
       }
 
@@ -162,6 +173,57 @@ export const getLateMinutes = (checkInTime, workTimeStart = '08:00') => {
   if (!checkIn || !workStart || checkIn <= workStart) return 0;
   
   return Math.round((checkIn - workStart) / (1000 * 60));
+};
+
+/**
+ * 🆕 ตรวจสอบว่ามาสายเกินขีดจำกัดหรือไม่ (แบบ percentage)
+ * @param {string} checkInTime - เวลาเข้างาน (HH:MM)
+ * @param {string} workTimeStart - เวลาเริ่มงาน (HH:MM)
+ * @param {string} workTimeEnd - เวลาเลิกงาน (HH:MM)
+ * @param {number} latePercentageThreshold - เปอร์เซ็นต์ที่ถือว่าสาย (default: 10% = 0.1)
+ * @returns {boolean} true ถ้าสายเกินขีดจำกัด
+ * 
+ * ตัวอย่าง:
+ * - งาน 8 ชม. (480 นาที) → สาย 10% = 48 นาที
+ * - งาน 30 นาที → สาย 10% = 3 นาที
+ * - งาน 1 ชม. (60 นาที) → สาย 10% = 6 นาที
+ */
+export const isLateBeyondThreshold = (checkInTime, workTimeStart = '08:00', workTimeEnd = '17:00', latePercentageThreshold = 0.1) => {
+  if (!checkInTime) return false;
+  
+  const lateMinutes = getLateMinutes(checkInTime, workTimeStart);
+  if (lateMinutes === 0) return false;
+  
+  // คำนวณระยะเวลาทำงานทั้งหมด (นาที)
+  const workStart = parseTime(workTimeStart);
+  const workEnd = parseTime(workTimeEnd);
+  
+  if (!workStart || !workEnd) return false;
+  
+  const totalWorkMinutes = (workEnd - workStart) / (1000 * 60);
+  if (totalWorkMinutes <= 0) return false;
+  
+  // คำนวณขีดจำกัดการมาสาย (% ของเวลาทำงาน)
+  const lateThresholdMinutes = Math.ceil(totalWorkMinutes * latePercentageThreshold);
+  
+  // สาย 5 นาทีแรกไม่นับ (grace period)
+  const gracePeriod = 5;
+  
+  return lateMinutes > Math.max(lateThresholdMinutes, gracePeriod);
+};
+
+/**
+ * 🆕 คำนวณสถานะการเข้างาน (รองรับ percentage-based late detection)
+ * @param {string} checkInTime - เวลาเข้างาน (HH:MM)
+ * @param {string} workTimeStart - เวลาเริ่มงาน (HH:MM)
+ * @param {string} workTimeEnd - เวลาเลิกงาน (HH:MM)
+ * @returns {string} 'on_time', 'late', 'absent'
+ */
+export const getCheckInStatus = (checkInTime, workTimeStart = '08:00', workTimeEnd = '17:00') => {
+  if (!checkInTime) return 'absent';
+  
+  const isLateResult = isLateBeyondThreshold(checkInTime, workTimeStart, workTimeEnd);
+  return isLateResult ? 'late' : 'on_time';
 };
 
 /**
