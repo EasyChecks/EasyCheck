@@ -4,8 +4,17 @@ import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } 
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../../contexts/LocationContext'
+import { useAuth } from '../../../contexts/useAuth'
 import { usersData } from '../../../data/usersData'
 import PageModal from '../../../components/common/PageModal'
+
+// Fix Leaflet default icon
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
 
 // Inline styles for animations
 const styles = `
@@ -65,16 +74,8 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// Fix Leaflet default icon
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-})
-
-// Component to handle map clicks - memoize เพื่อลด re-render
-const MapClickHandler = React.memo(function MapClickHandler({ onMapClick, isActive }) {
+// 🔥 Component to handle map clicks - Memoized
+const MapClickHandler = React.memo(({ onMapClick, isActive }) => {
   useMapEvents({
     click: (e) => {
       if (isActive) {
@@ -85,7 +86,11 @@ const MapClickHandler = React.memo(function MapClickHandler({ onMapClick, isActi
   return null
 })
 
-// Map Component - แยกออกมาเพื่อ lazy load
+// 🔥 Memoized pathOptions เพื่อไม่ต้องสร้างใหม่ทุกครั้ง
+const greenCircleStyle = { color: 'green', fillColor: 'green', fillOpacity: 0.2 }
+const blueCircleStyle = { color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }
+
+// 🔥 Map Component - Ultra optimized เหมือน Mapping page
 const LocationMapView = React.memo(function LocationMapView({ 
   defaultCenter, 
   defaultZoom, 
@@ -95,31 +100,51 @@ const LocationMapView = React.memo(function LocationMapView({
   handleSelectLocation,
   newLocationForm 
 }) {
+  // Memoize map config
+  const mapStyle = useMemo(() => ({ height: '100%', width: '100%' }), [])
+  
   return (
     <MapContainer
       center={defaultCenter}
       zoom={defaultZoom}
-      style={{ height: '100%', width: '100%' }}
+      style={mapStyle}
       scrollWheelZoom={true}
+      zoomControl={true}
+      preferCanvas={true}
+      attributionControl={false}
+      zoomAnimation={true}
+      fadeAnimation={true}
+      markerZoomAnimation={true}
     >
       <LayersControl position="topright">
         <LayersControl.BaseLayer checked name="แผนที่ปกติ">
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution='&copy; OpenStreetMap'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            updateWhenIdle={true}
+            updateWhenZooming={false}
+            keepBuffer={4}
+            maxNativeZoom={19}
+            maxZoom={19}
+            minZoom={3}
           />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name="แผนที่ดาวเทียม">
           <TileLayer
-            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+            attribution='&copy; Esri'
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            updateWhenIdle={true}
+            updateWhenZooming={false}
+            keepBuffer={4}
+            maxNativeZoom={18}
+            maxZoom={18}
           />
         </LayersControl.BaseLayer>
       </LayersControl>
 
       <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
 
-      {/* Show existing locations */}
+      {/* Show existing locations - Memoized */}
       {locations.map((loc) => (
         <React.Fragment key={loc.id}>
           <Marker 
@@ -131,11 +156,7 @@ const LocationMapView = React.memo(function LocationMapView({
           <Circle
             center={[loc.latitude, loc.longitude]}
             radius={loc.radius}
-            pathOptions={{ 
-              color: 'green',
-              fillColor: 'green',
-              fillOpacity: 0.2 
-            }}
+            pathOptions={greenCircleStyle}
           />
         </React.Fragment>
       ))}
@@ -148,17 +169,27 @@ const LocationMapView = React.memo(function LocationMapView({
             <Circle
               center={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}
               radius={parseFloat(newLocationForm.radius)}
-              pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }}
+              pathOptions={blueCircleStyle}
             />
           )}
         </>
       )}
     </MapContainer>
   )
+}, (prevProps, nextProps) => {
+  // Custom comparison เพื่อลด re-render
+  return (
+    prevProps.mapClickEnabled === nextProps.mapClickEnabled &&
+    prevProps.locations.length === nextProps.locations.length &&
+    prevProps.newLocationForm.latitude === nextProps.newLocationForm.latitude &&
+    prevProps.newLocationForm.longitude === nextProps.newLocationForm.longitude &&
+    prevProps.newLocationForm.radius === nextProps.newLocationForm.radius
+  )
 })
 
 export default function CreateAttendance({ onClose, onCreate, initialData, onUpdate }) {
   const { locations, addLocation } = useLocations()
+  const { user: currentUser } = useAuth() // 🔐 เช็ค role และ branch
   const [team, setTeam] = useState('')
   const [date, setDate] = useState('')
   const [dateEnd, setDateEnd] = useState('')
@@ -194,6 +225,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [showAddTypeForm, setShowAddTypeForm] = useState(false)
   const [newTypeName, setNewTypeName] = useState('')
   const [showMapModal, setShowMapModal] = useState(false)
+  const [mapLoading, setMapLoading] = useState(false) // 🔥 Loading state for map
   const [showWarningPopup, setShowWarningPopup] = useState(false)
   const [showErrorPopup, setShowErrorPopup] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -250,6 +282,26 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     setTasks((initialData.tasks || []).join('\n'))
     setGoals((initialData.goals || []).join('\n'))
     setSelectedTeams(initialData.teams || [])
+    
+    // 🔄 โหลดสมาชิกที่เคยเลือกไว้
+    if (initialData.members && initialData.members.trim()) {
+      const memberNames = initialData.members.split(',').map(name => name.trim()).filter(Boolean)
+      const selectedUsers = usersData.filter(user => memberNames.includes(user.name))
+      setSelectedMembers(selectedUsers)
+      console.log('📋 โหลดสมาชิก:')
+      console.log('  - ชื่อที่บันทึกไว้:', memberNames)
+      console.log('  - ค้นพบ:', selectedUsers.map(u => `${u.name} (${u.department})`))
+      console.log('  - จำนวนที่พบ:', selectedUsers.length, 'จาก', memberNames.length, 'คน')
+      
+      // แจ้งเตือนถ้าหาไม่พบบางคน
+      if (selectedUsers.length !== memberNames.length) {
+        const foundNames = selectedUsers.map(u => u.name)
+        const notFound = memberNames.filter(name => !foundNames.includes(name))
+        console.warn('⚠️ ไม่พบสมาชิก:', notFound)
+      }
+    } else {
+      setSelectedMembers([])
+    }
   }, [initialData])
 
   useEffect(() => {
@@ -337,7 +389,19 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     return usersData
       .filter(user => {
         // ไม่แสดง admin
-        if (user.role === 'admin') return false
+        if (user.role === 'admin' || user.role === 'superadmin') return false
+        
+        // 🔐 ถ้าเป็น admin (ไม่ใช่ superadmin) ให้เห็นเฉพาะสมาชิกในสาขาเดียวกัน
+        if (currentUser?.role === 'admin' && currentUser?.department) {
+          const currentBranch = currentUser.department.toLowerCase()
+          const userBranch = user.department?.toLowerCase() || ''
+          
+          // ถ้าไม่ใช่สาขาเดียวกัน ไม่แสดง
+          if (!userBranch.includes(currentBranch) && !currentBranch.includes(userBranch)) {
+            return false
+          }
+        }
+        // Super Admin เห็นทุกคน (ไม่มี filter branch)
         
         // ถ้าเลือกแผนก/ตำแหน่งแล้ว ให้กรองตามแผนก/ตำแหน่งที่เลือก
         if (selectedTeams.length > 0) {
@@ -366,7 +430,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                user.employeeId?.toLowerCase().includes(search)
       })
       .slice(0, 15) // เพิ่มจำนวนเป็น 15 คน
-  }, [members, selectedTeams])
+  }, [members, selectedTeams, currentUser])
 
   // Handle map click to create new location - useCallback เพื่อป้องกัน re-render
   const handleMapClick = useCallback((latlng) => {
@@ -531,15 +595,19 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
   // Handle map modal open with validation
   const handleOpenMapModal = () => {
-    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง
-    if (!team || !date) {
+    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง (ชื่อทีม + เวลาเริ่ม-สิ้นสุด)
+    if (!team.trim() || !timeStart.trim() || !timeEnd.trim()) {
       setShowWarningPopup(true)
       setTimeout(() => {
         setShowWarningPopup(false)
       }, 3000)
       return
     }
+    // 🔥 แสดง loading ก่อนเปิด map
+    setMapLoading(true)
     setShowMapModal(true)
+    // ปิด loading หลัง map render เสร็จ
+    setTimeout(() => setMapLoading(false), 500)
   }
 
   // helpers to normalize user input
@@ -757,6 +825,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     const nDate = date.trim() ? normalizeDate(date) : ''
     const nDateEnd = dateEnd.trim() ? normalizeDate(dateEnd) : ''
     
+    // 🔄 รวมชื่อสมาชิกจาก selectedMembers
+    const memberNames = selectedMembers.map(m => m.name).join(', ')
+    console.log('💾 บันทึกสมาชิก:', selectedMembers.map(m => `${m.name} (${m.department})`))
+    console.log('💾 ข้อความที่บันทึก:', memberNames)
+    
     const payload = {
       id: initialData?.id ?? Date.now(),
       team: team || 'ทีมใหม่',
@@ -767,7 +840,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       startTime: nTimeStart || '', // เพิ่มเวลาเริ่มแยก
       endTime: nTimeEnd || '',     // เพิ่มเวลาสิ้นสุดแยก
       location: location || '',
-      members: members || '',
+      members: memberNames || '',
       type: type || '',
       preparations: preparations.split('\n').map(s => s.trim()).filter(Boolean),
       tasks: tasks.split('\n').map(s => s.trim()).filter(Boolean),
@@ -781,18 +854,33 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     } else if (onCreate) {
       onCreate(payload)
     }
+    
+    // 🔥 Broadcast event for REAL-TIME sync (ทั้ง same tab และ cross-tab)
+    const eventType = onUpdate ? 'update' : 'create'
+    
+    // 1. Custom Event สำหรับ same tab (ทำงานทันที)
+    window.dispatchEvent(new CustomEvent('scheduleUpdated', { 
+      detail: { action: eventType, data: payload } 
+    }))
+    
+    // 2. localStorage สำหรับ cross-tab (ทำงานใน tab อื่น)
+    localStorage.setItem('scheduleUpdateTrigger', JSON.stringify({
+      action: eventType,
+      data: payload,
+      timestamp: Date.now()
+    }))
   }, [team, date, dateEnd, timeStart, timeEnd, location, month, members, type, preparations, tasks, goals, selectedTeams, initialData, onUpdate, onCreate, teamRef, locationRef, timeStartRef, timeEndRef])
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-8 sm:pt-16 bg-black/60 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md overflow-y-auto p-4"
       style={{
         animation: 'fadeIn 0.3s ease-out forwards'
       }}
     >
       <div className="absolute inset-0" onClick={onClose} />
       <div 
-        className="relative w-[95%] max-w-5xl bg-white rounded-2xl border-4 border-[#F26623] shadow-2xl my-8"
+        className="relative w-[95%] max-w-5xl bg-white rounded-2xl border-4 border-[#F26623] shadow-2xl max-h-[90vh] flex flex-col"
         style={{
           animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
@@ -825,7 +913,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* ชื่อทีม */}
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
@@ -845,79 +933,81 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             />
           </div>
 
-          {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ */}
-          <div className="relative" ref={teamsDropdownRef}>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-              </svg>
-              แผนก/ตำแหน่งที่จะเห็นตารางนี้ 
-              <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
-                ไม่บังคับ
-              </span>
-            </label>
-            
-            {/* Dropdown Button */}
-            <button
-              type="button"
-              onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
-              className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 bg-white hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all flex items-center justify-between outline-none"
-            >
-              <span className="text-gray-700">
-                {selectedTeams.length === 0 
-                  ? 'เลือกแผนก/ตำแหน่ง...' 
-                  : `เลือกแล้ว ${selectedTeams.length} รายการ`
-                }
-              </span>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 text-gray-400 transition-transform ${showTeamsDropdown ? 'rotate-180' : ''}`}
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
+          {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ - 🔐 แสดงเฉพาะ Super Admin */}
+          {currentUser?.role === 'superadmin' && (
+            <div className="relative" ref={teamsDropdownRef}>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                แผนก/ตำแหน่งที่จะเห็นตารางนี้ 
+                <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
+                  ไม่บังคับ
+                </span>
+              </label>
+              
+              {/* Dropdown Button */}
+              <button
+                type="button"
+                onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
+                className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 bg-white hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all flex items-center justify-between outline-none"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+                <span className="text-gray-700">
+                  {selectedTeams.length === 0 
+                    ? 'เลือกแผนก/ตำแหน่ง...' 
+                    : `เลือกแล้ว ${selectedTeams.length} รายการ`
+                  }
+                </span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 text-gray-400 transition-transform ${showTeamsDropdown ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-            {/* Dropdown Menu */}
-            {showTeamsDropdown && (
-              <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-y-auto">
-                {availableTeams.map((teamOption) => (
-                  <label
-                    key={teamOption}
-                    className="flex items-center px-4 py-2 hover:bg-orange-50 cursor-pointer transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedTeams.includes(teamOption)}
-                      onChange={() => toggleTeam(teamOption)}
-                      className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 mr-3"
-                    />
-                    <span className="text-gray-700">{teamOption}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {/* Selected Teams Tags */}
-            {selectedTeams.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {selectedTeams.map(team => (
-                  <span key={team} className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {team}
-                    <button
-                      type="button"
-                      onClick={() => toggleTeam(team)}
-                      className="hover:text-orange-900 ml-1 font-bold"
+              {/* Dropdown Menu */}
+              {showTeamsDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-y-auto">
+                  {availableTeams.map((teamOption) => (
+                    <label
+                      key={teamOption}
+                      className="flex items-center px-4 py-2 hover:bg-orange-50 cursor-pointer transition-colors"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+                      <input
+                        type="checkbox"
+                        checked={selectedTeams.includes(teamOption)}
+                        onChange={() => toggleTeam(teamOption)}
+                        className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 mr-3"
+                      />
+                      <span className="text-gray-700">{teamOption}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {/* Selected Teams Tags */}
+              {selectedTeams.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedTeams.map(team => (
+                    <span key={team} className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {team}
+                      <button
+                        type="button"
+                        onClick={() => toggleTeam(team)}
+                        className="hover:text-orange-900 ml-1 font-bold"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ช่วงวันที่ทำงาน - ปรับ Layout ใหม่ */}
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-4">
@@ -1583,15 +1673,25 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             <div className="flex flex-col lg:flex-row" style={{ height: 'calc(90vh - 80px)' }}>
               {/* Map Section */}
               <div className="flex-1 relative">
-                <LocationMapView
-                  defaultCenter={defaultCenter}
-                  defaultZoom={defaultZoom}
-                  mapClickEnabled={mapClickEnabled}
-                  handleMapClick={handleMapClick}
-                  locations={filteredLocations}
-                  handleSelectLocation={handleSelectLocation}
-                  newLocationForm={newLocationForm}
-                />
+                {mapLoading ? (
+                  /* Loading Spinner */
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-[2000]">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand-primary border-t-transparent mb-4"></div>
+                      <p className="text-gray-600 font-medium">กำลังโหลดแผนที่...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <LocationMapView
+                    defaultCenter={defaultCenter}
+                    defaultZoom={defaultZoom}
+                    mapClickEnabled={mapClickEnabled}
+                    handleMapClick={handleMapClick}
+                    locations={filteredLocations}
+                    handleSelectLocation={handleSelectLocation}
+                    newLocationForm={newLocationForm}
+                  />
+                )}
 
                 {/* Enable Click Mode Button */}
                 {!mapClickEnabled && !showNewLocationForm && (
@@ -1826,7 +1926,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">วันที่</span> ก่อนเลือกสถานที่
+                  กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-orange-600">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -1857,7 +1957,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">วันที่</span> ก่อนเลือกสถานที่</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</p>
                 </div>
                 <button onClick={() => setShowWarningPopup(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>

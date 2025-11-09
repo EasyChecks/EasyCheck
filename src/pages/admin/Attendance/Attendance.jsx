@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { sampleSchedules } from './DataAttendance.jsx'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { sampleSchedules } from '../../../data/usersData'
 import CreateAttendance from './CreateAttendance.jsx'
 import { useLocations } from '../../../contexts/LocationContext'
+import { useAuth } from '../../../contexts/useAuth'
 import { MapContainer, TileLayer, Marker, Circle, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -16,6 +17,7 @@ L.Icon.Default.mergeOptions({
 
 function Attendance() {
   const { locations } = useLocations()
+  const { user: currentUser } = useAuth()
   
   // Load schedules from localStorage or use sampleSchedules as default
   const [schedules, setSchedules] = useState(() => {
@@ -49,10 +51,73 @@ function Attendance() {
   const innerRefs = useRef({})
   const endListenersRef = useRef({}) // เก็บ listener ปัจจุบันต่อรายการ
 
+  // 🔐 กรองตารางตาม role ของผู้ดู
+  const visibleSchedules = useMemo(() => {
+    if (!currentUser) return schedules
+    
+    // Admin เห็นทั้งตารางจาก Super Admin และตารางที่ตัวเองสร้าง
+    if (currentUser.role === 'admin') {
+      return schedules.filter(s => 
+        s.createdBy === 'superadmin' || s.createdBy === 'admin' || !s.createdBy
+      )
+    }
+    
+    // Super Admin เห็นเฉพาะตารางที่ตัวเองสร้าง (ไม่เห็นของ Admin)
+    if (currentUser.role === 'superadmin') {
+      return schedules.filter(s => s.createdBy === 'superadmin' || !s.createdBy)
+    }
+    
+    return schedules
+  }, [schedules, currentUser])
+
   // Save schedules to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('attendanceSchedules', JSON.stringify(schedules))
   }, [schedules])
+
+  // 🔥 Real-time update listener (เหมือนการเข้า-ออกงาน)
+  useEffect(() => {
+    // 1. ฟัง CustomEvent สำหรับ same tab (ทำงานทันที)
+    const handleScheduleUpdate = (event) => {
+      console.log('📢 [Same Tab Admin] Schedule updated:', event.detail)
+      // โหลดข้อมูลใหม่จาก localStorage
+      const savedSchedules = localStorage.getItem('attendanceSchedules')
+      if (savedSchedules) {
+        try {
+          setSchedules(JSON.parse(savedSchedules))
+        } catch (error) {
+          console.error('Error parsing schedules:', error)
+        }
+      }
+    }
+
+    // 2. ฟัง storage event สำหรับ cross-tab
+    const handleStorageChange = (e) => {
+      if (e.key === 'scheduleUpdateTrigger' && e.newValue) {
+        try {
+          const update = JSON.parse(e.newValue)
+          console.log('📢 [Cross Tab Admin] Schedule update:', update.action)
+          // โหลดข้อมูลใหม่จาก localStorage
+          const savedSchedules = localStorage.getItem('attendanceSchedules')
+          if (savedSchedules) {
+            setSchedules(JSON.parse(savedSchedules))
+          }
+        } catch (error) {
+          console.error('Error parsing schedule update:', error)
+        }
+      }
+    }
+
+    // ฟัง CustomEvent (same tab)
+    window.addEventListener('scheduleUpdated', handleScheduleUpdate)
+    // ฟัง storage event (cross-tab)
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('scheduleUpdated', handleScheduleUpdate)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   useEffect(() => {
     Object.values(wrapperRefs.current).forEach(w => {
@@ -215,7 +280,25 @@ function Attendance() {
 
   const confirmDelete = () => {
     if (selectedIds.length === 0) return
-    setSchedules(prev => prev.filter(s => !selectedIds.includes(s.id)))
+    const updatedSchedules = schedules.filter(s => !selectedIds.includes(s.id))
+    setSchedules(updatedSchedules)
+    
+    // 🔥 บันทึกลง localStorage ทันที
+    localStorage.setItem('attendanceSchedules', JSON.stringify(updatedSchedules))
+    
+    // 🔥 ส่ง event 2 แบบเหมือน create/update
+    // 1. CustomEvent สำหรับ same tab
+    window.dispatchEvent(new CustomEvent('scheduleUpdated', { 
+      detail: { action: 'delete', data: { deletedIds: selectedIds } } 
+    }))
+    
+    // 2. localStorage trigger สำหรับ cross-tab
+    localStorage.setItem('scheduleUpdateTrigger', JSON.stringify({
+      action: 'delete',
+      data: { deletedIds: selectedIds },
+      timestamp: Date.now()
+    }))
+    
     setSelectedIds([])
     setSelectMode(false)
     setOpenIds([])
@@ -233,8 +316,29 @@ function Attendance() {
 
   // ลบทั้งหมด (ทำงานจริงเมื่อผู้ใช้ยืนยันจาก modal)
   const deleteAll = () => {
-    if (schedules.length === 0) return
-    setSchedules([])
+    if (visibleSchedules.length === 0) return
+    
+    // 🔐 ลบเฉพาะตารางที่มองเห็น (ตามสิทธิ์)
+    const visibleIds = visibleSchedules.map(s => s.id)
+    const remainingSchedules = schedules.filter(s => !visibleIds.includes(s.id))
+    setSchedules(remainingSchedules)
+    
+    // 🔥 บันทึกลง localStorage ทันที
+    localStorage.setItem('attendanceSchedules', JSON.stringify(remainingSchedules))
+    
+    // 🔥 ส่ง event 2 แบบเหมือน create/update
+    // 1. CustomEvent สำหรับ same tab
+    window.dispatchEvent(new CustomEvent('scheduleUpdated', { 
+      detail: { action: 'deleteAll' } 
+    }))
+    
+    // 2. localStorage trigger สำหรับ cross-tab
+    localStorage.setItem('scheduleUpdateTrigger', JSON.stringify({
+      action: 'deleteAll',
+      data: {},
+      timestamp: Date.now()
+    }))
+    
     setSelectedIds([])
     setSelectMode(false)
     setOpenIds([])
@@ -251,7 +355,18 @@ function Attendance() {
   }
 
   const handleCreate = (newItem) => {
-    setSchedules(prev => [...prev, newItem])
+    // 🔐 เพิ่มข้อมูลผู้สร้าง
+    const itemWithCreator = {
+      ...newItem,
+      createdBy: currentUser?.role || 'admin'
+    }
+    
+    const updatedSchedules = [...schedules, itemWithCreator]
+    setSchedules(updatedSchedules)
+    
+    // 🔥 บันทึกลง localStorage ก่อน (สำคัญ!)
+    localStorage.setItem('attendanceSchedules', JSON.stringify(updatedSchedules))
+    
     setShowCreate(false)
     
     // แสดง popup สำเร็จ
@@ -265,7 +380,12 @@ function Attendance() {
   }
 
   const handleUpdate = (updated) => {
-    setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s))
+    const updatedSchedules = schedules.map(s => s.id === updated.id ? updated : s)
+    setSchedules(updatedSchedules)
+    
+    // 🔥 บันทึกลง localStorage ก่อน (สำคัญ!)
+    localStorage.setItem('attendanceSchedules', JSON.stringify(updatedSchedules))
+    
     setShowEdit(false)
     setEditingItem(null)
     
@@ -316,9 +436,9 @@ function Attendance() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setShowDeleteAllConfirm(true)}
-                    disabled={schedules.length === 0}
+                    disabled={visibleSchedules.length === 0}
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-colors font-medium text-sm ${
-                      schedules.length === 0 
+                      visibleSchedules.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                         : 'bg-destructive hover:bg-destructive/90 text-white shadow-sm'
                     }`}
@@ -350,11 +470,11 @@ function Attendance() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
-          {schedules.length === 0 && (
+          {visibleSchedules.length === 0 && (
             <div className="col-span-full text-center text-gray-600 py-8">ไม่มีตารางงาน</div>
           )}
 
-          {schedules.map(item => {
+          {visibleSchedules.map(item => {
             const isOpen = openIds.includes(item.id)
             const checked = selectedIds.includes(item.id)
 
@@ -374,13 +494,16 @@ function Attendance() {
                     {item.time}
                   </div>
                   {selectMode && (
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleSelect(item.id)}
-                      className="w-4 h-4 rounded border-white/40 bg-white"
-                      aria-label={`เลือก ${item.team}`}
-                    />
+                    <div 
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
+                      className="flex items-center justify-center w-6 h-6 rounded border-2 border-gray-400 bg-white hover:border-brand-primary transition-colors cursor-pointer"
+                    >
+                      {checked && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-brand-primary" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </svg>
+                      )}
+                    </div>
                   )}
                 </div>
 

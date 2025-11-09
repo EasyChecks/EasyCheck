@@ -33,6 +33,45 @@ function UserDashboard() {
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [popupInfoMessage, setPopupInfoMessage] = useState('');
   const [checkingCamera, setCheckingCamera] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0) // For real-time updates
+
+  // 🔥 Real-time schedule updates (เหมือนการเข้า-ออกงาน)
+  useEffect(() => {
+    // 1. ฟัง CustomEvent สำหรับ same tab (ทำงานทันที)
+    const handleScheduleUpdate = (event) => {
+      console.log('📢 [Same Tab User] Schedule updated:', event.detail?.action)
+      // Force refresh โดยเปลี่ยน refreshKey
+      setRefreshKey(prev => prev + 1)
+    }
+
+    // 2. ฟัง storage event สำหรับ cross-tab (รวมถึงตอนลบ)
+    const handleStorageChange = (e) => {
+      // ฟังทั้ง scheduleUpdateTrigger และ attendanceSchedules
+      if (e.key === 'scheduleUpdateTrigger' && e.newValue) {
+        try {
+          const update = JSON.parse(e.newValue)
+          console.log('📢 [Cross Tab User] Schedule update:', update.action)
+          setRefreshKey(prev => prev + 1)
+        } catch (error) {
+          console.error('Error parsing schedule update:', error)
+        }
+      } else if (e.key === 'attendanceSchedules') {
+        // 🔥 ฟังการเปลี่ยนแปลงของ attendanceSchedules โดยตรง (ตอนลบ/แก้ไข)
+        console.log('📢 [Cross Tab User] attendanceSchedules changed')
+        setRefreshKey(prev => prev + 1)
+      }
+    }
+
+    // ฟัง CustomEvent (same tab)
+    window.addEventListener('scheduleUpdated', handleScheduleUpdate)
+    // ฟัง storage event (cross-tab)
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('scheduleUpdated', handleScheduleUpdate)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   // โหลดตารางงานทั้งหมดจาก localStorage
   const allSchedules = useMemo(() => {
@@ -49,17 +88,33 @@ function UserDashboard() {
       const today = new Date()
       today.setHours(0, 0, 0, 0) // ตั้งเวลาเป็นเที่ยงคืนเพื่อเปรียบเทียบวันที่
       
+      // 🔐 User เห็นเฉพาะตารางที่ Admin สร้าง (ไม่เห็นของ Super Admin)
+      const userVisibleSchedules = schedules.filter(schedule => 
+        schedule.createdBy === 'admin' || !schedule.createdBy
+      )
+      
       // กรองตารางตาม teams (แผนก/ตำแหน่ง) และวันที่
-      const userSchedules = schedules.filter(schedule => {
-        // 1. ตรวจสอบ teams/departments ก่อน
-        // ถ้าไม่มี teams หรือ teams ว่าง = ทุกคนเห็น
-        const hasTeamAccess = !schedule.teams || schedule.teams.length === 0 || 
-          schedule.teams.some(team => 
+      const userSchedules = userVisibleSchedules.filter(schedule => {
+        // 🔐 ตรวจสอบว่า user อยู่ในรายชื่อสมาชิกหรือไม่
+        // ⚠️ ยกเว้นตารางเก่าที่ไม่มี createdBy (ตารางตัวอย่าง)
+        if (schedule.createdBy && schedule.members && schedule.members.trim()) {
+          const memberNames = schedule.members.split(',').map(name => name.trim())
+          const isInMemberList = memberNames.includes(user?.name)
+          
+          if (!isInMemberList) {
+            return false // ถ้าไม่ได้อยู่ในรายชื่อสมาชิก ไม่แสดง
+          }
+        }
+        
+        // 1. ตรวจสอบ teams/departments (ถ้ามีการตั้งค่า)
+        if (schedule.teams && schedule.teams.length > 0) {
+          const hasTeamAccess = schedule.teams.some(team => 
             team === user?.department || team === user?.position || team === user?.role
           )
-        
-        if (!hasTeamAccess) {
-          return false // ถ้าไม่มีสิทธิ์ตาม role ให้ตัดทิ้งเลย
+          
+          if (!hasTeamAccess) {
+            return false // ถ้าไม่มีสิทธิ์ตาม role ให้ตัดทิ้งเลย
+          }
         }
         
         // 2. ตรวจสอบวันที่
@@ -96,7 +151,7 @@ function UserDashboard() {
       console.error('Error loading schedules:', error)
       return []
     }
-  }, [user])
+  }, [user, refreshKey])
 
   // ฟังก์ชันคำนวณระยะทาง (Haversine formula)
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
