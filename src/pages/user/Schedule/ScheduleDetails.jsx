@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLocations } from '../../../contexts/LocationContext';
 import { MapContainer, TileLayer, Marker, Circle, LayersControl } from 'react-leaflet';
@@ -17,6 +17,7 @@ export default function ScheduleDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { locations } = useLocations();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // โหลดตารางงานจาก localStorage
   const schedule = useMemo(() => {
@@ -31,6 +32,43 @@ export default function ScheduleDetails() {
       }
     }
     return null;
+  }, [id, refreshKey]);
+
+  // 🔥 Real-time schedule updates (เหมือนการเข้า-ออกงาน)
+  useEffect(() => {
+    // 1. ฟัง CustomEvent สำหรับ same tab (ทำงานทันที)
+    const handleScheduleUpdate = (event) => {
+      console.log('📢 [Same Tab Details] Schedule updated:', event.detail?.action);
+      // อัพเดททุกครั้งเพราะอาจเป็นการลบหรือแก้ไข
+      setRefreshKey(prev => prev + 1);
+    };
+
+    // 2. ฟัง storage event สำหรับ cross-tab
+    const handleStorageChange = (e) => {
+      if (e.key === 'scheduleUpdateTrigger' && e.newValue) {
+        try {
+          const update = JSON.parse(e.newValue);
+          console.log('📢 [Cross Tab Details] Schedule update:', update.action);
+          setRefreshKey(prev => prev + 1);
+        } catch (error) {
+          console.error('Error parsing schedule update:', error);
+        }
+      } else if (e.key === 'attendanceSchedules') {
+        // 🔥 ฟังการเปลี่ยนแปลงของ attendanceSchedules โดยตรง (ตอนลบ/แก้ไข)
+        console.log('📢 [Cross Tab Details] attendanceSchedules changed');
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    // ฟัง CustomEvent (same tab)
+    window.addEventListener('scheduleUpdated', handleScheduleUpdate);
+    // ฟัง storage event (cross-tab)
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('scheduleUpdated', handleScheduleUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [id]);
 
   if (!schedule) {
