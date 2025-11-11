@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import PuffLoader from '../../components/common/PuffLoader'
-import { usersData, getUserForAuth, mockLoginAPI, getFallbackAdminAccount } from '../../data/usersData' // Import helper functions
+import { getUserForAuth, mockLoginAPI, getFallbackAdminAccount } from '../../data/usersData' // Import helper functions
 
 
 function Auth() {
@@ -50,12 +50,6 @@ function Auth() {
       setShowReset(true)
     }
   }, [searchParams])
-
-  const { login, getDashboardPath } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  const from = location.state?.from?.pathname || '/'
 
   useEffect(() => {
     function onKey(e) {
@@ -208,50 +202,6 @@ function Auth() {
       setResetSuccess('')
       navigate('/auth', { replace: true })
     }, 2000)
-  }
-
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      // Simulate API call - replace with actual authentication
-      const response = await mockLoginAPI(username, password)
-
-      if (response.success) {
-        login(response.user)
-        const dashboardPath = getDashboardPath(response.user.role)
-        navigate(dashboardPath, { replace: true })
-      } else {
-        setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
-      }
-    } catch (err) {
-      setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Mock login API - replace with actual API call
-  const mockLoginAPI = async (username, password) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Mock user data based on username
-    const mockUsers = {
-      'admin': { id: 1, username: 'admin', role: 'admin', name: 'Administrator' },
-      'superadmin': { id: 2, username: 'superadmin', role: 'superadmin', name: 'Super Admin' },
-      'manager': { id: 3, username: 'manager', role: 'manager', name: 'หัวหน้า' },
-      'user': { id: 4, username: 'user', role: 'user', name: 'ผู้ใช้' }
-    }
-
-    const user = mockUsers[username.toLowerCase()]
-    if (user && password === '123456') {
-      return { success: true, user }
-    }
-
-    return { success: false }
   }
 
   return (
