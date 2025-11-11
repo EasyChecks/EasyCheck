@@ -91,6 +91,7 @@ function AdminDashboard() {
   const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
   const locationRefs = useRef({}) // Refs for scrolling to location cards
+  const scrollPositions = useRef({}) // Store scroll positions before expanding
   
   // State for attendance/event details modal
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -377,30 +378,48 @@ function AdminDashboard() {
   // Toggle location details
   const toggleLocationDetails = (locationId) => {
     const wasExpanded = expandedLocationIds.includes(locationId)
+    const element = locationRefs.current[locationId]
+    
+    if (!element) return
+    
+    const scrollContainer = element.closest('.overflow-y-auto')
+    if (!scrollContainer) return
 
-    setExpandedLocationIds(prev =>
-      prev.includes(locationId)
-        ? prev.filter(id => id !== locationId)
-        : [...prev, locationId]
-    )
-
-    // If expanding, scroll to show the element at the top
-    if (!wasExpanded) {
+    if (wasExpanded) {
+      // ปิดรายละเอียด - กลับไปตำแหน่งเดิม
+      setExpandedLocationIds(prev => prev.filter(id => id !== locationId))
+      
+      // เลื่อนกลับตำแหน่งเดิม
       setTimeout(() => {
-        const element = locationRefs.current[locationId]
-        if (element) {
-          const scrollContainer = element.parentElement
-
-          if (scrollContainer) {
-            const elementTop = element.offsetTop
-
-            scrollContainer.scrollTo({
-              top: elementTop - 10,
-              behavior: 'smooth'
-            })
-          }
+        const savedPosition = scrollPositions.current[locationId]
+        if (savedPosition !== undefined) {
+          scrollContainer.scrollTo({
+            top: savedPosition,
+            behavior: 'smooth'
+          })
+          // ลบตำแหน่งที่บันทึกไว้
+          delete scrollPositions.current[locationId]
         }
-      }, 50) // Small delay to let the state update
+      }, 50)
+    } else {
+      // เปิดรายละเอียด - เก็บตำแหน่งปัจจุบันและเลื่อนไปด้านบน
+      // บันทึกตำแหน่ง scroll ปัจจุบัน
+      scrollPositions.current[locationId] = scrollContainer.scrollTop
+      
+      setExpandedLocationIds(prev => [...prev, locationId])
+      
+      // เลื่อนรายการไปชิดใต้แท็บ (top = 0)
+      setTimeout(() => {
+        // หา offset ของ element เทียบกับ scrollContainer
+        const containerRect = scrollContainer.getBoundingClientRect()
+        const elementRect = element.getBoundingClientRect()
+        const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop
+        
+        scrollContainer.scrollTo({
+          top: relativeTop - 12, // เพิ่มระยะห่าง 12px จากแท็บ
+          behavior: 'smooth'
+        })
+      }, 50)
     }
   }
 
