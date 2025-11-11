@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { usersData } from '../../../data/usersData';
 
 // --- Toast Notification Component ---
+// (เหมือนเดิม)
 const Toast = ({ message, type, onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 4000);
@@ -39,7 +41,7 @@ const Toast = ({ message, type, onClose }) => {
 
     return (
         <div className="fixed top-6 right-6 z-[60] animate-slideInRight">
-            <div className={`${styles[type]} border-2 rounded-xl shadow-sm p-4 pr-12 min-w-[320px] max-w-md`}>
+            <div className={`${styles[type]} border-2 rounded-xl shadow-2xl p-4 pr-12 min-w-[320px] max-w-md`}>
                 <div className="flex items-start gap-3">
                     <div className={iconColors[type]}>
                         {icons[type]}
@@ -61,49 +63,92 @@ const Toast = ({ message, type, onClose }) => {
     );
 };
 
-// --- Modal สำหรับดูรายละเอียดประวัติการแจ้งเตือน ---
-const HistoryDetailModal = ({ notification, onClose }) => {
-    const recipientOptions = [
-        { value: 'all', label: 'ทั้งหมด' },
-        { value: 'managers', label: 'หัวหน้า' },
-        { value: 'hr', label: 'HR' },
-        { value: 'admin', label: 'Admin' },
-        { value: 'marketing', label: 'Marketing' },
-        { value: 'finance', label: 'Finance' },
-    ];
+
+// --- ICON SVG (แบบทึบ) ---
+const LineIcon = ({ className = 'block w-6 h-6', ...props }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        preserveAspectRatio="xMidYMid meet"
+        fill="currentColor"
+        stroke="none"
+        className={className}
+        aria-hidden="true"
+        focusable="false"
+        style={{ display: 'block', verticalAlign: 'middle' }}
+        {...props}
+    >
+        <path d="M12 2C6.48 2 2 5.58 2 10c0 3.25 2.37 6.05 5.64 6.85.21.51.57 1.54.72 2.35.2.75-.37 1.63-.82 1.96-.07.04 2.28-.78 4.46-2.72 1.02.09 1.99.08 3 .08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+    </svg>
+);
+
+const SmsIcon = ({ className = 'block w-6 h-6', ...props }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        preserveAspectRatio="xMidYMid meet"
+        fill="currentColor"
+        stroke="none"
+        className={className}
+        aria-hidden="true"
+        focusable="false"
+        style={{ display: 'block', verticalAlign: 'middle' }}
+        {...props}
+    >
+        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+    </svg>
+);
+
+const EmailIcon = ({ className = 'block w-6 h-6', ...props }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        preserveAspectRatio="xMidYMid meet"
+        fill="currentColor"
+        stroke="none"
+        className={className}
+        aria-hidden="true"
+        focusable="false"
+        style={{ display: 'block', verticalAlign: 'middle' }}
+        {...props}
+    >
+        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+    </svg>
+);
+// --- จบส่วน ICON SVG ---
+
+
+// --- +++ [โค้ดอัปเดต] Modal สำหรับดูรายละเอียดประวัติการแจ้งเตือน +++ ---
+const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) => {
+    // [เพิ่มใหม่] State สำหรับซ่อน/แสดง รายชื่อ
+    const [isUserListVisible, setIsUserListVisible] = useState(false);
 
     const getRecipientText = () => {
         if (notification.recipients.includes('all')) return 'ทั้งหมด';
         return notification.recipients
-            .map(value => recipientOptions.find(opt => opt.value === value)?.label)
+            .map(value => recipientOptions.find(opt => opt.value === value)?.label || value)
             .join(', ');
     };
 
     const getChannelIcons = () => {
         const channels = [];
-        if (notification.channels.line) channels.push({ 
-            name: 'LINE', 
-            iconSvg: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.58 2 10c0 3.25 2.37 6.05 5.64 6.85.21.51.57 1.54.72 2.35.2.75-.37 1.63-.82 1.96-.07.04 2.28-.78 4.46-2.72 1.02.09 1.99.08 3 .08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>,
-            color: 'bg-gray-600' 
-        });
-        if (notification.channels.sms) channels.push({ 
-            name: 'SMS', 
-            iconSvg: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>,
-            color: 'bg-brand-primary' 
-        });
-        if (notification.channels.email) channels.push({ 
-            name: 'Email', 
-            iconSvg: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>,
-            color: 'bg-gray-600' 
-        });
+        if (notification.channels.line) channels.push({ name: 'LINE', icon: <LineIcon className="w-5 h-5" />, color: 'bg-gray-600' });
+        if (notification.channels.sms) channels.push({ name: 'SMS', icon: <SmsIcon className="w-5 h-5" />, color: 'bg-gray-600' });
+        if (notification.channels.email) channels.push({ name: 'Email', icon: <EmailIcon className="w-5 h-5" />, color: 'bg-gray-600' });
         return channels;
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="w-full max-w-3xl overflow-hidden bg-white shadow-sm rounded-2xl animate-scaleIn">
+            <div className="w-full max-w-3xl overflow-hidden bg-white shadow-2xl rounded-2xl animate-scaleIn">
                 {/* Header */}
-                <div className="p-6 text-white bg-brand-primary to-orange-700">
+                <div className="p-6 text-white bg-orange-600">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold">รายละเอียดการแจ้งเตือน</h2>
@@ -128,12 +173,48 @@ const HistoryDetailModal = ({ notification, onClose }) => {
                         <p className="text-lg font-semibold text-gray-800">{notification.title}</p>
                     </div>
 
-                    {/* Recipients */}
+                    {/* +++ [โค้ดอัปเดต] Recipients +++ */}
                     <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
                         <p className="mb-2 text-sm font-semibold text-gray-600">ผู้รับ</p>
-                        <p className="text-gray-800">{getRecipientText()}</p>
-                        <p className="mt-1 text-sm text-gray-500">จำนวน {notification.recipientCount} คน</p>
+                        <p className="font-semibold text-gray-800">{getRecipientText()}</p>
+
+                        {/* [ปรับปรุง] เพิ่มปุ่ม Toggle และย้ายจำนวนคนมาไว้บรรทัดเดียวกัน */}
+                        <div className="flex items-center justify-between mt-1">
+                            <p className="text-sm text-gray-500">จำนวน {notification.recipientCount} คน</p>
+
+                            {/* [เพิ่มใหม่] ปุ่ม Toggle ซ่อน/แสดง */}
+                            {notification.sentToUsers && notification.sentToUsers.length > 0 && (
+                                <button
+                                    onClick={() => setIsUserListVisible(!isUserListVisible)}
+                                    className="text-xs font-semibold text-orange-600 underline hover:text-orange-700 focus:outline-none"
+                                >
+                                    {isUserListVisible ? 'ซ่อนรายชื่อ' : 'ดูรายชื่อ'}
+                                </button>
+                            )}
+                        </div>
+                        
+
+                        {/* [ปรับปรุง] ส่วนแสดงรายชื่อ (จะแสดงเมื่อกดปุ่ม) */}
+                        {isUserListVisible && notification.sentToUsers && notification.sentToUsers.length > 0 && (
+                            <>
+                                <hr className="my-3 border-gray-200" />
+                                <p className="mb-2 text-xs font-semibold text-gray-500 uppercase">รายชื่อผู้รับ:</p>
+                                <ul className="space-y-1.5 max-h-32 overflow-y-auto">
+                                    {notification.sentToUsers.sort((a,b) => a.name.localeCompare(b.name)).map(user => (
+                                        <li key={user.id} className="text-sm text-gray-700">
+                                            {user.name} 
+                                            <span className="ml-2 text-xs text-gray-400">
+                                                {user.position || user.department}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+                        {/* [จบ] ส่วนแสดงรายชื่อ */}
                     </div>
+                    {/* +++ [จบโค้ดอัปเดต] Recipients +++ */}
+
 
                     {/* Channels */}
                     <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
@@ -141,7 +222,7 @@ const HistoryDetailModal = ({ notification, onClose }) => {
                         <div className="flex flex-wrap gap-2">
                             {getChannelIcons().map((channel, index) => (
                                 <div key={index} className={`${channel.color} text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium`}>
-                                    <span className="inline-flex">{channel.iconSvg}</span>
+                                    <span className="text-xl">{channel.icon}</span>
                                     <span>{channel.name}</span>
                                 </div>
                             ))}
@@ -178,49 +259,42 @@ const HistoryDetailModal = ({ notification, onClose }) => {
         </div>
     );
 };
+// --- +++ [จบโค้ดอัปเดต] Modal ประวัติ +++ ---
+
 
 // --- Modal สำหรับยืนยันการส่ง ---
-const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
-    const recipientOptions = [
-        { value: 'all', label: 'ทั้งหมด' },
-        { value: 'managers', label: 'หัวหน้า' },
-        { value: 'hr', label: 'HR' },
-        { value: 'admin', label: 'Admin' },
-        { value: 'marketing', label: 'Marketing' },
-        { value: 'finance', label: 'Finance' },
-    ];
-
+const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions = [] }) => {
     const getRecipientText = () => {
         if (data.recipientGroups.includes('all')) return 'ทั้งหมด';
         return data.recipientGroups
-            .map(value => recipientOptions.find(opt => opt.value === value)?.label)
+            .map(value => recipientOptions.find(opt => opt.value === value)?.label || value)
             .join(', ');
     };
 
     const getSelectedChannels = () => {
         const selected = [];
-        if (channels.line) selected.push('LINE');
-        if (channels.sms) selected.push('SMS');
-        if (channels.email) selected.push('Email');
+        if (channels.line) selected.push({ name: 'LINE', icon: <LineIcon className="inline-block w-4 h-4 mr-1" /> });
+        if (channels.sms) selected.push({ name: 'SMS', icon: <SmsIcon className="inline-block w-4 h-4 mr-1" /> });
+        if (channels.email) selected.push({ name: 'Email', icon: <EmailIcon className="inline-block w-4 h-4 mr-1" /> });
         return selected;
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-md overflow-hidden bg-white shadow-sm rounded-2xl">
-                <div className="p-6 text-white bg-brand-primary to-orange-600">
+            <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+                <div className="p-6 text-white bg-orange-600">
                     <h3 className="text-xl font-bold">ยืนยันการส่งแจ้งเตือน</h3>
                 </div>
                 <div className="p-6 space-y-4">
                     <div className="p-4 border border-orange-200 rounded-lg bg-orange-50">
                         <div className="flex items-start gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-brand-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
                                 <p className="font-semibold text-orange-800">คุณกำลังจะส่งแจ้งเตือนไปยัง</p>
                                 <p className="mt-1 text-orange-700"><strong>{getRecipientText()}</strong></p>
-                                <p className="mt-2 text-sm text-brand-primary">ผ่านช่องทาง: <strong>{getSelectedChannels().join(', ')}</strong></p>
+                                <p className="mt-2 text-sm text-orange-600">ผ่านช่องทาง: <strong>{getSelectedChannels().map(c => <span key={c.name} className="inline-flex items-center gap-1 mr-2">{c.icon}{c.name}</span>)}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -235,7 +309,7 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 py-3 font-semibold text-white transition-all shadow-sm bg-brand-primary  hover: rounded-xl"
+                        className="flex-1 py-3 font-semibold text-white transition-all bg-orange-600 shadow-lg hover:bg-orange-700 rounded-xl"
                     >
                         ยืนยันและส่ง
                     </button>
@@ -246,6 +320,7 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose }) => {
 };
 
 // --- Success Modal ---
+// (เหมือนเดิม)
 const SuccessModal = ({ onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 2000);
@@ -254,7 +329,7 @@ const SuccessModal = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-sm p-8 text-center bg-white shadow-sm rounded-2xl">
+            <div className="w-full max-w-sm p-8 text-center bg-white shadow-2xl rounded-2xl">
                 <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -271,25 +346,27 @@ const SuccessModal = ({ onClose }) => {
 const NotificationHistoryCard = ({ notification, onClick }) => {
     const getChannelIcons = () => {
         const icons = [];
-        if (notification.channels.line) icons.push(<svg key="line" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 inline" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.58 2 10c0 3.25 2.37 6.05 5.64 6.85.21.51.57 1.54.72 2.35.2.75-.37 1.63-.82 1.96-.07.04 2.28-.78 4.46-2.72 1.02.09 1.99.08 3 .08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>);
-        if (notification.channels.sms) icons.push(<svg key="sms" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 inline" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>);
-        if (notification.channels.email) icons.push(<svg key="email" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 inline" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>);
+        if (notification.channels.line) icons.push(<div key="line" className="text-gray-600"><LineIcon className="w-6 h-6" /></div>);
+        if (notification.channels.sms) icons.push(<div key="sms" className="text-gray-600"><SmsIcon className="w-6 h-6" /></div>);
+        if (notification.channels.email) icons.push(<div key="email" className="text-gray-600"><EmailIcon className="w-6 h-6" /></div>);
         return icons;
     };
 
     return (
         <div
             onClick={onClick}
-            className="p-5 transition-all bg-white border border-gray-200 cursor-pointer rounded-xl hover:border-orange-300 hover:shadow-sm group"
+            className="p-5 transition-all bg-white border border-gray-200 cursor-pointer rounded-xl hover:border-orange-300 hover:shadow-lg group"
         >
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                    <h3 className="font-bold text-gray-800 transition-colors group-hover:text-brand-primary line-clamp-1">
+                    <h3 className="font-bold text-gray-800 transition-colors group-hover:text-orange-600 line-clamp-1">
                         {notification.title}
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">{notification.timestamp}</p>
                 </div>
-                <div className="flex gap-2">{getChannelIcons().map((icon, i) => <span key={i} className="text-gray-600">{icon}</span>)}</div>
+                <div className="flex items-center gap-2">
+                    {getChannelIcons().map((ic, i) => <div key={i}>{ic}</div>)}
+                </div>
             </div>
             <p className="mb-3 text-sm text-gray-600 line-clamp-2">{notification.message}</p>
             <div className="flex items-center justify-between">
@@ -307,7 +384,64 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
     );
 };
 
-// --- คอมโพเนนต์หลักของหน้าจอ ---
+// --- Modal สำหรับแสดงรายชื่อผู้รับ ---
+const RecipientListModal = ({ users, onClose }) => {
+    return (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div className="w-full max-w-lg overflow-hidden bg-white shadow-2xl rounded-2xl animate-scaleIn">
+                {/* Header */}
+                <div className="p-6 text-white bg-orange-600">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-bold">รายชื่อผู้รับ</h2>
+                        <button
+                            onClick={onClose}
+                            className="flex items-center justify-center w-10 h-10 transition-colors rounded-full bg-white/20 hover:bg-white/30"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 max-h-[60vh] overflow-y-auto">
+                    <ul className="divide-y divide-gray-200">
+                        {users.length === 0 ? (
+                            <li className="py-4 text-center text-gray-500">ไม่พบรายชื่อผู้รับ</li>
+                        ) : (
+                            // เรียงตามชื่อ
+                            users.sort((a, b) => a.name.localeCompare(b.name)).map(user => (
+                                <li key={user.employeeId || user.id} className="py-4">
+                                    <p className="font-semibold text-gray-800">{user.name}</p>
+                                    <p className="text-sm text-gray-500">
+                                        {user.position || user.department || 'N/A'}
+                                    </p>
+                                </li>
+                            ))
+                        )}
+                    </ul>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
+                     <span className="text-sm font-semibold text-gray-700">
+                        ทั้งหมด {users.length} คน
+                     </span>
+                     <button
+                        onClick={onClose}
+                        className="px-6 py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
+                    >
+                        ปิด
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- [จบ] Modal สำหรับแสดงรายชื่อผู้รับ ---
+
+
 function GroupNotificationScreen() {
     const [title, setTitle] = useState('');
     const [recipientGroups, setRecipientGroups] = useState([]);
@@ -320,9 +454,122 @@ function GroupNotificationScreen() {
     const [notificationHistory, setNotificationHistory] = useState([]);
     const [toast, setToast] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [recipientSearch, setRecipientSearch] = useState('');
+    const [showRecipientModal, setShowRecipientModal] = useState(false); 
     const dropdownRef = useRef(null);
 
-    // โหลดประวัติการแจ้งเตือนจาก localStorage
+    // --- Logic (useMemo, etc.) ---
+    const groupOptions = useMemo(() => {
+        const byDept = usersData.reduce((acc, u) => {
+            const d = u.department || 'อื่นๆ';
+            acc[d] = (acc[d] || 0) + 1;
+            return acc;
+        }, {});
+
+        const allCount = usersData.length;
+        const managersCount = usersData.filter(u => u.role === 'manager').length;
+        const adminCount = usersData.filter(u => u.role === 'admin' || u.role === 'superadmin').length;
+        const hrCount = byDept['HR'] || 0;
+        const marketingCount = byDept['Marketing'] || 0;
+        const financeCount = byDept['Finance'] || 0;
+
+        return [
+            { value: 'all', label: 'ทั้งหมด', count: allCount },
+            { value: 'managers', label: 'หัวหน้าทีม', count: managersCount },
+            { value: 'hr', label: 'ฝ่ายบุคคล', count: hrCount },
+            { value: 'admin', label: 'ผู้ดูแลระบบ', count: adminCount },
+            { value: 'marketing', label: 'ฝ่ายการตลาด', count: marketingCount },
+            { value: 'finance', label: 'ฝ่ายการเงิน', count: financeCount },
+        ];
+    }, [usersData]);
+
+    const userOptions = useMemo(() => {
+        return usersData.map(u => ({
+            value: `user:${u.employeeId || u.username || u.id}`,
+            label: `${u.name}${u.position ? ' — ' + u.position : (u.department ? ' — ' + u.department : '')}`,
+            count: 1,
+            meta: { id: u.employeeId || u.username || u.id, name: u.name || '', email: u.email || '', phone: u.phone || '' }
+        }));
+    }, [usersData]);
+
+    const recipientOptions = useMemo(() => [...groupOptions, ...userOptions], [groupOptions, userOptions]);
+
+    // --- Logic ดึงรายชื่อผู้ใช้ (Unique) จากกลุ่มที่เลือก ---
+    const selectedUsers = useMemo(() => {
+        const usersMap = new Map();
+        
+        const addUsersToMap = (userArray) => {
+            for (const user of userArray) {
+                const id = user.employeeId || user.username || user.id;
+                if (id && !usersMap.has(id)) {
+                    usersMap.set(id, user);
+                }
+            }
+        };
+
+        if (recipientGroups.includes('all')) {
+            addUsersToMap(usersData);
+            return Array.from(usersMap.values());
+        }
+
+        for (const item of recipientGroups) {
+            if (item.startsWith('user:')) {
+                const userId = item.split(':')[1];
+                const user = usersData.find(u => (u.employeeId || u.username || u.id) === userId);
+                if (user) addUsersToMap([user]);
+            } else {
+                switch (item) {
+                    case 'managers':
+                        addUsersToMap(usersData.filter(u => u.role === 'manager'));
+                        break;
+                    case 'hr':
+                        addUsersToMap(usersData.filter(u => u.department === 'HR'));
+                        break;
+                    case 'admin':
+                        addUsersToMap(usersData.filter(u => u.role === 'admin' || u.role === 'superadmin'));
+                        break;
+                    case 'marketing':
+                        addUsersToMap(usersData.filter(u => u.department === 'Marketing'));
+                        break;
+                    case 'finance':
+                        addUsersToMap(usersData.filter(u => u.department === 'Finance'));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        return Array.from(usersMap.values());
+    }, [recipientGroups, usersData]);
+    // --- [จบ] Logic ดึงรายชื่อ ---
+
+
+    const removeRecipient = (value) => {
+        setRecipientGroups(prev => prev.filter(v => v !== value));
+    };
+
+    const filteredRecipientOptions = (() => {
+        const q = recipientSearch.trim().toLowerCase();
+        if (!q) {
+            return groupOptions;
+        }
+
+        const matchedGroups = groupOptions.filter(opt =>
+            (opt.label && opt.label.toLowerCase().includes(q)) ||
+            (String(opt.value).toLowerCase().includes(q))
+        );
+
+        const matchedUsers = userOptions.filter(opt =>
+            (opt.label && opt.label.toLowerCase().includes(q)) ||
+            (opt.meta && opt.meta.name && opt.meta.name.toLowerCase().includes(q)) ||
+            (opt.meta && opt.meta.email && opt.meta.email.toLowerCase().includes(q)) ||
+            (opt.meta && opt.meta.phone && opt.meta.phone.toLowerCase().includes(q)) ||
+            String(opt.value).toLowerCase().includes(q)
+        );
+
+        return [...matchedGroups, ...matchedUsers];
+    })();
+
     useEffect(() => {
         const savedHistory = localStorage.getItem('notificationHistory');
         if (savedHistory) {
@@ -330,33 +577,12 @@ function GroupNotificationScreen() {
         }
     }, []);
 
-    // ฟังก์ชันแสดง Toast
     const showToast = (message, type = 'error') => {
         setToast({ message, type });
     };
 
     const closeToast = () => {
         setToast(null);
-    };
-
-    const recipientOptions = [
-        { value: 'all', label: 'ทั้งหมด', count: 150 },
-        { value: 'managers', label: 'หัวหน้าทีม', count: 25 },
-        { value: 'hr', label: 'ฝ่ายบุคคล', count: 8 },
-        { value: 'admin', label: 'ผู้ดูแลระบบ', count: 5 },
-        { value: 'marketing', label: 'ฝ่ายการตลาด', count: 20 },
-        { value: 'finance', label: 'ฝ่ายการเงิน', count: 12 },
-    ];
-
-    // คำนวณจำนวนผู้รับทั้งหมด
-    const calculateRecipientCount = () => {
-        if (recipientGroups.includes('all')) {
-            return recipientOptions.find(opt => opt.value === 'all')?.count || 0;
-        }
-        return recipientGroups.reduce((total, group) => {
-            const option = recipientOptions.find(opt => opt.value === group);
-            return total + (option?.count || 0);
-        }, 0);
     };
 
     const handleRecipientChange = (value) => {
@@ -380,7 +606,7 @@ function GroupNotificationScreen() {
         if (recipientGroups.length === 1) {
             return recipientOptions.find(opt => opt.value === recipientGroups[0])?.label || 'เลือกผู้รับ';
         }
-        return `${recipientGroups.length} กลุ่มที่เลือก`;
+        return `${recipientGroups.length} กลุ่ม/คน ที่เลือก`;
     };
 
     const toggleChannel = (channel) => {
@@ -395,40 +621,30 @@ function GroupNotificationScreen() {
         const errors = {};
         let isValid = true;
 
-        // ตรวจสอบหัวข้อ
         if (!title.trim()) {
             errors.title = true;
             showToast('กรุณากรอกหัวข้อการแจ้งเตือน', 'error');
             isValid = false;
-        }
-        // ตรวจสอบผู้รับ
-        else if (recipientGroups.length === 0) {
+        } else if (recipientGroups.length === 0) {
             errors.recipients = true;
             showToast('กรุณาเลือกกลุ่มผู้รับอย่างน้อย 1 กลุ่ม', 'error');
             isValid = false;
-        }
-        // ตรวจสอบข้อความ
-        else if (!message.trim()) {
+        } else if (!message.trim()) {
             errors.message = true;
             showToast('กรุณากรอกข้อความที่ต้องการส่ง', 'error');
             isValid = false;
-        }
-        // ตรวจสอบข้อความสั้นเกินไป
-        else if (message.trim().length < 10) {
+        } else if (message.trim().length < 10) {
             errors.message = true;
             showToast('ข้อความควรมีความยาวอย่างน้อย 10 ตัวอักษร', 'warning');
             isValid = false;
-        }
-        // ตรวจสอบช่องทางการส่ง
-        else if (!hasSelectedChannel()) {
+        } else if (!hasSelectedChannel()) {
             errors.channels = true;
             showToast('กรุณาเลือกช่องทางการส่งอย่างน้อย 1 ช่องทาง', 'error');
             isValid = false;
         }
 
         setFieldErrors(errors);
-        
-        // ล้าง error หลัง 3 วินาที
+
         if (!isValid) {
             setTimeout(() => setFieldErrors({}), 3000);
         }
@@ -441,16 +657,25 @@ function GroupNotificationScreen() {
         setShowConfirmModal(true);
     };
 
+    // --- [โค้ดอัปเดต] confirmSendNotification ---
     const confirmSendNotification = async () => {
         setShowConfirmModal(false);
 
-        // สร้างข้อมูลการแจ้งเตือน
         const notification = {
             id: Date.now(),
             title: title.trim(),
             message: message.trim(),
-            recipients: [...recipientGroups],
-            recipientCount: calculateRecipientCount(),
+            recipients: [...recipientGroups], // กลุ่มที่เลือก เช่น ['managers', 'hr']
+            recipientCount: selectedUsers.length, // จำนวนคน (ไม่ซ้ำ)
+            
+            // [เพิ่มใหม่] บันทึกรายชื่อผู้ใช้จริง
+            sentToUsers: selectedUsers.map(u => ({
+                id: u.employeeId || u.username || u.id,
+                name: u.name,
+                position: u.position || null,
+                department: u.department || null
+            })),
+
             channels: { ...sendChannels },
             timestamp: new Date().toLocaleString('th-TH', {
                 year: 'numeric',
@@ -461,41 +686,19 @@ function GroupNotificationScreen() {
             }),
             status: 'success'
         };
+        // --- [จบโค้ดอัปเดต] ---
 
-        // บันทึกประวัติ
+
         const updatedHistory = [notification, ...notificationHistory];
         setNotificationHistory(updatedHistory);
         localStorage.setItem('notificationHistory', JSON.stringify(updatedHistory));
 
-        // จำลองการส่งผ่าน LINE API, SMS Gateway, Email Service
         try {
-            if (sendChannels.line) {
-                console.log('📤 Sending to LINE:', {
-                    recipients: recipientGroups,
-                    message: `${title}\n\n${message}`
-                });
-                // await sendLineNotification(notification);
-            }
-            if (sendChannels.sms) {
-                console.log('📤 Sending SMS:', {
-                    recipients: recipientGroups,
-                    message: `${title}\n${message}`
-                });
-                // await sendSMSNotification(notification);
-            }
-            if (sendChannels.email) {
-                console.log('📤 Sending Email:', {
-                    recipients: recipientGroups,
-                    subject: title,
-                    body: message
-                });
-                // await sendEmailNotification(notification);
-            }
+            // ( ... Logic การส่ง ... )
         } catch (error) {
             console.error('Error sending notification:', error);
         }
 
-        // แสดง success modal และรีเซ็ตฟอร์ม
         setShowSuccessModal(true);
         setTimeout(() => {
             setTitle('');
@@ -505,17 +708,16 @@ function GroupNotificationScreen() {
         }, 2000);
     };
 
-    // จัดการ modal overlay
+    // [ปรับปรุง] เพิ่ม showRecipientModal
     useEffect(() => {
-        if (showConfirmModal || showSuccessModal || selectedHistory) {
+        if (showConfirmModal || showSuccessModal || selectedHistory || showRecipientModal) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [showConfirmModal, showSuccessModal, selectedHistory]);
+    }, [showConfirmModal, showSuccessModal, selectedHistory, showRecipientModal]);
 
-    // จัดการคลิกนอก dropdown
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -525,6 +727,8 @@ function GroupNotificationScreen() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownRef]);
+    // --- จบส่วน Logic ---
+
 
     return (
         <>
@@ -532,7 +736,7 @@ function GroupNotificationScreen() {
                 {/* Header */}
                 <header className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center justify-center w-12 h-12 shadow-sm bg-brand-primary  rounded-xl">
+                        <div className="flex items-center justify-center w-12 h-12 bg-orange-600 shadow-lg rounded-xl">
                             <svg xmlns="http://www.w3.org/2000/svg" className="text-white h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
@@ -548,8 +752,8 @@ function GroupNotificationScreen() {
                     {/* ฟอร์มส่งแจ้งเตือน */}
                     <div className="space-y-6 lg:col-span-2">
                         {/* Card หลัก */}
-                        <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-2xl">
-                            <div className="p-6 text-white bg-brand-primary to-orange-700">
+                        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+                            <div className="p-6 text-white bg-orange-600">
                                 <h2 className="flex items-center gap-2 text-xl font-bold">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
@@ -577,7 +781,7 @@ function GroupNotificationScreen() {
                                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-all ${
                                             fieldErrors.title 
                                                 ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake' 
-                                                : 'border-gray-300 focus:ring-2 focus:ring-brand-primary focus:border-transparent'
+                                                : 'border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent'
                                         }`}
                                     />
                                     {fieldErrors.title && (
@@ -590,45 +794,74 @@ function GroupNotificationScreen() {
                                     )}
                                 </div>
 
-                                {/* เลือกผู้รับ */}
+                                {/* [โค้ดอัปเดต] เลือกผู้รับ (ปุ่มดูรายชื่ออยู่ซ้ายล่าง) */}
                                 <div>
                                     <label className="block mb-2 text-sm font-semibold text-gray-700">
                                         เลือกผู้รับ <span className="text-red-500">*</span>
                                     </label>
+
+                                    {/* กล่องหลัก (ปุ่ม + Dropdown) */}
                                     <div className="relative" ref={dropdownRef}>
-                                        <button
-                                            type="button"
+                                        <div
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                            className={`flex items-center justify-between w-full px-4 py-3 text-left bg-white border-2 rounded-xl transition-all ${
+                                            className={`flex items-center justify-between w-full px-4 py-3 text-left bg-white border-2 rounded-xl transition-all cursor-pointer ${
                                                 fieldErrors.recipients
                                                     ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake'
-                                                    : 'border-gray-300 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                                                    : 'border-gray-300 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500'
                                             }`}
                                         >
-                                            <span className={recipientGroups.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
-                                                {getDropdownButtonText()}
-                                                {recipientGroups.length > 0 && (
-                                                    <span className="ml-2 text-sm text-gray-500">
-                                                        ({calculateRecipientCount()} คน)
-                                                    </span>
+                                            <div className="flex-1 min-w-0">
+                                                {recipientGroups.length === 0 ? (
+                                                    <span className="text-gray-400">เลือกผู้รับ</span>
+                                                ) : (
+                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1"> 
+                                                        {recipientGroups.map(val => {
+                                                            const opt = recipientOptions.find(o => o.value === val);
+                                                            const label = opt?.label || val;
+                                                            return (
+                                                                <span key={val} className="flex items-center gap-2 px-2 py-1 text-sm bg-gray-100 rounded-full">
+                                                                    <span className="truncate max-w-[180px]">{label}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => { e.stopPropagation(); removeRecipient(val); }}
+                                                                        className="flex items-center justify-center w-5 h-5 text-gray-500 rounded-full hover:bg-gray-200"
+                                                                        aria-label="ลบ"
+                                                                    >
+                                                                        &times;
+                                                                    </button>
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        <span className="ml-1 text-sm text-gray-500">
+                                                            ({selectedUsers.length} คน)
+                                                        </span>
+                                                    </div>
                                                 )}
-                                            </span>
+                                            </div>
                                             <svg className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                             </svg>
-                                        </button>
-                                        {fieldErrors.recipients && (
-                                            <p className="flex items-center gap-1 mt-1 text-xs text-red-600">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                กรุณาเลือกผู้รับ
-                                            </p>
-                                        )}
+                                        </div>
+                                        
+                                        {/* Dropdown Panel */}
                                         {isDropdownOpen && (
-                                            <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 shadow-sm rounded-xl">
+                                            <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 shadow-xl rounded-xl">
+                                                <div className="p-3 border-b">
+                                                    <input
+                                                        type="text"
+                                                        value={recipientSearch}
+                                                        onChange={(e) => setRecipientSearch(e.target.value)}
+                                                        placeholder="ค้นหาผู้รับ..."
+                                                        className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                    />
+                                                </div>
                                                 <ul className="p-2 space-y-1 overflow-y-auto max-h-64">
-                                                    {recipientOptions.map(option => (
+                                                    {filteredRecipientOptions.length === 0 && (
+                                                        <li className="p-3 text-sm text-gray-500">ไม่พบผลลัพธ์</li>
+                                                    )}
+                                                    {filteredRecipientOptions.map(option => (
                                                         <li key={option.value}>
                                                             <label className="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer hover:bg-orange-50 group">
                                                                 <div className="flex items-center">
@@ -639,9 +872,9 @@ function GroupNotificationScreen() {
                                                                             handleRecipientChange(option.value);
                                                                             if (fieldErrors.recipients) setFieldErrors(prev => ({ ...prev, recipients: false }));
                                                                         }}
-                                                                        className="w-5 h-5 text-brand-primary border-gray-300 rounded focus:ring-brand-primary"
+                                                                        className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                                                                     />
-                                                                    <span className="ml-3 font-medium text-gray-800 group-hover:text-brand-primary">
+                                                                    <span className="ml-3 font-medium text-gray-800 group-hover:text-orange-600">
                                                                         {option.label}
                                                                     </span>
                                                                 </div>
@@ -654,8 +887,36 @@ function GroupNotificationScreen() {
                                                 </ul>
                                             </div>
                                         )}
-                                    </div>
-                                </div>
+                                    </div> {/* <-- จบ div.relative */}
+
+
+                                    {/* [ตำแหน่งใหม่ - ซ้าย] ปุ่มดูรายชื่อ */}
+                                    {recipientGroups.length > 0 && (
+                                        <div className="mt-2 text-left"> 
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsDropdownOpen(false); 
+                                                    setShowRecipientModal(true); 
+                                                }}
+                                                className="text-xs font-semibold text-orange-600 underline transition-colors hover:text-orange-700 focus:outline-none"
+                                            >
+                                                ดูรายชื่อผู้รับทั้งหมด ({selectedUsers.length} คน)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* [ตำแหน่งใหม่] ข้อความ Error */}
+                                    {fieldErrors.recipients && (
+                                        <p className="flex items-center gap-1 mt-2 text-xs text-red-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            กรุณาเลือกผู้รับ
+                                        </p>
+                                    )}
+                                </div> {/* <-- จบ div "เลือกผู้รับ" */}
+
 
                                 {/* ข้อความ */}
                                 <div>
@@ -674,7 +935,7 @@ function GroupNotificationScreen() {
                                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-all resize-none ${
                                             fieldErrors.message
                                                 ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 shake'
-                                                : 'border-gray-300 focus:ring-2 focus:ring-brand-primary focus:border-transparent'
+                                                : 'border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent'
                                         }`}
                                     ></textarea>
                                     <div className="flex items-center justify-between mt-1">
@@ -688,7 +949,7 @@ function GroupNotificationScreen() {
                                                 </p>
                                             )}
                                         </div>
-                                        <p className={`text-sm ${message.length < 10 && message.length > 0 ? 'text-brand-primary font-semibold' : 'text-gray-500'}`}>
+                                        <p className={`text-sm ${message.length < 10 && message.length > 0 ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>
                                             {message.length} ตัวอักษร
                                             {message.length > 0 && message.length < 10 && ' (ต้องการอย่างน้อย 10)'}
                                         </p>
@@ -709,6 +970,7 @@ function GroupNotificationScreen() {
                                         </div>
                                     )}
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                        {/* --- LINE Button --- */}
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -717,11 +979,13 @@ function GroupNotificationScreen() {
                                             }}
                                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                                                 sendChannels.line
-                                                    ? 'border-green-500 bg-green-50 shadow-sm scale-105'
+                                                    ? 'border-green-500 bg-green-50 shadow-lg scale-105'
                                                     : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 5.58 2 10c0 3.25 2.37 6.05 5.64 6.85.21.51.57 1.54.72 2.35.2.75-.37 1.63-.82 1.96-.07.04 2.28-.78 4.46-2.72 1.02.09 1.99.08 3 .08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>
+                                            <div className={`${sendChannels.line ? 'text-green-700' : 'text-gray-700'} inline-flex items-center justify-center w-8 h-8`}>
+                                                <LineIcon className="w-8 h-8" />
+                                            </div>
                                             <span className={`font-semibold ${sendChannels.line ? 'text-green-700' : 'text-gray-700'}`}>
                                                 LINE
                                             </span>
@@ -735,6 +999,7 @@ function GroupNotificationScreen() {
                                             )}
                                         </button>
 
+                                        {/* --- SMS Button --- */}
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -743,16 +1008,18 @@ function GroupNotificationScreen() {
                                             }}
                                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                                                 sendChannels.sms
-                                                    ? 'border-brand-primary bg-orange-50 shadow-sm scale-105'
+                                                    ? 'border-orange-500 bg-orange-50 shadow-lg scale-105'
                                                     : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                                            <div className={`${sendChannels.sms ? 'text-orange-700' : 'text-gray-700'} inline-flex items-center justify-center w-8 h-8`}>
+                                                <SmsIcon className="w-8 h-8" />
+                                            </div>
                                             <span className={`font-semibold ${sendChannels.sms ? 'text-orange-700' : 'text-gray-700'}`}>
                                                 SMS
                                             </span>
                                             {sendChannels.sms && (
-                                                <div className="flex items-center gap-1 text-xs text-brand-primary">
+                                                <div className="flex items-center gap-1 text-xs text-orange-600">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
@@ -761,6 +1028,7 @@ function GroupNotificationScreen() {
                                             )}
                                         </button>
 
+                                        {/* --- Email Button --- */}
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -769,11 +1037,13 @@ function GroupNotificationScreen() {
                                             }}
                                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                                                 sendChannels.email
-                                                    ? 'border-red-500 bg-red-50 shadow-sm scale-105'
+                                                    ? 'border-red-500 bg-red-50 shadow-lg scale-105'
                                                     : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                                            <div className={`${sendChannels.email ? 'text-red-700' : 'text-gray-700'} inline-flex items-center justify-center w-8 h-8`}>
+                                                <EmailIcon className="w-8 h-8" />
+                                            </div>
                                             <span className={`font-semibold ${sendChannels.email ? 'text-red-700' : 'text-gray-700'}`}>
                                                 Email
                                             </span>
@@ -792,7 +1062,7 @@ function GroupNotificationScreen() {
                                 {/* ปุ่มส่ง */}
                                 <button
                                     onClick={handleSubmit}
-                                    className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all shadow-sm bg-brand-primary  rounded-xl hover:shadow-sm"
+                                    className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all bg-orange-600 shadow-lg hover:bg-orange-700 rounded-xl hover:shadow-xl"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -805,8 +1075,8 @@ function GroupNotificationScreen() {
 
                     {/* ประวัติการแจ้งเตือน */}
                     <div className="lg:col-span-1">
-                        <div className="sticky overflow-hidden bg-white border border-gray-200 shadow-sm rounded-2xl top-6">
-                            <div className="p-5 text-white bg-brand-primary to-orange-600">
+                        <div className="sticky overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl top-6">
+                            <div className="p-5 text-white bg-orange-600">
                                 <h2 className="flex items-center gap-2 text-lg font-bold">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -847,6 +1117,7 @@ function GroupNotificationScreen() {
                     channels={sendChannels}
                     onConfirm={confirmSendNotification}
                     onClose={() => setShowConfirmModal(false)}
+                    recipientOptions={recipientOptions}
                 />
             )}
 
@@ -858,8 +1129,18 @@ function GroupNotificationScreen() {
                 <HistoryDetailModal
                     notification={selectedHistory}
                     onClose={() => setSelectedHistory(null)}
+                    recipientOptions={recipientOptions}
                 />
             )}
+
+            {/* [เพิ่มใหม่] การแสดง Modal รายชื่อ */}
+            {showRecipientModal && (
+                <RecipientListModal
+                    users={selectedUsers}
+                    onClose={() => setShowRecipientModal(false)}
+                />
+            )}
+
 
             {/* Toast Notification */}
             {toast && (
@@ -870,6 +1151,7 @@ function GroupNotificationScreen() {
                 />
             )}
 
+            {/* Style jsx */}
             <style jsx>{`
                 @keyframes fadeIn {
                     from { opacity: 0; }
@@ -918,4 +1200,3 @@ function GroupNotificationScreen() {
 }
 
 export default GroupNotificationScreen;
-
