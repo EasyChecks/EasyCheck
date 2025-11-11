@@ -44,9 +44,6 @@ const ScheduleDetails = lazy(() => import("./pages/user/Schedule/ScheduleDetails
 // Loading Component - ใช้ PuffLoader
 const PageLoader = () => <PuffLoader text="กำลังโหลด..." />;
 
-export const Wait = () => <div style={{ padding: 20, textAlign: 'center' }}>Waiting for my team…</div>
-
-// 🔹 กำหนด router ทั้งหมดในที่เดียว
 const router = createBrowserRouter([
   {
     path: '/',

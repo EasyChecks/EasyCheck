@@ -5,94 +5,67 @@ const LocationContext = createContext()
 
 // Initial locations data
 const initialLocations = [
+  // ========== กรุงเทพ (BKK - Branch 101) ==========
   {
     id: 1,
-    name: 'สำนักใหญ่ TGS',
-    description: 'ศูนย์การประชุมหลัก',
+    name: 'สำนักงานใหญ่ TGS กรุงเทพ',
+    description: 'สำนักงานใหญ่ ถนนสาทร กรุงเทพฯ',
     radius: 150,
-    latitude: 13.7596,
-    longitude: 100.5008,
+    latitude: 13.7245,
+    longitude: 100.5316,
     status: 'active',
-    // ✅ สาขา BKK - Admin จะเห็นอันนี้
     createdBy: {
       userId: 1,
       username: 'BKK1010001',
       branch: '101'
     }
   },
+  
+  // ========== เชียงใหม่ (CNX - Branch 102) ==========
   {
     id: 2,
-    name: 'Site Event ซอยนามบัญญัติ',
-    description: 'บางนา กรุงเทพฯ',
-    radius: 150,
-    latitude: 13.7650,
-    longitude: 100.5050,
+    name: 'สำนักงานสาขาเชียงใหม่',
+    description: 'สำนักงานสาขา ใกล้ประตูท่าแพ เชียงใหม่',
+    radius: 120,
+    latitude: 18.7883,
+    longitude: 98.9853,
     status: 'active',
-    // สาขาอื่น - Admin BKK จะไม่เห็น
     createdBy: {
       userId: 2,
       username: 'CNX1020001',
       branch: '102'
     }
   },
+  
+  // ========== ภูเก็ต (PKT - Branch 201) ==========
   {
     id: 3,
-    name: 'Site Event แยกจักรพรรดิ์',
-    description: 'บางนา กรุงเทพฯ',
-    radius: 100,
-    latitude: 13.7580,
-    longitude: 100.5100,
+    name: 'สำนักงานสาขาภูเก็ต',
+    description: 'สำนักงานสาขา เมืองภูเก็ต',
+    radius: 130,
+    latitude: 7.8804,
+    longitude: 98.3923,
     status: 'active',
-    // สาขาอื่น - Admin BKK จะไม่เห็น
     createdBy: {
       userId: 5,
       username: 'PKT2010001',
       branch: '201'
     }
   },
+  
+  // ========== ภาคตะวันตก - กาญจนบุรี (KAN - Branch 301) ==========
   {
     id: 4,
-    name: 'โบเทค บางนา Hall 101',
-    description: 'ศูนย์แสดงสินค้าและนิทรรศการ บางนา',
-    radius: 200,
-    latitude: 13.6709,
-    longitude: 100.6311,
+    name: 'สำนักงานสาขากาญจนบุรี',
+    description: 'สำนักงานสาขา เมืองกาญจนบุรี',
+    radius: 140,
+    latitude: 14.0227,
+    longitude: 99.5328,
     status: 'active',
-    // สาขาอื่น - Admin BKK จะไม่เห็น
     createdBy: {
       userId: 6,
-      username: 'CMI3010001',
+      username: 'KAN3010001',
       branch: '301'
-    }
-  },
-  {
-    id: 5,
-    name: 'CentralWorld ชั้น 3',
-    description: 'ศูนย์การค้า CentralWorld',
-    radius: 150,
-    latitude: 13.7469,
-    longitude: 100.5397,
-    status: 'active',
-    // สาขาอื่น - Admin BKK จะไม่เห็น
-    createdBy: {
-      userId: 2,
-      username: 'CNX1020001',
-      branch: '102'
-    }
-  },
-  {
-    id: 6,
-    name: 'สำนักงานใหญ่ ชั้น 5',
-    description: 'สำนักงานใหญ่บริษัท',
-    radius: 100,
-    latitude: 13.7563,
-    longitude: 100.5018,
-    status: 'active',
-    // สาขาอื่น - Admin BKK จะไม่เห็น
-    createdBy: {
-      userId: 5,
-      username: 'PKT2010001',
-      branch: '201'
     }
   }
 ]
