@@ -604,6 +604,159 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 </div>
               )}
 
+              {/* 🔥 สถิติการลา */}
+              {(() => {
+                const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
+                const userLeaves = leaveList.filter(leave => leave.userId === user.id || !leave.userId);
+                
+                // คำนวณสถิติ
+                const totalLeaves = userLeaves.length;
+                const approvedLeaves = userLeaves.filter(l => l.status === 'อนุมัติ').length;
+                const pendingLeaves = userLeaves.filter(l => l.status === 'รออนุมัติ').length;
+                const rejectedLeaves = userLeaves.filter(l => l.status === 'ไม่อนุมัติ').length;
+                
+                // นับวันลาที่ใช้ไปแล้ว (เฉพาะที่อนุมัติ)
+                const leaveDaysUsed = {
+                  'ลาป่วย': 0,
+                  'ลากิจ': 0,
+                  'ลาพักร้อน': 0,
+                  'ลาคลอด': 0
+                };
+                
+                userLeaves
+                  .filter(l => l.status === 'อนุมัติ')
+                  .forEach(leave => {
+                    const days = parseInt(leave.days) || 0;
+                    if (Object.prototype.hasOwnProperty.call(leaveDaysUsed, leave.leaveType)) {
+                      leaveDaysUsed[leave.leaveType] += days;
+                    }
+                  });
+                
+                return (
+                  <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
+                    <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                      สถิติการลา
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                      <div className="bg-blue-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-blue-600">{totalLeaves}</div>
+                        <div className="text-xs text-gray-600 mt-1">ทั้งหมด</div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-green-600">{approvedLeaves}</div>
+                        <div className="text-xs text-gray-600 mt-1">อนุมัติ</div>
+                      </div>
+                      <div className="bg-yellow-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-yellow-600">{pendingLeaves}</div>
+                        <div className="text-xs text-gray-600 mt-1">รออนุมัติ</div>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-red-600">{rejectedLeaves}</div>
+                        <div className="text-xs text-gray-600 mt-1">ไม่อนุมัติ</div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600">ลาป่วย (ใช้ไป/ทั้งหมด)</span>
+                        <span className="font-medium text-gray-800">{leaveDaysUsed['ลาป่วย']} / 60 วัน</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600">ลากิจ (ใช้ไป/ทั้งหมด)</span>
+                        <span className="font-medium text-gray-800">{leaveDaysUsed['ลากิจ']} / 45 วัน</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-600">ลาพักร้อน (ใช้ไป/ทั้งหมด)</span>
+                        <span className="font-medium text-gray-800">{leaveDaysUsed['ลาพักร้อน']} / 10 วัน</span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">ลาคลอด (ใช้ไป/ทั้งหมด)</span>
+                        <span className="font-medium text-gray-800">{leaveDaysUsed['ลาคลอด']} / 90 วัน</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 🔥 สถิติการเข้าร่วมกิจกรรม */}
+              {(() => {
+                const eventsData = JSON.parse(localStorage.getItem('events') || '[]');
+                const userEvents = eventsData.filter(event => {
+                  // เช็คว่า user อยู่ใน teams ของกิจกรรม
+                  if (event.teams && user.department) {
+                    return event.teams.includes(user.department);
+                  }
+                  return false;
+                });
+                
+                const totalEvents = userEvents.length;
+                const ongoingEvents = userEvents.filter(e => e.status === 'ongoing').length;
+                const completedEvents = userEvents.filter(e => e.status === 'completed').length;
+                const upcomingEvents = userEvents.filter(e => e.status === 'upcoming').length;
+                
+                return (
+                  <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">
+                    <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      สถิติการเข้าร่วมกิจกรรม
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                      <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-indigo-600">{totalEvents}</div>
+                        <div className="text-xs text-gray-600 mt-1">ทั้งหมด</div>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-blue-600">{ongoingEvents}</div>
+                        <div className="text-xs text-gray-600 mt-1">กำลังดำเนินการ</div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-green-600">{completedEvents}</div>
+                        <div className="text-xs text-gray-600 mt-1">เสร็จสิ้น</div>
+                      </div>
+                      <div className="bg-amber-50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-amber-600">{upcomingEvents}</div>
+                        <div className="text-xs text-gray-600 mt-1">กำลังจะมาถึง</div>
+                      </div>
+                    </div>
+                    
+                    {totalEvents > 0 ? (
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold text-gray-600 mb-2">กิจกรรมล่าสุด:</div>
+                        {userEvents.slice(0, 3).map((event, index) => (
+                          <div key={index} className="flex gap-3 text-sm bg-gray-50 rounded-lg p-2">
+                            <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                              event.status === 'ongoing' ? 'bg-blue-500' :
+                              event.status === 'completed' ? 'bg-green-500' :
+                              'bg-amber-500'
+                            }`}></div>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-800">{event.name}</div>
+                              <div className="text-xs text-gray-600">{event.date} | {event.locationName}</div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {event.status === 'ongoing' ? '🔵 กำลังดำเนินการ' :
+                                 event.status === 'completed' ? '✅ เสร็จสิ้น' :
+                                 '🟡 กำลังจะมาถึง'}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500 text-sm py-2">
+                        ยังไม่มีกิจกรรมที่เข้าร่วม
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* ประวัติการทำงาน */}
               {user.workHistory && user.workHistory.length > 0 && (
                 <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-sm">

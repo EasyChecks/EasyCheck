@@ -14,14 +14,37 @@ export default defineConfig({
     // Optimize chunk splitting
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['react-markdown'],
+        manualChunks: (id) => {
+          // React core libraries
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
+            return 'react-vendor';
+          }
+          // UI libraries
+          if (id.includes('node_modules/react-markdown') || id.includes('node_modules/remark') || id.includes('node_modules/rehype')) {
+            return 'ui-vendor';
+          }
+          // Data modules
+          if (id.includes('/src/data/')) {
+            return 'data';
+          }
+          // Context modules
+          if (id.includes('/src/contexts/')) {
+            return 'contexts';
+          }
+          // Other node_modules
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     },
     // Smaller chunks for better caching
     chunkSizeWarningLimit: 1000,
+    // Minify & optimize
+    minify: 'esbuild', // เร็วกว่า terser
+    target: 'es2015', // Support modern browsers
+    // Optimize CSS
+    cssCodeSplit: true
   },
   // Faster dev server
   server: {

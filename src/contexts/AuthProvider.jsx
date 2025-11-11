@@ -169,7 +169,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   // ✅ ฟังก์ชันอัพเดตข้อมูลการเข้า-ออกงานไปยัง usersData.js
-  const updateUserAttendanceInUsersData = (checkInTime, checkOutTime, checkInPhoto, checkOutPhoto, status) => {
+  const updateUserAttendanceInUsersData = (checkInTime, checkOutTime, checkInPhoto, checkOutPhoto, status, checkInGPS = null, checkInAddress = null, checkOutGPS = null, checkOutAddress = null, checkInDistance = null, checkOutDistance = null) => {
     if (!user) return
     
     try {
@@ -207,22 +207,22 @@ export const AuthProvider = ({ children }) => {
           status: status === 'late' ? 'มาสาย' : status === 'absent' ? 'ขาด' : 'ตรงเวลา',
           location: 'อยู่ในพื้นที่',
           photo: checkInPhoto || users[userIndex].profileImage,
-          gps: '13.7563,100.5018',
-          address: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
-          distance: '15 เมตร',
-          checkedByBuddy: false, // 🆕 เพิ่ม flag เช็คแทน
-          buddyName: null // 🆕 ชื่อคนที่เช็คแทน
+          gps: checkInGPS || '13.7563,100.5018',
+          address: checkInAddress || 'ในพื้นที่อนุญาต',
+          distance: checkInDistance || '-',
+          checkedByBuddy: false,
+          buddyName: null
         } : (recordIndex >= 0 ? users[userIndex].attendanceRecords[recordIndex].checkIn : undefined),
         checkOut: checkOutTime ? {
           time: checkOutTime,
           status: 'ตรงเวลา',
           location: 'อยู่ในพื้นที่',
           photo: checkOutPhoto || users[userIndex].profileImage,
-          gps: '13.7563,100.5018',
-          address: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
-          distance: '18 เมตร',
-          checkedByBuddy: false, // 🆕 เพิ่ม flag เช็คแทน
-          buddyName: null // 🆕 ชื่อคนที่เช็คแทน
+          gps: checkOutGPS || '13.7563,100.5018',
+          address: checkOutAddress || 'ในพื้นที่อนุญาต',
+          distance: checkOutDistance || '-',
+          checkedByBuddy: false,
+          buddyName: null
         } : undefined
       }
       
@@ -292,39 +292,98 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkIn = (time, photo, workTimeStart = '08:00', workTimeEnd = '17:00') => {
+  const checkIn = (time, photo, workTimeStart = '08:00', workTimeEnd = '17:00', autoCheckOutFlag = false, locationInfo = {}) => {
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // 🆕 ใช้ percentage-based late detection
+      // 🆕 ใช้ percentage-based late detection + รองรับ auto check-out
       const statusResult = getCheckInStatus(time, workTimeStart, workTimeEnd)
-      const status = statusResult.status // 'on_time', 'late', 'absent'
+      const status = statusResult.status // 'on_time' | 'absent'
+      const shouldAutoCheckOut = statusResult.autoCheckOut || autoCheckOutFlag
       
       const newAttendance = {
         checkInTime: time,
-        checkOutTime: null,
-        status: 'checked_in',
+        checkOutTime: shouldAutoCheckOut ? time : null, // 🔥 ถ้า auto check-out ให้ออกทันที
+        status: shouldAutoCheckOut ? 'not_checked_in' : 'checked_in', // 🔥 ถ้า auto ให้กลับเป็น not_checked_in
         checkInPhoto: photo,
-        checkInStatus: status
+        checkInStatus: status,
+        checkOutPhoto: shouldAutoCheckOut ? photo : null // 🔥 ใช้รูปเดียวกัน
       }
       setAttendance(newAttendance)
       
       // 🔥 บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
       if (user) {
         const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
-        localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
-        localStorage.setItem(`${userAttendanceKey}_date`, today) // 🆕 บันทึกวันที่
+        if (!shouldAutoCheckOut) {
+          // ถ้าไม่ auto check-out ให้บันทึก state ปกติ
+          localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
+          localStorage.setItem(`${userAttendanceKey}_date`, today)
+        } else {
+          // ถ้า auto check-out ให้ลบ state เพราะถือว่าออกงานแล้ว
+          localStorage.removeItem(userAttendanceKey)
+          localStorage.removeItem(`${userAttendanceKey}_date`)
+        }
       }
       
-      // ✅ อัพเดตข้อมูลใน usersData.js ทันที
-      updateUserAttendanceInUsersData(time, null, photo, null, status)
+      // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
+      const { gps: checkInGPS, address: checkInAddress, distance: checkInDistance } = locationInfo
+      if (shouldAutoCheckOut) {
+        // 🔥 Auto check-out: บันทึกทั้ง check-in และ check-out พร้อมกัน
+        updateUserAttendanceInUsersData(time, time, photo, photo, status, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
+        
+        // 🔥 อัพเดต attendanceRecords เพื่อให้แสดงในประวัติ
+        const shiftRecord = {
+          checkIn: time,
+          checkOut: time,
+          checkInPhoto: photo,
+          checkOutPhoto: photo,
+          status: status
+        }
+        
+        const updatedRecords = [...attendanceRecords]
+        const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
+        
+        if (existingDayIndex >= 0) {
+          const existingDay = updatedRecords[existingDayIndex]
+          if (!existingDay.shifts) {
+            existingDay.shifts = [shiftRecord]
+          } else {
+            existingDay.shifts.push(shiftRecord)
+          }
+          updatedRecords[existingDayIndex] = existingDay
+        } else {
+          updatedRecords.push({
+            date: today,
+            shifts: [shiftRecord]
+          })
+        }
+        
+        updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
+        setAttendanceRecords(updatedRecords)
+        
+        if (user) {
+          const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
+          localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
+        }
+        
+        const stats = calculateAttendanceStats(updatedRecords)
+        setAttendanceStats(stats)
+        
+        // Trigger event
+        window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
+          detail: { userId: user?.id, stats, records: updatedRecords } 
+        }))
+      } else {
+        // ปกติ: บันทึกแค่ check-in
+        updateUserAttendanceInUsersData(time, null, photo, null, status, checkInGPS, checkInAddress, null, null, checkInDistance, null)
+      }
     } catch (error) {
       console.error('Error in checkIn:', error)
       throw new Error('ไม่สามารถบันทึกเวลาเข้างานได้ กรุณาลองใหม่อีกครั้ง')
     }
   }
 
-  const checkOut = (time, photo) => {
+  const checkOut = (time, photo, locationInfo = {}) => {
     try {
       const today = new Date().toISOString().split('T')[0]
       
@@ -398,8 +457,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem(`${userAttendanceKey}_date`) // ลบวันที่ด้วย
       }
       
-      // ✅ อัพเดตข้อมูลใน usersData.js ทันที
-      updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status)
+      // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
+      const { gps: checkOutGPS, address: checkOutAddress, distance: checkOutDistance } = locationInfo
+      updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status, null, null, checkOutGPS, checkOutAddress, null, checkOutDistance)
       
       // ✅ Trigger custom event สำหรับ real-time sync
       window.dispatchEvent(new CustomEvent('attendanceUpdated', { 

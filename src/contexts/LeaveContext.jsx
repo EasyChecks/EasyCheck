@@ -42,6 +42,43 @@ export const LeaveProvider = ({ children }) => {
         localStorage.setItem('leaveList', JSON.stringify(leaveList));
     }, [leaveList]);
 
+    // 🔥 Real-time sync - Listen to storage changes from other tabs/components
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'leaveList' && e.newValue) {
+                console.log('📢 LeaveContext: Storage changed, syncing leaveList...');
+                const newList = JSON.parse(e.newValue);
+                setLeaveList(newList);
+            }
+        };
+
+        const handleLeaveRequestCreated = () => {
+            console.log('📢 LeaveContext: New leave request, reloading from localStorage...');
+            const saved = localStorage.getItem('leaveList');
+            if (saved) {
+                setLeaveList(JSON.parse(saved));
+            }
+        };
+
+        const handleLeaveStatusUpdated = () => {
+            console.log('📢 LeaveContext: Leave status updated, reloading from localStorage...');
+            const saved = localStorage.getItem('leaveList');
+            if (saved) {
+                setLeaveList(JSON.parse(saved));
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('leaveRequestCreated', handleLeaveRequestCreated);
+        window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('leaveRequestCreated', handleLeaveRequestCreated);
+            window.removeEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+        };
+    }, []);
+
     // Calculate days used for each leave type
     const getUsedDays = (leaveType) => {
         return leaveList
@@ -112,6 +149,19 @@ export const LeaveProvider = ({ children }) => {
             documents: leaveData.documents || []
         };
         setLeaveList(prev => [newLeave, ...prev]);
+        
+        // 🔥 Real-time notification - Trigger event ทันทีที่มีการขอลา
+        window.dispatchEvent(new CustomEvent('leaveRequestCreated', {
+            detail: { leave: newLeave }
+        }));
+        
+        // 🔥 Trigger storage event สำหรับ cross-tab
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: 'leaveList',
+            newValue: JSON.stringify([newLeave, ...leaveList]),
+            url: window.location.href
+        }));
+        
         return newLeave;
     };
 
@@ -261,11 +311,25 @@ export const LeaveProvider = ({ children }) => {
                         statusColor: statusColors[newStatus] || 'yellow'
                     };
                     console.log('Updated leave:', updatedLeave)
+                    
+                    // 🔥 Real-time notification - Trigger event ทันทีที่มีการอนุมัติ/ไม่อนุมัติ
+                    window.dispatchEvent(new CustomEvent('leaveStatusUpdated', {
+                        detail: { leave: updatedLeave, oldStatus: leave.status, newStatus }
+                    }));
+                    
                     return updatedLeave;
                 }
                 return leave;
             });
             console.log('All leaves after update:', updated)
+            
+            // 🔥 Trigger storage event สำหรับ cross-tab
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'leaveList',
+                newValue: JSON.stringify(updated),
+                url: window.location.href
+            }));
+            
             return updated;
         });
     };

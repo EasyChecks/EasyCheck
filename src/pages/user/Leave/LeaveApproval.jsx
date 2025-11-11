@@ -21,16 +21,54 @@ function LeaveApproval() {
   const [showRejectSuccess, setShowRejectSuccess] = useState(false);
   const [leaveToApprove, setLeaveToApprove] = useState(null);
   
+  // 🆕 State สำหรับแสดงหลักฐาน
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [currentDocuments, setCurrentDocuments] = useState([]);
+  const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
+  
   // Calendar states
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedStartDate, setSelectedStartDate] = useState(null);
   const [selectedEndDate, setSelectedEndDate] = useState(null);
   const [selectingRange, setSelectingRange] = useState(false);
 
+  // 🆕 State สำหรับ force re-render เมื่อมีการเปลี่ยนแปลง
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   // Hide loading เมื่อ component พร้อม render
   useEffect(() => {
     hideLoading()
   }, [hideLoading])
+
+  // 🔥 Real-time listener สำหรับ leave request ใหม่
+  useEffect(() => {
+    const handleLeaveRequestCreated = () => {
+      console.log('📢 LeaveApproval: New leave request detected - refreshing...');
+      setRefreshTrigger(prev => prev + 1); // 👈 Force re-render
+    };
+
+    const handleLeaveStatusUpdated = () => {
+      console.log('📢 LeaveApproval: Leave status updated - refreshing...');
+      setRefreshTrigger(prev => prev + 1); // 👈 Force re-render
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'leaveList') {
+        console.log('📢 LeaveApproval: Storage changed - refreshing...');
+        setRefreshTrigger(prev => prev + 1); // 👈 Force re-render
+      }
+    };
+
+    window.addEventListener('leaveRequestCreated', handleLeaveRequestCreated);
+    window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('leaveRequestCreated', handleLeaveRequestCreated);
+      window.removeEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Auto focus textarea when reject modal opens
   useEffect(() => {
@@ -149,7 +187,8 @@ function LeaveApproval() {
     }
     
     return filtered;
-  }, [leaveList, selectedStartDate, selectedEndDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaveList, selectedStartDate, selectedEndDate, refreshTrigger]); // 👈 refreshTrigger เพื่อ force re-render เมื่อมี event
 
   // ฟังก์ชันอนุมัติ
   const handleApprove = (leave) => {
@@ -181,6 +220,67 @@ function LeaveApproval() {
     setRejectReason('');
     setSelectedLeave(null);
     setShowRejectSuccess(true);
+  };
+
+  // 🆕 ฟังก์ชันแสดงหลักฐาน
+  const handleViewDocuments = (leave) => {
+    const originalLeave = leaveList.find(l => l.id === leave.id);
+    console.log('🔍 Debug - originalLeave:', originalLeave);
+    console.log('🔍 Debug - documents:', originalLeave?.documents);
+    console.log('🔍 Debug - documents type:', typeof originalLeave?.documents);
+    console.log('🔍 Debug - is Array:', Array.isArray(originalLeave?.documents));
+    
+    if (originalLeave && originalLeave.documents && originalLeave.documents.length > 0) {
+      console.log('🔍 Debug - Documents found:', originalLeave.documents.length);
+      
+      // 🔥 กรองเฉพาะเอกสารที่เป็นรูปภาพ
+      const imageDocuments = originalLeave.documents.filter(doc => {
+        console.log('🔍 Debug - checking doc:', typeof doc, doc?.substring?.(0, 100));
+        if (typeof doc === 'string') {
+          // ✅ เช็คว่าเป็น base64 หรือ URL จริงๆ
+          const isImage = doc.startsWith('data:image') || 
+                 doc.startsWith('http://') || 
+                 doc.startsWith('https://') ||
+                 doc.startsWith('blob:') ||
+                 /\.(jpg|jpeg|png|gif|webp)$/i.test(doc);
+          console.log('🔍 Debug - isImage:', isImage, 'for doc starting with:', doc.substring(0, 20));
+          return isImage;
+        }
+        console.log('🔍 Debug - doc is not string, type:', typeof doc);
+        return false;
+      });
+      
+      console.log('🔍 Debug - imageDocuments filtered:', imageDocuments.length);
+      console.log('🔍 Debug - imageDocuments:', imageDocuments);
+      
+      if (imageDocuments.length > 0) {
+        console.log('✅ Setting documents to show:', imageDocuments);
+        setCurrentDocuments(imageDocuments);
+        setCurrentDocumentIndex(0);
+        setShowDocumentModal(true);
+      } else {
+        console.error('❌ No image documents found after filter!');
+        console.log('Original documents were:', originalLeave.documents);
+        
+        // 🔥 แสดงข้อความที่ชัดเจนขึ้น
+        const docInfo = originalLeave.documents.map((doc, i) => 
+          `${i+1}. ${typeof doc === 'string' ? (doc.substring(0, 50) + '...') : typeof doc}`
+        ).join('\n');
+        
+        alert(`ไม่สามารถแสดงเอกสารได้\n\nเอกสารที่มีในระบบ (${originalLeave.documents.length} ไฟล์):\n${docInfo}\n\n💡 กรุณาอัพโหลดไฟล์รูปภาพใหม่ (jpg, png) เพื่อให้แสดงผลได้`);
+      }
+    } else {
+      console.log('🔍 Debug - ไม่มี documents หรือ documents.length = 0');
+      alert('ไม่มีเอกสารแนบ');
+    }
+  };
+
+  const nextDocument = () => {
+    setCurrentDocumentIndex((prev) => (prev + 1) % currentDocuments.length);
+  };
+
+  const previousDocument = () => {
+    setCurrentDocumentIndex((prev) => (prev - 1 + currentDocuments.length) % currentDocuments.length);
   };
 
   // สีของแท็กประเภทการลา
@@ -385,6 +485,28 @@ function LeaveApproval() {
                   <p className="text-xs text-gray-500 mb-1">เหตุผล</p>
                   <p className="text-gray-700">{leave.reason}</p>
                 </div>
+
+                {/* 🆕 Documents Section */}
+                {leaveList.find(l => l.id === leave.id)?.documents?.length > 0 && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-900">
+                          มีหลักฐานแนบ ({leaveList.find(l => l.id === leave.id).documents.length} ไฟล์)
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleViewDocuments(leave)}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                      >
+                        ดูหลักฐาน
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3">
@@ -675,6 +797,91 @@ function LeaveApproval() {
         autoClose={true}
         autoCloseDelay={2500}
       />
+
+      {/* 🆕 Document Viewer Modal */}
+      {showDocumentModal && currentDocuments.length > 0 && (
+        <PageModal onClose={() => setShowDocumentModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">หลักฐานการลา</h2>
+                <p className="text-white/80 text-sm mt-1">
+                  เอกสาร {currentDocumentIndex + 1} จาก {currentDocuments.length}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl flex items-center justify-center transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Document Display */}
+            <div className="flex-1 overflow-auto p-6 bg-gray-50">
+              <div className="max-w-3xl mx-auto">
+                <img
+                  src={currentDocuments[currentDocumentIndex]}
+                  alt={`หลักฐาน ${currentDocumentIndex + 1}`}
+                  className="w-full h-auto rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+
+            {/* Navigation */}
+            {currentDocuments.length > 1 && (
+              <div className="p-4 bg-white border-t border-gray-200 flex items-center justify-between">
+                <button
+                  onClick={previousDocument}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  ก่อนหน้า
+                </button>
+                
+                <div className="flex items-center gap-2">
+                  {currentDocuments.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentDocumentIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentDocumentIndex 
+                          ? 'bg-brand-primary w-8' 
+                          : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={nextDocument}
+                  className="flex items-center gap-2 px-4 py-2 bg-brand-primary hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+                >
+                  ถัดไป
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="p-4 bg-gray-50 border-t border-gray-200">
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-semibold transition-colors"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </PageModal>
+      )}
     </div>
   );
 }

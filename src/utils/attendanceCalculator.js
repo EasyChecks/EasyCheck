@@ -217,13 +217,35 @@ export const isLateBeyondThreshold = (checkInTime, workTimeStart = '08:00', work
  * @param {string} checkInTime - เวลาเข้างาน (HH:MM)
  * @param {string} workTimeStart - เวลาเริ่มงาน (HH:MM)
  * @param {string} workTimeEnd - เวลาเลิกงาน (HH:MM)
- * @returns {string} 'on_time', 'late', 'absent'
+ * @returns {Object} { status: 'on_time' | 'late' | 'absent', autoCheckOut: boolean }
  */
 export const getCheckInStatus = (checkInTime, workTimeStart = '08:00', workTimeEnd = '17:00') => {
-  if (!checkInTime) return 'absent';
+  if (!checkInTime) {
+    return { status: 'absent', autoCheckOut: false };
+  }
   
   const isLateResult = isLateBeyondThreshold(checkInTime, workTimeStart, workTimeEnd);
-  return isLateResult ? 'late' : 'on_time';
+  
+  // 🔥 ถ้าสายเกินขีดจำกัด = ขาดงาน → ต้อง auto check-out ทันที
+  if (isLateResult) {
+    return { status: 'absent', autoCheckOut: true };
+  }
+  
+  return { status: 'on_time', autoCheckOut: false };
+};
+
+/**
+ * 🆕 ตรวจสอบว่าควร auto check-out หรือไม่
+ * @param {string} checkInTime - เวลาเข้างาน (HH:MM)
+ * @param {string} workTimeStart - เวลาเริ่มงาน (HH:MM)
+ * @param {string} workTimeEnd - เวลาเลิกงาน (HH:MM)
+ * @returns {boolean} true ถ้าควร auto check-out (ขาดงาน)
+ */
+export const shouldAutoCheckOut = (checkInTime, workTimeStart = '08:00', workTimeEnd = '17:00') => {
+  if (!checkInTime) return false; // ไม่มีข้อมูลเข้างาน ไม่ต้อง auto check-out
+  
+  const result = getCheckInStatus(checkInTime, workTimeStart, workTimeEnd);
+  return result.autoCheckOut;
 };
 
 /**

@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/useAuth';
+import { useLocations } from '../../../contexts/LocationContext';
+import { useEvents } from '../../../contexts/EventContext';
 import { compressImage, getBase64Size } from '../../../utils/imageCompressor';
-import { getCheckInStatus } from '../../../utils/attendanceCalculator';
+import { getCheckInStatus, shouldAutoCheckOut } from '../../../utils/attendanceCalculator';
 
 function TakePhoto() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { attendance, checkIn, checkOut } = useAuth();
+  const { attendance, checkIn, checkOut, user } = useAuth();
+  const { locations } = useLocations();
+  const { events } = useEvents();
   const [photo, setPhoto] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -18,6 +22,7 @@ function TakePhoto() {
   const [popupInfoMessage, setPopupInfoMessage] = useState('');
   const [imageSize, setImageSize] = useState(null); // 🆕 แสดงขนาดไฟล์
   const [showPhotoPreview, setShowPhotoPreview] = useState(false); // 🆕 แสดงรูปเต็มจอ
+  const [currentLocation, setCurrentLocation] = useState(null); // 🆕 GPS location
 
   const schedule = location.state?.schedule || { time: '09:00 - 18:00' };
 
@@ -53,7 +58,79 @@ function TakePhoto() {
     if (attendance.status === 'checked_in' && now < endTime) {
       setIsEarlyCheckout(true);
     }
+
+    // 🆕 Get GPS location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn('GPS Error:', error);
+        }
+      );
+    }
   }, [schedule.time, attendance.status]);
+
+  // 🆕 Helper: Calculate distance between two coordinates (Haversine formula)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // Earth radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  };
+
+  // 🆕 Helper: Find nearest location or event
+  const findNearestPlace = () => {
+    if (!currentLocation) return null;
+
+    const allPlaces = [
+      ...locations.map(loc => ({ ...loc, type: 'location' })),
+      ...events.map(evt => ({
+        id: evt.id,
+        name: evt.locationName,
+        latitude: evt.latitude,
+        longitude: evt.longitude,
+        type: 'event'
+      }))
+    ];
+
+    let nearest = null;
+    let minDistance = Infinity;
+
+    allPlaces.forEach(place => {
+      const distance = calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        place.latitude,
+        place.longitude
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = place;
+      }
+    });
+
+    return nearest ? {
+      gps: `${currentLocation.latitude.toFixed(6)},${currentLocation.longitude.toFixed(6)}`,
+      address: nearest.name,
+      distance: minDistance < 1000 
+        ? `${Math.round(minDistance)} ม.` 
+        : `${(minDistance / 1000).toFixed(2)} กม.`
+    } : null;
+  };
 
   const startCamera = () => {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } })
@@ -166,25 +243,33 @@ function TakePhoto() {
     }
     
     try {
+      // 🆕 Get nearest location info with distance
+      const locationInfo = findNearestPlace() || { gps: '13.7563,100.5018', address: 'ในพื้นที่อนุญาต', distance: '-' };
+
       if (attendance.status === 'not_checked_in') {
-        // 🆕 ใช้ percentage-based late detection
+        // 🆕 ใช้ percentage-based late detection + auto check-out
         const [startTimeStr, endTimeStr] = schedule.time.split(' - ');
         const workTimeStart = startTimeStr.replace('.', ':'); // แปลง "07.00" เป็น "07:00"
         const workTimeEnd = endTimeStr.replace('.', ':');
         
         const statusResult = getCheckInStatus(currentTime, workTimeStart, workTimeEnd);
-        const status = statusResult.status; // 'on_time', 'late', 'absent'
+        const status = statusResult.status; // 'on_time' | 'absent'
+        const autoCheckOut = statusResult.autoCheckOut; // boolean
         
         let message = '';
         if (status === 'on_time') {
           message = `เข้างานตรงเวลา ${currentTime} น.`;
-        } else if (status === 'late') {
-          message = `เข้างานสาย (${currentTime} น.)`;
-        } else {
-          message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)`;
+        } else if (status === 'absent') {
+          if (autoCheckOut) {
+            // 🔥 ขาดงาน - เข้างานสายเกินขีดจำกัด → Auto check-out ทันที
+            message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)\nออกงานอัตโนมัติแล้ว`;
+            checkIn(currentTime, photo, workTimeStart, workTimeEnd, true, locationInfo); // true = auto checkout
+          } else {
+            message = `ขาดงาน - ไม่ได้เข้างาน (${currentTime} น.)`;
+            checkIn(currentTime, photo, workTimeStart, workTimeEnd, false, locationInfo);
+          }
         }
         
-        checkIn(currentTime, photo, workTimeStart, workTimeEnd);
         setPopupMessage(message);
         
       } else if (attendance.status === 'checked_in') {
@@ -195,7 +280,7 @@ function TakePhoto() {
           return;
         }
         
-        checkOut(currentTime, photo);
+        checkOut(currentTime, photo, locationInfo);
         setPopupMessage(`ออกงานเวลา ${currentTime} น.`);
       }
     } catch (error) {

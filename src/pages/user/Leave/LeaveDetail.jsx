@@ -164,14 +164,43 @@ function LeaveDetail() {
                                 <p className="text-gray-500 text-xs sm:text-sm ml-8 sm:ml-10 lg:ml-12 italic">ไม่มีเอกสารแนบ</p>
                             ) : (
                                 <div className="ml-8 sm:ml-10 lg:ml-12 space-y-2">
-                                    {leaveData.documents.map((doc, index) => (
-                                        <div key={index} className="flex items-center gap-2 text-gray-700 text-sm sm:text-base font-medium bg-white rounded-lg p-2 border border-emerald-200">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            <span className="truncate">{doc}</span>
-                                        </div>
-                                    ))}
+                                    {leaveData.documents.map((doc, index) => {
+                                        // 🔥 เช็คว่าเป็น URL รูปหรือไม่
+                                        const isImage = typeof doc === 'string' && (
+                                            doc.startsWith('data:image') || 
+                                            doc.startsWith('http') || 
+                                            doc.startsWith('blob:') ||
+                                            /\.(jpg|jpeg|png|gif|webp)$/i.test(doc)
+                                        );
+                                        
+                                        return (
+                                            <div key={index} className="bg-white rounded-lg p-3 border border-emerald-200">
+                                                {isImage ? (
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base font-medium">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <span className="truncate">เอกสาร {index + 1}</span>
+                                                        </div>
+                                                        <img 
+                                                            src={doc} 
+                                                            alt={`เอกสาร ${index + 1}`}
+                                                            className="w-full h-auto rounded-lg border-2 border-gray-200 cursor-pointer hover:border-emerald-500 transition-colors"
+                                                            onClick={() => window.open(doc, '_blank')}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base font-medium">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        <span className="truncate">{typeof doc === 'string' ? doc : `เอกสาร ${index + 1}`}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
