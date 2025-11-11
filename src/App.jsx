@@ -1,6 +1,7 @@
 import React, { useEffect, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import { runAttendanceMigration } from './utils/attendanceDataMigration'
 
 // Loading Component - Memoized เพื่อป้องกัน re-render
 const LoadingScreen = memo(() => (
@@ -17,6 +18,11 @@ LoadingScreen.displayName = 'LoadingScreen';
 function App() {
   const { user, loading, getDashboardPath } = useAuth()
   const navigate = useNavigate()
+
+  // 🔄 Run data migration on app start
+  useEffect(() => {
+    runAttendanceMigration();
+  }, []);
 
   useEffect(() => {
     if (!loading) {

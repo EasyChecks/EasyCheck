@@ -5,7 +5,23 @@ import React, { useState, useCallback } from 'react';
 //   - users: รายการข้อมูลพนักงาน
 //   - onSelectUser: ฟังก์ชันเมื่อกดดูรายละเอียด
 //   - getStatusBadge: ฟังก์ชันจัดการสีของสถานะ
-const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatusBadge }) {
+//   - currentUser: ข้อมูลผู้ใช้ปัจจุบัน (สำหรับตรวจสอบสิทธิ์แก้ไข)
+//   - onAttendanceEdit: ฟังก์ชันเมื่อกดแก้ไขข้อมูลการเข้า-ออกงาน
+//   - onSaveAttendanceEdit: ฟังก์ชันบันทึกการแก้ไข
+//   - editingAttendance: สถานะการแก้ไขปัจจุบัน
+//   - attendanceForm: ข้อมูลฟอร์มแก้ไข
+//   - onAttendanceFormChange: ฟังก์ชันเปลี่ยนค่าฟอร์ม
+const UserTable = React.memo(function UserTable({ 
+  users, 
+  onSelectUser, 
+  getStatusBadge,
+  currentUser,
+  onAttendanceEdit,
+  onSaveAttendanceEdit,
+  editingAttendance,
+  attendanceForm,
+  onAttendanceFormChange
+}) {
   // สถานะการขยายแถว - เก็บ userId ของแถวที่กำลังขยาย
   const [expandedUserId, setExpandedUserId] = useState(null);
   
@@ -387,13 +403,37 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               {/* Check-in Section */}
                               <div className="bg-white rounded-xl shadow-md border-2 border-green-200 overflow-hidden">
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3">
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 flex items-center justify-between">
                                   <h4 className="font-bold text-white flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
                                     Check-in
                                   </h4>
+                                  {(currentUser?.role === 'admin' || currentUser?.role === 'superadmin') && (
+                                    <div className="flex gap-2">
+                                      {editingAttendance?.userId === user.id && editingAttendance?.date === selectedDate && editingAttendance?.type === 'checkIn' ? (
+                                        <>
+                                          <button 
+                                            onClick={onSaveAttendanceEdit} 
+                                            className="text-xs px-3 py-1 bg-white text-green-700 rounded hover:bg-green-50 transition-colors font-semibold">
+                                            บันทึก
+                                          </button>
+                                          <button 
+                                            onClick={() => onAttendanceEdit(null)} 
+                                            className="text-xs px-3 py-1 bg-white/20 text-white rounded hover:bg-white/30 transition-colors">
+                                            ยกเลิก
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <button 
+                                          onClick={() => onAttendanceEdit({ userId: user.id, date: selectedDate, type: 'checkIn', data: attendanceData.checkIn })} 
+                                          className="text-xs px-3 py-1 bg-white text-green-700 rounded hover:bg-green-50 transition-colors font-semibold">
+                                          แก้ไข
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="p-4 space-y-4">
                                   {/* Photo */}
@@ -426,7 +466,16 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                       </svg>
                                       <span className="text-gray-700 font-medium">เวลา:</span>
-                                      <span className="font-bold text-gray-950">{attendanceData.checkIn.time}</span>
+                                      {editingAttendance?.userId === user.id && editingAttendance?.date === selectedDate && editingAttendance?.type === 'checkIn' ? (
+                                        <input 
+                                          type="time" 
+                                          value={attendanceForm.time || ''} 
+                                          onChange={(e) => onAttendanceFormChange({...attendanceForm, time: e.target.value})} 
+                                          className="text-sm font-bold border border-green-300 rounded px-2 py-1"
+                                        />
+                                      ) : (
+                                        <span className="font-bold text-gray-950">{attendanceData.checkIn.time}</span>
+                                      )}
                                     </div>
                                     
                                     <div className="flex items-center gap-2">
@@ -435,7 +484,18 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                       </svg>
                                       <span className="text-gray-700 font-medium">สถานะ:</span>
-                                      <span className={`font-bold px-2 py-0.5 rounded text-xs ${
+                                      {editingAttendance?.userId === user.id && editingAttendance?.date === selectedDate && editingAttendance?.type === 'checkIn' ? (
+                                        <select 
+                                          value={attendanceForm.status || 'on_time'} 
+                                          onChange={(e) => onAttendanceFormChange({...attendanceForm, status: e.target.value})} 
+                                          className="text-xs font-bold border border-green-300 rounded px-2 py-1">
+                                          <option value="on_time">ตรงเวลา</option>
+                                          <option value="late">มาสาย</option>
+                                          <option value="absent">ขาด</option>
+                                          <option value="leave">ลา</option>
+                                        </select>
+                                      ) : (
+                                        <span className={`font-bold px-2 py-0.5 rounded text-xs ${
                                         (() => {
                                           // 🔥 เช็คว่าวันนี้มีการลางานที่ approved หรือไม่
                                           const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
@@ -486,6 +546,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                                  attendanceData.checkIn.status === 'absent' ? 'ขาด' : 'ลา';
                                         })()}
                                       </span>
+                                      )}
                                     </div>
                                     
                                     <div className="flex items-center gap-2">
@@ -545,13 +606,37 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                               {/* Check-out Section */}
                               {attendanceData.checkOut ? (
                                 <div className="bg-white rounded-xl shadow-md border-2 border-orange-200 overflow-hidden">
-                                  <div className="bg-gradient-to-r from-orange-500 to-red-600 px-4 py-3">
+                                  <div className="bg-gradient-to-r from-orange-500 to-red-600 px-4 py-3 flex items-center justify-between">
                                     <h4 className="font-bold text-white flex items-center gap-2">
                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                       </svg>
                                       Check-out
                                     </h4>
+                                    {(currentUser?.role === 'admin' || currentUser?.role === 'superadmin') && (
+                                      <div className="flex gap-2">
+                                        {editingAttendance?.userId === user.id && editingAttendance?.date === selectedDate && editingAttendance?.type === 'checkOut' ? (
+                                          <>
+                                            <button 
+                                              onClick={onSaveAttendanceEdit} 
+                                              className="text-xs px-3 py-1 bg-white text-red-700 rounded hover:bg-red-50 transition-colors font-semibold">
+                                              บันทึก
+                                            </button>
+                                            <button 
+                                              onClick={() => onAttendanceEdit(null)} 
+                                              className="text-xs px-3 py-1 bg-white/20 text-white rounded hover:bg-white/30 transition-colors">
+                                              ยกเลิก
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <button 
+                                            onClick={() => onAttendanceEdit({ userId: user.id, date: selectedDate, type: 'checkOut', data: attendanceData.checkOut })} 
+                                            className="text-xs px-3 py-1 bg-white text-red-700 rounded hover:bg-red-50 transition-colors font-semibold">
+                                            แก้ไข
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="p-4 space-y-4">
                                     {/* Photo */}
@@ -584,7 +669,37 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <span className="text-gray-700 font-medium">เวลา:</span>
-                                        <span className="font-bold text-gray-950">{attendanceData.checkOut.time}</span>
+                                        {editingAttendance?.userId === user.id && editingAttendance?.date === selectedDate && editingAttendance?.type === 'checkOut' ? (
+                                          <input 
+                                            type="time" 
+                                            value={attendanceForm.time || ''} 
+                                            onChange={(e) => onAttendanceFormChange({...attendanceForm, time: e.target.value})} 
+                                            className="text-sm font-bold border border-red-300 rounded px-2 py-1"
+                                          />
+                                        ) : (
+                                          <span className="font-bold text-gray-950">{attendanceData.checkOut.time}</span>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span className="text-gray-700 font-medium">สถานะ:</span>
+                                        {editingAttendance?.userId === user.id && editingAttendance?.date === selectedDate && editingAttendance?.type === 'checkOut' ? (
+                                          <select 
+                                            value={attendanceForm.status || 'on_time'} 
+                                            onChange={(e) => onAttendanceFormChange({...attendanceForm, status: e.target.value})} 
+                                            className="text-xs font-bold border border-red-300 rounded px-2 py-1">
+                                            <option value="on_time">ตรงเวลา</option>
+                                            <option value="late">มาสาย</option>
+                                            <option value="absent">ขาด</option>
+                                            <option value="leave">ลา</option>
+                                          </select>
+                                        ) : (
+                                          <span className="font-bold text-gray-950">ตรงเวลา</span>
+                                        )}
                                       </div>
                                       
                                       <div className="flex items-center gap-2">

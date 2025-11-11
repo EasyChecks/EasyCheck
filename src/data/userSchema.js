@@ -112,7 +112,8 @@ export const UserSchema = {
         location: String,
         photo: String, // Base64 or URL
         gps: String, // "13.7563,100.5018"
-        address: String
+        address: String, // ชื่อสถานที่ เช่น "ในพื้นที่อนุญาต", "บริษัท ABC"
+        distance: String // ระยะทาง เช่น "50 ม.", "2.5 กม."
       },
       checkOut: {
         time: String,
@@ -120,7 +121,8 @@ export const UserSchema = {
         location: String,
         photo: String,
         gps: String,
-        address: String
+        address: String,
+        distance: String
       }
     }
   ],

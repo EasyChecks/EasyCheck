@@ -255,74 +255,74 @@ function Layout() {
     }
 
     // 6. Mock - ประกาศเรื่องสำคัญ
-    notifs.push({
-      id: 'announcement-1',
-      title: 'ประกาศ: ปรับปรุงระบบลงเวลา',
-      description: 'ระบบจะมีการปรับปรุงในวันที่ 5 พฤศจิกายน 2568',
-      date: '1/11/2568',
-      type: 'info',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
-        </svg>
-      )
-    })
+    // notifs.push({
+    //   id: 'announcement-1',
+    //   title: 'ประกาศ: ปรับปรุงระบบลงเวลา',
+    //   description: 'ระบบจะมีการปรับปรุงในวันที่ 5 พฤศจิกายน 2568',
+    //   date: '1/11/2568',
+    //   type: 'info',
+    //   icon: (
+    //     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+    //       <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+    //     </svg>
+    //   )
+    // })
 
-    // 7. Mock - เตือนอัปเดตข้อมูลส่วนตัว
-    notifs.push({
-      id: 'profile-update-reminder',
-      title: 'เตือน: อัปเดตข้อมูลส่วนตัว',
-      description: 'กรุณาตรวจสอบและอัปเดตข้อมูลส่วนตัวของคุณ',
-      date: '31/10/2568',
-      type: 'warning',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-        </svg>
-      )
-    })
+    // // 7. Mock - เตือนอัปเดตข้อมูลส่วนตัว
+    // notifs.push({
+    //   id: 'profile-update-reminder',
+    //   title: 'เตือน: อัปเดตข้อมูลส่วนตัว',
+    //   description: 'กรุณาตรวจสอบและอัปเดตข้อมูลส่วนตัวของคุณ',
+    //   date: '31/10/2568',
+    //   type: 'warning',
+    //   icon: (
+    //     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+    //       <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+    //     </svg>
+    //   )
+    // })
 
-    // 8. Mock - ข้อมูลการประชุม
-    notifs.push({
-      id: 'meeting-reminder',
-      title: 'การประชุมประจำเดือน',
-      description: 'วันที่ 10 พฤศจิกายน 2568 เวลา 14:00 น.',
-      date: '30/10/2568',
-      type: 'info',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" />
-        </svg>
-      )
-    })
+    // // 8. Mock - ข้อมูลการประชุม
+    // notifs.push({
+    //   id: 'meeting-reminder',
+    //   title: 'การประชุมประจำเดือน',
+    //   description: 'วันที่ 10 พฤศจิกายน 2568 เวลา 14:00 น.',
+    //   date: '30/10/2568',
+    //   type: 'info',
+    //   icon: (
+    //     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+    //       <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" />
+    //     </svg>
+    //   )
+    // })
 
-    // 9. Mock - สรุปการทำงานเดือนที่แล้ว
-    notifs.push({
-      id: 'monthly-summary',
-      title: 'สรุปการทำงานประจำเดือน',
-      description: 'ตุลาคม 2568: เข้างานตรงเวลา 20 วัน',
-      date: '29/10/2568',
-      type: 'success',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-        </svg>
-      )
-    })
+    // // 9. Mock - สรุปการทำงานเดือนที่แล้ว
+    // notifs.push({
+    //   id: 'monthly-summary',
+    //   title: 'สรุปการทำงานประจำเดือน',
+    //   description: 'ตุลาคม 2568: เข้างานตรงเวลา 20 วัน',
+    //   date: '29/10/2568',
+    //   type: 'success',
+    //   icon: (
+    //     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+    //       <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+    //     </svg>
+    //   )
+    // })
 
-    // 10. Mock - วันหยุดที่จะถึง
-    notifs.push({
-      id: 'holiday-reminder',
-      title: 'วันหยุดพิเศษ',
-      description: 'วันลอยกระทง 15 พฤศจิกายน 2568',
-      date: '28/10/2568',
-      type: 'info',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
-        </svg>
-      )
-    })
+    // // 10. Mock - วันหยุดที่จะถึง
+    // notifs.push({
+    //   id: 'holiday-reminder',
+    //   title: 'วันหยุดพิเศษ',
+    //   description: 'วันลอยกระทง 15 พฤศจิกายน 2568',
+    //   date: '28/10/2568',
+    //   type: 'info',
+    //   icon: (
+    //     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+    //       <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
+    //     </svg>
+    //   )
+    // })
 
     // เพิ่ม isRead property ให้กับ notifications
     return notifs.map(notif => ({
@@ -455,7 +455,7 @@ function Layout() {
                     } ${
                       notif.type === 'success' ? 'border-l-4 border-green-500' :
                       notif.type === 'error' ? 'border-l-4 border-red-500' :
-                      notif.type === 'warning' ? 'border-l-4 border-orange-500' :
+                      notif.type === 'warning' ? 'border-l-4 border-gray-200' :
                       'border-l-4 border-blue-500'
                     }`}
                   >
