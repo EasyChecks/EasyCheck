@@ -669,63 +669,91 @@ function AdminManageUser() {
     return `${parseInt(day)} ${months[parseInt(month) - 1]} ${buddhistYear}`;
   };
 
-  const handleAttendanceEdit = (record, type) => {
-    setEditingAttendance({ record, type });
-    setAttendanceForm(type === 'checkIn' ? record.checkIn : record.checkOut);
+  const handleAttendanceEdit = (editData) => {
+    if (!editData) {
+      // ยกเลิกการแก้ไข
+      setEditingAttendance(null);
+      setAttendanceForm({});
+    } else {
+      // เริ่มแก้ไข - รองรับทั้ง UserDetailModal format และ UserTable format
+      if (editData.userId) {
+        // จาก UserTable: { userId, date, type, data }
+        setEditingAttendance(editData);
+        setAttendanceForm(editData.data);
+      } else {
+        // จาก UserDetailModal: { record, type }
+        setEditingAttendance(editData);
+        setAttendanceForm(editData.type === 'checkIn' ? editData.record.checkIn : editData.record.checkOut);
+      }
+    }
   };
 
   const saveAttendanceEdit = () => {
-    if (!editingAttendance || !selectedUser) return;
-
-    const { record, type } = editingAttendance;
+    if (!editingAttendance) return;
 
     try {
-      // 1. Update attendance record in selectedUser
-      const updatedAttendanceRecords = selectedUser.attendanceRecords.map(r => {
-        if (r.date === record.date) {
+      const storedUsers = localStorage.getItem('usersData');
+      if (!storedUsers) return;
+
+      const users = JSON.parse(storedUsers);
+      
+      // รองรับทั้งสองรูปแบบ
+      const userId = editingAttendance.userId || selectedUser?.id;
+      const date = editingAttendance.date;
+      const type = editingAttendance.type;
+
+      if (!userId || !type) return;
+
+      // แปลง date จาก YYYY-MM-DD เป็นรูปแบบไทย ถ้าจำเป็น
+      let thaiDate = date;
+      if (date && date.includes('-')) {
+        const [year, month, day] = date.split('-');
+        const buddhistYear = parseInt(year) + 543;
+        thaiDate = `${day}/${month}/${buddhistYear}`;
+      }
+
+      // อัพเดท attendance record
+      const updatedUsers = users.map(u => {
+        if (u.id === userId) {
+          const updatedRecords = u.attendanceRecords?.map(r => {
+            if (r.date === thaiDate || r.date === date) {
+              return {
+                ...r,
+                [type]: { ...r[type], ...attendanceForm }
+              };
+            }
+            return r;
+          }) || [];
+
           return {
-            ...r,
-            [type]: { ...r[type], ...attendanceForm }
+            ...u,
+            attendanceRecords: updatedRecords
           };
         }
-        return r;
+        return u;
       });
-
-      // 2. Update usersData in localStorage
-      const storedUsers = localStorage.getItem('usersData');
-      if (storedUsers) {
-        const users = JSON.parse(storedUsers);
-        const updatedUsers = users.map(u => {
-          if (u.id === selectedUser.id) {
-            return {
-              ...u,
-              attendanceRecords: updatedAttendanceRecords
-            };
-          }
-          return u;
-        });
-        
-        // Save to localStorage
-        localStorage.setItem('usersData', JSON.stringify(updatedUsers));
-        
-        // 3. Update users state
-        setUsers(updatedUsers);
-        
-        // 4. Update selectedUser
-        const updatedSelectedUser = updatedUsers.find(u => u.id === selectedUser.id);
+      
+      // บันทึกลง localStorage
+      localStorage.setItem('usersData', JSON.stringify(updatedUsers));
+      
+      // อัพเดท state
+      setUsers(updatedUsers);
+      
+      // อัพเดท selectedUser ถ้ามี
+      if (selectedUser && selectedUser.id === userId) {
+        const updatedSelectedUser = updatedUsers.find(u => u.id === userId);
         setSelectedUser(updatedSelectedUser);
-        
-        // 5. Trigger storage event for other tabs
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'usersData',
-          newValue: JSON.stringify(updatedUsers)
-        }));
-        
-        // 6. Trigger attendanceUpdated event
-        window.dispatchEvent(new CustomEvent('attendanceUpdated', {
-          detail: { userId: selectedUser.id }
-        }));
       }
+      
+      // Trigger events
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'usersData',
+        newValue: JSON.stringify(updatedUsers)
+      }));
+      
+      window.dispatchEvent(new CustomEvent('attendanceUpdated', {
+        detail: { userId }
+      }));
 
       setAlertDialog({
         isOpen: true,
@@ -735,6 +763,7 @@ function AdminManageUser() {
         autoClose: true
       });
       setEditingAttendance(null);
+      setAttendanceForm({});
     } catch (error) {
       setAlertDialog({
         isOpen: true,
@@ -851,6 +880,12 @@ function AdminManageUser() {
           users={filteredUsers}
           onSelectUser={openDetail}
           getStatusBadge={getStatusBadge}
+          currentUser={currentUser}
+          onAttendanceEdit={handleAttendanceEdit}
+          onSaveAttendanceEdit={saveAttendanceEdit}
+          editingAttendance={editingAttendance}
+          attendanceForm={attendanceForm}
+          onAttendanceFormChange={setAttendanceForm}
         />
 
         {/* Footer legend */}
@@ -930,12 +965,7 @@ function AdminManageUser() {
             onToggleAttendance={() => setShowAttendance(!showAttendance)}
             getStatusBadge={getStatusBadge}
             getFilteredAttendanceRecords={getFilteredAttendanceRecords}
-            editingAttendance={editingAttendance}
-            attendanceForm={attendanceForm}
             onSetSelectedDate={setSelectedDate}
-            onAttendanceEdit={handleAttendanceEdit}
-            onSaveAttendanceEdit={saveAttendanceEdit}
-            onAttendanceFormChange={setAttendanceForm}
           />
         )}
 

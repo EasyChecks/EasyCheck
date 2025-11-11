@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { AuthContext } from './AuthContextValue'
-import { calculateAttendanceStats, getCheckInStatus } from '../utils/attendanceCalculator'
+import { calculateAttendanceStats } from '../utils/attendanceCalculator'
+import {
+  calculateAttendanceStatus,
+  handleConsecutiveShifts,
+  autoCheckoutAtMidnight,
+  handleCrossMidnightShift,
+  hasCheckedInToday
+} from '../utils/attendanceLogic'
 
 const getOrCreateTabId = () => {
   let tabId = sessionStorage.getItem('tabId')
@@ -292,34 +299,55 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkIn = (time, photo, workTimeStart = '08:00', workTimeEnd = '17:00', autoCheckOutFlag = false, locationInfo = {}) => {
+  const checkIn = (time, photo, workTimeStart = '08:00', autoCheckOutFlag = false, locationInfo = {}) => {
     try {
       const today = new Date().toISOString().split('T')[0]
+      const todayThaiFormat = new Date().toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
       
-      // 🆕 ใช้ percentage-based late detection + รองรับ auto check-out
-      const statusResult = getCheckInStatus(time, workTimeStart, workTimeEnd)
-      const status = statusResult.status // 'on_time' | 'absent'
-      const shouldAutoCheckOut = statusResult.autoCheckOut || autoCheckOutFlag
+      // 🔥 ตรวจสอบว่า check-in ไปแล้วหรือยัง
+      if (hasCheckedInToday(attendanceRecords, todayThaiFormat)) {
+        throw new Error('คุณได้ check-in ไปแล้ววันนี้')
+      }
+      
+      // 🎯 ใช้ logic ใหม่: calculateAttendanceStatus
+      const attendanceResult = calculateAttendanceStatus(time, workTimeStart, false)
+      const { status, lateMinutes, shouldAutoCheckout, message } = attendanceResult
+      
+      // 🔥 ตรวจจับกะติดกัน (ถ้ามี user.shifts)
+      let consecutiveInfo = null
+      if (user?.shifts && user.shifts.length > 0) {
+        consecutiveInfo = handleConsecutiveShifts(time, user.shifts)
+        if (consecutiveInfo.coveredShifts.length > 1) {
+          console.log('✅ กะติดกัน:', consecutiveInfo.message)
+        }
+      }
+      
+      const finalAutoCheckOut = shouldAutoCheckout || autoCheckOutFlag
       
       const newAttendance = {
         checkInTime: time,
-        checkOutTime: shouldAutoCheckOut ? time : null, // 🔥 ถ้า auto check-out ให้ออกทันที
-        status: shouldAutoCheckOut ? 'not_checked_in' : 'checked_in', // 🔥 ถ้า auto ให้กลับเป็น not_checked_in
+        checkOutTime: finalAutoCheckOut ? time : null,
+        status: finalAutoCheckOut ? 'not_checked_in' : 'checked_in',
         checkInPhoto: photo,
         checkInStatus: status,
-        checkOutPhoto: shouldAutoCheckOut ? photo : null // 🔥 ใช้รูปเดียวกัน
+        checkOutPhoto: finalAutoCheckOut ? photo : null,
+        lateMinutes: lateMinutes || 0,
+        message
       }
+      
       setAttendance(newAttendance)
       
       // 🔥 บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
       if (user) {
         const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
-        if (!shouldAutoCheckOut) {
-          // ถ้าไม่ auto check-out ให้บันทึก state ปกติ
+        if (!finalAutoCheckOut) {
           localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
           localStorage.setItem(`${userAttendanceKey}_date`, today)
         } else {
-          // ถ้า auto check-out ให้ลบ state เพราะถือว่าออกงานแล้ว
           localStorage.removeItem(userAttendanceKey)
           localStorage.removeItem(`${userAttendanceKey}_date`)
         }
@@ -327,17 +355,24 @@ export const AuthProvider = ({ children }) => {
       
       // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
       const { gps: checkInGPS, address: checkInAddress, distance: checkInDistance } = locationInfo
-      if (shouldAutoCheckOut) {
+      
+      // แปลง status จาก ATTENDANCE_CONFIG เป็นรูปแบบเดิม
+      const legacyStatus = status === 'ตรงเวลา' ? 'on_time' : 
+                          status === 'มาสาย' ? 'late' : 
+                          status === 'ขาด' ? 'absent' : 'on_time'
+      
+      if (finalAutoCheckOut) {
         // 🔥 Auto check-out: บันทึกทั้ง check-in และ check-out พร้อมกัน
-        updateUserAttendanceInUsersData(time, time, photo, photo, status, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
+        updateUserAttendanceInUsersData(time, time, photo, photo, legacyStatus, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
         
-        // 🔥 อัพเดต attendanceRecords เพื่อให้แสดงในประวัติ
         const shiftRecord = {
           checkIn: time,
           checkOut: time,
           checkInPhoto: photo,
           checkOutPhoto: photo,
-          status: status
+          status: legacyStatus,
+          lateMinutes: lateMinutes || 0,
+          message
         }
         
         const updatedRecords = [...attendanceRecords]
@@ -369,17 +404,16 @@ export const AuthProvider = ({ children }) => {
         const stats = calculateAttendanceStats(updatedRecords)
         setAttendanceStats(stats)
         
-        // Trigger event
         window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
           detail: { userId: user?.id, stats, records: updatedRecords } 
         }))
       } else {
         // ปกติ: บันทึกแค่ check-in
-        updateUserAttendanceInUsersData(time, null, photo, null, status, checkInGPS, checkInAddress, null, null, checkInDistance, null)
+        updateUserAttendanceInUsersData(time, null, photo, null, legacyStatus, checkInGPS, checkInAddress, null, null, checkInDistance, null)
       }
     } catch (error) {
       console.error('Error in checkIn:', error)
-      throw new Error('ไม่สามารถบันทึกเวลาเข้างานได้ กรุณาลองใหม่อีกครั้ง')
+      throw error
     }
   }
 
@@ -387,28 +421,67 @@ export const AuthProvider = ({ children }) => {
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      const newAttendance = {
-        ...attendance,
-        checkOutTime: time,
-        status: 'not_checked_in',
-        checkOutPhoto: photo
+      // 🔥 ตรวจสอบกะข้ามวัน - ถ้าเลยเที่ยงให้ตัดอัตโนมัติ
+      let finalCheckoutTime = time
+      let isAutoCheckout = false
+      let autoCheckoutReason = null
+      
+      if (user?.shift && attendance.checkInTime) {
+        const checkInRecord = {
+          time: attendance.checkInTime,
+          location: locationInfo.address || 'อยู่ในพื้นที่',
+          address: locationInfo.address || 'ในพื้นที่อนุญาต'
+        }
+        
+        // ตรวจสอบกะข้ามวัน
+        const crossMidnightResult = handleCrossMidnightShift(
+          checkInRecord,
+          user.shift,
+          time
+        )
+        
+        if (crossMidnightResult) {
+          finalCheckoutTime = crossMidnightResult.time
+          isAutoCheckout = true
+          autoCheckoutReason = crossMidnightResult.autoCheckoutReason
+          console.log('🌙 กะข้ามวัน - ตัด checkout ที่เที่ยงอัตโนมัติ')
+        }
+        
+        // ตรวจสอบลืม checkout
+        if (!crossMidnightResult) {
+          const midnightCheckout = autoCheckoutAtMidnight(
+            checkInRecord,
+            user.shift?.end || '17:00'
+          )
+          
+          if (midnightCheckout) {
+            finalCheckoutTime = midnightCheckout.time
+            isAutoCheckout = true
+            autoCheckoutReason = midnightCheckout.autoCheckoutReason
+            console.log('🌙 ลืม checkout - ระบบทำให้อัตโนมัติที่เที่ยงคืน')
+          }
+        }
       }
       
-      const getShiftStatus = (checkInTime, workTimeStart = '08:00') => {
-        if (!checkInTime) return 'absent'
-        const [checkHour, checkMinute] = checkInTime.split(':').map(Number)
-        const [workHour, workMinute] = workTimeStart.split(':').map(Number)
-        const checkTotalMinutes = checkHour * 60 + checkMinute
-        const workTotalMinutes = workHour * 60 + workMinute
-        return checkTotalMinutes <= workTotalMinutes ? 'on_time' : 'late'
+      const newAttendance = {
+        ...attendance,
+        checkOutTime: finalCheckoutTime,
+        status: 'not_checked_in',
+        checkOutPhoto: photo,
+        isAutoCheckout,
+        autoCheckoutReason
       }
       
       const shiftRecord = {
         checkIn: attendance.checkInTime,
-        checkOut: time,
+        checkOut: finalCheckoutTime,
         checkInPhoto: attendance.checkInPhoto,
         checkOutPhoto: photo,
-        status: attendance.checkInStatus || getShiftStatus(attendance.checkInTime, '08:00')
+        status: attendance.checkInStatus || 'on_time',
+        lateMinutes: attendance.lateMinutes || 0,
+        message: attendance.message || '',
+        isAutoCheckout,
+        autoCheckoutReason
       }
       
       const updatedRecords = [...attendanceRecords]

@@ -30,12 +30,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
   getStatusBadge,
   // Attendance verification props
   getFilteredAttendanceRecords,
-  editingAttendance,
-  attendanceForm,
-  onSetSelectedDate,
-  onAttendanceEdit,
-  onSaveAttendanceEdit,
-  onAttendanceFormChange
+  onSetSelectedDate
 }) {
   // 🔥 State สำหรับ sync timeSummary แบบ real-time
   const [currentTimeSummary, setCurrentTimeSummary] = useState(user?.timeSummary);
@@ -237,11 +232,6 @@ const UserDetailModal = React.memo(function UserDetailModal({
                             </svg>
                             เข้างาน
                           </h4>
-                          {editingAttendance?.record === record && editingAttendance?.type === 'checkIn' ? (
-                            <button onClick={onSaveAttendanceEdit} className="text-xs px-2 py-1 bg-green-500 text-white rounded">บันทึก</button>
-                          ) : (
-                            <button onClick={() => onAttendanceEdit(record, 'checkIn')} className="text-xs px-2 py-1 bg-white border border-green-300 rounded hover:bg-green-100">แก้ไข</button>
-                          )}
                         </div>
                         
                         <div className="space-y-2 text-sm">
@@ -249,46 +239,40 @@ const UserDetailModal = React.memo(function UserDetailModal({
                             <img src={record.checkIn.photo} alt="check-in" className="w-16 h-16 rounded-lg object-cover border-2 border-green-300" />
                             <div className="flex-1">
                               <div className="text-xs text-gray-500">เวลา</div>
-                              {editingAttendance?.record === record && editingAttendance?.type === 'checkIn' ? (
-                                <input type="time" value={attendanceForm.time} onChange={(e) => onAttendanceFormChange({...attendanceForm, time: e.target.value})} className="text-base font-bold border rounded px-2 py-1 w-full" />
-                              ) : (
-                                <div className="text-base font-bold text-gray-800">{record.checkIn.time}</div>
-                              )}
+                              <div className="text-base font-bold text-gray-800">{record.checkIn.time}</div>
                             </div>
                           </div>
                           
                           <div>
                             <div className="text-xs text-gray-500">สถานะ</div>
-                            {editingAttendance?.record === record && editingAttendance?.type === 'checkIn' ? (
-                              <select value={attendanceForm.status} onChange={(e) => onAttendanceFormChange({...attendanceForm, status: e.target.value})} className="text-sm border rounded px-2 py-1 w-full">
-                                <option value="ตรงเวลา">ตรงเวลา</option>
-                                <option value="มาสาย">มาสาย</option>
-                                <option value="ขาด">ขาด</option>
-                                <option value="ลา">ลา</option>
-                              </select>
-                            ) : (
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                                 record.checkIn.status === 'ตรงเวลา' ? 'bg-green-100 text-green-700' : 
                                 record.checkIn.status === 'มาสาย' ? 'bg-yellow-100 text-yellow-700' : 
                                 'bg-red-100 text-red-700'
                               }`}>
                                 {record.checkIn.status}
-                              </span>
-                            )}
+                            </span>
                           </div>
                           
                           <div>
                             <div className="text-xs text-gray-500">ตำแหน่ง</div>
-                            {editingAttendance?.record === record && editingAttendance?.type === 'checkIn' ? (
-                              <select value={attendanceForm.location} onChange={(e) => onAttendanceFormChange({...attendanceForm, location: e.target.value})} className="text-sm border rounded px-2 py-1 w-full">
-                                <option value="อยู่ในพื้นที่">อยู่ในพื้นที่</option>
-                                <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
-                              </select>
-                            ) : (
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
-                                {record.checkIn.location}
-                              </span>
-                            )}
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
+                              {record.checkIn.location}
+                            </span>
+                          </div>
+                          
+                          <div>
+                            <div className="text-xs text-gray-500">พิกัด</div>
+                            <div className="text-xs text-gray-800 font-medium">
+                              {record.checkIn.address || 'ไม่ระบุ'}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div className="text-xs text-gray-500">ระยะทาง</div>
+                            <div className="text-xs text-gray-800 font-medium">
+                              {record.checkIn.distance || '-'}
+                            </div>
                           </div>
                           
                           <div>
@@ -308,11 +292,6 @@ const UserDetailModal = React.memo(function UserDetailModal({
                               </svg>
                               ออกงาน
                             </h4>
-                            {editingAttendance?.record === record && editingAttendance?.type === 'checkOut' ? (
-                              <button onClick={onSaveAttendanceEdit} className="text-xs px-2 py-1 bg-red-500 text-white rounded">บันทึก</button>
-                            ) : (
-                              <button onClick={() => onAttendanceEdit(record, 'checkOut')} className="text-xs px-2 py-1 bg-white border border-orange-300 rounded hover:bg-red-100">แก้ไข</button>
-                            )}
                           </div>
                           
                           <div className="space-y-2 text-sm">
@@ -320,42 +299,36 @@ const UserDetailModal = React.memo(function UserDetailModal({
                               <img src={record.checkOut.photo} alt="check-out" className="w-16 h-16 rounded-lg object-cover border-2 border-orange-300" />
                               <div className="flex-1">
                                 <div className="text-xs text-gray-500">เวลา</div>
-                                {editingAttendance?.record === record && editingAttendance?.type === 'checkOut' ? (
-                                  <input type="time" value={attendanceForm.time} onChange={(e) => onAttendanceFormChange({...attendanceForm, time: e.target.value})} className="text-base font-bold border rounded px-2 py-1 w-full" />
-                                ) : (
-                                  <div className="text-base font-bold text-gray-800">{record.checkOut.time}</div>
-                                )}
+                                <div className="text-base font-bold text-gray-800">{record.checkOut.time}</div>
                               </div>
                             </div>
                             
                             <div>
                               <div className="text-xs text-gray-500">สถานะ</div>
-                              {editingAttendance?.record === record && editingAttendance?.type === 'checkOut' ? (
-                                <select value={attendanceForm.status} onChange={(e) => onAttendanceFormChange({...attendanceForm, status: e.target.value})} className="text-sm border rounded px-2 py-1 w-full">
-                                  <option value="ตรงเวลา">ตรงเวลา</option>
-                                  <option value="มาสาย">มาสาย</option>
-                                  <option value="ขาด">ขาด</option>
-                                  <option value="ลา">ลา</option>
-                                </select>
-                              ) : (
-                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.status === 'ตรงเวลา' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                  {record.checkOut.status}
-                                </span>
-                              )}
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.status === 'ตรงเวลา' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {record.checkOut.status}
+                              </span>
                             </div>
                             
                             <div>
                               <div className="text-xs text-gray-500">ตำแหน่ง</div>
-                              {editingAttendance?.record === record && editingAttendance?.type === 'checkOut' ? (
-                                <select value={attendanceForm.location} onChange={(e) => onAttendanceFormChange({...attendanceForm, location: e.target.value})} className="text-sm border rounded px-2 py-1 w-full">
-                                  <option value="อยู่ในพื้นที่">อยู่ในพื้นที่</option>
-                                  <option value="อยู่นอกพื้นที่">อยู่นอกพื้นที่</option>
-                                </select>
-                              ) : (
-                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
-                                  {record.checkOut.location}
-                                </span>
-                              )}
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
+                                {record.checkOut.location}
+                              </span>
+                            </div>
+                            
+                            <div>
+                              <div className="text-xs text-gray-500">พิกัด</div>
+                              <div className="text-xs text-gray-800 font-medium">
+                                {record.checkOut.address || 'ไม่ระบุ'}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <div className="text-xs text-gray-500">ระยะทาง</div>
+                              <div className="text-xs text-gray-800 font-medium">
+                                {record.checkOut.distance || '-'}
+                              </div>
                             </div>
                             
                             <div>
