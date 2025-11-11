@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { usersData } from '../../../data/usersData';
 
-// --- Toast Notification Component ---
-// (เหมือนเดิม)
+
 const Toast = ({ message, type, onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 4000);
@@ -64,7 +63,7 @@ const Toast = ({ message, type, onClose }) => {
 };
 
 
-// --- ICON SVG (แบบทึบ) ---
+
 const LineIcon = ({ className = 'block w-6 h-6', ...props }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -121,12 +120,12 @@ const EmailIcon = ({ className = 'block w-6 h-6', ...props }) => (
         <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
     </svg>
 );
-// --- จบส่วน ICON SVG ---
 
 
-// --- +++ [โค้ดอัปเดต] Modal สำหรับดูรายละเอียดประวัติการแจ้งเตือน +++ ---
+
+
 const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) => {
-    // [เพิ่มใหม่] State สำหรับซ่อน/แสดง รายชื่อ
+    
     const [isUserListVisible, setIsUserListVisible] = useState(false);
 
     const getRecipientText = () => {
@@ -173,16 +172,16 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                         <p className="text-lg font-semibold text-gray-800">{notification.title}</p>
                     </div>
 
-                    {/* +++ [โค้ดอัปเดต] Recipients +++ */}
+                    
                     <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
                         <p className="mb-2 text-sm font-semibold text-gray-600">ผู้รับ</p>
                         <p className="font-semibold text-gray-800">{getRecipientText()}</p>
 
-                        {/* [ปรับปรุง] เพิ่มปุ่ม Toggle และย้ายจำนวนคนมาไว้บรรทัดเดียวกัน */}
+                        
                         <div className="flex items-center justify-between mt-1">
                             <p className="text-sm text-gray-500">จำนวน {notification.recipientCount} คน</p>
 
-                            {/* [เพิ่มใหม่] ปุ่ม Toggle ซ่อน/แสดง */}
+                            
                             {notification.sentToUsers && notification.sentToUsers.length > 0 && (
                                 <button
                                     onClick={() => setIsUserListVisible(!isUserListVisible)}
@@ -194,7 +193,7 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                         </div>
                         
 
-                        {/* [ปรับปรุง] ส่วนแสดงรายชื่อ (จะแสดงเมื่อกดปุ่ม) */}
+                        
                         {isUserListVisible && notification.sentToUsers && notification.sentToUsers.length > 0 && (
                             <>
                                 <hr className="my-3 border-gray-200" />
@@ -211,9 +210,9 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                                 </ul>
                             </>
                         )}
-                        {/* [จบ] ส่วนแสดงรายชื่อ */}
+                     
                     </div>
-                    {/* +++ [จบโค้ดอัปเดต] Recipients +++ */}
+                   
 
 
                     {/* Channels */}
@@ -259,10 +258,7 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
         </div>
     );
 };
-// --- +++ [จบโค้ดอัปเดต] Modal ประวัติ +++ ---
 
-
-// --- Modal สำหรับยืนยันการส่ง ---
 const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions = [] }) => {
     const getRecipientText = () => {
         if (data.recipientGroups.includes('all')) return 'ทั้งหมด';
@@ -319,8 +315,7 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions
     );
 };
 
-// --- Success Modal ---
-// (เหมือนเดิม)
+
 const SuccessModal = ({ onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 2000);
@@ -342,7 +337,7 @@ const SuccessModal = ({ onClose }) => {
     );
 };
 
-// --- Card สำหรับแสดงประวัติ ---
+
 const NotificationHistoryCard = ({ notification, onClick }) => {
     const getChannelIcons = () => {
         const icons = [];
@@ -384,7 +379,7 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
     );
 };
 
-// --- Modal สำหรับแสดงรายชื่อผู้รับ ---
+
 const RecipientListModal = ({ users, onClose }) => {
     return (
         <div className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
@@ -439,7 +434,7 @@ const RecipientListModal = ({ users, onClose }) => {
         </div>
     );
 };
-// --- [จบ] Modal สำหรับแสดงรายชื่อผู้รับ ---
+// 
 
 
 function GroupNotificationScreen() {
@@ -494,7 +489,7 @@ function GroupNotificationScreen() {
 
     const recipientOptions = useMemo(() => [...groupOptions, ...userOptions], [groupOptions, userOptions]);
 
-    // --- Logic ดึงรายชื่อผู้ใช้ (Unique) จากกลุ่มที่เลือก ---
+    
     const selectedUsers = useMemo(() => {
         const usersMap = new Map();
         
@@ -541,7 +536,7 @@ function GroupNotificationScreen() {
         }
         return Array.from(usersMap.values());
     }, [recipientGroups, usersData]);
-    // --- [จบ] Logic ดึงรายชื่อ ---
+    
 
 
     const removeRecipient = (value) => {
@@ -657,7 +652,7 @@ function GroupNotificationScreen() {
         setShowConfirmModal(true);
     };
 
-    // --- [โค้ดอัปเดต] confirmSendNotification ---
+    // --- confirmSendNotification ---
     const confirmSendNotification = async () => {
         setShowConfirmModal(false);
 
@@ -665,10 +660,10 @@ function GroupNotificationScreen() {
             id: Date.now(),
             title: title.trim(),
             message: message.trim(),
-            recipients: [...recipientGroups], // กลุ่มที่เลือก เช่น ['managers', 'hr']
+            recipients: [...recipientGroups], 
             recipientCount: selectedUsers.length, // จำนวนคน (ไม่ซ้ำ)
             
-            // [เพิ่มใหม่] บันทึกรายชื่อผู้ใช้จริง
+           
             sentToUsers: selectedUsers.map(u => ({
                 id: u.employeeId || u.username || u.id,
                 name: u.name,
@@ -686,7 +681,7 @@ function GroupNotificationScreen() {
             }),
             status: 'success'
         };
-        // --- [จบโค้ดอัปเดต] ---
+        
 
 
         const updatedHistory = [notification, ...notificationHistory];
@@ -694,7 +689,7 @@ function GroupNotificationScreen() {
         localStorage.setItem('notificationHistory', JSON.stringify(updatedHistory));
 
         try {
-            // ( ... Logic การส่ง ... )
+            // 
         } catch (error) {
             console.error('Error sending notification:', error);
         }
@@ -708,7 +703,7 @@ function GroupNotificationScreen() {
         }, 2000);
     };
 
-    // [ปรับปรุง] เพิ่ม showRecipientModal
+    
     useEffect(() => {
         if (showConfirmModal || showSuccessModal || selectedHistory || showRecipientModal) {
             document.body.style.overflow = 'hidden';
@@ -727,7 +722,7 @@ function GroupNotificationScreen() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownRef]);
-    // --- จบส่วน Logic ---
+    
 
 
     return (
@@ -751,7 +746,7 @@ function GroupNotificationScreen() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {/* ฟอร์มส่งแจ้งเตือน */}
                     <div className="space-y-6 lg:col-span-2">
-                        {/* Card หลัก */}
+                       
                         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
                             <div className="p-6 text-white bg-orange-600">
                                 <h2 className="flex items-center gap-2 text-xl font-bold">
@@ -764,7 +759,7 @@ function GroupNotificationScreen() {
                             </div>
 
                             <div className="p-6 space-y-5">
-                                {/* หัวข้อ */}
+                               
                                 <div>
                                     <label htmlFor="title" className="block mb-2 text-sm font-semibold text-gray-700">
                                         หัวข้อ <span className="text-red-500">*</span>
@@ -794,13 +789,13 @@ function GroupNotificationScreen() {
                                     )}
                                 </div>
 
-                                {/* [โค้ดอัปเดต] เลือกผู้รับ (ปุ่มดูรายชื่ออยู่ซ้ายล่าง) */}
+                                
                                 <div>
                                     <label className="block mb-2 text-sm font-semibold text-gray-700">
                                         เลือกผู้รับ <span className="text-red-500">*</span>
                                     </label>
 
-                                    {/* กล่องหลัก (ปุ่ม + Dropdown) */}
+                                    
                                     <div className="relative" ref={dropdownRef}>
                                         <div
                                             role="button"
@@ -887,10 +882,10 @@ function GroupNotificationScreen() {
                                                 </ul>
                                             </div>
                                         )}
-                                    </div> {/* <-- จบ div.relative */}
+                                    </div> 
 
 
-                                    {/* [ตำแหน่งใหม่ - ซ้าย] ปุ่มดูรายชื่อ */}
+                                   
                                     {recipientGroups.length > 0 && (
                                         <div className="mt-2 text-left"> 
                                             <button
@@ -906,7 +901,7 @@ function GroupNotificationScreen() {
                                         </div>
                                     )}
 
-                                    {/* [ตำแหน่งใหม่] ข้อความ Error */}
+                                   
                                     {fieldErrors.recipients && (
                                         <p className="flex items-center gap-1 mt-2 text-xs text-red-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -915,7 +910,7 @@ function GroupNotificationScreen() {
                                             กรุณาเลือกผู้รับ
                                         </p>
                                     )}
-                                </div> {/* <-- จบ div "เลือกผู้รับ" */}
+                                </div> 
 
 
                                 {/* ข้อความ */}
@@ -956,7 +951,7 @@ function GroupNotificationScreen() {
                                     </div>
                                 </div>
 
-                                {/* เลือกช่องทางการส่ง */}
+                               
                                 <div>
                                     <label className="block mb-3 text-sm font-semibold text-gray-700">
                                         เลือกช่องทางการส่ง <span className="text-red-500">*</span>
@@ -1059,7 +1054,7 @@ function GroupNotificationScreen() {
                                     </div>
                                 </div>
 
-                                {/* ปุ่มส่ง */}
+                             
                                 <button
                                     onClick={handleSubmit}
                                     className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all bg-orange-600 shadow-lg hover:bg-orange-700 rounded-xl hover:shadow-xl"
@@ -1073,7 +1068,7 @@ function GroupNotificationScreen() {
                         </div>
                     </div>
 
-                    {/* ประวัติการแจ้งเตือน */}
+                   
                     <div className="lg:col-span-1">
                         <div className="sticky overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl top-6">
                             <div className="p-5 text-white bg-orange-600">
@@ -1133,7 +1128,7 @@ function GroupNotificationScreen() {
                 />
             )}
 
-            {/* [เพิ่มใหม่] การแสดง Modal รายชื่อ */}
+        
             {showRecipientModal && (
                 <RecipientListModal
                     users={selectedUsers}
