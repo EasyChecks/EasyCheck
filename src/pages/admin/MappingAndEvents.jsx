@@ -347,11 +347,12 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
 }
 
 // Create Form Component
-function CreateForm({ type, position, onSubmit, onCancel }) {
+function CreateForm({ type, position, onSubmit, onCancel, user }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     radius: 100,
+    branchCode: user?.branchCode || '', // 🆕 Default to user's branch
     locationName: '',
     startDate: '',
     endDate: '',
@@ -509,6 +510,27 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
           placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
         />
       </div>
+
+      {/* 🆕 Branch Code - แสดงเฉพาะ SuperAdmin */}
+      {user?.role === 'superadmin' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            สาขา <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.branchCode || user?.branchCode || ''}
+            onChange={(e) => setFormData({ ...formData, branchCode: e.target.value })}
+            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors cursor-pointer"
+            required
+          >
+            <option value="">เลือกสาขา</option>
+            <option value="101">BKK-101 (กรุงเทพ สาขา 1)</option>
+            <option value="102">BKK-102 (กรุงเทพ สาขา 2)</option>
+            <option value="201">CNX-201 (เชียงใหม่)</option>
+            <option value="301">PKT-301 (ภูเก็ต)</option>
+          </select>
+        </div>
+      )}
 
       {/* Radius */}
       <div>
@@ -753,11 +775,12 @@ function CreateForm({ type, position, onSubmit, onCancel }) {
 }
 
 // Edit Form Component
-function EditForm({ type, item, onSubmit, onCancel }) {
+function EditForm({ type, item, onSubmit, onCancel, user }) {
   const [formData, setFormData] = useState({
     name: item.name || '',
     description: item.description || '',
     radius: item.radius || 100,
+    branchCode: item.branchCode || user?.branchCode || '', // 🆕 รักษา branchCode เดิม
     locationName: item.locationName || '',
     startDate: item.startDate || item.date || '',
     endDate: item.endDate || item.date || '',
@@ -896,6 +919,27 @@ function EditForm({ type, item, onSubmit, onCancel }) {
           rows="3"
         />
       </div>
+
+      {/* 🆕 Branch Code - แสดงเฉพาะ SuperAdmin */}
+      {user?.role === 'superadmin' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            สาขา <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.branchCode || ''}
+            onChange={(e) => setFormData({ ...formData, branchCode: e.target.value })}
+            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors cursor-pointer"
+            required
+          >
+            <option value="">เลือกสาขา</option>
+            <option value="101">BKK-101 (กรุงเทพ สาขา 1)</option>
+            <option value="102">BKK-102 (กรุงเทพ สาขา 2)</option>
+            <option value="201">CNX-201 (เชียงใหม่)</option>
+            <option value="301">PKT-301 (ภูเก็ต)</option>
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1551,11 +1595,12 @@ function MappingAndEvents() {
           latitude: newMarkerPosition[0],
           longitude: newMarkerPosition[1],
           status: 'active',
+          branchCode: formData.branchCode || user.branchCode, // 🆕 เพิ่ม branchCode
           // ✅ เพิ่มข้อมูลผู้สร้างและสาขา
           createdBy: {
             userId: user.id,
             username: user.username,
-            branch: user.branchCode
+            branch: formData.branchCode || user.branchCode
           }
         })
       } else if (createType === 'event') {
@@ -1602,11 +1647,12 @@ function MappingAndEvents() {
           assignedRoles: formData.assignedRoles || [],
           assignedDepartments: formData.assignedDepartments || [],
           assignedPositions: formData.assignedPositions || [],
+          branchCode: formData.branchCode || user.branchCode, // 🆕 เพิ่ม branchCode
           // ✅ เพิ่มข้อมูลผู้สร้างและสาขา
           createdBy: {
             userId: user.id,
             username: user.username,
-            branch: user.branchCode
+            branch: formData.branchCode || user.branchCode
           }
         })
       }
@@ -2133,6 +2179,7 @@ function MappingAndEvents() {
               <EditForm
                 type={editItem.type}
                 item={editItem}
+                user={user}
                 onSubmit={handleEdit}
                 onCancel={() => {
                   setShowEditModal(false)
@@ -2203,6 +2250,7 @@ function MappingAndEvents() {
                 <CreateForm
                   type={createType}
                   position={newMarkerPosition}
+                  user={user}
                   onSubmit={handleCreate}
                   onCancel={() => {
                     setCreateType(null)

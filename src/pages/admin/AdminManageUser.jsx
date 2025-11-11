@@ -20,6 +20,14 @@ const CsvImportModal = lazy(() => import('../../components/admin/CsvImportModal'
 function AdminManageUser() {
   const { user: currentUser } = useAuth();
   
+  // 🆕 Branch options for filter dropdown
+  const branchOptions = [
+    { value: 'all', label: 'สาขา: ทั้งหมด' },
+    { value: 'BKK', label: 'BKK (กรุงเทพ)' },
+    { value: 'CNX', label: 'CNX (เชียงใหม่)' },
+    { value: 'PKT', label: 'PKT (ภูเก็ต)' }
+  ];
+  
   // เริ่มต้นข้อมูลผู้ใช้จาก localStorage หรือข้อมูล default
   const [users, setUsers] = useState(() => {
     try {
@@ -667,15 +675,75 @@ function AdminManageUser() {
   };
 
   const saveAttendanceEdit = () => {
-    // Update attendance record
-    setAlertDialog({
-      isOpen: true,
-      type: 'success',
-      title: 'บันทึกสำเร็จ!',
-      message: 'บันทึกการแก้ไขข้อมูลการเข้า-ออกงานเรียบร้อยแล้ว',
-      autoClose: true
-    });
-    setEditingAttendance(null);
+    if (!editingAttendance || !selectedUser) return;
+
+    const { record, type } = editingAttendance;
+
+    try {
+      // 1. Update attendance record in selectedUser
+      const updatedAttendanceRecords = selectedUser.attendanceRecords.map(r => {
+        if (r.date === record.date) {
+          return {
+            ...r,
+            [type]: { ...r[type], ...attendanceForm }
+          };
+        }
+        return r;
+      });
+
+      // 2. Update usersData in localStorage
+      const storedUsers = localStorage.getItem('usersData');
+      if (storedUsers) {
+        const users = JSON.parse(storedUsers);
+        const updatedUsers = users.map(u => {
+          if (u.id === selectedUser.id) {
+            return {
+              ...u,
+              attendanceRecords: updatedAttendanceRecords
+            };
+          }
+          return u;
+        });
+        
+        // Save to localStorage
+        localStorage.setItem('usersData', JSON.stringify(updatedUsers));
+        
+        // 3. Update users state
+        setUsers(updatedUsers);
+        
+        // 4. Update selectedUser
+        const updatedSelectedUser = updatedUsers.find(u => u.id === selectedUser.id);
+        setSelectedUser(updatedSelectedUser);
+        
+        // 5. Trigger storage event for other tabs
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'usersData',
+          newValue: JSON.stringify(updatedUsers)
+        }));
+        
+        // 6. Trigger attendanceUpdated event
+        window.dispatchEvent(new CustomEvent('attendanceUpdated', {
+          detail: { userId: selectedUser.id }
+        }));
+      }
+
+      setAlertDialog({
+        isOpen: true,
+        type: 'success',
+        title: 'บันทึกสำเร็จ!',
+        message: 'บันทึกการแก้ไขข้อมูลการเข้า-ออกงานเรียบร้อยแล้ว',
+        autoClose: true
+      });
+      setEditingAttendance(null);
+    } catch (error) {
+      setAlertDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        message: `ไม่สามารถบันทึกการแก้ไขได้: ${error.message}`,
+        autoClose: true
+      });
+    }
   };
 
   const closeAlertDialog = () => {
@@ -769,10 +837,11 @@ function AdminManageUser() {
               onChange={(e) => setFilterBranch(e.target.value)}
               className="cursor-pointer px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[var(--gray-900, #111827)] focus:outline-none transition-colors bg-white"
             >
-              <option value="all">สาขา: ทั้งหมด</option>
-              <option value="BKK">กรุงเทพฯ (BKK)</option>
-              <option value="CNX">เชียงใหม่ (CNX)</option>
-              <option value="PKT">ภูเก็ต (PKT)</option>
+              {branchOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           )}
         </div>

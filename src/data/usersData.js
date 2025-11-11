@@ -1,3 +1,34 @@
+// ===================================
+// ��� MODULARIZED usersData.js - Central Hub
+// ===================================
+// ��� Re-export all data from subfolders for backward compatibility
+// ��� Old imports from './data/usersData' still work!
+
+// Re-export: Events
+export * from './events/index.js';
+
+// Re-export: Leave
+export * from './leave/index.js';
+
+// Re-export: Attendance
+export * from './attendance/index.js';
+
+// Re-export: Schedule
+export * from './schedule/index.js';
+
+// Re-export: Admin
+export * from './admin/index.js';
+
+// Re-export: Team
+export * from './team/index.js';
+
+// Re-export: Warning
+export * from './warning/index.js';
+
+// ===================================
+// ��� Users Data & Helper Functions
+// (Keep temporarily - will move to users/ folder later)
+// ===================================
 // 📊 ข้อมูลผู้ใช้ทั้งหมดในระบบ - แหล่งข้อมูลกลาง (Centralized Mock Data Repository)
 // 🔗 ใช้ร่วมกันระหว่าง: Auth.jsx, AdminManageUser.jsx, UserDashboard.jsx, Layout.jsx, Nav.jsx
 // 📝 รวมมาจาก: userData.js + buddyData.js (ย้ายมาเก็บไว้ที่เดียวเพื่อง่ายต่อการจัดการ)
@@ -371,6 +402,10 @@ export const usersData = [
   }
 ];
 
+// ===================================
+// 📚 Helper Functions - User Utilities
+// ===================================
+
 // Helper function: แปลง usersData เป็น format สำหรับ Auth.jsx
 export const getUserForAuth = (employeeId) => {
   // Try to get updated users from localStorage first (for role changes made by admin)
@@ -406,7 +441,7 @@ export const getUserForAuth = (employeeId) => {
     role: (user.role === 'admin' || user.role === 'superadmin') ? 'user' : user.role, // แสดงเป็น user ตอนเช็คชื่อ
     isAdminAccount: false
   };
-  
+
   return normalUserData;
 };
 
@@ -423,8 +458,8 @@ export const getUserById = (id) => {
 // Helper function: Find user by username/employeeId
 export const getUserByUsername = (username) => {
   const normalized = username.toUpperCase();
-  return usersData.find(u => 
-    u.username.toUpperCase() === normalized || 
+  return usersData.find(u =>
+    u.username.toUpperCase() === normalized ||
     (u.adminAccount && u.adminAccount.toUpperCase() === normalized)
   );
 };
@@ -461,7 +496,7 @@ const getCurrentTabId = () => {
 const getCurrentUser = () => {
   const tabId = getCurrentTabId()
   if (!tabId) return null
-  
+
   const savedUser = localStorage.getItem(`user_${tabId}`)
   return savedUser ? JSON.parse(savedUser) : null
 }
@@ -594,7 +629,6 @@ export const getLegacyUserData = () => {
 
 // ============================================
 // Mock Data: บัญชี fallback สำหรับ Admin (กรณีใช้ username = admin)
-// รวมศูนย์ข้อมูลไว้ใน data layer เพื่อหลีกเลี่ยงการ hardcode ใน component
 // ============================================
 export const mockAdminFallbackAccounts = {
   admin: {
@@ -623,215 +657,13 @@ export const getFallbackAdminAccount = (username, storedPasswords = {}) => {
   };
 };
 
-// ===================================
-// Event Data - ข้อมูลกิจกรรม/งานต่างๆ
-// ===================================
-export const eventsData = [
-  {
-    id: 1,
-    title: "คุยงานกับลูกค้า",
-    description: "เก็บ requirement ของลูกค้า",
-    location: "โซนเมกะบางนา",
-    time: "23/09/2025 → 24/09/2025 (09:00 - 11:00)",
-  },
-  {
-    id: 2,
-    title: "ลงตรวจ site งาน",
-    description: "ตรวจความเรียบร้อยของโครงการ",
-    location: "คลองเตย",
-    time: "25/09/2025 (10:00 - 12:00)",
-  },
-  {
-    id: 3,
-    title: "ติดตั้งสินค้าที่บ้านลูกค้า",
-    description: "ติดตั้งระบบให้ลูกค้ารายใหม่",
-    location: "ลาดพร้าว 71",
-    time: "27/09/2025 (13:00 - 15:00)",
-  },
-];
+// ============================================
+// Missing Exports - Additional Mock Data
+// ============================================
 
-// ===================================
-// Calendar Events - กิจกรรมในปฏิทิน
-// ===================================
-export const calendarEvents = [
-  { id: 1, date: '2025-11-23', title: 'เตรียมตัวนำเสนอโปรเจค', type: 'meeting', status: 'normal' },
-  { id: 2, date: '2025-11-24', title: 'นำเสนอโปรเจค', type: 'meeting', status: 'normal' },
-  { id: 3, date: '2025-11-25', title: 'นำเสนอโปรเจค', type: 'meeting', status: 'normal' },
-];
-
-// ===================================
-// Attendance Data - ข้อมูลการลงเวลา
-// ===================================
-export const attendanceData = [
-  { date: '2025-10-03', status: 'late' },
-  { date: '2025-10-04', status: 'absent' },
-  { date: '2025-10-08', status: 'late' },
-  { date: '2025-10-11', status: 'leave' },
-  { date: '2025-10-17', status: 'late' },
-  { date: '2025-10-18', status: 'absent' },
-];
-
-// ===================================
-// Leave Data - ข้อมูลการลา
-// ===================================
-export const leaveData = [
-  {
-    id: 1,
-    leaveType: 'ลาป่วย',
-    days: '4 วัน',
-    category: 'ลาป่วย',
-    period: '23/09/2025 → 26/09/2025',
-    startDate: '23/09/2025',
-    endDate: '26/09/2025',
-    reason: 'test',
-    status: 'รออนุมัติ',
-    statusColor: 'yellow',
-    documents: []
-  },
-  {
-    id: 2,
-    leaveType: 'ลากิจ',
-    days: '2 วัน',
-    category: 'ลากิจ',
-    period: '15/10/2025 → 16/10/2025',
-    startDate: '15/10/2025',
-    endDate: '16/10/2025',
-    reason: 'ธุระส่วนตัว',
-    status: 'อนุมัติ',
-    statusColor: 'green',
-    documents: []
-  },
-  {
-    id: 3,
-    leaveType: 'ลาพักร้อน',
-    days: '5 วัน',
-    category: 'ลาพักร้อน',
-    period: '01/11/2025 → 05/11/2025',
-    startDate: '01/11/2025',
-    endDate: '05/11/2025',
-    reason: 'เที่ยวกับครอบครัว',
-    status: 'อนุมัติ',
-    statusColor: 'green',
-    documents: []
-  },
-  {
-    id: 4,
-    leaveType: 'ลาป่วย',
-    days: '1 วัน',
-    category: 'ลาป่วย',
-    period: '10/09/2025',
-    startDate: '10/09/2025',
-    endDate: '10/09/2025',
-    reason: 'ไข้หวัด',
-    status: 'ไม่อนุมัติ',
-    statusColor: 'red',
-    documents: []
-  },
-  {
-    id: 5,
-    leaveType: 'ลาป่วย',
-    days: '2 วัน',
-    category: 'ลาป่วย',
-    period: '05/08/2025 → 06/08/2025',
-    startDate: '05/08/2025',
-    endDate: '06/08/2025',
-    reason: 'ป่วยไข้หวัด',
-    status: 'อนุมัติ',
-    statusColor: 'green',
-    documents: []
-  },
-  {
-    id: 6,
-    leaveType: 'ลากิจ',
-    days: '1 วัน',
-    category: 'ลากิจ',
-    period: '20/09/2025',
-    startDate: '20/09/2025',
-    endDate: '20/09/2025',
-    reason: 'ติดธุระส่วนตัว',
-    status: 'รออนุมัติ',
-    statusColor: 'yellow',
-    documents: []
-  }
-];
-
-// ============================================
-// Mock Data: ข้อมูลสาขา (Branches)
-// ใช้สำหรับ: DownloadData.jsx
-// ============================================
-export const mockBranches = [
-  { id: 'BKK101', name: 'กรุงเทพ สาขา 101', provinceCode: 'BKK' },
-  { id: 'BKK102', name: 'กรุงเทพ สาขา 102', provinceCode: 'BKK' },
-  { id: 'CNX201', name: 'เชียงใหม่ สาขา 201', provinceCode: 'CNX' },
-  { id: 'PKT301', name: 'ภูเก็ต สาขา 301', provinceCode: 'PKT' },
-];
-
-// ============================================
-// Mock Data: รายงาน (Reports)
-// ใช้สำหรับ: DownloadData.jsx
-// ============================================
-export const mockReports = [
-  {
-    id: 1,
-    title: 'รายงาน',
-    subtitle: 'ข้อมูลรายเดือน',
-    description: 'ดาวน์โหลดข้อมูล',
-    color: 'from-brand-primary to-orange-600'
-  },
-  // {
-  //   id: 2,
-  //   title: 'รายงาน2',
-  //   subtitle: 'ข้อมูลแบบเดือน',
-  //   description: 'ดาวน์โหลดข้อมูล',
-  //   color: 'from-brand-primary to-orange-600'
-  // }
-];
-
-// ============================================
-// Mock Data: ตัวเลือกข้อมูล (Data Options)
-// ใช้สำหรับ: DownloadData.jsx
-// ============================================
-export const mockDataOptions = [
-  {
-    id: 'attendanceData',
-    label: 'ข้อมูลเวลาเข้า/ออก',
-    description: 'เวลาเข้า-ออก, ขาด, ลา, มาสาย',
-    color: 'blue'
-  },
-  {
-    id: 'personalData',
-    label: 'ข้อมูลส่วนตัว/งาน',
-    description: 'ข้อมูลส่วนตัว, ตำแหน่งงาน',
-    color: 'purple'
-  },
-  {
-    id: 'gpsTracking',
-    label: 'GPS Tracking',
-    description: 'สถานะอยู่ในหรือนอกระยะ',
-    color: 'green'
-  },
-  {
-    id: 'photoAttendance',
-    label: 'ข้อมูลภาพถ่าย',
-    description: 'รูปถ่าย Check-in, Check-out',
-    color: 'pink'
-  },
-  {
-    id: 'eventStats',
-    label: 'สถิติการเข้าร่วมกิจกรรม',
-    description: 'จำนวนกิจกรรมที่เข้าร่วม',
-    color: 'orange'
-  }
-];
-
-// ============================================
-// Utility Function: สร้างข้อมูล Mock สำหรับรายงาน
-// ใช้สำหรับ: DownloadData.jsx
-// ============================================
 export const generateMockReportData = (selectedOptions) => {
   const data = [];
   
-  // สร้าง 10 รายการข้อมูลตัวอย่าง
   for (let i = 1; i <= 10; i++) {
     const record = {
       'ลำดับ': i,
@@ -873,160 +705,27 @@ export const generateMockReportData = (selectedOptions) => {
   return data;
 };
 
-// ============================================
-// Mock Data: ข้อมูลบันทึกการเข้างาน (Attendance Records)
-// ใช้สำหรับ: AuthProvider.jsx
-// ============================================
 export const mockAttendanceRecords = [
   {
-    date: new Date().toISOString().split('T')[0], // วันนี้
+    date: new Date().toISOString().split('T')[0],
     shifts: [
-      {
-        checkIn: '08:00',
-        checkOut: '12:00',
-        status: 'on_time'
-      },
-      {
-        checkIn: '13:00',
-        checkOut: '17:00',
-        status: 'on_time'
-      }
+      { checkIn: '08:00', checkOut: '12:00', status: 'on_time' },
+      { checkIn: '13:00', checkOut: '17:00', status: 'on_time' }
     ]
   },
   {
-    date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // เมื่อวาน
-    shifts: [
-      {
-        checkIn: '08:15',
-        checkOut: '17:30',
-        status: 'late'
-      }
-    ]
+    date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+    shifts: [{ checkIn: '08:15', checkOut: '17:30', status: 'late' }]
   },
   {
-    date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 วันที่แล้ว
+    date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
     shifts: [
-      {
-        checkIn: '07:45',
-        checkOut: '12:00',
-        status: 'on_time'
-      },
-      {
-        checkIn: '18:00',
-        checkOut: '22:00',
-        status: 'on_time'
-      }
+      { checkIn: '07:45', checkOut: '12:00', status: 'on_time' },
+      { checkIn: '18:00', checkOut: '22:00', status: 'on_time' }
     ]
   }
 ];
 
-// ============================================
-// Mock Data: สมาชิกในทีม (Team Members)
-// ใช้สำหรับ: TeamContext.jsx
-// ============================================
-export const mockTeamMembers = [
-  {
-    id: 1,
-    name: 'สมชาย ใจดี',
-    position: 'Junior Developer',
-    status: 'checked_in',
-    checkInTime: '08:45',
-    checkOutTime: null,
-    isLate: false,
-    profilePic: null
-  },
-  {
-    id: 2,
-    name: 'สมหญิง รักงาน',
-    position: 'UI/UX Designer',
-    status: 'checked_in',
-    checkInTime: '09:15',
-    checkOutTime: null,
-    isLate: true, // สาย 15 นาที
-    profilePic: null
-  },
-  {
-    id: 3,
-    name: 'วิชัย เก่งมาก',
-    position: 'Frontend Developer',
-    status: 'checked_in',
-    checkInTime: '08:30',
-    checkOutTime: null,
-    isLate: false,
-    profilePic: null
-  },
-  {
-    id: 4,
-    name: 'อรทัย สวยงาม',
-    position: 'Backend Developer',
-    status: 'absent',
-    checkInTime: null,
-    checkOutTime: null,
-    isLate: false,
-    profilePic: null
-  },
-  {
-    id: 5,
-    name: 'ประยุทธ์ ทำงานหนัก',
-    position: 'QA Tester',
-    status: 'not_checked_in',
-    checkInTime: null,
-    checkOutTime: null,
-    isLate: false,
-    profilePic: null
-  }
-];
-
-// ============================================
-// Mock Data: ใบลาที่รออนุมัติ (Pending Leaves)
-// ใช้สำหรับ: TeamContext.jsx
-// ============================================
-export const mockPendingLeaves = [
-  {
-    id: 1,
-    employeeId: 2,
-    employeeName: 'สมหญิง รักงาน',
-    leaveType: 'ลาป่วย',
-    startDate: '15/10/2568',
-    endDate: '16/10/2568',
-    totalDays: 2,
-    reason: 'ไข้หวัด ปวดศีรษะ',
-    status: 'pending',
-    submittedDate: '14/10/2568',
-    documents: []
-  },
-  {
-    id: 2,
-    employeeId: 4,
-    employeeName: 'อรทัย สวยงาม',
-    leaveType: 'ลากิจ',
-    startDate: '18/10/2568',
-    endDate: '18/10/2568',
-    totalDays: 1,
-    reason: 'ติดธุระส่วนตัว',
-    status: 'pending',
-    submittedDate: '15/10/2568',
-    documents: []
-  },
-  {
-    id: 3,
-    employeeId: 1,
-    employeeName: 'สมชาย ใจดี',
-    leaveType: 'ลาพักร้อน',
-    startDate: '20/10/2568',
-    endDate: '22/10/2568',
-    totalDays: 3,
-    reason: 'เที่ยวกับครอบครัว',
-    status: 'pending',
-    submittedDate: '13/10/2568',
-    documents: []
-  }
-];
-
-// ============================================
-// Mock Data: สถิติการเข้างาน (Attendance Stats)
-// ใช้สำหรับ: AdminDashboard.jsx
-// ============================================
 export const mockAttendanceStats = {
   totalemployees: 300,
   totalWeekly: 290,
@@ -1036,17 +735,13 @@ export const mockAttendanceStats = {
   absentCount: 3
 };
 
-// ============================================
-// Mock Data: ข้อมูล Chart สำหรับการเข้างาน (Chart Data)
-// ใช้สำหรับ: AdminDashboard.jsx
-// ============================================
 export const mockAttendanceChartData = {
   week: [
     { name: 'จันทร์', value: 285 },
     { name: 'อังคาร', value: 292 },
     { name: 'พุธ', value: 268 },
     { name: 'พฤหัส', value: 290 },
-    { name: 'ศุกร์', value: 95 }, // ข้อมูลวันนี้
+    { name: 'ศุกร์', value: 95 },
     { name: 'เสาร์', value: 0 },
     { name: 'อาทิตย์', value: 0 }
   ],
@@ -1066,99 +761,12 @@ export const mockAttendanceChartData = {
     { name: 'ก.ค.', value: 295 },
     { name: 'ส.ค.', value: 290 },
     { name: 'ก.ย.', value: 287 },
-    { name: 'ต.ค.', value: 290 }, // ข้อมูลรายสัปดาห์
+    { name: 'ต.ค.', value: 290 },
     { name: 'พ.ย.', value: 0 },
     { name: 'ธ.ค.', value: 0 }
   ]
 };
 
-// ============================================
-// Mock Data: ตารางกิจกรรม/งาน (Schedules)
-// ใช้สำหรับ: DataAttendance.jsx, ScheduleDetails.jsx
-// ============================================
-export const sampleSchedules = [
-  {
-    id: 1,
-    team: 'ทีม A : งานติดตั้ง',
-    date: null, // ไม่มีวันที่ = แสดงตลอด
-    isPermanent: true, // ตารางถาวร
-    location: 'โบเทค บางนา Hall 101',
-    members: 'อภิสิทธิ์, พรหมพิริยะ, ธนกร',
-    type: 'ติดตั้งระบบไฟฟ้า',
-    time: '07.00 - 15.00',
-    startTime: '07:00',
-    endTime: '15:00',
-    teams: ['IT', 'Engineering'], // แผนก IT และ Engineering เท่านั้น
-    tasks: [
-      'เช็คระบบสายไฟ และติดตั้งตัวควบคุม',
-      'ตรวจสอบอุปกรณ์ต่อไฟฟ้าในพื้นที่ Hall 101',
-      'ทดสอบการทำงานของระบบเบื้องต้น'
-    ],
-    preparations: [
-      'อุปกรณ์สายไฟ, ผู้ควบคุม, เครื่องมือช่วยไฟ',
-      'อุปกรณ์ความปลอดภัย (หมวก, ถุงมือ, รองเท้ากันบิ่น)'
-    ],
-    goals: [
-      'ให้ระบบไฟฟ้าพร้อมใช้งานภายในสถานที่',
-      'ตรวจสอบความปลอดภัยและรายงานผลก่อนเลิกงาน'
-    ]
-  },
-  {
-    id: 2,
-    team: 'ทีม B : งานอีเว้นท์',
-    date: null, // ไม่มีวันที่ = แสดงตลอด
-    isPermanent: true, // ตารางถาวร
-    location: 'CentralWorld ชั้น 3',
-    members: 'ฤทธิ์ชัย วรกานต์',
-    type: 'ออกบูธงาน',
-    time: '10.00 - 22.00',
-    startTime: '10:00',
-    endTime: '22:00',
-    teams: ['Marketing', 'Sales'], // แผนก Marketing และ Sales เท่านั้น
-    tasks: [
-      'ติดตั้งบูธและอุปกรณ์สาธิต',
-      'ตรวจเช็คระบบไฟและแสงสว่าง'
-    ],
-    preparations: [
-      'ตารางงาน, อุปกรณ์สื่อสาร, อุปกรณ์แสดงสินค้า'
-    ],
-    goals: [
-      'บูธพร้อมใช้งานและปลอดภัยตลอดงาน'
-    ]
-  },
-  {
-    id: 3,
-    team: 'ทีม C : งาน HR',
-    date: null, // ไม่มีวันที่ = แสดงตลอด
-    isPermanent: true, // ตารางถาวร
-    location: 'สำนักงานใหญ่ ชั้น 5',
-    members: 'สมชาย, สมหญิง',
-    type: 'สัมภาษณ์พนักงานใหม่',
-    time: '09.00 - 17.00',
-    startTime: '09:00',
-    endTime: '17:00',
-    teams: ['HR'], // แผนก HR เท่านั้น
-    tasks: [
-      'เตรียมห้องสัมภาษณ์และเอกสาร',
-      'ดำเนินการสัมภาษณ์ผู้สมัคร',
-      'สรุปผลและรายงาน'
-    ],
-    preparations: [
-      'เอกสารประวัติผู้สมัคร',
-      'แบบฟอร์มประเมิน',
-      'อุปกรณ์สำนักงาน'
-    ],
-    goals: [
-      'คัดเลือกพนักงานที่เหมาะสมกับตำแหน่ง',
-      'สรุปผลการสัมภาษณ์ทุกรายภายในวันเดียวกัน'
-    ]
-  }
-];
-
-// ============================================
-// Utility Function: สร้าง Mock Attendance Data สำหรับทดสอบ
-// ใช้สำหรับ: attendanceCalculator.js (จะลบเมื่อมี API จริง)
-// ============================================
 export const generateMockAttendanceData = (days = 30) => {
   const records = [];
   const today = new Date();
@@ -1167,23 +775,22 @@ export const generateMockAttendanceData = (days = 30) => {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     
-    // สุ่มสถานะ
     const rand = Math.random();
     let status, checkIn, checkOut;
     
-    if (rand < 0.8) { // 80% มาตรงเวลา
+    if (rand < 0.8) {
       status = 'on-time';
       checkIn = '07:45';
       checkOut = '17:30';
-    } else if (rand < 0.9) { // 10% มาสาย
+    } else if (rand < 0.9) {
       status = 'late';
       checkIn = '08:30';
       checkOut = '17:30';
-    } else if (rand < 0.95) { // 5% ลา
+    } else if (rand < 0.95) {
       status = 'leave';
       checkIn = null;
       checkOut = null;
-    } else { // 5% ขาด
+    } else {
       status = 'absent';
       checkIn = null;
       checkOut = null;
@@ -1200,122 +807,53 @@ export const generateMockAttendanceData = (days = 30) => {
   return records;
 };
 
-// ============================================
-// Mock Data: ข้อมูลคำเตือน/ใบลา (Warning/Leave Requests)
-// ใช้สำหรับ: DataWarning.jsx
-// ============================================
-export const mockWarningData = [
-  {
-    id: 1,
-    name: 'นายอภิชาติ รัตนา',
-    role: 'ตำแหน่ง : หัวหน้าทีม',
-    department: 'แผนก : HR',
-    branch: 'สาขา : กรุงเทพ',
-    type: 'ประเภทข้อความ : ลาป่วย',
-    file: 'ไฟล์แนบ : มี',
-    avatar: 'https://i.pravatar.cc/300?u=15',
-    attachments: [
-      { id: 'a1', name: 'ใบรับรองแพทย์.jpg', url: 'https://picsum.photos/seed/doc1/800/600', type: 'image' }
-    ],
-    time: '1 day'
-  },
-  {
-    id: 2,
-    name: 'นายพชรกล เทรทเนอร์',
-    role: 'ตำแหน่ง : ผู้จัดการ',
-    department: 'แผนก : การเงิน',
-    branch: 'สาขา : ชลบุรี',
-    type: 'ประเภทข้อความ : ลากิจ',
-    file: 'ไฟล์แนบ : ไม่มี',
-    avatar: 'https://i.pravatar.cc/300?u=37',
-    attachments: [
-      { id: 'a2', name: 'รายละเอียด.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', type: 'file' }
-    ],
-    time: '07.00 - 11.00'
-  },
-  {
-    id: 3,
-    name: 'นายณบิน หอมนเย็น',
-    role: 'ตำแหน่ง : พนักงาน',
-    department: 'แผนก : IT',
-    branch: 'สาขา : กรุงเทพ',
-    type: 'ประเภทข้อความ : ลากิจ',
-    file: 'ไฟล์แนบ : มี',
-    avatar: 'https://i.pravatar.cc/300?u=24',
-    attachments: [
-      { id: 'a3', name: 'รูปถ่าย1.jpg', url: 'https://picsum.photos/seed/photo1/800/600', type: 'image' },
-      { id: 'a4', name: 'เอกสาร.pdf', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', type: 'file' }
-    ],
-    time: '1 day'
-  }
-];
-
-// ============================================
-// Mock Data: ข้อมูล Event Chart (สำหรับ Dashboard)
-// ใช้สำหรับ: AdminDashboard.jsx - Event Chart Data
-// ============================================
 export const mockEventChartData = {
   week: {
     labels: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'],
-    counts: [2, 3, 1, 2, 0, 0, 0] // จำนวนกิจกรรมต่อวัน
+    counts: [2, 3, 1, 2, 0, 0, 0]
   },
   month: {
     labels: ['สัปดาห์ 1', 'สัปดาห์ 2', 'สัปดาห์ 3', 'สัปดาห์ 4'],
-    counts: [4, 5, 3, 0] // จำนวนกิจกรรมต่อสัปดาห์
+    counts: [4, 5, 3, 0]
   },
   year: {
     labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-    counts: [12, 10, 15, 18, 14, 16, 13, 11, 17, 0, 0, 0] // จำนวนกิจกรรมต่อเดือน
+    counts: [12, 10, 15, 18, 14, 16, 13, 11, 17, 0, 0, 0]
   }
 };
 
-// ============================================
-// Utility Function: Mock Login API
-// ใช้สำหรับ: Auth.jsx - จำลองการเรียก API Login
-// รองรับ: user จาก usersData + user ใหม่จาก localStorage
-// ============================================
 export const mockLoginAPI = async (username, password) => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // 1. ลองหา user จาก usersData เดิมก่อน (getUserForAuth จะดู localStorage อยู่แล้ว)
   let user = getUserForAuth(username);
-  
-  // 2. ถ้าไม่เจอ ให้ลองหาจาก usersData ที่บันทึกใน localStorage (user ที่เพิ่มใหม่)
+
   if (!user) {
     try {
       const storedUsers = JSON.parse(localStorage.getItem('usersData') || '[]');
-      user = storedUsers.find(u => 
-        u.username === username || 
+      user = storedUsers.find(u =>
+        u.username === username ||
         u.employeeId === username ||
         u.adminAccount === username
       );
-      
-      // ถ้าเจอ user ใหม่จาก localStorage ต้องจัดรูปแบบให้ตรงกับ getUserForAuth
-      if (user) {
-        // ถ้า login ด้วย admin account
-        if (username === user.adminAccount) {
-          user = {
-            ...user,
-            username: user.adminAccount,
-            isAdminAccount: true
-          };
-        }
+
+      if (user && username === user.adminAccount) {
+        user = {
+          ...user,
+          username: user.adminAccount,
+          isAdminAccount: true
+        };
       }
     } catch (e) {
       console.warn('Failed to read users from localStorage:', e);
     }
   }
-  
-  // 3. ตรวจสอบรหัสผ่าน
+
   if (user) {
-    // ดึงรหัสผ่านจาก localStorage
     const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
-    const correctPassword = storedPasswords[username.toLowerCase()] || 
-                           user.password;
-    
+    const correctPassword = storedPasswords[username.toLowerCase()] || user.password;
+
     if (password === correctPassword) {
-      // Remove password from response
       const { password: _, adminPassword: __, ...userWithoutPassword } = user;
       return { success: true, user: userWithoutPassword };
     }
@@ -1324,12 +862,10 @@ export const mockLoginAPI = async (username, password) => {
   return { success: false };
 };
 
-// ✅ ฟังก์ชัน initialize ข้อมูล usersData ลง localStorage
 export const initializeUsersData = () => {
   try {
     const storedUsers = localStorage.getItem('usersData');
     if (!storedUsers) {
-      // ถ้ายังไม่มีข้อมูลใน localStorage ให้บันทึกข้อมูลเริ่มต้น
       localStorage.setItem('usersData', JSON.stringify(usersData));
     }
   } catch (error) {

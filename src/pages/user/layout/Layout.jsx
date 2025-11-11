@@ -97,15 +97,45 @@ function Layout() {
     }
   }, [user]) // dependency: user เพื่อรู้ว่า user คนไหน login อยู่
 
-  // สร้างการแจ้งเตือนจากหลายแหล่ง
+  // 🔥 Real-time notification updates
+  useEffect(() => {
+    // ฟังการเปลี่ยนแปลงของ leaveList
+    const handleLeaveUpdate = () => {
+      // Force re-render เพื่อให้ notification อัพเดต
+      setReadNotifications(prev => [...prev]);
+    };
+    
+    const handleLeaveRequestCreated = (e) => {
+      console.log('📢 Leave request created:', e.detail);
+      handleLeaveUpdate();
+    };
+    
+    const handleLeaveStatusUpdated = (e) => {
+      console.log('📢 Leave status updated:', e.detail);
+      handleLeaveUpdate();
+    };
+    
+    window.addEventListener('leaveRequestCreated', handleLeaveRequestCreated);
+    window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    
+    return () => {
+      window.removeEventListener('leaveRequestCreated', handleLeaveRequestCreated);
+      window.removeEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    };
+  }, []);
+
+  // สร้างการแจ้งเตือนจากหลายแหล่ง - 🔥 แยกตาม user ID
   const userNotifications = useMemo(() => {
+    if (!user?.id) return [];
+    
     const notifs = []
 
-    // 1. การแจ้งเตือนเกี่ยวกับการลา
+    // 1. การแจ้งเตือนเกี่ยวกับการลา - 🔥 เฉพาะของ user คนนี้เท่านั้น
     const recentLeaves = leaveList
+      .filter(leave => leave.userId === user.id || !leave.userId) // ถ้าไม่มี userId ถือว่าเป็นของ user คนนี้ (backward compatible)
       .filter(leave => leave.id)
       .sort((a, b) => b.id - a.id)
-      .slice(0, 3)
+      .slice(0, 5) // 🔥 เพิ่มจาก 3 เป็น 5
 
     recentLeaves.forEach(leave => {
       if (leave.status === 'อนุมัติ') {
@@ -158,7 +188,7 @@ function Layout() {
         const dateB = b.date.split('/').reverse().join('')
         return dateA.localeCompare(dateB)
       })
-      .slice(0, 2)
+      .slice(0, 5) // 🔥 เพิ่มจาก 2 เป็น 5
 
     userEvents.forEach(event => {
       notifs.push({
@@ -299,7 +329,7 @@ function Layout() {
       ...notif,
       isRead: readNotifications.includes(notif.id)
     }))
-  }, [leaveList, getEventsForUser, user, leaveQuota, getUsedDays, attendance, readNotifications])
+  }, [leaveList, getEventsForUser, user, leaveQuota, getUsedDays, attendance, readNotifications]) // 🔥 เพิ่ม user.id dependency
 
   // นับจำนวนการแจ้งเตือนที่ยังไม่อ่าน
   const unreadCount = userNotifications.filter(n => !n.isRead).length
@@ -404,10 +434,10 @@ function Layout() {
       {showNotifications && (
         <>
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[9998]"
             onClick={() => setShowNotifications(false)}
           />
-          <div className="fixed top-16 right-4 w-80 bg-white rounded-lg shadow-2xl z-[100]">
+          <div className="fixed top-16 right-4 w-80 bg-white rounded-lg shadow-2xl z-[9999]">
             <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-4 text-white rounded-t-lg">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">การแจ้งเตือน</h3>
@@ -465,10 +495,10 @@ function Layout() {
       {showProfileMenu && (
         <>
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[9998]"
             onClick={() => setShowProfileMenu(false)}
           />
-          <div className="fixed top-16 right-4 w-64 bg-white rounded-lg shadow-xl z-[100]">
+          <div className="fixed top-16 right-4 w-64 bg-white rounded-lg shadow-xl z-[9999]">
             <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-4 text-white">
               <p className="font-semibold">{mockUser.name}</p>
               <p className="text-sm text-orange-100">{mockUser.position}</p>

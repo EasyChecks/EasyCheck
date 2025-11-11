@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Circle, LayersControl, useMap, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -53,12 +53,40 @@ function MapRefSetter({ mapRef }) {
 function AdminDashboard() {
   const { user } = useAuth()
   
+  // 🆕 Branch filter state (สำหรับ SuperAdmin เท่านั้น)
+  const [selectedBranch, setSelectedBranch] = useState('all')
+  
   // ✅ ใช้ฟังก์ชันกรองตาม branch
   const { getFilteredLocations } = useLocations()
   const { getFilteredEvents } = useEvents()
   
-  const locations = getFilteredLocations(user)
-  const events = getFilteredEvents(user)
+  // 🆕 กรอง locations และ events ตาม selectedBranch (สำหรับ SuperAdmin)
+  const allLocations = getFilteredLocations(user)
+  const allEvents = getFilteredEvents(user)
+  
+  const locations = useMemo(() => {
+    if (user?.role !== 'superadmin' || selectedBranch === 'all') {
+      return allLocations
+    }
+    // SuperAdmin เลือกสาขา - กรองตาม branchCode หรือ provinceCode
+    return allLocations.filter(loc => 
+      loc.branchCode === selectedBranch || 
+      loc.provinceCode === selectedBranch || 
+      loc.createdBy?.branch === selectedBranch
+    )
+  }, [allLocations, selectedBranch, user?.role])
+  
+  const events = useMemo(() => {
+    if (user?.role !== 'superadmin' || selectedBranch === 'all') {
+      return allEvents
+    }
+    // SuperAdmin เลือกสาขา - กรองตาม branchCode หรือ provinceCode
+    return allEvents.filter(evt => 
+      evt.branchCode === selectedBranch || 
+      evt.provinceCode === selectedBranch || 
+      evt.createdBy?.branch === selectedBranch
+    )
+  }, [allEvents, selectedBranch, user?.role])
 
   const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
@@ -68,10 +96,18 @@ function AdminDashboard() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailType, setDetailType] = useState(null) // 'absent', 'leave', 'late'
   const [detailUsers, setDetailUsers] = useState([])
+  
+  // 🆕 Branch options
+  const branchOptions = [
+    { code: 'all', name: 'ทั้งหมด' },
+    { code: 'BKK', name: 'กรุงเทพ' },
+    { code: 'CNX', name: 'เชียงใหม่' },
+    { code: 'PKT', name: 'ภูเก็ต' }
+  ]
 
   // Calculate real attendance stats from usersData and localStorage
   // Wrapped in useCallback to avoid re-creating the function on every render
-  const calculateAttendanceStats = useCallback(() => {
+  const calculateAttendanceStats = useCallback((branchFilter = 'all') => {
     const today = new Date()
     const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear() + 543}` // Thai year
     
@@ -86,7 +122,15 @@ function AdminDashboard() {
       console.warn('Failed to load usersData from localStorage:', e)
     }
     
-    const totalEmployees = users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').length
+    // 🆕 Filter by branch
+    const filteredUsers = users.filter(u => {
+      if (u.role === 'admin' || u.role === 'superadmin') return false
+      if (branchFilter === 'all') return true
+      // Match against provinceCode or branch field
+      return u.provinceCode === branchFilter || u.branch === branchFilter
+    })
+    
+    const totalEmployees = filteredUsers.length
     
     // 🔥 ดึงข้อมูลจริงจาก attendanceRecords ของแต่ละ user
     const absentUsers = []
@@ -94,9 +138,7 @@ function AdminDashboard() {
     const lateUsers = []
     const onTimeUsers = []
     
-    users.forEach(user => {
-      if (user.role === 'admin' || user.role === 'superadmin') return
-      
+    filteredUsers.forEach(user => {
       // เช็คจาก attendanceRecords
       const todayRecord = user.attendanceRecords?.find(r => r.date === todayStr)
       
@@ -135,30 +177,44 @@ function AdminDashboard() {
     }
   }, [])
 
-  const [attendanceStats, setAttendanceStats] = useState(calculateAttendanceStats())
+  // 🆕 Calculate stats based on selected branch
+  const attendanceStats = useMemo(() => {
+    // SuperAdmin: ใช้ selectedBranch, Admin: ใช้ provinceCode ของตัวเอง
+    const branchFilter = user?.role === 'superadmin' ? selectedBranch : (user?.provinceCode || user?.branch || 'all')
+    return calculateAttendanceStats(branchFilter)
+  }, [selectedBranch, user, calculateAttendanceStats])
   
-  // 🔥 ฟังการอัปเดตจาก localStorage
+  // 🔥 ฟังการอัปเดตจาก localStorage - ลบ setAttendanceStats เพราะใช้ useMemo แล้ว
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'usersData') {
-        setAttendanceStats(calculateAttendanceStats())
+        // Force re-render by updating selectedBranch
+        setSelectedBranch(prev => prev)
       }
+    }
+    
+    const handleAttendanceUpdate = () => {
+      // Force re-calculate stats when attendance is updated
+      setSelectedBranch(prev => prev)
     }
     
     // เช็คทุก 3 วินาที (สำหรับ same-tab updates)
     const interval = setInterval(() => {
-      setAttendanceStats(calculateAttendanceStats())
+      setSelectedBranch(prev => prev)
     }, 3000)
     
     window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate)
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('attendanceUpdated', handleAttendanceUpdate)
       clearInterval(interval)
     }
   }, [calculateAttendanceStats])
 
-  // Calculate real event stats from EventContext
-  const calculateEventStats = () => {
+  // Calculate real event stats from EventContext with branch filter
+  const calculateEventStats = useCallback((branchFilter = 'all') => {
     const today = new Date()
     const todayStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
     
@@ -166,10 +222,30 @@ function AdminDashboard() {
     const todayEvents = events.filter(e => e.date === todayStr || e.startDate === todayStr)
     const completedEvents = events.filter(e => e.status === 'completed')
     
+    // ดึงข้อมูลจาก localStorage
+    let users = usersData
+    try {
+      const storedUsers = localStorage.getItem('usersData')
+      if (storedUsers) {
+        users = JSON.parse(storedUsers)
+      }
+    } catch (e) {
+      console.warn('Failed to load usersData from localStorage:', e)
+    }
+    
+    // 🆕 Filter users by branch
+    const filteredUsers = users.filter(u => {
+      if (u.role === 'admin' || u.role === 'superadmin') return false
+      if (branchFilter === 'all') return true
+      // Match against provinceCode or branch field
+      return u.provinceCode === branchFilter || u.branch === branchFilter
+    })
+    
     // Mock: สร้างรายชื่อผู้ที่ยังไม่เข้าร่วม, ลางาน, มาสาย (เหมือนการเข้างาน)
-    const notParticipatedUsers = usersData.filter(u => u.role === 'user' && u.id % 6 === 0).slice(0, 4)
-    const leaveEventUsers = usersData.filter(u => u.role === 'user' && u.id % 4 === 0 && u.id % 6 !== 0).slice(0, 5)
-    const lateEventUsers = usersData.filter(u => u.role === 'user' && u.id % 8 === 0 && u.id % 4 !== 0 && u.id % 6 !== 0).slice(0, 4)
+    // แต่กรองตาม branch แล้ว
+    const notParticipatedUsers = filteredUsers.filter(u => u.id % 6 === 0).slice(0, 4)
+    const leaveEventUsers = filteredUsers.filter(u => u.id % 4 === 0 && u.id % 6 !== 0).slice(0, 5)
+    const lateEventUsers = filteredUsers.filter(u => u.id % 8 === 0 && u.id % 4 !== 0 && u.id % 6 !== 0).slice(0, 4)
     
     return {
       totalEvents: events.length,
@@ -183,9 +259,14 @@ function AdminDashboard() {
       leaveEventUsers,
       lateEventUsers
     }
-  }
+  }, [events])
 
-  const eventStats = calculateEventStats()
+  // 🆕 Calculate event stats based on selected branch
+  const eventStats = useMemo(() => {
+    // SuperAdmin: ใช้ selectedBranch, Admin: ใช้ provinceCode ของตัวเอง
+    const branchFilter = user?.role === 'superadmin' ? selectedBranch : (user?.provinceCode || user?.branch || 'all')
+    return calculateEventStats(branchFilter)
+  }, [selectedBranch, user, calculateEventStats])
   
   // State for search and map controls
   const [searchQuery, setSearchQuery] = useState('')
@@ -424,8 +505,30 @@ function AdminDashboard() {
 
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-800">ภาพรวมการปฏิบัติงานทั้งหมด</h1>
-        <p className="text-sm text-gray-600 mt-1">ข้อมูลเรียลไทม์ของระบบตรวจสอบการเข้างาน การลางาน และพื้นที่อนุญาต</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">ภาพรวมการปฏิบัติงานทั้งหมด</h1>
+            <p className="text-sm text-gray-600 mt-1">ข้อมูลเรียลไทม์ของระบบตรวจสอบการเข้างาน การลางาน และพื้นที่อนุญาต</p>
+          </div>
+          
+          {/* 🆕 Branch Filter (SuperAdmin only) */}
+          {user?.role === 'superadmin' && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">สาขา:</label>
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="px-4 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+              >
+                {branchOptions.map(branch => (
+                  <option key={branch.code} value={branch.code}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main Content */}

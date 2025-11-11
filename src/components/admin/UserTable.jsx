@@ -31,9 +31,33 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
       const thaiYear = parseInt(year) + 543;
       const thaiDate = `${day}/${month}/${thaiYear}`;
       
-      // ดึงข้อมูลจาก usersData แทน attendanceRecords
+      // 🔥 ดึงข้อมูล schedule ของ user จาก usersData
       const usersDataJson = localStorage.getItem('usersData');
+      let userScheduleLocation = null;
       
+      if (usersDataJson) {
+        const usersData = JSON.parse(usersDataJson);
+        const userData = usersData.find(u => u.id === userId);
+        
+        // หาตารางงานของ user (ค้นหาจาก sampleSchedules)
+        const schedulesJson = localStorage.getItem('sampleSchedules');
+        if (schedulesJson) {
+          const schedules = JSON.parse(schedulesJson);
+          const userSchedule = schedules.find(schedule => {
+            // เช็คว่า user อยู่ในทีม/แผนกที่มีตารางงานนี้
+            if (userData && userData.department && schedule.teams) {
+              return schedule.teams.includes(userData.department);
+            }
+            return false;
+          });
+          
+          if (userSchedule) {
+            userScheduleLocation = userSchedule.location || null;
+          }
+        }
+      }
+      
+      // ดึงข้อมูลจาก usersData แทน attendanceRecords
       if (!usersDataJson) {
         return null;
       }
@@ -66,7 +90,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               time: shift.checkIn || '-',
               gpsStatus: 'อยู่ในระยะ',
               distance: '15 เมตร',
-              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
               photo: shift.checkInPhoto || null,
               status: shift.status || 'on_time',
               checkedByBuddy: shift.checkedByBuddy || false,
@@ -76,7 +100,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               time: shift.checkOut || '-',
               gpsStatus: 'อยู่ในระยะ',
               distance: '18 เมตร',
-              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
               photo: shift.checkOutPhoto || null
             } : null;
           }
@@ -89,7 +113,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               time: shift.checkIn || '-',
               gpsStatus: 'อยู่ในระยะ',
               distance: '15 เมตร',
-              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
               photo: shift.checkInPhoto || null,
               status: shift.status || 'on_time',
               checkedByBuddy: shift.checkedByBuddy || false,
@@ -99,7 +123,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
               time: shift.checkOut || '-',
               gpsStatus: 'อยู่ในระยะ',
               distance: '18 เมตร',
-              location: 'ในพื้นที่อนุญาต - บริษัท GGS จำกัด',
+              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
               photo: shift.checkOutPhoto || null
             } : null;
           }
@@ -110,7 +134,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
           time: record.checkIn.time || '-',
           gpsStatus: record.checkIn.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
           distance: record.checkIn.distance || 'ไม่ทราบ',
-          location: record.checkIn.address || record.checkIn.location || 'ไม่มีข้อมูล',
+          location: userScheduleLocation || record.checkIn.address || record.checkIn.location || 'ไม่มีข้อมูล', // 🔥 ใช้สถานที่จาก schedule
           photo: record.checkIn.photo || null,
           status: record.checkIn.status === 'ตรงเวลา' ? 'on_time' : 
                  record.checkIn.status === 'มาสาย' ? 'late' : 
@@ -122,7 +146,7 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
           time: record.checkOut.time || '-',
           gpsStatus: record.checkOut.gps ? 'อยู่ในระยะ' : 'อยู่นอกระยะ',
           distance: record.checkOut.distance || 'ไม่ทราบ',
-          location: record.checkOut.address || record.checkOut.location || 'ไม่มีข้อมูล',
+          location: userScheduleLocation || record.checkOut.address || record.checkOut.location || 'ไม่มีข้อมูล', // 🔥 ใช้สถานที่จาก schedule
           photo: record.checkOut.photo || null,
           checkedByBuddy: record.checkOut.checkedByBuddy || false,
           buddyName: record.checkOut.buddyName || null
@@ -297,24 +321,52 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                               />
                             </div>
                             
-                            {/* 🆕 Shift Selector */}
-                            <div className="flex items-center gap-2">
-                              <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                เลือกกะ:
-                              </label>
-                              <select
-                                value={selectedShift}
-                                onChange={(e) => setSelectedShift(e.target.value)}
-                                className="px-4 py-2 border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm font-medium bg-white cursor-pointer"
-                              >
-                                <option value="all">ทุกกะ</option>
-                                <option value="1">กะที่ 1 (เช้า)</option>
-                                <option value="2">กะที่ 2 (บ่าย/เย็น)</option>
-                              </select>
-                            </div>
+                            {/* 🆕 Shift Selector - ซ่อนถ้าไม่มีกะงาน */}
+                            {(() => {
+                              // 🔥 เช็คว่า user มีกี่กะงาน
+                              const usersDataJson = localStorage.getItem('usersData');
+                              const schedulesJson = localStorage.getItem('sampleSchedules');
+                              let userShiftCount = 0;
+                              
+                              if (usersDataJson && schedulesJson) {
+                                const usersData = JSON.parse(usersDataJson);
+                                const userData = usersData.find(u => u.id === user.id);
+                                const schedules = JSON.parse(schedulesJson);
+                                
+                                if (userData && userData.department) {
+                                  // นับจำนวนตารางงานที่ user มี
+                                  userShiftCount = schedules.filter(schedule => {
+                                    return schedule.teams && schedule.teams.includes(userData.department);
+                                  }).length;
+                                }
+                              }
+                              
+                              // ถ้าไม่มีตารางงาน ให้ซ่อนปุ่มกะงาน
+                              if (userShiftCount === 0) {
+                                return null;
+                              }
+                              
+                              // ถ้ามี 2+ ตารางงาน แสดงว่ามี 2 กะ
+                              return (
+                                <div className="flex items-center gap-2">
+                                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    เลือกกะ ({userShiftCount} ตารางงาน):
+                                  </label>
+                                  <select
+                                    value={selectedShift}
+                                    onChange={(e) => setSelectedShift(e.target.value)}
+                                    className="px-4 py-2 border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm font-medium bg-white cursor-pointer"
+                                  >
+                                    <option value="all">ทุกกะ</option>
+                                    {userShiftCount >= 1 && <option value="1">กะที่ 1 (เช้า)</option>}
+                                    {userShiftCount >= 2 && <option value="2">กะที่ 2 (บ่าย/เย็น)</option>}
+                                  </select>
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* แสดงข้อมูลถ้ามี หรือ SVG ถ้าไม่มี */}
@@ -384,14 +436,55 @@ const UserTable = React.memo(function UserTable({ users, onSelectUser, getStatus
                                       </svg>
                                       <span className="text-gray-700 font-medium">สถานะ:</span>
                                       <span className={`font-bold px-2 py-0.5 rounded text-xs ${
-                                        attendanceData.checkIn.status === 'on_time' ? 'bg-green-100 text-green-700' :
-                                        attendanceData.checkIn.status === 'late' ? 'bg-orange-100 text-orange-700' :
-                                        attendanceData.checkIn.status === 'absent' ? 'bg-red-100 text-red-700' :
-                                        'bg-blue-100 text-blue-700'
+                                        (() => {
+                                          // 🔥 เช็คว่าวันนี้มีการลางานที่ approved หรือไม่
+                                          const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
+                                          const [day, month, year] = selectedDate.split('-');
+                                          
+                                          const leaveOnThisDate = leaveList.find(leave => {
+                                            if (leave.status !== 'อนุมัติ') return false;
+                                            // เช็คว่าวันนี้อยู่ในช่วงการลาหรือไม่
+                                            const [startDay, startMonth, startYear] = leave.startDate.split('/');
+                                            const [endDay, endMonth, endYear] = leave.endDate.split('/');
+                                            const start = new Date(parseInt(startYear) - 543, parseInt(startMonth) - 1, parseInt(startDay));
+                                            const end = new Date(parseInt(endYear) - 543, parseInt(endMonth) - 1, parseInt(endDay));
+                                            const current = new Date(year, month - 1, day);
+                                            return current >= start && current <= end;
+                                          });
+                                          
+                                          if (leaveOnThisDate) {
+                                            return 'bg-purple-100 text-purple-700'; // ลา
+                                          }
+                                          
+                                          return attendanceData.checkIn.status === 'on_time' ? 'bg-green-100 text-green-700' :
+                                                 attendanceData.checkIn.status === 'late' ? 'bg-orange-100 text-orange-700' :
+                                                 attendanceData.checkIn.status === 'absent' ? 'bg-red-100 text-red-700' :
+                                                 'bg-blue-100 text-blue-700';
+                                        })()
                                       }`}>
-                                        {attendanceData.checkIn.status === 'on_time' ? 'ตรงเวลา' :
-                                         attendanceData.checkIn.status === 'late' ? 'สาย' :
-                                         attendanceData.checkIn.status === 'absent' ? 'ขาด' : 'ลา'}
+                                        {(() => {
+                                          // 🔥 แสดงสถานะลาถ้ามี
+                                          const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
+                                          const [day, month, year] = selectedDate.split('-');
+                                          
+                                          const leaveOnThisDate = leaveList.find(leave => {
+                                            if (leave.status !== 'อนุมัติ') return false;
+                                            const [startDay, startMonth, startYear] = leave.startDate.split('/');
+                                            const [endDay, endMonth, endYear] = leave.endDate.split('/');
+                                            const start = new Date(parseInt(startYear) - 543, parseInt(startMonth) - 1, parseInt(startDay));
+                                            const end = new Date(parseInt(endYear) - 543, parseInt(endMonth) - 1, parseInt(endDay));
+                                            const current = new Date(year, month - 1, day);
+                                            return current >= start && current <= end;
+                                          });
+                                          
+                                          if (leaveOnThisDate) {
+                                            return `ลา${leaveOnThisDate.leaveType}`;
+                                          }
+                                          
+                                          return attendanceData.checkIn.status === 'on_time' ? 'ตรงเวลา' :
+                                                 attendanceData.checkIn.status === 'late' ? 'สาย' :
+                                                 attendanceData.checkIn.status === 'absent' ? 'ขาด' : 'ลา';
+                                        })()}
                                       </span>
                                     </div>
                                     
