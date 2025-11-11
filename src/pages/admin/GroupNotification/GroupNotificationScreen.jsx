@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { usersData } from '../../../data/usersData';
 
-
+// --- Toast Notification Component ---
+// (เหมือนเดิม)
 const Toast = ({ message, type, onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 4000);
@@ -63,7 +64,7 @@ const Toast = ({ message, type, onClose }) => {
 };
 
 
-
+// --- ICON SVG (แบบทึบ) ---
 const LineIcon = ({ className = 'block w-6 h-6', ...props }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -120,12 +121,12 @@ const EmailIcon = ({ className = 'block w-6 h-6', ...props }) => (
         <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
     </svg>
 );
+// --- จบส่วน ICON SVG ---
 
 
-
-
-const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) => {
-    
+// --- +++ [โค้ดอัปเดต] Modal สำหรับดูรายละเอียดประวัติการแจ้งเตือน +++ ---
+const HistoryDetailModal = ({ notification, onClose, recipientOptions = [], onDelete }) => {
+    // State สำหรับซ่อน/แสดง รายชื่อ
     const [isUserListVisible, setIsUserListVisible] = useState(false);
 
     const getRecipientText = () => {
@@ -138,7 +139,7 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
     const getChannelIcons = () => {
         const channels = [];
         if (notification.channels.line) channels.push({ name: 'LINE', icon: <LineIcon className="w-5 h-5" />, color: 'bg-gray-600' });
-        if (notification.channels.sms) channels.push({ name: 'SMS', icon: <SmsIcon className="w-5 h-5" />, color: 'bg-gray-600' });
+        if (notification.channels.sms) channels.push({ name: 'SMS', icon: <SmsIcon className="w-5 h-5" />, color: 'bg-orange-600' });
         if (notification.channels.email) channels.push({ name: 'Email', icon: <EmailIcon className="w-5 h-5" />, color: 'bg-gray-600' });
         return channels;
     };
@@ -172,16 +173,15 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                         <p className="text-lg font-semibold text-gray-800">{notification.title}</p>
                     </div>
 
-                    
+                    {/* Recipients */}
                     <div className="p-4 border border-gray-200 bg-gray-50 rounded-xl">
                         <p className="mb-2 text-sm font-semibold text-gray-600">ผู้รับ</p>
                         <p className="font-semibold text-gray-800">{getRecipientText()}</p>
 
-                        
                         <div className="flex items-center justify-between mt-1">
                             <p className="text-sm text-gray-500">จำนวน {notification.recipientCount} คน</p>
 
-                            
+                            {/* ปุ่ม Toggle ซ่อน/แสดง */}
                             {notification.sentToUsers && notification.sentToUsers.length > 0 && (
                                 <button
                                     onClick={() => setIsUserListVisible(!isUserListVisible)}
@@ -193,7 +193,7 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                         </div>
                         
 
-                        
+                        {/* ส่วนแสดงรายชื่อ (จะแสดงเมื่อกดปุ่ม) */}
                         {isUserListVisible && notification.sentToUsers && notification.sentToUsers.length > 0 && (
                             <>
                                 <hr className="my-3 border-gray-200" />
@@ -210,9 +210,7 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                                 </ul>
                             </>
                         )}
-                     
                     </div>
-                   
 
 
                     {/* Channels */}
@@ -245,20 +243,29 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [] }) =>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="p-4 border-t border-gray-200 bg-gray-50">
+                {/* +++ [โค้ดอัปเดต] Footer +++ */}
+                <div className="flex gap-3 p-4 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="w-full py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
+                        className="flex-1 py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
                     >
                         ปิด
+                    </button>
+                    <button
+                        onClick={() => onDelete(notification.id)}
+                        className="flex-1 py-3 font-semibold text-white transition-all bg-red-600 hover:bg-red-700 rounded-xl"
+                    >
+                        ลบรายการนี้
                     </button>
                 </div>
             </div>
         </div>
     );
 };
+// --- +++ [จบโค้ดอัปเดต] Modal ประวัติ +++ ---
 
+
+// --- Modal สำหรับยืนยันการส่ง ---
 const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions = [] }) => {
     const getRecipientText = () => {
         if (data.recipientGroups.includes('all')) return 'ทั้งหมด';
@@ -315,7 +322,8 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions
     );
 };
 
-
+// --- Success Modal ---
+// (เหมือนเดิม)
 const SuccessModal = ({ onClose }) => {
     useEffect(() => {
         const timer = setTimeout(onClose, 2000);
@@ -337,12 +345,12 @@ const SuccessModal = ({ onClose }) => {
     );
 };
 
-
+// --- Card สำหรับแสดงประวัติ ---
 const NotificationHistoryCard = ({ notification, onClick }) => {
     const getChannelIcons = () => {
         const icons = [];
         if (notification.channels.line) icons.push(<div key="line" className="text-gray-600"><LineIcon className="w-6 h-6" /></div>);
-        if (notification.channels.sms) icons.push(<div key="sms" className="text-gray-600"><SmsIcon className="w-6 h-6" /></div>);
+        if (notification.channels.sms) icons.push(<div key="sms" className="text-orange-600"><SmsIcon className="w-6 h-6" /></div>);
         if (notification.channels.email) icons.push(<div key="email" className="text-gray-600"><EmailIcon className="w-6 h-6" /></div>);
         return icons;
     };
@@ -379,7 +387,7 @@ const NotificationHistoryCard = ({ notification, onClick }) => {
     );
 };
 
-
+// --- Modal สำหรับแสดงรายชื่อผู้รับ ---
 const RecipientListModal = ({ users, onClose }) => {
     return (
         <div className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
@@ -434,7 +442,97 @@ const RecipientListModal = ({ users, onClose }) => {
         </div>
     );
 };
-// 
+// --- [จบ] Modal สำหรับแสดงรายชื่อผู้รับ ---
+
+
+// --- Modal ยืนยันการล้างประวัติ ---
+const ConfirmClearModal = ({ onConfirm, onClose }) => {
+    return (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-scaleIn">
+                {/* Header (ใช้สีแดง) */}
+                <div className="p-6 text-white bg-red-600">
+                    <h3 className="flex items-center gap-2 text-xl font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        ยืนยันการล้างประวัติ
+                    </h3>
+                </div>
+                
+                {/* Content */}
+                <div className="p-6">
+                    <p className="text-gray-700">
+                        คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการส่งทั้งหมด?
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-red-700">
+                        การกระทำนี้ไม่สามารถย้อนกลับได้
+                    </p>
+                </div>
+                
+                {/* Footer */}
+                <div className="flex gap-3 p-4 border-t border-gray-200 bg-gray-50">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
+                    >
+                        ยกเลิก
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 py-3 font-semibold text-white transition-all bg-red-600 hover:bg-red-700 rounded-xl"
+                    >
+                        ยืนยันและลบทั้งหมด
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- [จบ] Modal ยืนยันการล้างประวัติ ---
+
+
+// --- +++ [เพิ่มใหม่] Modal ยืนยันการลบทีละรายการ +++ ---
+const ConfirmDeleteModal = ({ onConfirm, onClose }) => {
+    return (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-scaleIn">
+                <div className="p-6 text-white bg-red-600">
+                    <h3 className="flex items-center gap-2 text-xl font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        ยืนยันการลบรายการ
+                    </h3>
+                </div>
+                <div className="p-6">
+                    <p className="text-gray-700">
+                        คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-red-700">
+                        การกระทำนี้ไม่สามารถย้อนกลับได้
+                    </p>
+                </div>
+                <div className="flex gap-3 p-4 border-t border-gray-200 bg-gray-50">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 font-semibold text-gray-800 transition-colors bg-gray-200 hover:bg-gray-300 rounded-xl"
+                    >
+                        ยกเลิก
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 py-3 font-semibold text-white transition-all bg-red-600 hover:bg-red-700 rounded-xl"
+                    >
+                        ยืนยันและลบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- +++ [จบ] Modal ยืนยันการลบทีละรายการ +++ ---
+
 
 
 function GroupNotificationScreen() {
@@ -451,6 +549,8 @@ function GroupNotificationScreen() {
     const [fieldErrors, setFieldErrors] = useState({});
     const [recipientSearch, setRecipientSearch] = useState('');
     const [showRecipientModal, setShowRecipientModal] = useState(false); 
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [deletingId, setDeletingId] = useState(null); // <-- [เพิ่มใหม่] State
     const dropdownRef = useRef(null);
 
     // --- Logic (useMemo, etc.) ---
@@ -489,7 +589,7 @@ function GroupNotificationScreen() {
 
     const recipientOptions = useMemo(() => [...groupOptions, ...userOptions], [groupOptions, userOptions]);
 
-    
+    // --- Logic ดึงรายชื่อผู้ใช้ (Unique) จากกลุ่มที่เลือก ---
     const selectedUsers = useMemo(() => {
         const usersMap = new Map();
         
@@ -536,7 +636,7 @@ function GroupNotificationScreen() {
         }
         return Array.from(usersMap.values());
     }, [recipientGroups, usersData]);
-    
+    // --- [จบ] Logic ดึงรายชื่อ ---
 
 
     const removeRecipient = (value) => {
@@ -652,7 +752,6 @@ function GroupNotificationScreen() {
         setShowConfirmModal(true);
     };
 
-    // --- confirmSendNotification ---
     const confirmSendNotification = async () => {
         setShowConfirmModal(false);
 
@@ -661,9 +760,8 @@ function GroupNotificationScreen() {
             title: title.trim(),
             message: message.trim(),
             recipients: [...recipientGroups], 
-            recipientCount: selectedUsers.length, // จำนวนคน (ไม่ซ้ำ)
+            recipientCount: selectedUsers.length,
             
-           
             sentToUsers: selectedUsers.map(u => ({
                 id: u.employeeId || u.username || u.id,
                 name: u.name,
@@ -681,7 +779,6 @@ function GroupNotificationScreen() {
             }),
             status: 'success'
         };
-        
 
 
         const updatedHistory = [notification, ...notificationHistory];
@@ -689,7 +786,7 @@ function GroupNotificationScreen() {
         localStorage.setItem('notificationHistory', JSON.stringify(updatedHistory));
 
         try {
-            // 
+            // ( ... Logic การส่ง ... )
         } catch (error) {
             console.error('Error sending notification:', error);
         }
@@ -703,15 +800,43 @@ function GroupNotificationScreen() {
         }, 2000);
     };
 
+    // --- ฟังก์ชันล้างประวัติ ---
+    const handleClearHistory = () => {
+        setNotificationHistory([]); 
+        localStorage.removeItem('notificationHistory'); 
+        setShowClearConfirm(false); 
+        showToast('ล้างประวัติการส่งทั้งหมดแล้ว', 'success'); 
+    };
     
+    // --- +++ [เพิ่มใหม่] ฟังก์ชันขอลบทีละรายการ +++ ---
+    const requestDeleteNotification = (id) => {
+        setSelectedHistory(null); // 1. ปิด Modal ประวัติ
+        setDeletingId(id);       // 2. ตั้งค่า ID ที่จะลบ (เพื่อเปิด Modal ยืนยัน)
+    };
+
+    // --- +++ [เพิ่มใหม่] ฟังก์ชันยืนยันการลบทีละรายการ +++ ---
+    const confirmDeleteNotification = () => {
+        if (!deletingId) return;
+
+        const updatedHistory = notificationHistory.filter(item => item.id !== deletingId);
+        
+        setNotificationHistory(updatedHistory);
+        localStorage.setItem('notificationHistory', JSON.stringify(updatedHistory));
+        
+        setDeletingId(null); // ปิด Modal ยืนยัน
+        showToast('ลบรายการแจ้งเตือนแล้ว', 'success');
+    };
+
+
+    // [ปรับปรุง] เพิ่ม showRecipientModal, showClearConfirm, และ deletingId
     useEffect(() => {
-        if (showConfirmModal || showSuccessModal || selectedHistory || showRecipientModal) {
+        if (showConfirmModal || showSuccessModal || selectedHistory || showRecipientModal || showClearConfirm || deletingId) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [showConfirmModal, showSuccessModal, selectedHistory, showRecipientModal]);
+    }, [showConfirmModal, showSuccessModal, selectedHistory, showRecipientModal, showClearConfirm, deletingId]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -722,7 +847,7 @@ function GroupNotificationScreen() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownRef]);
-    
+    // --- จบส่วน Logic ---
 
 
     return (
@@ -746,7 +871,7 @@ function GroupNotificationScreen() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {/* ฟอร์มส่งแจ้งเตือน */}
                     <div className="space-y-6 lg:col-span-2">
-                       
+                        {/* Card หลัก */}
                         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
                             <div className="p-6 text-white bg-orange-600">
                                 <h2 className="flex items-center gap-2 text-xl font-bold">
@@ -759,7 +884,7 @@ function GroupNotificationScreen() {
                             </div>
 
                             <div className="p-6 space-y-5">
-                               
+                                {/* หัวข้อ */}
                                 <div>
                                     <label htmlFor="title" className="block mb-2 text-sm font-semibold text-gray-700">
                                         หัวข้อ <span className="text-red-500">*</span>
@@ -789,13 +914,13 @@ function GroupNotificationScreen() {
                                     )}
                                 </div>
 
-                                
+                                {/* เลือกผู้รับ (ปุ่มดูรายชื่ออยู่ซ้ายล่าง) */}
                                 <div>
                                     <label className="block mb-2 text-sm font-semibold text-gray-700">
                                         เลือกผู้รับ <span className="text-red-500">*</span>
                                     </label>
 
-                                    
+                                    {/* กล่องหลัก (ปุ่ม + Dropdown) */}
                                     <div className="relative" ref={dropdownRef}>
                                         <div
                                             role="button"
@@ -882,10 +1007,10 @@ function GroupNotificationScreen() {
                                                 </ul>
                                             </div>
                                         )}
-                                    </div> 
+                                    </div> {/* <-- จบ div.relative */}
 
 
-                                   
+                                    {/* [ตำแหน่งใหม่ - ซ้าย] ปุ่มดูรายชื่อ */}
                                     {recipientGroups.length > 0 && (
                                         <div className="mt-2 text-left"> 
                                             <button
@@ -901,7 +1026,7 @@ function GroupNotificationScreen() {
                                         </div>
                                     )}
 
-                                   
+                                    {/* [ตำแหน่งใหม่] ข้อความ Error */}
                                     {fieldErrors.recipients && (
                                         <p className="flex items-center gap-1 mt-2 text-xs text-red-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -910,7 +1035,7 @@ function GroupNotificationScreen() {
                                             กรุณาเลือกผู้รับ
                                         </p>
                                     )}
-                                </div> 
+                                </div> {/* <-- จบ div "เลือกผู้รับ" */}
 
 
                                 {/* ข้อความ */}
@@ -951,7 +1076,7 @@ function GroupNotificationScreen() {
                                     </div>
                                 </div>
 
-                               
+                                {/* เลือกช่องทางการส่ง */}
                                 <div>
                                     <label className="block mb-3 text-sm font-semibold text-gray-700">
                                         เลือกช่องทางการส่ง <span className="text-red-500">*</span>
@@ -1054,7 +1179,7 @@ function GroupNotificationScreen() {
                                     </div>
                                 </div>
 
-                             
+                                {/* ปุ่มส่ง */}
                                 <button
                                     onClick={handleSubmit}
                                     className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition-all bg-orange-600 shadow-lg hover:bg-orange-700 rounded-xl hover:shadow-xl"
@@ -1068,16 +1193,31 @@ function GroupNotificationScreen() {
                         </div>
                     </div>
 
-                   
+                    {/* [โค้ดอัปเดต] ประวัติการแจ้งเตือน */}
                     <div className="lg:col-span-1">
                         <div className="sticky overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl top-6">
-                            <div className="p-5 text-white bg-orange-600">
+                            {/* [ปรับปรุง] เพิ่มปุ่มล้างประวัติ */}
+                            <div className="flex items-center justify-between p-5 text-white bg-orange-600">
                                 <h2 className="flex items-center gap-2 text-lg font-bold">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     ประวัติการส่ง
                                 </h2>
+                                
+                                {/* [เพิ่มใหม่] ปุ่มล้างประวัติ (จะแสดงเมื่อมีประวัติ) */}
+                                {notificationHistory.length > 0 && (
+                                    <button
+                                        onClick={() => setShowClearConfirm(true)}
+                                        className="flex items-center justify-center w-8 h-8 transition-colors rounded-full bg-white/20 hover:bg-white/30"
+                                        aria-label="ล้างประวัติ"
+                                        title="ล้างประวัติ"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
 
                             <div className="p-4 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -1125,14 +1265,31 @@ function GroupNotificationScreen() {
                     notification={selectedHistory}
                     onClose={() => setSelectedHistory(null)}
                     recipientOptions={recipientOptions}
+                    onDelete={requestDeleteNotification} // <-- [เพิ่มใหม่] ส่งฟังก์ชันลบ
                 />
             )}
 
-        
+         
             {showRecipientModal && (
                 <RecipientListModal
                     users={selectedUsers}
                     onClose={() => setShowRecipientModal(false)}
+                />
+            )}
+
+            
+            {showClearConfirm && (
+                <ConfirmClearModal
+                    onConfirm={handleClearHistory}
+                    onClose={() => setShowClearConfirm(false)}
+                />
+            )}
+
+           
+            {deletingId && (
+                <ConfirmDeleteModal
+                    onConfirm={confirmDeleteNotification}
+                    onClose={() => setDeletingId(null)}
                 />
             )}
 
