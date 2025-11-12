@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/useAuth';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import AlertDialog from '../../components/common/AlertDialog';
-import { mockBranches, mockReports, mockDataOptions, generateMockReportData } from '../../data/usersData';
-
-// นำเข้าฟอนต์ภาษาไทย (ถ้ามี)
-// import { thaiFont } from '../../utils/thaiFont';
+import { mockBranches, mockReports, mockDataOptions } from '../../data/usersData';
+import { 
+  generateEnhancedReportData, 
+  convertToCSV, 
+  generateFileName, 
+  validateSelection,
+  calculateStatistics 
+} from '../../utils/reportDataGenerator';
+import { downloadPDF } from '../../utils/enhancedPDFGenerator';
+import { StatusText } from '../../components/common/StatusIcons';
 
 function DownloadData() {
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === 'superadmin';
   const [showModal, setShowModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // 🆕 ใช้ trigger refresh เมื่อข้อมูลเปลี่ยน
   const [selectedReport, setSelectedReport] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -19,8 +24,6 @@ function DownloadData() {
   const [selectedOptions, setSelectedOptions] = useState({
     attendanceData: true,
     personalData: true,
-    gpsTracking: false,
-    photoAttendance: false,
     eventStats: false
   });
   const [selectedFormat, setSelectedFormat] = useState('excel'); // excel, pdf, csv
@@ -39,6 +42,41 @@ function DownloadData() {
   const branches = mockBranches;
   const reports = mockReports;
   const dataOptions = mockDataOptions;
+
+  // 🆕 ฟังการเปลี่ยนแปลง usersData จาก AdminManageUser
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // เมื่อ usersData ใน localStorage เปลี่ยน (จาก AdminManageUser)
+      if (e.key === 'usersData' && e.newValue) {
+        setRefreshKey(prev => prev + 1); // Trigger refresh
+        
+        // ถ้ากำลังแสดง preview อยู่ ให้รีเฟรชข้อมูลทันที
+        if (showPreview) {
+          const updatedData = generateRealData();
+          setPreviewData(updatedData);
+        }
+      }
+    };
+
+    const handleAttendanceUpdate = () => {
+      // เมื่อมีการอัพเดท attendance (จาก AdminManageUser หรือ User Dashboard)
+      setRefreshKey(prev => prev + 1);
+      
+      // รีเฟรช preview ถ้าเปิดอยู่
+      if (showPreview) {
+        const updatedData = generateRealData();
+        setPreviewData(updatedData);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('attendanceUpdated', handleAttendanceUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('attendanceUpdated', handleAttendanceUpdate);
+    };
+  }, [showPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openModal = (report) => {
     setSelectedReport(report);
@@ -77,39 +115,52 @@ function DownloadData() {
     });
   };
 
-  // สร้างข้อมูล Mock สำหรับรายงาน (ใช้ฟังก์ชันจาก usersData.js)
-  const generateMockData = () => {
-    return generateMockReportData(selectedOptions);
+  // สร้างข้อมูลจริงสำหรับรายงาน (อัพเดทอัตโนมัติจาก localStorage)
+  const generateRealData = () => {
+    // ใช้ refreshKey เพื่อ force re-generate เมื่อข้อมูลเปลี่ยน
+    console.log(`Generating report data... (refresh: ${refreshKey})`);
+    console.log('Selected Options:', selectedOptions);
+    
+    const data = generateEnhancedReportData(
+      selectedOptions,
+      selectedBranches,
+      currentUser?.branchCode,
+      isSuperAdmin
+    );
+    
+    // Debug: แสดงชื่อคอลัมน์ทั้งหมด
+    if (data && data.length > 0) {
+      console.log('Generated columns:', Object.keys(data[0]));
+    }
+    
+    return data;
   };
 
   // จัดการการแสดงตัวอย่าง
   const handlePreview = () => {
+    console.log('=== handlePreview called ===');
+    console.log('Selected options:', selectedOptions);
+    
     // ตรวจสอบความถูกต้องก่อน
-    if (isSuperAdmin && selectedBranches.length === 0) {
+    const validation = validateSelection(selectedOptions, selectedBranches, isSuperAdmin);
+    
+    if (!validation.isValid) {
       setAlertDialog({
         isOpen: true,
         type: 'warning',
-        title: 'กรุณาเลือกสาขา',
-        message: 'กรุณาเลือกสาขาที่ต้องการดูตัวอย่างข้อมูลอย่างน้อย 1 สาขา',
-        autoClose: true
-      });
-      return;
-    }
-
-    const selectedCount = Object.values(selectedOptions).filter(Boolean).length;
-    if (selectedCount === 0) {
-      setAlertDialog({
-        isOpen: true,
-        type: 'warning',
-        title: 'กรุณาเลือกข้อมูล',
-        message: 'กรุณาเลือกข้อมูลที่ต้องการดูตัวอย่างอย่างน้อย 1 รายการ',
+        title: 'กรุณาตรวจสอบข้อมูล',
+        message: validation.message,
         autoClose: true
       });
       return;
     }
 
     // Generate preview data
-    const data = generateMockData();
+    const data = generateRealData();
+    console.log('Preview data generated:', data?.length, 'records');
+    if (data && data.length > 0) {
+      console.log('First record keys:', Object.keys(data[0]));
+    }
     setPreviewData(data);
     setShowPreview(true);
   };
@@ -121,183 +172,50 @@ function DownloadData() {
 
   // Download as Excel (CSV format)
   const downloadExcel = (data) => {
-    const headers = Object.keys(data[0]);
-    const csvContent = [
-      '\uFEFF' + headers.join(','), // Add BOM for Thai characters
-      ...data.map(row => headers.map(header => {
-        const value = row[header] || '';
-        // Escape commas and quotes
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
-
+    const csvContent = convertToCSV(data);
+    const filename = generateFileName('รายงาน', 'excel', startDate, endDate);
+    
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `รายงาน_${startDate}_${endDate}.csv`);
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // Download as PDF using html2canvas (supports Thai language)
-  const downloadPDF = async (data) => {
-    try {
-      // Create a temporary container for the table
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-      container.style.background = 'white';
-      container.style.padding = '40px';
-      container.style.width = '1400px';
-      document.body.appendChild(container);
+  // Download as PDF using enhanced PDF generator
+  const handlePDFDownload = async (data) => {
+    const branchNames = isSuperAdmin && selectedBranches.length > 0
+      ? selectedBranches.map(id => branches.find(b => b.id === id)?.name || id).join(', ')
+      : null;
 
-      // Build HTML content with proper Thai font
-      let tableHTML = `
-        <div style="font-family: 'Sarabun', 'Prompt', 'Noto Sans Thai', sans-serif; background: white;">
-          <!-- Header -->
-          <div style="margin-bottom: 30px;">
-            <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: bold; color: #111827;">
-              รายงาน: ${selectedReport.title}
-            </h1>
-            <p style="margin: 5px 0; font-size: 16px; color: #4B5563;">
-              วันที่: ${startDate} ถึง ${endDate}
-            </p>
-      `;
+    const statistics = calculateStatistics(data);
+    const filename = generateFileName('รายงาน', 'pdf', startDate, endDate);
 
-      if (isSuperAdmin && selectedBranches.length > 0) {
-        const branchNames = selectedBranches.map(id => 
-          branches.find(b => b.id === id)?.name || id
-        ).join(', ');
-        tableHTML += `
-            <p style="margin: 5px 0; font-size: 16px; color: #4B5563;">
-              สาขา: ${branchNames}
-            </p>
-        `;
-      }
+    const metadata = {
+      title: selectedReport.title,
+      startDate,
+      endDate,
+      branches: branchNames,
+      statistics,
+    };
 
-      tableHTML += `
-          </div>
-          
-          <!-- Table -->
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <thead>
-              <tr style="background: linear-gradient(to right, #F26623, #F26623);">
-      `;
-
-      // Add headers
-      Object.keys(data[0]).forEach(header => {
-        tableHTML += `
-                <th style="padding: 12px 8px; text-align: center; color: white; font-weight: bold; border: 1px solid #F26623; font-size: 14px;">
-                  ${header}
-                </th>
-        `;
-      });
-
-      tableHTML += `
-              </tr>
-            </thead>
-            <tbody>
-      `;
-
-      // Add data rows
-      data.forEach((row, index) => {
-        const bgColor = index % 2 === 0 ? '#ffffff' : '#f0f9ff';
-        tableHTML += `<tr style="background-color: ${bgColor};">`;
-        
-        Object.values(row).forEach(value => {
-          tableHTML += `
-                <td style="padding: 10px 8px; text-align: left; border: 1px solid #e2e8f0; color: #111827; font-size: 13px;">
-                  ${value}
-                </td>
-          `;
-        });
-        
-        tableHTML += `</tr>`;
-      });
-
-      tableHTML += `
-            </tbody>
-          </table>
-          
-          <!-- Footer -->
-          <div style="margin-top: 30px; text-align: center; color: #9CA3AF; font-size: 12px;">
-            สร้างเมื่อ: ${new Date().toLocaleString('th-TH', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </div>
-        </div>
-      `;
-
-      container.innerHTML = tableHTML;
-
-      // Wait for fonts to load
-      await document.fonts.ready;
-
-      // Convert to canvas
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1400
-      });
-
-      // Remove temporary container
-      document.body.removeChild(container);
-
-      // Create PDF
-      const imgWidth = 297; // A4 width in mm (landscape)
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const pageHeight = 210; // A4 height in mm (landscape)
-      
-      const doc = new jsPDF('l', 'mm', 'a4');
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add image to PDF (first page)
-      doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add additional pages if needed
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        doc.addPage();
-        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      // Save PDF
-      doc.save(`รายงาน_${startDate}_${endDate}.pdf`);
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      throw new Error('ไม่สามารถสร้าง PDF ได้: ' + error.message);
-    }
+    await downloadPDF(data, metadata, filename);
   };
 
-  // Download as CSV (same as Excel but different extension)
+  // Download as CSV
   const downloadCSV = (data) => {
-    const headers = Object.keys(data[0]);
-    const csvContent = [
-      '\uFEFF' + headers.join(','),
-      ...data.map(row => headers.map(header => {
-        const value = row[header] || '';
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
-
+    const csvContent = convertToCSV(data);
+    const filename = generateFileName('รายงาน', 'csv', startDate, endDate);
+    
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `รายงาน_${startDate}_${endDate}.csv`);
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -305,32 +223,23 @@ function DownloadData() {
   };
 
   const handleDownload = async () => {
-    // Check if SuperAdmin has selected branches
-    if (isSuperAdmin && selectedBranches.length === 0) {
+    // ตรวจสอบความถูกต้องก่อน
+    const validation = validateSelection(selectedOptions, selectedBranches, isSuperAdmin);
+    
+    if (!validation.isValid) {
       setAlertDialog({
         isOpen: true,
         type: 'warning',
-        title: 'กรุณาเลือกสาขา',
-        message: 'กรุณาเลือกสาขาที่ต้องการดาวน์โหลดข้อมูลอย่างน้อย 1 สาขา',
+        title: 'กรุณาตรวจสอบข้อมูล',
+        message: validation.message,
         autoClose: true
       });
       return;
     }
 
+    // Generate real data
+    const data = generateRealData();
     const selectedCount = Object.values(selectedOptions).filter(Boolean).length;
-    if (selectedCount === 0) {
-      setAlertDialog({
-        isOpen: true,
-        type: 'warning',
-        title: 'กรุณาเลือกข้อมูล',
-        message: 'กรุณาเลือกข้อมูลที่ต้องการดาวน์โหลดอย่างน้อย 1 รายการ',
-        autoClose: true
-      });
-      return;
-    }
-
-    // Generate mock data
-    const data = generateMockData();
 
     // Download based on selected format
     try {
@@ -339,7 +248,7 @@ function DownloadData() {
           downloadExcel(data);
           break;
         case 'pdf':
-          await downloadPDF(data);
+          await handlePDFDownload(data);
           break;
         case 'csv':
           downloadCSV(data);
@@ -390,12 +299,12 @@ function DownloadData() {
   // SVG Icons
   const icons = {
     report: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
     chart: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
       </svg>
     ),
@@ -779,38 +688,84 @@ function DownloadData() {
               </div>
             </div>
 
-            {/* Preview Body - Table View */}
-            <div className="flex-1 overflow-auto p-6">
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {Object.keys(previewData[0]).map((header, index) => (
-                        <th
-                          key={index}
-                          className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {previewData.map((row, rowIndex) => (
-                      <tr key={rowIndex} className="hover:bg-gray-50">
-                        {Object.values(row).map((value, colIndex) => (
-                          <td
-                            key={colIndex}
-                            className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+            {/* Preview Body - Table View with Horizontal Scroll */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Scroll Hint */}
+              <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>เลื่อนซ้าย-ขวาเพื่อดูข้อมูลทั้งหมด</span>
+              </div>
+
+              {/* Table with Horizontal Scroll */}
+              <div className="border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gradient-to-r from-orange-500 to-orange-600 sticky top-0 z-10">
+                      <tr>
+                        {Object.keys(previewData[0]).map((header, index) => (
+                          <th
+                            key={index}
+                            className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
                           >
-                            {value}
-                          </td>
+                            {header}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {previewData.map((row, rowIndex) => (
+                        <tr key={rowIndex} className={`hover:bg-orange-50 transition-colors ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                          {Object.entries(row).map(([, value], colIndex) => {
+                            // Check if value contains status keywords
+                            const statusKeywords = ['ตรงเวลา', 'มาสาย', 'ขาดงาน', 'ลางาน', 'อยู่ในพื้นที่', 'อยู่นอกพื้นที่', 'ทำงานอยู่', 'ออกจากงาน', 'มี', 'ไม่มี'];
+                            const isStatus = statusKeywords.includes(value);
+
+                            return (
+                              <td
+                                key={colIndex}
+                                className="px-4 py-3 text-sm whitespace-nowrap"
+                              >
+                                {isStatus ? (
+                                  <StatusText status={value} />
+                                ) : (
+                                  <span className="text-gray-900">{value}</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* Statistics Summary */}
+              {previewData && previewData.length > 0 && (() => {
+                const stats = calculateStatistics(previewData);
+                return (
+                  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                      <div className="text-sm text-blue-600 font-medium mb-1">จำนวนพนักงาน</div>
+                      <div className="text-2xl font-bold text-blue-900">{stats.totalEmployees}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                      <div className="text-sm text-purple-600 font-medium mb-1">จำนวนแผนก</div>
+                      <div className="text-2xl font-bold text-purple-900">{stats.totalDepartments}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                      <div className="text-sm text-green-600 font-medium mb-1">จำนวนสาขา</div>
+                      <div className="text-2xl font-bold text-green-900">{stats.totalBranches}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                      <div className="text-sm text-orange-600 font-medium mb-1">เปอร์เซ็นต์มาตรงเวลา</div>
+                      <div className="text-2xl font-bold text-orange-900">{stats.avgAttendanceRate}%</div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Format-specific preview info */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -825,9 +780,16 @@ function DownloadData() {
                       รูปแบบไฟล์: {selectedFormat.toUpperCase()}
                     </h4>
                     <p className="text-xs text-gray-600">
-                      {selectedFormat === 'excel' && 'ไฟล์ Excel (.xlsx) สามารถเปิดด้วย Microsoft Excel, Google Sheets หรือโปรแกรมแผ่นงานอื่นๆ'}
-                      {selectedFormat === 'pdf' && 'ไฟล์ PDF (.pdf) เหมาะสำหรับการพิมพ์และแชร์ สามารถเปิดด้วย Adobe Reader หรือโปรแกรมอ่าน PDF อื่นๆ'}
-                      {selectedFormat === 'csv' && 'ไฟล์ CSV (.csv) เป็นรูปแบบข้อมูลธรรมดา สามารถนำเข้าระบบอื่นได้ง่าย'}
+                      {selectedFormat === 'excel' && 'ไฟล์ Excel (.xlsx) สามารถเปิดด้วย Microsoft Excel, Google Sheets หรือโปรแกรมแผ่นงานอื่นๆ แนะนำสำหรับข้อมูลจำนวนมาก'}
+                      {selectedFormat === 'pdf' && (
+                        <>
+                          ไฟล์ PDF (.pdf) เหมาะสำหรับการพิมพ์และแชร์ สามารถเปิดด้วย Adobe Reader หรือโปรแกรมอ่าน PDF อื่นๆ
+                          <span className="block mt-1 text-orange-600 font-medium">
+                            ⚠️ หมายเหตุ: เนื่องจากข้อมูลมีจำนวนคอลัมน์มาก ตัวอักษรใน PDF จะมีขนาดเล็ก (7-8px) เพื่อให้แสดงข้อมูลครบทั้งหมด หากต้องการดูข้อมูลละเอียด แนะนำให้ใช้ไฟล์ Excel แทน
+                          </span>
+                        </>
+                      )}
+                      {selectedFormat === 'csv' && 'ไฟล์ CSV (.csv) เป็นรูปแบบข้อมูลธรรมดา สามารถนำเข้าระบบอื่นได้ง่าย เปิดด้วย Excel หรือ Google Sheets'}
                     </p>
                   </div>
                 </div>

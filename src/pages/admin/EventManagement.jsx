@@ -81,12 +81,12 @@ function FitBoundsToMarkers({ locations }) {
         locations.map(loc => [loc.latitude, loc.longitude])
       )
 
-      // Fit map to bounds with padding
+      // Fit map to bounds with padding - faster animation
       map.fitBounds(bounds, {
         padding: [50, 50], // Add padding around bounds
         maxZoom: 17, // Don't zoom in too close even if markers are very close
         animate: true,
-        duration: 0.5
+        duration: 0.3 // Much faster (reduced from 0.5)
       })
     }
   }, [locations, map])
@@ -711,7 +711,7 @@ function EventManagement({ hideHeader = false, hideMap = false, scrollToId = nul
           element.classList.remove('ring-4', 'ring-orange-400')
         }, 2000)
       }
-    }, 100)
+    }, 50) // Reduced from 100ms to 50ms for faster response
   }
 
   return (

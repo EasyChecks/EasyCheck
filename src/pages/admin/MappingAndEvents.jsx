@@ -7,6 +7,31 @@ import { useEvents } from '../../contexts/EventContext'
 import { useAuth } from '../../contexts/useAuth'
 import { usersData } from '../../data/usersData'
 
+// Add animations style
+const style = document.createElement('style')
+style.textContent = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`
+document.head.appendChild(style)
+
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -346,8 +371,135 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
   )
 }
 
+// Custom Success Dialog
+function SuccessDialog({ isOpen, message, onClose }) {
+  useEffect(() => {
+    if (isOpen) {
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+          onClose()
+        }
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#22C55E">
+              <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">สำเร็จ!</h3>
+          <p className="text-gray-600 mb-6 whitespace-pre-line">{message}</p>
+          <button
+            onClick={onClose}
+            className="w-full bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
+          >
+            ตกลง
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Custom Error Dialog
+function ErrorDialog({ isOpen, message, onClose }) {
+  useEffect(() => {
+    if (isOpen) {
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+          onClose()
+        }
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#F97316">
+              <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">ข้อผิดพลาด</h3>
+          <p className="text-gray-600 mb-6 whitespace-pre-line">{message}</p>
+          <button
+            onClick={onClose}
+            className="w-full bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
+          >
+            ตกลง
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Custom Confirm Dialog
+function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
+  useEffect(() => {
+    if (isOpen) {
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+          onConfirm()
+        } else if (e.key === 'Escape') {
+          onCancel()
+        }
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onConfirm, onCancel])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-sm max-w-md w-full p-6 animate-scaleIn">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#EF4444">
+              <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+          <p className="text-gray-600 mb-6 whitespace-pre-line">{message}</p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={onCancel}
+              className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={onConfirm}
+              className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition-all"
+            >
+              ยืนยัน
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Create Form Component
-function CreateForm({ type, position, onSubmit, onCancel, user }) {
+function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -421,11 +573,11 @@ function CreateForm({ type, position, onSubmit, onCancel, user }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!formData.name.trim()) {
-      alert('กรุณากรอกชื่อ')
+      onShowError('กรุณากรอกชื่อ')
       return
     }
     if (type === 'event' && (!formData.startDate || !formData.endDate)) {
-      alert('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด')
+      onShowError('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด')
       return
     }
     
@@ -450,7 +602,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user }) {
       }
       
       if (startDateObj > endDateObj) {
-        alert('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
+        onShowError('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
         return
       }
 
@@ -462,7 +614,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user }) {
         formData.assignedPositions.length > 0
 
       if (!hasAssignment) {
-        alert('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
+        onShowError('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
         return
       }
     }
@@ -775,7 +927,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user }) {
 }
 
 // Edit Form Component
-function EditForm({ type, item, onSubmit, onCancel, user }) {
+function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
   const [formData, setFormData] = useState({
     name: item.name || '',
     description: item.description || '',
@@ -847,11 +999,11 @@ function EditForm({ type, item, onSubmit, onCancel, user }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!formData.name.trim()) {
-      alert('กรุณากรอกชื่อ')
+      onShowError('กรุณากรอกชื่อ')
       return
     }
     if (type === 'event' && (!formData.startDate || !formData.endDate)) {
-      alert('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด')
+      onShowError('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด')
       return
     }
     
@@ -873,7 +1025,7 @@ function EditForm({ type, item, onSubmit, onCancel, user }) {
       }
       
       if (startDateObj > endDateObj) {
-        alert('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
+        onShowError('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
         return
       }
 
@@ -885,7 +1037,7 @@ function EditForm({ type, item, onSubmit, onCancel, user }) {
         formData.assignedPositions.length > 0
 
       if (!hasAssignment) {
-        alert('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
+        onShowError('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
         return
       }
     }
@@ -1227,6 +1379,16 @@ function MappingAndEvents() {
   const [selectedMarkerId, setSelectedMarkerId] = useState(null)
   const markerRefs = useRef({})
 
+  // Dialog states
+  const [successDialog, setSuccessDialog] = useState({ isOpen: false, message: '' })
+  const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: '' })
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { }
+  })
+
   const defaultCenter = [13.7606, 100.5034]
 
   // Auto-open popup when selectedMarkerId changes
@@ -1540,20 +1702,37 @@ function MappingAndEvents() {
 
   // Handle delete
   const handleDelete = async (id, type) => {
-    if (window.confirm(`คุณต้องการลบ${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}นี้ใช่หรือไม่?`)) {
-      try {
-        if (type === 'location') {
-          await deleteLocation(id)
-        } else {
-          await deleteEvent(id)
+    setConfirmDialog({
+      isOpen: true,
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบ${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}นี้ใช่หรือไม่?`,
+      onConfirm: async () => {
+        try {
+          if (type === 'location') {
+            await deleteLocation(id)
+          } else {
+            await deleteEvent(id)
+          }
+          // Close the detail if it was open
+          setOpenIds(prev => prev.filter(openId => openId !== id))
+          setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: () => {} })
+          setSuccessDialog({
+            isOpen: true,
+            message: `ลบ${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}สำเร็จ!`
+          })
+        } catch (error) {
+          console.error('Error deleting:', error)
+          setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: () => {} })
+          setErrorDialog({
+            isOpen: true,
+            message: 'เกิดข้อผิดพลาดในการลบ กรุณาลองใหม่อีกครั้ง'
+          })
         }
-        // Close the detail if it was open
-        setOpenIds(prev => prev.filter(openId => openId !== id))
-      } catch (error) {
-        console.error('Error deleting:', error)
-        alert('เกิดข้อผิดพลาดในการลบ')
+      },
+      onCancel: () => {
+        setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: () => {} })
       }
-    }
+    })
   }
 
   // Handle map click to create new marker
@@ -1584,7 +1763,10 @@ function MappingAndEvents() {
           loc.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
-          alert('มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          setErrorDialog({
+            isOpen: true,
+            message: 'มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
+          })
           return
         }
 
@@ -1609,7 +1791,10 @@ function MappingAndEvents() {
           evt.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
-          alert('มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          setErrorDialog({
+            isOpen: true,
+            message: 'มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
+          })
           return
         }
 
@@ -1661,10 +1846,16 @@ function MappingAndEvents() {
       setNewMarkerPosition(null)
       setSearchMarkerPosition(null)
       setSearchMarkerName('')
-      alert('สร้างสำเร็จ!')
+      setSuccessDialog({
+        isOpen: true,
+        message: `สร้าง${createType === 'location' ? 'พื้นที่' : 'กิจกรรม'}สำเร็จ!`
+      })
     } catch (error) {
       console.error('Error creating:', error)
-      alert('เกิดข้อผิดพลาดในการสร้าง')
+      setErrorDialog({
+        isOpen: true,
+        message: 'เกิดข้อผิดพลาดในการสร้าง กรุณาลองใหม่อีกครั้ง'
+      })
     }
   }
 
@@ -1704,7 +1895,10 @@ function MappingAndEvents() {
           loc.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
-          alert('มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          setErrorDialog({
+            isOpen: true,
+            message: 'มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
+          })
           return
         }
 
@@ -1719,7 +1913,10 @@ function MappingAndEvents() {
           evt.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
-          alert('มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น')
+          setErrorDialog({
+            isOpen: true,
+            message: 'มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
+          })
           return
         }
 
@@ -1731,7 +1928,10 @@ function MappingAndEvents() {
           formData.assignedPositions.length > 0
 
         if (!hasAssignment) {
-          alert('กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)')
+          setErrorDialog({
+            isOpen: true,
+            message: 'กรุณากำหนดผู้รับผิดชอบอย่างน้อย 1 เกณฑ์\n(เลือกพนักงาน, Role, แผนก หรือตำแหน่ง)'
+          })
           return
         }
 
@@ -1763,10 +1963,16 @@ function MappingAndEvents() {
       }
       setShowEditModal(false)
       setEditItem(null)
-      alert('แก้ไขสำเร็จ!')
+      setSuccessDialog({
+        isOpen: true,
+        message: `แก้ไข${editItem.type === 'location' ? 'พื้นที่' : 'กิจกรรม'}สำเร็จ!`
+      })
     } catch (error) {
       console.error('Error updating:', error)
-      alert('เกิดข้อผิดพลาดในการแก้ไข')
+      setErrorDialog({
+        isOpen: true,
+        message: 'เกิดข้อผิดพลาดในการแก้ไข กรุณาลองใหม่อีกครั้ง'
+      })
     }
   }
 
@@ -2185,6 +2391,9 @@ function MappingAndEvents() {
                   setShowEditModal(false)
                   setEditItem(null)
                 }}
+                onShowError={(message) => {
+                  setErrorDialog({ isOpen: true, message })
+                }}
               />
             </div>
           </div>
@@ -2254,6 +2463,9 @@ function MappingAndEvents() {
                   onSubmit={handleCreate}
                   onCancel={() => {
                     setCreateType(null)
+                  }}
+                  onShowError={(message) => {
+                    setErrorDialog({ isOpen: true, message })
                   }}
                 />
               )}
@@ -3005,6 +3217,27 @@ function MappingAndEvents() {
           </div>
         </div>
       </div>
+
+      {/* Dialog Components */}
+      <SuccessDialog
+        isOpen={successDialog.isOpen}
+        message={successDialog.message}
+        onClose={() => setSuccessDialog({ isOpen: false, message: '' })}
+      />
+
+      <ErrorDialog
+        isOpen={errorDialog.isOpen}
+        message={errorDialog.message}
+        onClose={() => setErrorDialog({ isOpen: false, message: '' })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+      />
     </div>
   )
 }

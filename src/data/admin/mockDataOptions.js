@@ -16,18 +16,6 @@ export const mockDataOptions = [
     color: 'purple'
   },
   {
-    id: 'gpsTracking',
-    label: 'GPS Tracking',
-    description: 'สถานะอยู่ในหรือนอกระยะ',
-    color: 'green'
-  },
-  {
-    id: 'photoAttendance',
-    label: 'ข้อมูลภาพถ่าย',
-    description: 'รูปถ่าย Check-in, Check-out',
-    color: 'pink'
-  },
-  {
     id: 'eventStats',
     label: 'สถิติการเข้าร่วมกิจกรรม',
     description: 'จำนวนกิจกรรมที่เข้าร่วม',
