@@ -795,8 +795,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
   // Handle map modal open with validation
   const handleOpenMapModal = () => {
-    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง (ชื่อทีม + เวลาเริ่ม-สิ้นสุด)
-    if (!team.trim() || !timeStart.trim() || !timeEnd.trim()) {
+    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง
+    // Super Admin: ต้องกรอก ชื่อทีม + สาขา + เวลาเริ่ม-สิ้นสุด
+    // Admin: ต้องกรอก ชื่อทีม + เวลาเริ่ม-สิ้นสุด
+    const isSuperAdmin = currentUser?.role === 'superadmin'
+    const missingFields = !team.trim() || !timeStart.trim() || !timeEnd.trim() || (isSuperAdmin && !selectedBranch)
+    
+    if (missingFields) {
       setShowWarningPopup(true)
       setTimeout(() => {
         setShowWarningPopup(false)
@@ -2235,7 +2240,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่
+                  {currentUser?.role === 'superadmin' ? (
+                    <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span>, <span className="font-semibold text-orange-600">สาขา</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                  ) : (
+                    <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                  )}
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-orange-600">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -2266,7 +2275,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {currentUser?.role === 'superadmin' ? (
+                      <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span>, <span className="font-semibold text-orange-600">สาขา</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                    ) : (
+                      <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                    )}
+                  </p>
                 </div>
                 <button onClick={() => setShowWarningPopup(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
