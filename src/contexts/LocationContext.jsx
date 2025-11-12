@@ -140,13 +140,15 @@ export function LocationProvider({ children }) {
   const getFilteredLocations = (user) => {
     if (!user) return []
     
+    const userRole = user.role?.toLowerCase()
+    
     // SuperAdmin เห็นทุกอย่าง
-    if (user.role === 'superadmin') {
+    if (userRole === 'superadmin' || userRole === 'super admin') {
       return locations
     }
     
     // Admin เห็นเฉพาะสาขาของตัวเอง
-    if (user.role === 'admin') {
+    if (userRole === 'admin') {
       return locations.filter(loc => {
         // ถ้ายังไม่มี branch (location เก่า) ให้แสดงทุกอัน
         if (!loc.createdBy?.branch) return true
