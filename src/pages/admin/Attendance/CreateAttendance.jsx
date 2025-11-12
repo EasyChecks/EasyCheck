@@ -1571,9 +1571,23 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                   </div>
                 )}
 
+                {/* Display Members from initialData as non-removable badges */}
+                {!selectedMembers.length && initialData?.members && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {initialData.members.split(',').map((memberName, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center gap-2 bg-brand-primary text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                      >
+                        <span>{memberName.trim()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <input 
                   ref={membersRef}
-                  value={members} 
+                  value={selectedMembers.length > 0 ? members : ''} 
                   onChange={e => {
                     setMembers(e.target.value)
                     setShowMembersDropdown(true)
