@@ -26,12 +26,12 @@ function FitBoundsToMarkers({ locations }) {
         locations.map(loc => [loc.latitude, loc.longitude])
       )
 
-      // Fit map to bounds with padding
+      // Fit map to bounds with padding - faster animation
       map.fitBounds(bounds, {
         padding: [30, 30],
         maxZoom: 17,
         animate: true,
-        duration: 0.5
+        duration: 0.3 // Much faster (reduced from 0.5)
       })
     }
   }, [locations, map])
@@ -433,10 +433,10 @@ function AdminDashboard() {
 
     const map = mapRef.current
 
-    // Fly to the marker position
+    // Fly to the marker position with faster animation
     map.flyTo([location.latitude, location.longitude], 17, {
-      duration: 1.5,
-      easeLinearity: 0.25
+      duration: 0.5, // Faster animation (reduced from 1.5)
+      easeLinearity: 0.5 // Smoother ease
     })
 
     // Open the popup after flying
@@ -450,7 +450,7 @@ function AdminDashboard() {
           }
         }
       })
-    }, 1500)
+    }, 500) // Faster popup open (reduced from 1500ms)
   }
 
   // Handle marker click - scroll to list item

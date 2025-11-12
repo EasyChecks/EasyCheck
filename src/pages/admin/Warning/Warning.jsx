@@ -3,6 +3,7 @@ import { useLeave } from '../../../contexts/LeaveContext'
 import { usersData } from '../../../data/usersData'
 import ConfirmDialog from '../../../components/common/ConfirmDialog'
 import SuccessDialog from '../../../components/common/SuccessDialog'
+import ErrorDialog from '../../../components/common/ErrorMessage'
 
 export function AttachmentModal({ data, onClose }) {
   if (!data) return null
@@ -53,6 +54,7 @@ export default function Warning() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
+  const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: '' })
 
   // แปลง leaveList เป็น format สำหรับหน้า Warning
   const items = useMemo(() => {
@@ -250,7 +252,10 @@ export default function Warning() {
     if (!selectedItem) return
     
     if (!rejectReason.trim()) {
-      alert('กรุณาระบุเหตุผลที่ไม่อนุมัติ')
+      setErrorDialog({
+        isOpen: true,
+        message: 'กรุณาระบุเหตุผลที่ไม่อนุมัติ'
+      })
       return
     }
     
@@ -751,6 +756,13 @@ function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapp
 
         </div>
       </div>
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        isOpen={errorDialog.isOpen}
+        message={errorDialog.message}
+        onClose={() => setErrorDialog({ isOpen: false, message: '' })}
+      />
     </div>
   )
 }

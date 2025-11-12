@@ -61,12 +61,12 @@ function FitBoundsToMarkers({ locations }) {
         locations.map(loc => [loc.latitude, loc.longitude])
       )
 
-      // Fit map to bounds with padding
+      // Fit map to bounds with padding - faster animation
       map.fitBounds(bounds, {
         padding: [50, 50], // Add padding around bounds
         maxZoom: 16,
         animate: true,
-        duration: 0.5
+        duration: 0.3 // Much faster (reduced from 0.5)
       })
     }
   }, [locations, map])
@@ -834,10 +834,16 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                               latitude: lat,
                               longitude: lon
                             }))
-                            alert(`✅ ใช้ตำแหน่งปัจจุบัน:\nLat: ${lat}\nLon: ${lon}`)
+                            setSuccessDialog({
+                              isOpen: true,
+                              message: `ใช้ตำแหน่งปัจจุบันสำเร็จ\nLat: ${lat}, Lon: ${lon}`
+                            })
                           },
                           (error) => {
-                            alert(`❌ ไม่สามารถดึงตำแหน่งได้: ${error.message}`)
+                            setErrorDialog({
+                              isOpen: true,
+                              message: `ไม่สามารถดึงตำแหน่งได้: ${error.message}`
+                            })
                           },
                           {
                             enableHighAccuracy: true,
@@ -846,7 +852,10 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                           }
                         )
                       } else {
-                        alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
+                        setErrorDialog({
+                          isOpen: true,
+                          message: 'เบราว์เซอร์ไม่รองรับ Geolocation'
+                        })
                       }
                     }}
                     className="flex items-center gap-2 bg-gray-600 hover:hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
@@ -1060,10 +1069,16 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                               latitude: lat,
                                               longitude: lon
                                             }))
-                                            alert(`✅ ใช้ตำแหน่งปัจจุบัน:\nLat: ${lat}\nLon: ${lon}`)
+                                            setSuccessDialog({
+                                              isOpen: true,
+                                              message: `ใช้ตำแหน่งปัจจุบันสำเร็จ\nLat: ${lat}, Lon: ${lon}`
+                                            })
                                           },
                                           (error) => {
-                                            alert(`❌ ไม่สามารถดึงตำแหน่งได้: ${error.message}`)
+                                            setErrorDialog({
+                                              isOpen: true,
+                                              message: `ไม่สามารถดึงตำแหน่งได้: ${error.message}`
+                                            })
                                           },
                                           {
                                             enableHighAccuracy: true,
@@ -1072,7 +1087,10 @@ function Mapping({ hideHeader = false, hideMap = false, scrollToId = null }) {
                                           }
                                         )
                                       } else {
-                                        alert('❌ เบราว์เซอร์ไม่รองรับ Geolocation')
+                                        setErrorDialog({
+                                          isOpen: true,
+                                          message: 'เบราว์เซอร์ไม่รองรับ Geolocation'
+                                        })
                                       }
                                     }}
                                     className="flex items-center gap-2 bg-gray-600 hover:hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
