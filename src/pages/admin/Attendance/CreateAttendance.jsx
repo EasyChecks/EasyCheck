@@ -341,6 +341,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [selectedTeams, setSelectedTeams] = useState([]) // แผนก/ตำแหน่งที่จะเห็นตาราง
   const [showTeamsDropdown, setShowTeamsDropdown] = useState(false) // แสดง/ซ่อน dropdown
   const teamsDropdownRef = useRef(null) // ref สำหรับปิด dropdown เมื่อคลิกนอก
+  const [selectedBranch, setSelectedBranch] = useState('') // สาขาที่เลือก
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false) // แสดง/ซ่อน dropdown สาขา
+  const branchDropdownRef = useRef(null) // ref สำหรับปิด dropdown สาขา
   const [showTypeDropdown, setShowTypeDropdown] = useState(false) // แสดง/ซ่อน dropdown ประเภทงาน
   const typeDropdownRef = useRef(null) // ref สำหรับปิด dropdown ประเภทงาน
   const [showMembersDropdown, setShowMembersDropdown] = useState(false) // แสดง/ซ่อน dropdown สมาชิก
@@ -379,6 +382,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     'Operations',
     'Manager',
     'Staff'
+  ]
+  
+  // รายการสาขาที่มี
+  const availableBranches = [
+    { code: 'BKK', name: 'กรุงเทพฯ (BKK)', provinceCode: 'BKK' },
+    { code: 'CNX', name: 'เชียงใหม่ (CNX)', provinceCode: 'CNX' },
+    { code: 'PKT', name: 'ภูเก็ต (PKT)', provinceCode: 'PKT' },
+    { code: 'KAN', name: 'กาญจนบุรี (KAN)', provinceCode: 'KAN' }
   ]
   
   // New location form for map modal
@@ -422,6 +433,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     setTasks((initialData.tasks || []).join('\n'))
     setGoals((initialData.goals || []).join('\n'))
     setSelectedTeams(initialData.teams || [])
+    setSelectedBranch(initialData.branch || '')
     
     // 🔄 โหลดสมาชิกที่เคยเลือกไว้
     if (initialData.members && initialData.members.trim()) {
@@ -456,6 +468,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       if (teamsDropdownRef.current && !teamsDropdownRef.current.contains(event.target)) {
         setShowTeamsDropdown(false)
       }
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target)) {
+        setShowBranchDropdown(false)
+      }
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setShowTypeDropdown(false)
         setShowAddTypeForm(false)
@@ -465,11 +480,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       }
     }
     
-    if (showTeamsDropdown || showTypeDropdown || showMembersDropdown) {
+    if (showTeamsDropdown || showBranchDropdown || showTypeDropdown || showMembersDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showTeamsDropdown, showTypeDropdown, showMembersDropdown])
+  }, [showTeamsDropdown, showBranchDropdown, showTypeDropdown, showMembersDropdown])
 
   // refs to call native pickers where supported
   const monthRef = useRef(null)
@@ -1031,6 +1046,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       tasks: tasks.split('\n').map(s => s.trim()).filter(Boolean),
       goals: goals.split('\n').map(s => s.trim()).filter(Boolean),
       teams: selectedTeams, // เพิ่มแผนก/ตำแหน่งที่จะเห็นตาราง
+      branch: selectedBranch || '', // เพิ่มสาขา
       isPermanent: !nDate, // ถ้าไม่มีวันที่ = แสดงตลอด
     }
 
@@ -1117,6 +1133,75 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               placeholder="ระบุชื่อทีม เช่น ทีมพัฒนา" 
             />
           </div>
+
+          {/* สาขา - 🔐 แสดงเฉพาะ Super Admin */}
+          {currentUser?.role === 'superadmin' && (
+            <div className="relative" ref={branchDropdownRef}>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                สาขา
+                <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
+                  ไม่บังคับ
+                </span>
+              </label>
+              
+              {/* Dropdown Button */}
+              <button
+                type="button"
+                onClick={() => setShowBranchDropdown(!showBranchDropdown)}
+                className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 bg-white hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between outline-none"
+              >
+                <span className="text-gray-700">
+                  {!selectedBranch 
+                    ? 'เลือกสาขา...' 
+                    : availableBranches.find(b => b.code === selectedBranch)?.name || selectedBranch
+                  }
+                </span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 text-gray-400 transition-transform ${showBranchDropdown ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showBranchDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBranch('')
+                      setShowBranchDropdown(false)
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors text-gray-500 italic"
+                  >
+                    -- ไม่ระบุสาขา --
+                  </button>
+                  {availableBranches.map((branch) => (
+                    <button
+                      key={branch.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBranch(branch.code)
+                        setShowBranchDropdown(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors ${
+                        selectedBranch === branch.code ? 'bg-orange-100 font-semibold' : ''
+                      }`}
+                    >
+                      {branch.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ - 🔐 แสดงเฉพาะ Super Admin */}
           {currentUser?.role === 'superadmin' && (

@@ -47,13 +47,28 @@ function Attendance() {
   const [showDeleteSelectedConfirm, setShowDeleteSelectedConfirm] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState('all') // กรองตามสาขา
+  const [showBranchFilterDropdown, setShowBranchFilterDropdown] = useState(false)
   const wrapperRefs = useRef({})
   const innerRefs = useRef({})
   const endListenersRef = useRef({}) // เก็บ listener ปัจจุบันต่อรายการ
+  const branchFilterDropdownRef = useRef(null)
+  
+  // รายการสาขาที่มี
+  const availableBranches = [
+    { code: 'BKK', name: 'กรุงเทพฯ (BKK)' },
+    { code: 'CNX', name: 'เชียงใหม่ (CNX)' },
+    { code: 'PKT', name: 'ภูเก็ต (PKT)' }
+  ]
 
   // 🔐 กรองตารางตาม role ของผู้ดู
   const visibleSchedules = useMemo(() => {
     if (!currentUser) return schedules
+    
+    // Super Admin เห็นทุกอย่าง (รวมตารางตัวอย่างด้วย)
+    if (currentUser.role === 'superadmin') {
+      return schedules
+    }
     
     // Admin เห็นทั้งตารางจาก Super Admin และตารางที่ตัวเองสร้าง
     if (currentUser.role === 'admin') {
@@ -62,18 +77,38 @@ function Attendance() {
       )
     }
     
-    // Super Admin เห็นเฉพาะตารางที่ตัวเองสร้าง (ไม่เห็นของ Admin)
-    if (currentUser.role === 'superadmin') {
-      return schedules.filter(s => s.createdBy === 'superadmin' || !s.createdBy)
-    }
-    
     return schedules
   }, [schedules, currentUser])
+
+  // 🏢 กรองตามสาขาเพิ่มเติม (สำหรับ Super Admin เท่านั้น)
+  const filteredSchedules = useMemo(() => {
+    if (currentUser?.role !== 'superadmin' || selectedBranchFilter === 'all') {
+      return visibleSchedules
+    }
+    return visibleSchedules.filter(s => s.branch === selectedBranchFilter)
+  }, [visibleSchedules, selectedBranchFilter, currentUser])
 
   // Save schedules to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('attendanceSchedules', JSON.stringify(schedules))
   }, [schedules])
+
+  // ปิด branch filter dropdown เมื่อคลิกข้างนอก
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (branchFilterDropdownRef.current && !branchFilterDropdownRef.current.contains(event.target)) {
+        setShowBranchFilterDropdown(false)
+      }
+    }
+
+    if (showBranchFilterDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showBranchFilterDropdown])
 
   // 🔥 Real-time update listener (เหมือนการเข้า-ออกงาน)
   useEffect(() => {
@@ -422,6 +457,76 @@ function Attendance() {
                 สร้างตารางใหม่
               </button>
 
+              {/* 🏢 Branch filter dropdown (Super Admin only) */}
+              {currentUser?.role === 'superadmin' && (
+                <div className="relative" ref={branchFilterDropdownRef}>
+                  <button
+                    onClick={() => setShowBranchFilterDropdown(!showBranchFilterDropdown)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 hover:border-brand-primary text-gray-700 rounded-lg transition-all font-medium text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span className="min-w-[120px] text-left">
+                      {selectedBranchFilter === 'all' 
+                        ? 'ทุกสาขา' 
+                        : availableBranches.find(b => b.code === selectedBranchFilter)?.name || 'เลือกสาขา'}
+                    </span>
+                    <svg className={`w-4 h-4 transition-transform ${showBranchFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown menu */}
+                  {showBranchFilterDropdown && (
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                      {/* ตัวเลือก "ทุกสาขา" */}
+                      <button
+                        onClick={() => {
+                          setSelectedBranchFilter('all')
+                          setShowBranchFilterDropdown(false)
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
+                          selectedBranchFilter === 'all'
+                            ? 'bg-brand-primary text-white'
+                            : 'text-gray-700 hover:bg-brand-accent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <span>ทุกสาขา</span>
+                        </div>
+                      </button>
+
+                      {/* แสดงรายการสาขา */}
+                      {availableBranches.map((branch) => (
+                        <button
+                          key={branch.code}
+                          onClick={() => {
+                            setSelectedBranchFilter(branch.code)
+                            setShowBranchFilterDropdown(false)
+                          }}
+                          className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
+                            selectedBranchFilter === branch.code
+                              ? 'bg-brand-primary text-white'
+                              : 'text-gray-700 hover:bg-brand-accent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span>{branch.name}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {!selectMode ? (
                 // ปกติ: แสดงปุ่มเข้าสู่โหมดลบ
                 <button 
@@ -436,9 +541,9 @@ function Attendance() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setShowDeleteAllConfirm(true)}
-                    disabled={visibleSchedules.length === 0}
+                    disabled={filteredSchedules.length === 0}
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-lg transition-colors font-medium text-sm ${
-                      visibleSchedules.length === 0 
+                      filteredSchedules.length === 0 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                         : 'bg-destructive hover:bg-destructive/90 text-white shadow-sm'
                     }`}
@@ -470,11 +575,11 @@ function Attendance() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
-          {visibleSchedules.length === 0 && (
+          {filteredSchedules.length === 0 && (
             <div className="col-span-full text-center text-gray-600 py-8">ไม่มีตารางงาน</div>
           )}
 
-          {visibleSchedules.map(item => {
+          {filteredSchedules.map(item => {
             const isOpen = openIds.includes(item.id)
             const checked = selectedIds.includes(item.id)
 
