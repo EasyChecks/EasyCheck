@@ -3,8 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../../../contexts/EventContext';
 
 export default function EventList() {
-  const { events } = useEvents();
   const navigate = useNavigate();
+  
+  // Try-catch for useEvents
+  let events = [];
+  try {
+    const context = useEvents();
+    events = context?.events || [];
+  } catch (error) {
+    console.error('EventContext error:', error);
+    return (
+      <div className="p-4 max-w-4xl mx-auto">
+        <div className="text-center text-red-500 py-12">
+          เกิดข้อผิดพลาดในการโหลดข้อมูลกิจกรรม
+        </div>
+      </div>
+    );
+  }
 
   const handleEventClick = (eventId) => {
     navigate(`/user/event/${eventId}`);
