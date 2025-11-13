@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEvent } from '../../../contexts/EventContext';
+import { useEvents } from '../../../contexts/EventContext';
 
 export default function EventList() {
-  const { events } = useEvent();
+  const { events } = useEvents();
   const navigate = useNavigate();
 
   const handleEventClick = (eventId) => {
