@@ -107,22 +107,16 @@ export default function ScheduleDetails() {
 
       {/* Schedule Header */}
       <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-3 flex-1">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold mb-2">{schedule.team}</h1>
-              <p className="text-orange-100 text-sm mb-1">{schedule.date}</p>
-              <p className="text-orange-100 text-sm">เวลา: {schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</p>
-            </div>
+        <div className="flex items-start space-x-3">
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </div>
-          
-          <div className="bg-white/20 px-4 py-2 rounded-xl border border-white/30 shadow-lg backdrop-blur-sm">
-            <span className="text-sm font-medium">{schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</span>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold mb-2">{schedule.team}</h1>
+            <p className="text-orange-100 text-sm mb-1">{schedule.date}</p>
+            <p className="text-orange-100 text-sm">เวลา: {schedule.time || `${schedule.startTime} - ${schedule.endTime}`}</p>
           </div>
         </div>
       </div>
@@ -274,14 +268,6 @@ export default function ScheduleDetails() {
             </p>
           </div>
           )}
-
-          {/* Info Banner */}
-          <div className="p-6 bg-orange-50 border-t border-orange-100">
-            <p className="text-sm text-orange-800 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-              <span><span className="font-medium">เคล็ดลับ:</span> อย่าลืมเตรียมอุปกรณ์ให้พร้อมก่อนถึงสถานที่</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>

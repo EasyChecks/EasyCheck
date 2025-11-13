@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { MapContainer, TileLayer, Marker, Circle, useMapEvents, LayersControl } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../../contexts/LocationContext'
@@ -90,6 +90,104 @@ const MapClickHandler = React.memo(({ onMapClick, isActive }) => {
 const greenCircleStyle = { color: 'green', fillColor: 'green', fillOpacity: 0.2 }
 const blueCircleStyle = { color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }
 
+// 🔥 LocationCard Component - Separate to prevent re-render
+const LocationCard = React.memo(function LocationCard({ location, isSelected, onSelect, onConfirm, onCancel }) {
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => onSelect(location)}
+        className={`w-full text-left bg-white border-2 rounded-xl p-3.5 transition-all hover:shadow-md group ${
+          isSelected ? 'border-[#F26623] shadow-lg' : 'border-gray-200 hover:border-[#F26623]'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <div className={`p-2 rounded-lg transition-colors ${
+            isSelected ? 'bg-[#F26623]' : 'bg-green-50 group-hover:bg-[#F26623]'
+          }`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 flex-shrink-0 transition-colors ${
+              isSelected ? 'text-white' : 'text-green-600 group-hover:text-white'
+            }`} viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={`font-semibold transition-colors truncate ${
+              isSelected ? 'text-[#F26623]' : 'text-gray-800 group-hover:text-[#F26623]'
+            }`}>{location.name}</div>
+            {location.description && (
+              <div className="text-sm text-gray-500 mt-0.5 truncate">{location.description}</div>
+            )}
+            <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              <span>รัศมี {location.radius} เมตร</span>
+            </div>
+          </div>
+          <div className={`transition-opacity flex-shrink-0 ${
+            isSelected ? 'opacity-100 text-[#F26623]' : 'opacity-0 group-hover:opacity-100 text-[#F26623]'
+          }`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </div>
+      </button>
+      
+      {/* Action Buttons - แสดงเมื่อเลือกแล้ว */}
+      {isSelected && (
+        <div className="flex gap-2 px-2">
+          <button
+            onClick={() => onConfirm(location.name)}
+            className="flex-1 bg-gradient-to-r from-[#F26623] to-orange-500 text-white px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            เลือก
+          </button>
+          <button
+            onClick={onCancel}
+            className="flex-1 bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            ยกเลิก
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}, (prevProps, nextProps) => {
+  // Only re-render if selection state or location changes
+  return prevProps.isSelected === nextProps.isSelected && 
+         prevProps.location.id === nextProps.location.id
+})
+
+// Component สำหรับซูมไปยัง location - Optimized for smooth performance
+const ZoomToLocation = React.memo(function ZoomToLocation({ location }) {
+  const map = useMap()
+  const prevLocationRef = useRef(null)
+  
+  useEffect(() => {
+    if (location && location.latitude && location.longitude) {
+      // ป้องกันการซูมซ้ำถ้าเป็น location เดิม
+      if (prevLocationRef.current?.id === location.id) return
+      
+      prevLocationRef.current = location
+      
+      // ใช้ setView แทน flyTo เพื่อความเร็วและความลื่นไหล
+      map.setView([location.latitude, location.longitude], 17, {
+        animate: true,
+        duration: 0.4 // ลดเวลา animation ให้เร็วขึ้น
+      })
+    }
+  }, [location?.id, map])
+  
+  return null
+})
+
 // 🔥 Map Component - Ultra optimized เหมือน Mapping page
 const LocationMapView = React.memo(function LocationMapView({ 
   defaultCenter, 
@@ -98,10 +196,22 @@ const LocationMapView = React.memo(function LocationMapView({
   handleMapClick, 
   locations, 
   handleSelectLocation,
-  newLocationForm 
+  handleViewLocationDetails,
+  newLocationForm,
+  selectedLocationPreview
 }) {
   // Memoize map config
   const mapStyle = useMemo(() => ({ height: '100%', width: '100%' }), [])
+  
+  // Memoize location markers to prevent re-render
+  const locationMarkers = useMemo(() => {
+    return locations.map((loc) => ({
+      key: loc.id,
+      position: [loc.latitude, loc.longitude],
+      radius: loc.radius,
+      id: loc.id
+    }))
+  }, [locations])
   
   return (
     <MapContainer
@@ -143,19 +253,25 @@ const LocationMapView = React.memo(function LocationMapView({
       </LayersControl>
 
       <MapClickHandler onMapClick={handleMapClick} isActive={mapClickEnabled} />
+      
+      {/* Zoom to selected location */}
+      {selectedLocationPreview && <ZoomToLocation location={selectedLocationPreview} />}
 
-      {/* Show existing locations - Memoized */}
-      {locations.map((loc) => (
-        <React.Fragment key={loc.id}>
+      {/* Show existing locations - Memoized markers */}
+      {locationMarkers.map((marker) => (
+        <React.Fragment key={marker.key}>
           <Marker 
-            position={[loc.latitude, loc.longitude]}
+            position={marker.position}
             eventHandlers={{
-              click: () => handleSelectLocation(loc.name)
+              click: () => {
+                const loc = locations.find(l => l.id === marker.id)
+                if (loc) handleViewLocationDetails(loc)
+              }
             }}
           />
           <Circle
-            center={[loc.latitude, loc.longitude]}
-            radius={loc.radius}
+            center={marker.position}
+            radius={marker.radius}
             pathOptions={greenCircleStyle}
           />
         </React.Fragment>
@@ -177,18 +293,38 @@ const LocationMapView = React.memo(function LocationMapView({
     </MapContainer>
   )
 }, (prevProps, nextProps) => {
-  // Custom comparison เพื่อลด re-render
-  return (
-    prevProps.mapClickEnabled === nextProps.mapClickEnabled &&
-    prevProps.locations.length === nextProps.locations.length &&
-    prevProps.newLocationForm.latitude === nextProps.newLocationForm.latitude &&
-    prevProps.newLocationForm.longitude === nextProps.newLocationForm.longitude &&
-    prevProps.newLocationForm.radius === nextProps.newLocationForm.radius
-  )
+  // Custom comparison เพื่อลด re-render - เช็คเฉพาะสิ่งที่จำเป็น
+  if (prevProps.selectedLocationPreview?.id !== nextProps.selectedLocationPreview?.id) {
+    return false // Re-render เมื่อเปลี่ยน selection
+  }
+  
+  if (prevProps.locations.length !== nextProps.locations.length) {
+    return false // Re-render เมื่อจำนวน location เปลี่ยน
+  }
+  
+  // เช็คว่า location IDs เปลี่ยนหรือไม่
+  const prevIds = prevProps.locations.map(l => l.id).join(',')
+  const nextIds = nextProps.locations.map(l => l.id).join(',')
+  if (prevIds !== nextIds) {
+    return false
+  }
+  
+  // เช็ค new location form
+  if (prevProps.newLocationForm.latitude !== nextProps.newLocationForm.latitude ||
+      prevProps.newLocationForm.longitude !== nextProps.newLocationForm.longitude ||
+      prevProps.newLocationForm.radius !== nextProps.newLocationForm.radius) {
+    return false
+  }
+  
+  if (prevProps.mapClickEnabled !== nextProps.mapClickEnabled) {
+    return false
+  }
+  
+  return true // ไม่ re-render ถ้าไม่มีอะไรเปลี่ยน
 })
 
 export default function CreateAttendance({ onClose, onCreate, initialData, onUpdate }) {
-  const { locations, addLocation } = useLocations()
+  const { locations, addLocation, getFilteredLocations } = useLocations()
   const { user: currentUser } = useAuth() // 🔐 เช็ค role และ branch
   const [team, setTeam] = useState('')
   const [date, setDate] = useState('')
@@ -205,6 +341,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [selectedTeams, setSelectedTeams] = useState([]) // แผนก/ตำแหน่งที่จะเห็นตาราง
   const [showTeamsDropdown, setShowTeamsDropdown] = useState(false) // แสดง/ซ่อน dropdown
   const teamsDropdownRef = useRef(null) // ref สำหรับปิด dropdown เมื่อคลิกนอก
+  const [selectedBranch, setSelectedBranch] = useState('') // สาขาที่เลือก
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false) // แสดง/ซ่อน dropdown สาขา
+  const branchDropdownRef = useRef(null) // ref สำหรับปิด dropdown สาขา
   const [showTypeDropdown, setShowTypeDropdown] = useState(false) // แสดง/ซ่อน dropdown ประเภทงาน
   const typeDropdownRef = useRef(null) // ref สำหรับปิด dropdown ประเภทงาน
   const [showMembersDropdown, setShowMembersDropdown] = useState(false) // แสดง/ซ่อน dropdown สมาชิก
@@ -229,6 +368,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [showWarningPopup, setShowWarningPopup] = useState(false)
   const [showErrorPopup, setShowErrorPopup] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [showDeleteTypeConfirm, setShowDeleteTypeConfirm] = useState(false)
+  const [typeToDelete, setTypeToDelete] = useState('')
   
   // รายการแผนกและตำแหน่งที่มี
   const availableTeams = [
@@ -241,6 +382,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     'Operations',
     'Manager',
     'Staff'
+  ]
+  
+  // รายการสาขาที่มี
+  const availableBranches = [
+    { code: 'BKK', name: 'กรุงเทพฯ (BKK)', provinceCode: 'BKK' },
+    { code: 'CNX', name: 'เชียงใหม่ (CNX)', provinceCode: 'CNX' },
+    { code: 'PKT', name: 'ภูเก็ต (PKT)', provinceCode: 'PKT' },
+    { code: 'KAN', name: 'กาญจนบุรี (KAN)', provinceCode: 'KAN' }
   ]
   
   // New location form for map modal
@@ -256,6 +405,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [showTimeStartPicker, setShowTimeStartPicker] = useState(false)
   const [showTimeEndPicker, setShowTimeEndPicker] = useState(false)
   const [searchLocation, setSearchLocation] = useState('') // ค้นหาสถานที่
+  const [selectedLocationPreview, setSelectedLocationPreview] = useState(null) // พื้นที่ที่กำลังดูรายละเอียด
+  const mapRef = useRef(null) // ref สำหรับควบคุม map
 
   // If initialData provided, prefill fields (support editing)
   useEffect(() => {
@@ -282,6 +433,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     setTasks((initialData.tasks || []).join('\n'))
     setGoals((initialData.goals || []).join('\n'))
     setSelectedTeams(initialData.teams || [])
+    setSelectedBranch(initialData.branch || '')
     
     // 🔄 โหลดสมาชิกที่เคยเลือกไว้
     if (initialData.members && initialData.members.trim()) {
@@ -316,6 +468,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       if (teamsDropdownRef.current && !teamsDropdownRef.current.contains(event.target)) {
         setShowTeamsDropdown(false)
       }
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target)) {
+        setShowBranchDropdown(false)
+      }
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setShowTypeDropdown(false)
         setShowAddTypeForm(false)
@@ -325,11 +480,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       }
     }
     
-    if (showTeamsDropdown || showTypeDropdown || showMembersDropdown) {
+    if (showTeamsDropdown || showBranchDropdown || showTypeDropdown || showMembersDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showTeamsDropdown, showTypeDropdown, showMembersDropdown])
+  }, [showTeamsDropdown, showBranchDropdown, showTypeDropdown, showMembersDropdown])
 
   // refs to call native pickers where supported
   const monthRef = useRef(null)
@@ -369,18 +524,26 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const defaultCenter = useMemo(() => [13.7606, 100.5034], [])
   const defaultZoom = 12
 
-  // Filter locations based on search - useMemo เพื่อไม่ให้คำนวณซ้ำ
+  // Filter locations based on search and user role - useMemo เพื่อไม่ให้คำนวณซ้ำ
   const filteredLocations = useMemo(() => {
-    // กรองเฉพาะพื้นที่ที่ active เท่านั้น
-    const activeLocations = locations.filter(loc => loc.status === 'active')
+    // 🔐 ใช้ getFilteredLocations จาก LocationContext เพื่อกรองตาม role
+    let visibleLocations = getFilteredLocations(currentUser)
     
+    // Debug: แสดงข้อมูลการกรอง
+    console.log('🔐 [CreateAttendance] User:', currentUser?.username, 'Role:', currentUser?.role, 'Province:', currentUser?.provinceCode)
+    console.log('📍 [CreateAttendance] Visible locations:', visibleLocations.length, visibleLocations.map(l => `${l.name} (${l.createdBy?.branch})`))
+    
+    // กรองเฉพาะพื้นที่ที่ active เท่านั้น
+    const activeLocations = visibleLocations.filter(loc => loc.status === 'active')
+    
+    // กรองตาม search
     if (!searchLocation.trim()) return activeLocations
     const search = searchLocation.toLowerCase()
     return activeLocations.filter(loc => 
       loc.name.toLowerCase().includes(search) || 
       (loc.description && loc.description.toLowerCase().includes(search))
     )
-  }, [locations, searchLocation])
+  }, [getFilteredLocations, currentUser, searchLocation])
 
   // Filter members based on search - useMemo เพื่อไม่ให้คำนวณซ้ำ
   const filteredMembers = useMemo(() => {
@@ -392,12 +555,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         if (user.role === 'admin' || user.role === 'superadmin') return false
         
         // 🔐 ถ้าเป็น admin (ไม่ใช่ superadmin) ให้เห็นเฉพาะสมาชิกในสาขาเดียวกัน
-        if (currentUser?.role === 'admin' && currentUser?.department) {
-          const currentBranch = currentUser.department.toLowerCase()
-          const userBranch = user.department?.toLowerCase() || ''
-          
-          // ถ้าไม่ใช่สาขาเดียวกัน ไม่แสดง
-          if (!userBranch.includes(currentBranch) && !currentBranch.includes(userBranch)) {
+        if (currentUser?.role === 'admin' && currentUser?.provinceCode) {
+          // ใช้ provinceCode ในการเปรียบเทียบ (เช่น 'BKK', 'CNX', 'PKT', 'KAN')
+          if (user.provinceCode !== currentUser.provinceCode) {
             return false
           }
         }
@@ -445,10 +605,28 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     }
   }, [mapClickEnabled])
 
-  // Handle select existing location from map - useCallback
+  // Handle view location details (คลิกดูรายละเอียด) - Optimized with debounce
+  const handleViewLocationDetails = useCallback((loc) => {
+    // ใช้ requestAnimationFrame เพื่อให้ smooth
+    requestAnimationFrame(() => {
+      setSelectedLocationPreview(loc)
+    })
+  }, [])
+
+  // Handle confirm select location (กดปุ่มเลือก)
   const handleSelectLocation = useCallback((locationName) => {
-    setLocation(locationName)
-    setShowMapModal(false)
+    requestAnimationFrame(() => {
+      setLocation(locationName)
+      setSelectedLocationPreview(null)
+      setShowMapModal(false)
+    })
+  }, [])
+  
+  // Handle cancel select (กดปุ่มยกเลิก)
+  const handleCancelSelectLocation = useCallback(() => {
+    requestAnimationFrame(() => {
+      setSelectedLocationPreview(null)
+    })
   }, [])
 
   // Handle create new location from map - useCallback
@@ -593,10 +771,37 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     }
   }, [newTypeName, workTypes])
 
+  // Delete work type - useCallback
+  const handleDeleteTypeClick = useCallback((typeName, e) => {
+    e.stopPropagation() // ป้องกันการเลือก type เมื่อคลิกลบ
+    setTypeToDelete(typeName)
+    setShowDeleteTypeConfirm(true)
+  }, [])
+
+  const confirmDeleteType = useCallback(() => {
+    setWorkTypes(prev => prev.filter(t => t !== typeToDelete))
+    // ถ้าลบ type ที่กำลังเลือกอยู่ ให้เคลียร์การเลือก
+    if (type === typeToDelete) {
+      setType('')
+    }
+    setShowDeleteTypeConfirm(false)
+    setTypeToDelete('')
+  }, [typeToDelete, type])
+
+  const cancelDeleteType = useCallback(() => {
+    setShowDeleteTypeConfirm(false)
+    setTypeToDelete('')
+  }, [])
+
   // Handle map modal open with validation
   const handleOpenMapModal = () => {
-    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง (ชื่อทีม + เวลาเริ่ม-สิ้นสุด)
-    if (!team.trim() || !timeStart.trim() || !timeEnd.trim()) {
+    // ตรวจสอบว่ากรอกข้อมูลพื้นฐานแล้วหรือยัง
+    // Super Admin: ต้องกรอก ชื่อทีม + สาขา + เวลาเริ่ม-สิ้นสุด
+    // Admin: ต้องกรอก ชื่อทีม + เวลาเริ่ม-สิ้นสุด
+    const isSuperAdmin = currentUser?.role === 'superadmin'
+    const missingFields = !team.trim() || !timeStart.trim() || !timeEnd.trim() || (isSuperAdmin && !selectedBranch)
+    
+    if (missingFields) {
       setShowWarningPopup(true)
       setTimeout(() => {
         setShowWarningPopup(false)
@@ -846,6 +1051,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       tasks: tasks.split('\n').map(s => s.trim()).filter(Boolean),
       goals: goals.split('\n').map(s => s.trim()).filter(Boolean),
       teams: selectedTeams, // เพิ่มแผนก/ตำแหน่งที่จะเห็นตาราง
+      branch: selectedBranch || '', // เพิ่มสาขา
       isPermanent: !nDate, // ถ้าไม่มีวันที่ = แสดงตลอด
     }
 
@@ -869,7 +1075,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       data: payload,
       timestamp: Date.now()
     }))
-  }, [team, date, dateEnd, timeStart, timeEnd, location, month, members, type, preparations, tasks, goals, selectedTeams, initialData, onUpdate, onCreate, teamRef, locationRef, timeStartRef, timeEndRef])
+  }, [team, date, dateEnd, timeStart, timeEnd, location, month, selectedMembers, type, preparations, tasks, goals, selectedTeams, initialData, onUpdate, onCreate, teamRef, locationRef, timeStartRef, timeEndRef])
 
   return createPortal(
     <div 
@@ -932,6 +1138,75 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               placeholder="ระบุชื่อทีม เช่น ทีมพัฒนา" 
             />
           </div>
+
+          {/* สาขา - 🔐 แสดงเฉพาะ Super Admin */}
+          {currentUser?.role === 'superadmin' && (
+            <div className="relative" ref={branchDropdownRef}>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                สาขา
+                <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
+                  ไม่บังคับ
+                </span>
+              </label>
+              
+              {/* Dropdown Button */}
+              <button
+                type="button"
+                onClick={() => setShowBranchDropdown(!showBranchDropdown)}
+                className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 bg-white hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between outline-none"
+              >
+                <span className="text-gray-700">
+                  {!selectedBranch 
+                    ? 'เลือกสาขา...' 
+                    : availableBranches.find(b => b.code === selectedBranch)?.name || selectedBranch
+                  }
+                </span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 text-gray-400 transition-transform ${showBranchDropdown ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showBranchDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBranch('')
+                      setShowBranchDropdown(false)
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors text-gray-500 italic"
+                  >
+                    -- ไม่ระบุสาขา --
+                  </button>
+                  {availableBranches.map((branch) => (
+                    <button
+                      key={branch.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBranch(branch.code)
+                        setShowBranchDropdown(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors ${
+                        selectedBranch === branch.code ? 'bg-orange-100 font-semibold' : ''
+                      }`}
+                    >
+                      {branch.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* แผนก/ตำแหน่งที่จะเห็นตารางนี้ - 🔐 แสดงเฉพาะ Super Admin */}
           {currentUser?.role === 'superadmin' && (
@@ -1386,15 +1661,32 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                   </div>
                 )}
 
+                {/* Display Members from initialData as non-removable badges */}
+                {!selectedMembers.length && initialData?.members && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {initialData.members.split(',').map((memberName, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center gap-2 bg-brand-primary text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                      >
+                        <span>{memberName.trim()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <input 
                   ref={membersRef}
-                  value={members} 
+                  value={selectedMembers.length > 0 ? members : ''} 
                   onChange={e => {
                     setMembers(e.target.value)
                     setShowMembersDropdown(true)
                   }} 
                   onKeyDown={(e) => handleKeyDown(e, 'members')}
-                  onFocus={() => setShowMembersDropdown(true)}
+                  onFocus={() => {
+                    setMembers('') // ล้างชื่อที่แสดงใน input
+                    setShowMembersDropdown(true)
+                  }}
                   className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none" 
                   placeholder="ค้นหาชื่อสมาชิก หรือคลิกเพื่อดูทั้งหมด..." 
                 />
@@ -1479,16 +1771,32 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     {/* Existing Types */}
                     <div className="max-h-48 overflow-y-auto">
                     {workTypes.map((workType) => (
-                      <button
+                      <div
                         key={workType}
-                        type="button"
-                        onClick={() => selectWorkType(workType)}
-                        className={`w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors ${
-                          type === workType ? 'bg-orange-100 text-orange-700 font-semibold' : 'text-gray-700'
+                        className={`flex items-center justify-between group hover:bg-orange-50 transition-colors ${
+                          type === workType ? 'bg-orange-100' : ''
                         }`}
                       >
-                        {workType}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => selectWorkType(workType)}
+                          className={`flex-1 text-left px-4 py-2 ${
+                            type === workType ? 'text-orange-700 font-semibold' : 'text-gray-700'
+                          }`}
+                        >
+                          {workType}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteTypeClick(workType, e)}
+                          className="px-3 py-2 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                          title="ลบประเภทงาน"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     ))}
                   </div>
 
@@ -1655,10 +1963,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             style={{ maxHeight: '90vh' }}
           >
             {/* Header */}
-            <div className="bg-brand-primary  px-6 py-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-[#F26623] to-orange-500 px-6 py-5 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white">เลือกสถานที่จากแผนที่</h3>
-                <p className="text-sm text-orange-100 mt-1">คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่</p>
+                <h3 className="text-2xl font-bold text-white">เลือกสถานที่จากแผนที่</h3>
+                <p className="text-sm text-orange-100 mt-1">
+                  {currentUser?.role === 'Super Admin' 
+                    ? 'คลิกบนแผนที่เพื่อสร้างพื้นที่ใหม่ หรือเลือกจากพื้นที่ที่มีอยู่' 
+                    : 'เลือกสถานที่จากรายการพื้นที่ที่มีอยู่'}
+                </p>
               </div>
               <button
                 onClick={() => setShowMapModal(false)}
@@ -1689,16 +2001,18 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     handleMapClick={handleMapClick}
                     locations={filteredLocations}
                     handleSelectLocation={handleSelectLocation}
+                    handleViewLocationDetails={handleViewLocationDetails}
                     newLocationForm={newLocationForm}
+                    selectedLocationPreview={selectedLocationPreview}
                   />
                 )}
 
-                {/* Enable Click Mode Button */}
-                {!mapClickEnabled && !showNewLocationForm && (
+                {/* Enable Click Mode Button - เฉพาะ Super Admin เท่านั้น */}
+                {currentUser?.role === 'Super Admin' && !mapClickEnabled && !showNewLocationForm && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000]">
                     <button
                       onClick={() => setMapClickEnabled(true)}
-                      className="bg-brand-primary text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-gray-700 transition-all flex items-center gap-2"
+                      className="bg-gradient-to-r from-[#F26623] to-orange-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-[#F26623] transition-all flex items-center gap-2"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -1709,7 +2023,10 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 )}
 
                 {mapClickEnabled && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm z-[1000] pointer-events-none">
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-[#F26623] text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-lg z-[1000] pointer-events-none flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
                     คลิกบนแผนที่เพื่อเลือกตำแหน่ง
                   </div>
                 )}
@@ -1717,8 +2034,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
               {/* Sidebar - Location List or New Location Form */}
               <div className="lg:w-96 bg-gray-50 overflow-y-auto border-l border-gray-200">
-                {showNewLocationForm ? (
-                  // New Location Form
+                {showNewLocationForm && currentUser?.role === 'Super Admin' ? (
+                  // New Location Form - เฉพาะ Super Admin
                   <div className="p-6">
                     <h4 className="text-lg font-bold text-gray-800 mb-4">สร้างพื้นที่ใหม่</h4>
                     
@@ -1803,43 +2120,59 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     </div>
                   </div>
                 ) : (
-                  // Location List
+                  // Location List - แยก UI ตาม role
                   <div className="p-6">
-                    {/* Search Box */}
+                    {/* Header with Count */}
                     <div className="mb-4">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="ค้นหาสถานที่..."
-                          value={searchLocation}
-                          onChange={(e) => setSearchLocation(e.target.value)}
-                          className="w-full px-4 py-2 pr-20 rounded-lg border-2 border-gray-300 focus:border-brand-primary focus:outline-none bg-white"
-                        />
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <h4 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#F26623]" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                         </svg>
-                        {searchLocation && (
-                          <button
-                            onClick={() => setSearchLocation('')}
-                            className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
+                        พื้นที่ที่มีอยู่
+                        <span className="ml-auto text-sm font-normal bg-[#F26623] text-white px-2.5 py-0.5 rounded-full">
+                          {filteredLocations.length}
+                        </span>
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {currentUser?.role === 'Super Admin' 
+                          ? 'เลือกพื้นที่ที่ต้องการสำหรับตารางนี้' 
+                          : 'คลิกเพื่อเลือกสถานที่สำหรับตารางนี้'}
+                      </p>
                     </div>
 
-                    <h4 className="text-lg font-bold text-gray-800 mb-4">
-                      พื้นที่ที่มีอยู่ ({filteredLocations.length})
-                    </h4>
+                    {/* Search Box - แสดงเฉพาะ Super Admin */}
+                    {currentUser?.role === 'Super Admin' && (
+                      <div className="mb-4">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="ค้นหาสถานที่..."
+                            value={searchLocation}
+                            onChange={(e) => setSearchLocation(e.target.value)}
+                            className="w-full px-4 py-2.5 pr-20 rounded-lg border-2 border-gray-300 focus:border-[#F26623] focus:outline-none bg-white text-sm"
+                          />
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          {searchLocation && (
+                            <button
+                              onClick={() => setSearchLocation('')}
+                              className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     
                     {searchLocation && filteredLocations.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
@@ -1850,44 +2183,25 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       </div>
                     ) : filteredLocations.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
-                        <p>ยังไม่มีพื้นที่</p>
-                        <p className="text-sm mt-2">คลิก "สร้างพื้นที่ใหม่" เพื่อเริ่มต้น</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        <p className="font-medium">ยังไม่มีพื้นที่</p>
+                        {currentUser?.role === 'Super Admin' && (
+                          <p className="text-sm mt-2">คลิก "สร้างพื้นที่ใหม่" เพื่อเริ่มต้น</p>
+                        )}
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {filteredLocations.map((loc) => (
-                          <button
+                          <LocationCard
                             key={loc.id}
-                            onClick={() => handleSelectLocation(loc.name)}
-                            className="w-full text-left bg-white border-2 border-gray-200 hover:border-green-400 rounded-lg p-4 transition-all hover:shadow-md group"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                                </svg>
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors">{loc.name}</div>
-                                {loc.description && (
-                                  <div className="text-sm text-gray-500 mt-1">{loc.description}</div>
-                                )}
-                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                                  <span className="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                    </svg>
-                                    รัศมี: {loc.radius} เมตร
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="text-green-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            </div>
-                          </button>
+                            location={loc}
+                            isSelected={selectedLocationPreview?.id === loc.id}
+                            onSelect={handleViewLocationDetails}
+                            onConfirm={handleSelectLocation}
+                            onCancel={handleCancelSelectLocation}
+                          />
                         ))}
                       </div>
                     )}
@@ -1926,7 +2240,11 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่
+                  {currentUser?.role === 'superadmin' ? (
+                    <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span>, <span className="font-semibold text-orange-600">สาขา</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                  ) : (
+                    <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                  )}
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-orange-600">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -1957,7 +2275,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-800 mb-1">กรุณากรอกข้อมูลก่อน!</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {currentUser?.role === 'superadmin' ? (
+                      <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span>, <span className="font-semibold text-orange-600">สาขา</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                    ) : (
+                      <>กรุณากรอก <span className="font-semibold text-orange-600">ชื่อทีม</span> และ <span className="font-semibold text-orange-600">เวลา</span> ก่อนเลือกสถานที่</>
+                    )}
+                  </p>
                 </div>
                 <button onClick={() => setShowWarningPopup(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all transform hover:scale-110">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -2031,6 +2355,57 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
           </div>
         ))}
+
+      {/* Delete Type Confirmation Dialog */}
+      {showDeleteTypeConfirm && (typeof document !== 'undefined' ? createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out bg-black/50"
+          style={{
+            animation: 'fadeIn 0.3s ease-out forwards',
+            pointerEvents: 'auto'
+          }}
+          onClick={cancelDeleteType}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-lg mx-4 border-2 border-red-400 pointer-events-auto transform"
+            style={{
+              animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            }}
+          >
+            <div className="flex flex-col items-center text-center">
+              {/* Icon */}
+              <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-red-400/20 animate-pulse"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-600 relative z-10" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+
+              {/* Title & Message */}
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">ยืนยันการลบประเภทงาน</h3>
+              <p className="text-base text-gray-600 mb-2">คุณแน่ใจหรือไม่ที่จะลบ</p>
+              <p className="text-xl font-bold text-red-600 mb-5 px-4 py-2 bg-red-50 rounded-lg">"{typeToDelete}"</p>
+              <p className="text-sm text-gray-500 mb-8">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+
+              {/* Buttons */}
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={cancelDeleteType}
+                  className="flex-1 px-6 py-3.5 bg-gray-200 text-gray-700 rounded-xl font-bold text-base hover:bg-gray-300 transition-all"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={confirmDeleteType}
+                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold text-base hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl"
+                >
+                  ยืนยันการลบ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>, document.body) : null)}
     </div>,
     document.body
   )
