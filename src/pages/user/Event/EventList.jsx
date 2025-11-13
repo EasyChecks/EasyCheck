@@ -10,6 +10,17 @@ export default function EventList() {
     navigate(`/user/event/${eventId}`);
   };
 
+  // ป้องกัน events เป็น undefined
+  if (!events) {
+    return (
+      <div className="p-4 max-w-4xl mx-auto">
+        <div className="text-center text-gray-500 py-12">
+          กำลังโหลด...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">กิจกรรมทั้งหมด</h1>
@@ -31,8 +42,8 @@ export default function EventList() {
               </h2>
               <p className="text-gray-600 mb-2">{event.description}</p>
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>📅 {new Date(event.date).toLocaleDateString('th-TH')}</span>
-                <span>📍 {event.location}</span>
+                <span>📅 {event.startDate || event.date}</span>
+                <span>📍 {event.locationName || event.location || 'ไม่ระบุสถานที่'}</span>
               </div>
             </div>
           ))}
