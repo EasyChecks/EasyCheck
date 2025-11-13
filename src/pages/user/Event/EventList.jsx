@@ -1,0 +1,43 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useEvent } from '../../../contexts/EventContext';
+
+export default function EventList() {
+  const { events } = useEvent();
+  const navigate = useNavigate();
+
+  const handleEventClick = (eventId) => {
+    navigate(`/user/event/${eventId}`);
+  };
+
+  return (
+    <div className="p-4 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">กิจกรรมทั้งหมด</h1>
+      
+      {events.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">
+          ไม่มีกิจกรรมในขณะนี้
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {events.map((event) => (
+            <div
+              key={event.id}
+              onClick={() => handleEventClick(event.id)}
+              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+            >
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {event.name}
+              </h2>
+              <p className="text-gray-600 mb-2">{event.description}</p>
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <span>📅 {new Date(event.date).toLocaleDateString('th-TH')}</span>
+                <span>📍 {event.location}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
