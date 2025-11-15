@@ -1,4 +1,5 @@
 import React, { useState, memo, useEffect } from 'react';
+import ProfileManager from './ProfileManager';
 
 /**
  * UserCreateModal - Modal สำหรับเพิ่มผู้ใช้ใหม่ทีละคน
@@ -13,6 +14,7 @@ const UserCreateModal = memo(function UserCreateModal({
   users 
 }) {
   const [formData, setFormData] = useState({
+    titlePrefix: 'นาย', // เพิ่ม title prefix
     name: '',
     email: '',
     phone: '',
@@ -35,10 +37,13 @@ const UserCreateModal = memo(function UserCreateModal({
     emergencyContactRelation: '',
     // ประวัติการทำงาน
     workHistory: [],
-    // การศึกษา
-    education: [],
-    // ทักษะ
-    skills: [],
+    // 🆕 Profile Management - 6 categories
+    positions: [], // ตำแหน่ง
+    departments: [], // แผนก
+    salaries: [], // เงินเดือน
+    relationships: [], // ความสัมพันธ์
+    educations: [], // การศึกษา
+    skills: [], // ทักษะ
     // 🆕 ข้อมูลสวัสดิการ (Benefits) - เพิ่มใหม่ตาม Bug #7
     socialSecurityNumber: '', // เลขประกันสังคม
     providentFund: '', // กองทุนสำรองเลี้ยงชีพ
@@ -50,8 +55,6 @@ const UserCreateModal = memo(function UserCreateModal({
   
   // State สำหรับ dynamic fields
   const [currentWorkHistory, setCurrentWorkHistory] = useState({ position: '', company: '', period: '' });
-  const [currentEducation, setCurrentEducation] = useState('');
-  const [currentSkill, setCurrentSkill] = useState('');
 
   // ป้องกันการ scroll พื้นหลังเมื่อ modal เปิด
   useEffect(() => {
@@ -66,13 +69,11 @@ const UserCreateModal = memo(function UserCreateModal({
     };
   }, [isOpen]);
 
-  // Province และ Branch options
+  // Province และ Branch options  
   const provinces = [
     { code: 'BKK', name: 'กรุงเทพฯ' },
     { code: 'CNX', name: 'เชียงใหม่' },
     { code: 'PKT', name: 'ภูเก็ต' },
-    { code: 'KKN', name: 'ขอนแก่น' },
-    { code: 'HDY', name: 'หาดใหญ่' },
   ];
 
   const branches = [
@@ -148,7 +149,7 @@ const UserCreateModal = memo(function UserCreateModal({
     const newErrors = {};
 
     // Required fields
-    if (!formData.name.trim()) newErrors.name = 'กรุณากรอกชื่อ-นามสกุล';
+    if (!formData.name.trim()) newErrors.name = 'กรุณากรอกชื่อ นามสกุล';
     if (!formData.email.trim()) newErrors.email = 'กรุณากรอกอีเมล';
     if (!formData.phone.trim()) newErrors.phone = 'กรุณากรอกเบอร์โทรศัพท์';
     if (!formData.department) newErrors.department = 'กรุณาเลือกแผนก';
@@ -209,40 +210,26 @@ const UserCreateModal = memo(function UserCreateModal({
     });
   };
 
-  // ฟังก์ชันจัดการ Education
-  const addEducation = () => {
-    if (currentEducation.trim()) {
-      setFormData({
-        ...formData,
-        education: [...formData.education, currentEducation.trim()]
-      });
-      setCurrentEducation('');
-    }
+  // 🆕 ProfileManager handlers for 6 categories
+  const handleAddProfile = (category, item) => {
+    setFormData(prev => ({
+      ...prev,
+      [category]: [...prev[category], item]
+    }));
   };
 
-  const removeEducation = (index) => {
-    setFormData({
-      ...formData,
-      education: formData.education.filter((_, i) => i !== index)
-    });
+  const handleRemoveProfile = (category, index) => {
+    setFormData(prev => ({
+      ...prev,
+      [category]: prev[category].filter((_, i) => i !== index)
+    }));
   };
 
-  // ฟังก์ชันจัดการ Skills
-  const addSkill = () => {
-    if (currentSkill.trim()) {
-      setFormData({
-        ...formData,
-        skills: [...formData.skills, currentSkill.trim()]
-      });
-      setCurrentSkill('');
-    }
-  };
-
-  const removeSkill = (index) => {
-    setFormData({
-      ...formData,
-      skills: formData.skills.filter((_, i) => i !== index)
-    });
+  const handleRemoveAllProfiles = (category) => {
+    setFormData(prev => ({
+      ...prev,
+      [category]: []
+    }));
   };
 
   // Handle submit
@@ -339,14 +326,16 @@ const UserCreateModal = memo(function UserCreateModal({
       emergencyContactPhone: '',
       emergencyContactRelation: '',
       workHistory: [],
-      education: [],
+      positions: [],
+      departments: [],
+      salaries: [],
+      relationships: [],
+      educations: [],
       skills: []
     });
     
     // Reset dynamic field states
     setCurrentWorkHistory({ position: '', company: '', period: '' });
-    setCurrentEducation('');
-    setCurrentSkill('');
     
     // Reset other states
     setErrors({});
@@ -396,10 +385,52 @@ const UserCreateModal = memo(function UserCreateModal({
         {/* Body - Scrollable */}
         <div className="p-6 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* ชื่อ-นามสกุล */}
+            {/* คำนำหน้า */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                คำนำหน้า <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('titlePrefix', 'นาย')}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    formData.titlePrefix === 'นาย'
+                      ? 'bg-brand-primary text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  นาย
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('titlePrefix', 'นาง')}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    formData.titlePrefix === 'นาง'
+                      ? 'bg-brand-primary text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  นาง
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('titlePrefix', 'นางสาว')}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    formData.titlePrefix === 'นางสาว'
+                      ? 'bg-brand-primary text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  นางสาว
+                </button>
+              </div>
+            </div>
+
+            {/* ชื่อ นามสกุล */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                ชื่อ นามสกุล <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -408,7 +439,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="เช่น นายสมชาย ใจดี"
+                placeholder="เช่น สมชาย ใจดี (ไม่ต้องใส่คำนำหน้า)"
               />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
@@ -573,6 +604,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
               >
                 <option value="user">ผู้ใช้ทั่วไป (User)</option>
+                <option value="manager">ผู้จัดการ (Manager)</option>
                 <option value="admin">ผู้ดูแลระบบ (Admin)</option>
                 <option value="superadmin">ผู้ดูแลระบบสูงสุด (Super Admin)</option>
               </select>
@@ -594,8 +626,10 @@ const UserCreateModal = memo(function UserCreateModal({
                 onChange={(e) => handleInputChange('status', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
               >
-                <option value="active">ใช้งาน (Active)</option>
-                <option value="inactive">ไม่ใช้งาน (Inactive)</option>
+                <option value="active">ทำงานอยู่ (Active)</option>
+                <option value="leave">ลาออกแล้ว (Leave)</option>
+                <option value="suspended">โดนพักงาน (Suspended)</option>
+                <option value="pending">รอโปรโมท (Pending)</option>
               </select>
             </div>
 
@@ -866,103 +900,66 @@ const UserCreateModal = memo(function UserCreateModal({
             </div>
           </div>
 
-          {/* การศึกษา */}
+          {/* 📋 Profile Management - 6 Categories */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              การศึกษา
-            </h3>
+            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-brand-primary">
+              ข้อมูลโปรไฟล์ (Profile Management)
+            </h2>
             
-            {/* แสดงรายการการศึกษาที่เพิ่มแล้ว */}
-            {formData.education.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {formData.education.map((edu, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                    <div className="flex-1 text-gray-700">{edu}</div>
-                    <button
-                      type="button"
-                      onClick={() => removeEducation(index)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="space-y-6">
+              {/* Positions */}
+              <ProfileManager
+                category="position"
+                items={formData.positions}
+                onAdd={(item) => handleAddProfile('positions', item)}
+                onRemove={(index) => handleRemoveProfile('positions', index)}
+                onRemoveAll={() => handleRemoveAllProfiles('positions')}
+              />
 
-            {/* ฟอร์มเพิ่มการศึกษา */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="md:col-span-3">
-                <input
-                  type="text"
-                  value={currentEducation}
-                  onChange={(e) => setCurrentEducation(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addEducation()}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
-                  placeholder="เช่น ปริญญาตรี บริหารธุรกิจ มหาวิทยาลัย..."
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={addEducation}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                >
-                  + เพิ่ม
-                </button>
-              </div>
-            </div>
-          </div>
+              {/* Departments */}
+              <ProfileManager
+                category="department"
+                items={formData.departments}
+                onAdd={(item) => handleAddProfile('departments', item)}
+                onRemove={(index) => handleRemoveProfile('departments', index)}
+                onRemoveAll={() => handleRemoveAllProfiles('departments')}
+              />
 
-          {/* ทักษะ */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              ทักษะ
-            </h3>
-            
-            {/* แสดงรายการทักษะที่เพิ่มแล้ว */}
-            {formData.skills.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {formData.skills.map((skill, index) => (
-                  <div key={index} className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm">
-                    <span>{skill}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeSkill(index)}
-                      className="text-orange-500 hover:text-orange-700 transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+              {/* Salaries */}
+              <ProfileManager
+                category="salary"
+                items={formData.salaries}
+                onAdd={(item) => handleAddProfile('salaries', item)}
+                onRemove={(index) => handleRemoveProfile('salaries', index)}
+                onRemoveAll={() => handleRemoveAllProfiles('salaries')}
+              />
 
-            {/* ฟอร์มเพิ่มทักษะ */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="md:col-span-3">
-                <input
-                  type="text"
-                  value={currentSkill}
-                  onChange={(e) => setCurrentSkill(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
-                  placeholder="เช่น Microsoft Office, การบริหารจัดการ, ภาษาอังกฤษ..."
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                  + เพิ่ม
-                </button>
-              </div>
+              {/* Relationships */}
+              <ProfileManager
+                category="relationship"
+                items={formData.relationships}
+                onAdd={(item) => handleAddProfile('relationships', item)}
+                onRemove={(index) => handleRemoveProfile('relationships', index)}
+                onRemoveAll={() => handleRemoveAllProfiles('relationships')}
+              />
+
+              {/* Education */}
+              <ProfileManager
+                category="education"
+                items={formData.educations}
+                onAdd={(item) => handleAddProfile('educations', item)}
+                onRemove={(index) => handleRemoveProfile('educations', index)}
+                onRemoveAll={() => handleRemoveAllProfiles('educations')}
+              />
+
+              {/* Skills */}
+              <ProfileManager
+                category="skills"
+                items={formData.skills}
+                onAdd={(item) => handleAddProfile('skills', item)}
+                onRemove={(index) => handleRemoveProfile('skills', index)}
+                onRemoveAll={() => handleRemoveAllProfiles('skills')}
+              />
             </div>
           </div>
         </div>

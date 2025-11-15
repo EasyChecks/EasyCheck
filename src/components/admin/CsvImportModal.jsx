@@ -61,6 +61,7 @@ const CsvImportModal = memo(function CsvImportModal({
                 <tr className="bg-gray-100">
                   <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">#</th>
                   <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">รหัสพนักงาน (Auto)</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">คำนำหน้า</th>
                   <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">ชื่อ-นามสกุล</th>
                   <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">อีเมล</th>
                   <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">บทบาท</th>
@@ -99,6 +100,7 @@ const CsvImportModal = memo(function CsvImportModal({
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">
                         <span className="font-semibold text-brand-primary">{previewEmployeeId}</span>
                       </td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.titlePrefix || 'นาย'}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.name || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 text-xs whitespace-nowrap">{row.email || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">
@@ -131,7 +133,7 @@ const CsvImportModal = memo(function CsvImportModal({
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.branchCode || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.socialSecurityNumber || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.providentFund || ''}</td>
-                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.healthInsurance || ''}</td>
+                      <td className="border border-gray-300 px-3 py-2 whitespace-nowrap">{row.groupHealthInsurance || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-md overflow-hidden text-ellipsis">{row.education || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-md overflow-hidden text-ellipsis">{row.workHistory || ''}</td>
                       <td className="border border-gray-300 px-3 py-2 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">{row.skills || ''}</td>
@@ -152,9 +154,9 @@ const CsvImportModal = memo(function CsvImportModal({
             </h3>
             <div className="bg-white border border-gray-300 rounded p-3 text-xs overflow-x-auto">
               <code className="text-gray-800">
-                name,email,provinceCode,branchCode,role,department,position,nationalId,phone,skills<br/>
-                นายสมชาย ใจดี,somchai@email.com,BKK,101,user,IT,Developer,1234567890123,081-234-5678,"JavaScript|React"<br/>
-                นางสาวสมหญิง สวย,somying@email.com,BKK,101,admin,HR,HR Manager,9876543210987,082-345-6789,"HR|Recruitment"
+                titlePrefix,name,email,provinceCode,branchCode,role,department,position,nationalId,phone,skills<br/>
+                นาย,สมชาย ใจดี,somchai@email.com,BKK,101,user,IT,Developer,1234567890123,081-234-5678,"JavaScript|React"<br/>
+                นางสาว,สมหญิง สวย,somying@email.com,BKK,101,admin,HR,HR Manager,9876543210987,082-345-6789,"HR|Recruitment"
               </code>
             </div>
           </div>
