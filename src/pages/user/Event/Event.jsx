@@ -1,6 +1,10 @@
 import React from "react";
-import EventList from "./EventList";
 
 export default function Event() {
-  return <EventList />;
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold">Event Page</h1>
+      <p>กิจกรรม</p>
+    </div>
+  );
 }
