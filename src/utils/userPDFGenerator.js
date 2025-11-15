@@ -133,7 +133,8 @@ const createPage1HTML = (user, profileImageBase64, statusInfo) => {
                    onerror="this.style.display='none'" />
             </td>
             <td style="vertical-align: top;">
-              <h2 style="margin: 0 0 8px 0; font-size: 26px; color: #000000; font-weight: bold;">${user.name || 'ไม่ระบุชื่อ'}</h2>
+            <!-- ${user.titlePrefix || 'ไม่ระบุคำนำหน้าชื่อ'} -->
+              <h2 style="margin: 0 0 8px 0; font-size: 26px; color: #000000; font-weight: bold;">${user.name || 'ไม่ระบุชื่อ'}</h2> 
               <p style="margin: 0 0 12px 0; color: #4B5563; font-size: 16px; font-weight: 500;">${user.position || 'ไม่ระบุตำแหน่ง'}</p>
               <div style="display: inline-block; color: ${statusInfo.bg}; font-size: 14px; font-weight: bold; margin-bottom: 12px;">
                 ${statusInfo.text}
@@ -268,14 +269,44 @@ const createPage2HTML = (user) => {
   const hasWorkHistory = user.workHistory && user.workHistory.length > 0;
   const hasEducation = user.education && user.education.length > 0;
   const hasSkills = user.skills && user.skills.length > 0;
+  const hasBenefits = user.socialSecurityNumber || user.socialSecurityRights || user.providentFund || user.groupHealthInsurance;
 
   return `
     <div style="font-family: 'Prompt', sans-serif; width: 800px; background: white; color: #000;">
       <!-- Header หน้า 2 -->
       <div style="background: #F26623; padding: 25px; margin: -40px -40px 30px -40px; color: white;">
         <h2 style="margin: 0; font-size: 28px; font-weight: bold;">ข้อมูลเพิ่มเติม</h2>
-        <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">${user.name || ''} - ${user.employeeId || ''}</p>
+        <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">${user.titlePrefix || ''} ${user.name || ''} - ${user.employeeId || ''}</p>
       </div>
+
+      ${hasBenefits ? `
+      <!-- ข้อมูลสวัสดิการ -->
+      <div style="margin-bottom: 20px;">
+        <div style="background: #dbeafe; padding: 12px 20px; border-radius: 8px 8px 0 0;">
+          <h3 style="margin: 0; font-size: 18px; color: #1e40af; font-weight: bold;">🛡️ ข้อมูลสวัสดิการ</h3>
+        </div>
+        <div style="background: white; padding: 20px; border: 2px solid #dbeafe; border-top: none; border-radius: 0 0 8px 8px;">
+          <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #4B5563; width: 35%; font-weight: 500;">เลขประกันสังคม</td>
+              <td style="padding: 8px 0; color: #000000; font-weight: bold;">${user.socialSecurityNumber || 'ไม่ระบุ'}</td>
+            </tr>
+            <tr style="border-top: 1px solid #e2e8f0;">
+              <td style="padding: 8px 0; color: #4B5563; font-weight: 500;">สิทธิประกันสังคม</td>
+              <td style="padding: 8px 0; color: #000000; font-weight: bold;">${user.socialSecurityRights || 'ไม่ระบุ'}</td>
+            </tr>
+            <tr style="border-top: 1px solid #e2e8f0;">
+              <td style="padding: 8px 0; color: #4B5563; font-weight: 500;">กองทุนสำรองเลี้ยงชีพ</td>
+              <td style="padding: 8px 0; color: #000000; font-weight: bold;">${user.providentFund || 'ไม่มี'}</td>
+            </tr>
+            <tr style="border-top: 1px solid #e2e8f0;">
+              <td style="padding: 8px 0; color: #4B5563; font-weight: 500;">ประกันสุขภาพกลุ่ม</td>
+              <td style="padding: 8px 0; color: #000000; font-weight: bold;">${user.groupHealthInsurance || 'ไม่มี'}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      ` : ''}
 
       ${hasWorkHistory ? `
       <!-- ประวัติการทำงาน -->
@@ -452,7 +483,7 @@ export const generateUserPDF = async (user) => {
     }
 
     // บันทึก PDF
-    const fileName = `${user.name || 'employee'}_${user.employeeId || 'unknown'}.pdf`;
+    const fileName = `${(user.titlePrefix || '') + (user.name || 'employee')}_${user.employeeId || 'unknown'}.pdf`;
     pdf.save(fileName);
     
     return true;

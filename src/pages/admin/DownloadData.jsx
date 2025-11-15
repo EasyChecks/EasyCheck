@@ -373,7 +373,7 @@ function DownloadData() {
                 
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <div className="w-16 h-16 bg-brand-primary backdrop-blur-sm rounded-xl flex items-center justify-center">
                       {report.id === 1 ? icons.report : icons.chart}
                     </div>
                     <div>

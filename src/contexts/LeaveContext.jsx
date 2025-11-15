@@ -346,7 +346,7 @@ export const LeaveProvider = ({ children }) => {
         }
 
         switch (leaveType) {
-            case 'ลาป่วย':
+            case 'ลาป่วย': {
                 // ลาป่วยตั้งแต่ 3 วันขึ้นไป ต้องมีใบรับรองแพทย์
                 if (totalDays >= 3 && (!documents || documents.length === 0)) {
                     errors.push('กรณีลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องแนบใบรับรองแพทย์');
@@ -359,8 +359,9 @@ export const LeaveProvider = ({ children }) => {
                     errors.push(`คุณมีสิทธิ์ลาป่วยเหลืออีก ${sickDaysAvailable} วัน (ลาได้ไม่เกิน 60 วัน/ปี)`);
                 }
                 break;
+            }
 
-            case 'ลากิจ':
+            case 'ลากิจ': {
                 // ลากิจต้องได้รับการอนุมัติก่อน (เตือนผู้ใช้)
                 // Note: การตรวจสอบนี้เป็นแค่การแจ้งเตือน ไม่บล็อก
                 
@@ -371,8 +372,9 @@ export const LeaveProvider = ({ children }) => {
                     errors.push(`คุณมีสิทธิ์ลากิจเหลืออีก ${personalDaysAvailable} วัน`);
                 }
                 break;
+            }
 
-            case 'ลาพักร้อน':
+            case 'ลาพักร้อน': {
                 // ลาพักร้อนต้องได้รับการอนุมัติก่อน (เตือนผู้ใช้)
                 
                 // ตรวจสอบวันลาที่เหลือ
@@ -382,8 +384,9 @@ export const LeaveProvider = ({ children }) => {
                     errors.push(`คุณมีสิทธิ์ลาพักร้อนเหลืออีก ${vacationDaysAvailable} วัน (ลาได้ไม่เกิน 10 วัน/ปี)`);
                 }
                 break;
+            }
 
-            case 'ลาคลอด':
+            case 'ลาคลอด': {
                 // ตรวจสอบวันลาที่เหลือ
                 const maternityDaysUsed = getUsedDays('ลาคลอด');
                 const maternityDaysAvailable = leaveQuota['ลาคลอด'].totalDays - maternityDaysUsed;
@@ -391,6 +394,7 @@ export const LeaveProvider = ({ children }) => {
                     errors.push(`คุณมีสิทธิ์ลาคลอดเหลืออีก ${maternityDaysAvailable} วัน (ลาได้ไม่เกิน 90 วัน)`);
                 }
                 break;
+            }
 
             default:
                 errors.push('ประเภทการลาไม่ถูกต้อง');

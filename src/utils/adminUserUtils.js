@@ -38,26 +38,57 @@ export const generateEmployeeId = (provinceCode, branchCode, users = []) => {
  */
 export const validateUserData = (newUsers, existingUsers = []) => {
   const errors = [];
-  const allUsers = [...existingUsers];
+  
+  console.log('=== validateUserData Debug ===');
+  console.log('newUsers count:', newUsers.length);
+  console.log('existingUsers count:', existingUsers.length);
+  
+  // ตรวจสอบความซ้ำภายใน newUsers เอง
+  const seenEmails = new Set();
+  const seenNationalIds = new Set();
+  const seenUsernames = new Set();
   
   newUsers.forEach((user, index) => {
-    // Check duplicate email
-    if (allUsers.some(u => u.email === user.email)) {
+    console.log(`User ${index + 1}: nationalId="${user.nationalId}", email="${user.email}"`);
+    
+    // Check duplicate email กับข้อมูลเดิม
+    if (existingUsers.some(u => u.email === user.email)) {
       errors.push(`แถวที่ ${index + 1}: อีเมล ${user.email} ซ้ำกับข้อมูลที่มีอยู่`);
     }
     
-    // Check duplicate nationalId
-    if (user.nationalId && allUsers.some(u => u.nationalId === user.nationalId)) {
+    // Check duplicate email ภายใน CSV เอง
+    if (seenEmails.has(user.email)) {
+      errors.push(`แถวที่ ${index + 1}: อีเมล ${user.email} ซ้ำภายใน CSV`);
+    }
+    seenEmails.add(user.email);
+    
+    // Check duplicate nationalId กับข้อมูลเดิม
+    if (user.nationalId && existingUsers.some(u => u.nationalId === user.nationalId)) {
+      console.log(`❌ Duplicate with existing: ${user.nationalId}`);
       errors.push(`แถวที่ ${index + 1}: เลขบัตรประชาชน ${user.nationalId} ซ้ำกับข้อมูลที่มีอยู่`);
     }
     
-    // Check duplicate username
-    if (allUsers.some(u => u.username === user.username)) {
+    // Check duplicate nationalId ภายใน CSV เอง
+    if (user.nationalId && seenNationalIds.has(user.nationalId)) {
+      console.log(`❌ Duplicate within CSV: ${user.nationalId}`);
+      errors.push(`แถวที่ ${index + 1}: เลขบัตรประชาชน ${user.nationalId} ซ้ำภายใน CSV`);
+    }
+    if (user.nationalId) seenNationalIds.add(user.nationalId);
+    
+    // Check duplicate username กับข้อมูลเดิม
+    if (existingUsers.some(u => u.username === user.username)) {
       errors.push(`แถวที่ ${index + 1}: Username ${user.username} ซ้ำกับข้อมูลที่มีอยู่`);
     }
     
-    allUsers.push(user);
+    // Check duplicate username ภายใน CSV เอง
+    if (seenUsernames.has(user.username)) {
+      errors.push(`แถวที่ ${index + 1}: Username ${user.username} ซ้ำภายใน CSV`);
+    }
+    seenUsernames.add(user.username);
   });
+  
+  console.log('Errors found:', errors.length);
+  console.log('==============================');
   
   return errors;
 };
@@ -70,18 +101,32 @@ export const parseCsvData = (csvText) => {
   const lines = csvText.split('\n').filter(line => line.trim());
   if (lines.length === 0) return [];
 
+  // ตรวจสอบว่าใช้ delimiter อะไร (comma หรือ tab)
+  const delimiter = lines[0].includes('\t') ? '\t' : ',';
+  
   // Parse header
-  const headers = lines[0].split(',').map(h => h.trim());
+  const headers = lines[0].split(delimiter).map(h => h.trim());
   
   // Parse data rows
   const data = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',');
+    const values = lines[i].split(delimiter);
     if (values.length === headers.length) {
       const row = {};
       headers.forEach((header, index) => {
-        row[header] = values[index]?.trim() || '';
+        // ลบ single quote ที่ใช้ป้องกัน Excel แปลงเป็น Scientific Notation
+        let value = values[index]?.trim() || '';
+        if (value.startsWith("'")) {
+          value = value.substring(1);
+        }
+        row[header] = value;
       });
+      
+      // Debug log สำหรับเลขบัตรประชาชน
+      if (row.nationalId) {
+        console.log(`Row ${i}: nationalId = "${row.nationalId}"`);
+      }
+      
       data.push(row);
     }
   }
@@ -105,7 +150,29 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
   csvData.forEach((row, index) => {
     // สร้างรหัสพนักงาน
     const provinceCode = (row.provinceCode || 'BKK').toUpperCase().slice(0, 3);
-    const branchCode = (row.branchCode || '101').slice(0, 3);
+    
+    // แปลง branchCode: รองรับทั้งตัวเลข (101, 201) และตัวอักษร (BKK, CNX, PKT)
+    let branchCode = String(row.branchCode || '').trim();
+    
+    // ถ้า branchCode เป็นชื่อจังหวัด (BKK, CNX, PKT) ให้แปลงเป็นเลข branch
+    if (branchCode === 'BKK' || branchCode === 'Bangkok') {
+      branchCode = '101';
+    } else if (branchCode === 'CNX' || branchCode === 'ChiangMai') {
+      branchCode = '201';
+    } else if (branchCode === 'PKT' || branchCode === 'Phuket') {
+      branchCode = '301';
+    } else if (!branchCode) {
+      // ถ้าไม่มี branchCode ให้ใช้ default ตาม provinceCode
+      if (provinceCode === 'BKK') branchCode = '101';
+      else if (provinceCode === 'CNX') branchCode = '201';
+      else if (provinceCode === 'PKT') branchCode = '301';
+      else branchCode = '101'; // default
+    }
+    
+    // ถ้าเป็นตัวเลขอยู่แล้ว ให้ใช้เลย (รองรับ 101, 201, 301)
+    // ตัด branchCode ให้เหลือ 3 หลัก และ pad ถ้าสั้นกว่า 3 หลัก
+    branchCode = String(branchCode).slice(0, 3).padStart(3, '0');
+    
     const locationKey = provinceCode + branchCode;
     
     // หาเลขวิ่งล่าสุดจาก users ที่มีอยู่แล้ว + users ที่กำลังจะสร้าง
@@ -140,6 +207,7 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
     const normalUser = {
       id: currentId,
       name: row.name || '',
+      titlePrefix: row.titlePrefix || '', // 🆕 เพิ่ม default titlePrefix
       email: row.email || '',
       username: employeeId,
       employeeId: employeeId,
@@ -155,15 +223,18 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
       bloodType: row.bloodType || '',
       salary: row.salary || '',
       address: row.address || '',
+      startDate: row.startDate || new Date().toISOString().split('T')[0], // 🆕 เพิ่ม startDate
       provinceCode: provinceCode,
       branchCode: branchCode,
       // 🆕 Benefits - เพิ่มข้อมูลสวัสดิการ
       socialSecurityNumber: row.socialSecurityNumber || '',
+      socialSecurityRights: row.socialSecurityRights || 'มี', // 🆕 เพิ่ม socialSecurityRights
       providentFund: row.providentFund || '',
-      healthInsurance: row.healthInsurance || '',
-      profileImage: row.profileImage || '',
-      skills: row.skills ? row.skills.split('|').map(s => s.trim()) : [],
-      education: row.education ? row.education.split('|').map(e => e.trim()) : [],
+      groupHealthInsurance: row.groupHealthInsurance || '', // 🆕 เปลี่ยนจาก healthInsurance
+      profileImage: row.profileImage || `https://i.pravatar.cc/300?img=${Math.floor(Math.random() * 70) + 1}`, // 🆕 random avatar
+      skills: row.skills ? row.skills.split('|').map(s => s.trim()).filter(Boolean) : [], // 🆕 filter empty
+      education: row.education ? row.education.split('|').map(e => e.trim()).filter(Boolean) : [], // 🆕 filter empty
+      certifications: row.certifications ? row.certifications.split('|').map(c => c.trim()).filter(Boolean) : [], // 🆕 เพิ่ม certifications
       workHistory: row.workHistory ? 
         row.workHistory.split('|').map(w => {
           const parts = w.trim().split(';');
@@ -172,12 +243,16 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
             position: parts[1].trim(),
             company: parts[2].trim()
           } : w.trim();
-        }) : [],
+        }).filter(Boolean) : [], // 🆕 filter empty
       emergencyContact: row.emergencyContactName ? {
         name: row.emergencyContactName || '',
         phone: row.emergencyContactPhone || '',
         relation: row.emergencyContactRelation || ''
-      } : {},
+      } : {
+        name: '',
+        phone: '',
+        relation: ''
+      }, // 🆕 default empty object
       timeSummary: {
         totalWorkDays: 0,
         onTime: 0,
@@ -203,7 +278,7 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
         employeeId: adminEmployeeId,
         email: row.adminEmail || row.email.replace('@', '+admin@'),
         role: row.role,
-        position: (row.role === 'superadmin' ? 'Super Administrator' : 'Administrator') + ' - ' + (row.position || ''),
+        nationalId: '', // ⚠️ ลบเลขบัตรประชาชนออกจาก admin account เพื่อไม่ให้ซ้ำกับ user account
       };
       processedUsers.push(adminUser);
       currentId++;
