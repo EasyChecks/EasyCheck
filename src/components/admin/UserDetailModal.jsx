@@ -19,18 +19,12 @@ const formatThaiDate = (isoDate) => {
 const UserDetailModal = React.memo(function UserDetailModal({ 
   user, 
   showDetail,
-  showAttendance,
-  selectedDate,
   currentUser,
   onClose, 
   onEdit, 
   onDownloadPDF,
   onDelete,
-  onToggleAttendance,
-  getStatusBadge,
-  // Attendance verification props
-  getFilteredAttendanceRecords,
-  onSetSelectedDate
+  getStatusBadge
 }) {
   // 🔥 State สำหรับ sync timeSummary แบบ real-time
   const [currentTimeSummary, setCurrentTimeSummary] = useState(user?.timeSummary);
@@ -145,17 +139,6 @@ const UserDetailModal = React.memo(function UserDetailModal({
                 </svg>
                 PDF
               </button>
-              {user.attendanceRecords && (
-                <button 
-                  onClick={onToggleAttendance} 
-                  className="px-4 py-2 bg-white/20 hover:bg-brand-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {showAttendance ? 'ซ่อน' : 'เช็คอิน/เอาต์'}
-                </button>
-              )}
               <button 
                 onClick={onClose} 
                 className="px-4 py-2 bg-white/20 hover:bg-brand-accent/30 backdrop-blur-md text-white rounded-xl transition-colors transform hover:scale-105 font-medium shadow-lg"
@@ -168,183 +151,6 @@ const UserDetailModal = React.memo(function UserDetailModal({
 
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1">
-          {/* Attendance Verification Section - Collapsible */}
-          {showAttendance && user.attendanceRecords && getFilteredAttendanceRecords && (
-            <div className="mb-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border-2 border-orange-200 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  ตรวจสอบการเข้า-ออกงาน
-                </h3>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <input 
-                      type="date" 
-                      value={selectedDate}
-                      onChange={(e) => onSetSelectedDate(e.target.value)}
-                      className="px-3 py-2 pr-8 border-2 border-orange-300 rounded-lg text-sm focus:border-orange-500 focus:outline-none"
-                      placeholder="กรองตามวันที่"
-                    />
-                    {selectedDate && (
-                      <button
-                        onClick={() => onSetSelectedDate('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        title="ยกเลิกการเลือก (แสดง 3 วันล่าสุด)"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                  <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                    {selectedDate ? '1 วัน' : '3 วันล่าสุด'}
-                  </div>
-                </div>
-              </div>
-
-              {getFilteredAttendanceRecords().length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                  ไม่พบข้อมูลการเข้า-ออกงานในวันที่เลือก
-                </div>
-              ) : (
-                getFilteredAttendanceRecords().map((record, idx) => (
-                  <div key={idx} className="bg-white rounded-xl p-4 mb-3 shadow-md border border-orange-100">
-                    <div className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {record.date}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Check In */}
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-bold text-green-700 flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                            </svg>
-                            เข้างาน
-                          </h4>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <img src={record.checkIn.photo} alt="check-in" className="w-16 h-16 rounded-lg object-cover border-2 border-green-300" />
-                            <div className="flex-1">
-                              <div className="text-xs text-gray-500">เวลา</div>
-                              <div className="text-base font-bold text-gray-800">{record.checkIn.time}</div>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs text-gray-500">สถานะ</div>
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                                record.checkIn.status === 'ตรงเวลา' ? 'bg-green-100 text-green-700' : 
-                                record.checkIn.status === 'มาสาย' ? 'bg-yellow-100 text-yellow-700' : 
-                                'bg-red-100 text-red-700'
-                              }`}>
-                                {record.checkIn.status}
-                            </span>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs text-gray-500">ตำแหน่ง</div>
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkIn.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
-                              {record.checkIn.location}
-                            </span>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs text-gray-500">พิกัด</div>
-                            <div className="text-xs text-gray-800 font-medium">
-                              {record.checkIn.address || 'ไม่ระบุ'}
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs text-gray-500">ระยะทาง</div>
-                            <div className="text-xs text-gray-800 font-medium">
-                              {record.checkIn.distance || '-'}
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs text-gray-500">GPS</div>
-                            <a href={`https://maps.google.com/?q=${record.checkIn.gps}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">{record.checkIn.gps}</a>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Check Out */}
-                      {record.checkOut && (
-                        <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg p-4 border border-red-200">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-bold text-red-700 flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                              </svg>
-                              ออกงาน
-                            </h4>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <img src={record.checkOut.photo} alt="check-out" className="w-16 h-16 rounded-lg object-cover border-2 border-orange-300" />
-                              <div className="flex-1">
-                                <div className="text-xs text-gray-500">เวลา</div>
-                                <div className="text-base font-bold text-gray-800">{record.checkOut.time}</div>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <div className="text-xs text-gray-500">สถานะ</div>
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.status === 'ตรงเวลา' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {record.checkOut.status}
-                              </span>
-                            </div>
-                            
-                            <div>
-                              <div className="text-xs text-gray-500">ตำแหน่ง</div>
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${record.checkOut.location === 'อยู่ในพื้นที่' ? 'bg-brand-accent text-primary' : 'bg-orange-100 text-orange-700'}`}>
-                                {record.checkOut.location}
-                              </span>
-                            </div>
-                            
-                            <div>
-                              <div className="text-xs text-gray-500">พิกัด</div>
-                              <div className="text-xs text-gray-800 font-medium">
-                                {record.checkOut.address || 'ไม่ระบุ'}
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <div className="text-xs text-gray-500">ระยะทาง</div>
-                              <div className="text-xs text-gray-800 font-medium">
-                                {record.checkOut.distance || '-'}
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <div className="text-xs text-gray-500">GPS</div>
-                              <a href={`https://maps.google.com/?q=${record.checkOut.gps}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">{record.checkOut.gps}</a>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Left Column - Profile */}
@@ -357,7 +163,9 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   </div>
                   
                   <div className="mt-4 text-center w-full">
-                    <h3 className="text-xl font-bold text-gray-800">{user.name}</h3>
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {user.name}
+                    </h3>
                     <p className="text-sm text-gray-500 mt-1">{user.position || 'ไม่ระบุตำแหน่ง'}</p>
                     <div className="mt-3 space-y-2">
                       <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${getStatusBadge(user.status)}`}>

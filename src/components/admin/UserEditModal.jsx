@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ProfileManager from './ProfileManager';
 
 const UserEditModal = React.memo(function UserEditModal({ 
   show, 
@@ -109,17 +110,61 @@ const UserEditModal = React.memo(function UserEditModal({
                   </div>
                 </div>
 
+                {/* Title Prefix */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    คำนำหน้า <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onChange({ ...editForm, titlePrefix: 'นาย' })}
+                      className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                        (editForm.titlePrefix || editingUser.titlePrefix || 'นาย') === 'นาย'
+                          ? 'bg-brand-primary text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      นาย
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onChange({ ...editForm, titlePrefix: 'นาง' })}
+                      className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                        (editForm.titlePrefix || editingUser.titlePrefix || 'นาย') === 'นาง'
+                          ? 'bg-brand-primary text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      นาง
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onChange({ ...editForm, titlePrefix: 'นางสาว' })}
+                      className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                        (editForm.titlePrefix || editingUser.titlePrefix || 'นาย') === 'นางสาว'
+                          ? 'bg-brand-primary text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      นางสาว
+                    </button>
+                  </div>
+                </div>
+
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                    ชื่อ นามสกุล <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={editForm.name || editingUser.name || ''}
+                    value={(editForm.name || editingUser.name || '')
+                      .replace(/^(นาย|นาง|นางสาว)\s*/g, '')  // ตัดคำนำหน้าออก
+                    }
                     onChange={(e) => onChange({ ...editForm, name: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="กรอกชื่อ-นามสกุล"
+                    placeholder="เช่น สมชาย ใจดี (ไม่ต้องใส่คำนำหน้า)"
                   />
                 </div>
 
@@ -276,6 +321,21 @@ const UserEditModal = React.memo(function UserEditModal({
                   <p className="text-xs text-gray-500 mt-1">ไม่สามารถแก้ไขได้</p>
                 </div>
 
+                {/* Branch - Read Only */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    สาขา
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.branchCode || editingUser.branchCode || ''}
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600"
+                    placeholder="ระบุโดย รหัสพนักงาน"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">ไม่สามารถแก้ไขได้</p>
+                </div>
+
                 {/* Position */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -352,10 +412,10 @@ const UserEditModal = React.memo(function UserEditModal({
                     onChange={(e) => onChange({ ...editForm, status: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <option value="active">Active (ทำงานปกติ)</option>
-                    <option value="leave">Leave (ลาออก)</option>
-                    <option value="suspended">Suspended (ระงับการใช้งาน)</option>
-                    <option value="pending">Pending (รอการอนุมัติ)</option>
+                    <option value="active">ทำงานอยู่ (Active)</option>
+                    <option value="leave">ลาออกแล้ว (Leave)</option>
+                    <option value="suspended">โดนพักงาน (Suspended)</option>
+                    <option value="pending">รอโปรโมท (Pending)</option>
                   </select>
                 </div>
 
@@ -443,6 +503,74 @@ const UserEditModal = React.memo(function UserEditModal({
                     <option value="น้องสาว">น้องสาว</option>
                     <option value="อื่นๆ">อื่นๆ</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* ข้อมูลสวัสดิการ (Benefits) */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                ข้อมูลสวัสดิการ
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* เลขประกันสังคม */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    เลขประกันสังคม
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.socialSecurityNumber || editingUser.socialSecurityNumber || ''}
+                    onChange={(e) => onChange({ ...editForm, socialSecurityNumber: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="X-XXXX-XXXXX-XX-X"
+                  />
+                </div>
+
+                {/* สิทธิประกันสังคม */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    สิทธิประกันสังคม
+                  </label>
+                  <select
+                    value={editForm.socialSecurityRights || editingUser.socialSecurityRights || 'มี'}
+                    onChange={(e) => onChange({ ...editForm, socialSecurityRights: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    <option value="มี">มี</option>
+                    <option value="ไม่มี">ไม่มี</option>
+                  </select>
+                </div>
+
+                {/* กองทุนสำรองเลี้ยงชีพ */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    กองทุนสำรองเลี้ยงชีพ
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.providentFund || editingUser.providentFund || ''}
+                    onChange={(e) => onChange({ ...editForm, providentFund: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="เช่น 5% หรือ ไม่มี"
+                  />
+                </div>
+
+                {/* ประกันสุขภาพกลุ่ม */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ประกันสุขภาพกลุ่ม
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.groupHealthInsurance || editingUser.groupHealthInsurance || ''}
+                    onChange={(e) => onChange({ ...editForm, groupHealthInsurance: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="เช่น AIA, Allianz หรือ ไม่มี"
+                  />
                 </div>
               </div>
             </div>

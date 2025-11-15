@@ -37,7 +37,8 @@ export const usersData = [
   // 👨‍💼 Admin คนที่ 1 - มี 2 บัญชี (User Account สำหรับพนักงานทั่วไป + Admin Account สำหรับจัดการระบบ)
   { 
     id: 1, 
-    name: 'นางสาวสุภาพร จันทร์เพ็ญ', 
+    titlePrefix: 'นางสาว',
+    name: 'สุภาพร จันทร์เพ็ญ', 
     email: 'supaporn.admin@ggs.co.th', 
     role: 'admin', 
     status: 'active', 
@@ -79,6 +80,9 @@ export const usersData = [
     skills: ['HR Management', 'Recruitment', 'Employee Relations', 'HRIS'],
     address: '999/88 ถ.พระราม 4 แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
     socialSecurityNumber: '1-2098-76543-21-0',
+    socialSecurityRights: 'มี',
+    providentFund: '5%',
+    groupHealthInsurance: 'AIA',
     timeSummary: {
       totalWorkDays: 250,
       onTime: 240,
@@ -95,7 +99,8 @@ export const usersData = [
   // 👨‍💻 Super Admin - ผู้ดูแลระบบสูงสุด (ควบคุมทุกอย่างในระบบ)
   { 
     id: 2, 
-    name: 'นายวิชัย ศรีสวัสดิ์', 
+    titlePrefix: 'นาย',
+    name: 'วิชัย ศรีสวัสดิ์', 
     email: 'wichai.superadmin@ggs.co.th', 
     role: 'superadmin', 
     status: 'active', 
@@ -138,6 +143,9 @@ export const usersData = [
     skills: ['System Administration', 'Network Security', 'Cloud Infrastructure', 'Database Management'],
     address: '777/55 ถ.ลาดพร้าว แขวงจอมพล เขตจตุจักร กรุงเทพฯ 10900',
     socialSecurityNumber: '1-3099-88776-65-5',
+    socialSecurityRights: 'มี',
+    providentFund: '7%',
+    groupHealthInsurance: 'Allianz',
     timeSummary: {
       totalWorkDays: 260,
       onTime: 255,
@@ -153,7 +161,8 @@ export const usersData = [
   },
   { 
     id: 3, 
-    name: 'นายอภิชาติ รัตนา', 
+    titlePrefix: 'นาย',
+    name: 'อภิชาติ รัตนา', 
     email: 'apichart.rat@email.com', 
     role: 'manager', 
     status: 'active', 
@@ -201,6 +210,9 @@ export const usersData = [
     skills: ['React', 'Node.js', 'Python', 'Docker', 'AWS'],
     address: '123/45 ถ.พระราม 9 แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพฯ 10310',
     socialSecurityNumber: '1-1002-43657-22-4',
+    socialSecurityRights: 'มี',
+    providentFund: '5%',
+    groupHealthInsurance: 'AIA',
     timeSummary: {
       totalWorkDays: 245,
       onTime: 220,
@@ -237,7 +249,8 @@ export const usersData = [
   },
   { 
     id: 4, 
-    name: 'นางพรทิพย์ ภักดี', 
+    titlePrefix: 'นาง',
+    name: 'พรทิพย์ ภักดี', 
     email: 'porntip@ggs.co.th', 
     role: 'user', 
     status: 'leave', 
@@ -279,6 +292,9 @@ export const usersData = [
     skills: ['Digital Marketing', 'SEO', 'Content Marketing', 'Social Media'],
     address: '456/78 ถ.สุขุมวิท แขวงพระโขนง เขตคลองเตย กรุงเทพฯ 10110',
     socialSecurityNumber: '3-5678-91234-56-7',
+    socialSecurityRights: 'มี',
+    providentFund: '3%',
+    groupHealthInsurance: 'Dhipaya',
     timeSummary: {
       totalWorkDays: 220,
       onTime: 180,
@@ -292,7 +308,8 @@ export const usersData = [
   },
   { 
     id: 5, 
-    name: 'นายนันทกร ทูนแก้ว', 
+    titlePrefix: 'นาย',
+    name: 'นันทกร ทูนแก้ว', 
     email: 'nantakorn@ggs.co.th', 
     role: 'user', 
     status: 'suspended', 
@@ -334,6 +351,9 @@ export const usersData = [
     skills: ['Recruitment', 'Employee Relations', 'HR Management'],
     address: '789/12 ถ.พหลโยธิน แขวงสามเสนใน เขตพญาไท กรุงเทพฯ 10400',
     socialSecurityNumber: '2-1234-56789-01-2',
+    socialSecurityRights: 'มี',
+    providentFund: 'ไม่มี',
+    groupHealthInsurance: 'ไม่มี',
     timeSummary: {
       totalWorkDays: 180,
       onTime: 140,
@@ -347,7 +367,8 @@ export const usersData = [
   },
   { 
     id: 6, 
-    name: 'นายเทวราช วงค์ษาจันทร์', 
+    titlePrefix: 'นาย',
+    name: 'เทวราช วงค์ษาจันทร์', 
     email: 'tavarach@ggs.co.th', 
     role: 'user', 
     status: 'pending', 
@@ -389,6 +410,9 @@ export const usersData = [
     skills: ['Accounting', 'Financial Reporting', 'Tax Planning'],
     address: '321/65 ถ.วิภาวดีรังสิต แขวงจตุจักร เขตจตุจักร กรุงเทพฯ 10900',
     socialSecurityNumber: '4-7890-12345-67-8',
+    socialSecurityRights: 'มี',
+    providentFund: '5%',
+    groupHealthInsurance: 'Muang Thai Life',
     timeSummary: {
       totalWorkDays: 150,
       onTime: 135,

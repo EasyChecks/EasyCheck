@@ -79,11 +79,25 @@ function Auth() {
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
+        // 🚫 ตรวจสอบสถานะผู้ใช้ - ห้าม login ถ้าเป็น leave หรือ suspended
+        const userStatus = response.user.status?.toLowerCase()
+        
+        if (userStatus === 'leave' || userStatus === 'suspended') {
+          setError(
+            userStatus === 'leave' 
+              ? 'ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของคุณอยู่ในสถานะลาออก (Leave)'
+              : 'ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของคุณถูกระงับชั่วคราว (Suspended)'
+          )
+          setLoading(false)
+          return
+        }
+        
         // 🔍 Debug: ตรวจสอบ role ก่อน login
         console.log('✅ Login Success:', {
           username,
           name: response.user.name,
           role: response.user.role,
+          status: response.user.status,
           isAdminAccount: response.user.isAdminAccount
         });
         
