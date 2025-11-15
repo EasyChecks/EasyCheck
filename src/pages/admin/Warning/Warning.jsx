@@ -3,7 +3,7 @@ import { useLeave } from '../../../contexts/LeaveContext'
 import { usersData } from '../../../data/usersData'
 import ConfirmDialog from '../../../components/common/ConfirmDialog'
 import SuccessDialog from '../../../components/common/SuccessDialog'
-import ErrorDialog from '../../../components/common/ErrorMessage'
+import ErrorDialog from '../../../components/common/ErrorDialog'
 
 export function AttachmentModal({ data, onClose }) {
   if (!data) return null
