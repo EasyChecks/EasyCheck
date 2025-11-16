@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap, LayersControl } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMapEvents, useMap, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useLocations } from '../../../contexts/LocationContext'
@@ -203,6 +203,16 @@ const LocationMapView = React.memo(function LocationMapView({
   // Memoize map config
   const mapStyle = useMemo(() => ({ height: '100%', width: '100%' }), [])
   
+  // เก็บ ref ของ markers เพื่อเปิด popup
+  const markerRefs = useRef({})
+  
+  // เปิด popup เมื่อมีการเลือกจากด้านขวา
+  useEffect(() => {
+    if (selectedLocationPreview?.id && markerRefs.current[selectedLocationPreview.id]) {
+      markerRefs.current[selectedLocationPreview.id].openPopup()
+    }
+  }, [selectedLocationPreview?.id])
+  
   // Memoize location markers to prevent re-render
   const locationMarkers = useMemo(() => {
     return locations.map((loc) => ({
@@ -258,29 +268,95 @@ const LocationMapView = React.memo(function LocationMapView({
       {selectedLocationPreview && <ZoomToLocation location={selectedLocationPreview} />}
 
       {/* Show existing locations - Memoized markers */}
-      {locationMarkers.map((marker) => (
-        <React.Fragment key={marker.key}>
-          <Marker 
-            position={marker.position}
-            eventHandlers={{
-              click: () => {
-                const loc = locations.find(l => l.id === marker.id)
-                if (loc) handleViewLocationDetails(loc)
-              }
-            }}
-          />
-          <Circle
-            center={marker.position}
-            radius={marker.radius}
-            pathOptions={greenCircleStyle}
-          />
-        </React.Fragment>
-      ))}
+      {locationMarkers.map((marker) => {
+        const loc = locations.find(l => l.id === marker.id)
+        return (
+          <React.Fragment key={marker.key}>
+            <Marker 
+              position={marker.position}
+              ref={(ref) => {
+                if (ref) markerRefs.current[marker.id] = ref
+              }}
+            >
+              <Popup>
+                <div className="p-2 min-w-[200px]">
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 text-base leading-tight">{loc?.name}</h3>
+                      {loc?.description && (
+                        <p className="text-sm text-gray-600 mt-1">{loc.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">รัศมี: {loc?.radius} เมตร</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium mt-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      ใช้งาน
+                    </div>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+            <Circle
+              center={marker.position}
+              radius={marker.radius}
+              pathOptions={greenCircleStyle}
+            />
+          </React.Fragment>
+        )
+      })}
 
       {/* Show new location preview */}
       {newLocationForm.latitude && newLocationForm.longitude && (
         <>
-          <Marker position={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]} />
+          <Marker position={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}>
+            <Popup>
+              <div className="p-2 min-w-[200px]">
+                <div className="flex items-start gap-2 mb-2">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 text-base leading-tight">{newLocationForm.name || 'สถานที่ใหม่'}</h3>
+                    {newLocationForm.description && (
+                      <p className="text-sm text-gray-600 mt-1">{newLocationForm.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1 text-sm">
+                  {newLocationForm.radius && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">รัศมี: {newLocationForm.radius} เมตร</span>
+                    </div>
+                  )}
+                  <div className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                    </svg>
+                    ตัวอย่าง
+                  </div>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
           {newLocationForm.radius && (
             <Circle
               center={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}
@@ -371,25 +447,28 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [showDeleteTypeConfirm, setShowDeleteTypeConfirm] = useState(false)
   const [typeToDelete, setTypeToDelete] = useState('')
   
-  // รายการแผนกและตำแหน่งที่มี
+  // State สำหรับเก็บ users data ที่อัพเดทได้
+  const [allUsers, setAllUsers] = useState(() => {
+    const stored = localStorage.getItem('usersData');
+    return stored ? JSON.parse(stored) : usersData;
+  });
+  
+  // รายการแผนกและตำแหน่งที่มี (ตรงกับ UserCreateModal)
   const availableTeams = [
-    'IT',
-    'Engineering', 
-    'Marketing',
-    'Sales',
-    'HR',
-    'Finance',
-    'Operations',
-    'Manager',
-    'Staff'
+    'การเงิน',
+    'ฝ่ายบุคคล',
+    'ฝ่ายขาย',
+    'ฝ่ายผลิต',
+    'ฝ่ายไอที',
+    'ฝ่ายการตลาด',
+    'ฝ่ายบริการ'
   ]
   
-  // รายการสาขาที่มี
+  // รายการสาขาที่มี (ตรงกับภาพ)
   const availableBranches = [
-    { code: 'BKK', name: 'กรุงเทพฯ (BKK)', provinceCode: 'BKK' },
-    { code: 'CNX', name: 'เชียงใหม่ (CNX)', provinceCode: 'CNX' },
-    { code: 'PKT', name: 'ภูเก็ต (PKT)', provinceCode: 'PKT' },
-    { code: 'KAN', name: 'กาญจนบุรี (KAN)', provinceCode: 'KAN' }
+    { code: 'BKK', name: 'กรุงเทพฯ', shortName: 'BKK (กรุงเทพฯ)', provinceCode: 'BKK' },
+    { code: 'CNX', name: 'เชียงใหม่', shortName: 'CNX (เชียงใหม่)', provinceCode: 'CNX' },
+    { code: 'PKT', name: 'ภูเก็ต', shortName: 'PKT (ภูเก็ต)', provinceCode: 'PKT' }
   ]
   
   // New location form for map modal
@@ -438,7 +517,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     // 🔄 โหลดสมาชิกที่เคยเลือกไว้
     if (initialData.members && initialData.members.trim()) {
       const memberNames = initialData.members.split(',').map(name => name.trim()).filter(Boolean)
-      const selectedUsers = usersData.filter(user => memberNames.includes(user.name))
+      const selectedUsers = allUsers.filter(user => memberNames.includes(user.name))
       setSelectedMembers(selectedUsers)
       console.log('📋 โหลดสมาชิก:')
       console.log('  - ชื่อที่บันทึกไว้:', memberNames)
@@ -503,6 +582,24 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const tasksRef = useRef(null)
   const goalsRef = useRef(null)
 
+  // ฟัง event เมื่อมีการเพิ่มผู้ใช้ใหม่
+  useEffect(() => {
+    const handleUserCreated = (event) => {
+      const { user, branch, name } = event.detail;
+      
+      // รีเฟรช users data จาก localStorage
+      const updatedUsers = JSON.parse(localStorage.getItem('usersData') || '[]');
+      setAllUsers(updatedUsers); // อัพเดท state เพื่อให้ dropdown แสดงชื่อใหม่
+      
+      console.log('New user created:', name, 'Branch:', branch);
+    };
+
+    window.addEventListener('userCreated', handleUserCreated);
+    return () => {
+      window.removeEventListener('userCreated', handleUserCreated);
+    };
+  }, []);
+
   // Close time pickers when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -549,19 +646,38 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const filteredMembers = useMemo(() => {
     const search = members.toLowerCase()
     
-    return usersData
+    // 🔍 แยกสมาชิกที่ถูกเลือกแล้วและยังไม่เลือก
+    const selectedIds = selectedMembers.map(m => m.id)
+    
+    // ลบข้อมูลซ้ำก่อน (ถ้ามี)
+    const uniqueUsers = allUsers.reduce((acc, user) => {
+      if (!acc.find(u => u.id === user.id)) {
+        acc.push(user)
+      }
+      return acc
+    }, [])
+    
+    const allFilteredUsers = uniqueUsers
       .filter(user => {
-        // ไม่แสดง admin
-        if (user.role === 'admin' || user.role === 'superadmin') return false
+        // ✅ Super Admin เห็น admin/superadmin ด้วย (ไม่ filter role)
+        // ❌ ลบเงื่อนไข: if (user.role === 'admin' || user.role === 'superadmin') return false
         
         // 🔐 ถ้าเป็น admin (ไม่ใช่ superadmin) ให้เห็นเฉพาะสมาชิกในสาขาเดียวกัน
         if (currentUser?.role === 'admin' && currentUser?.provinceCode) {
-          // ใช้ provinceCode ในการเปรียบเทียบ (เช่น 'BKK', 'CNX', 'PKT', 'KAN')
+          // ใช้ provinceCode ในการเปรียบเทียบ (เช่น 'BKK', 'CNX', 'PKT')
           if (user.provinceCode !== currentUser.provinceCode) {
             return false
           }
         }
-        // Super Admin เห็นทุกคน (ไม่มี filter branch)
+        
+        // 🏢 Super Admin: ถ้าเลือกสาขาแล้ว ให้กรองตามสาขาที่เลือก
+        if (currentUser?.role === 'superadmin' && selectedBranch) {
+          // ตรวจสอบทั้ง provinceCode และ branchCode
+          const userBranch = user.provinceCode || user.branchCode
+          if (userBranch !== selectedBranch) {
+            return false
+          }
+        }
         
         // ถ้าเลือกแผนก/ตำแหน่งแล้ว ให้กรองตามแผนก/ตำแหน่งที่เลือก
         if (selectedTeams.length > 0) {
@@ -589,8 +705,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                user.position?.toLowerCase().includes(search) ||
                user.employeeId?.toLowerCase().includes(search)
       })
-      .slice(0, 15) // เพิ่มจำนวนเป็น 15 คน
-  }, [members, selectedTeams, currentUser])
+    
+    // 🎯 แยกสมาชิกที่เลือกแล้วและยังไม่เลือก
+    const selectedUsers = allFilteredUsers.filter(u => selectedIds.includes(u.id))
+    const unselectedUsers = allFilteredUsers.filter(u => !selectedIds.includes(u.id)).slice(0, 15)
+    
+    // 🏆 ส่งสมาชิกที่เลือกแล้วขึ้นก่อน แล้วตามด้วยที่ยังไม่เลือก
+    return [...selectedUsers, ...unselectedUsers]
+  }, [members, selectedTeams, currentUser, selectedMembers, selectedBranch, allUsers])
 
   // Handle map click to create new location - useCallback เพื่อป้องกัน re-render
   const handleMapClick = useCallback((latlng) => {
@@ -1102,7 +1224,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 </svg>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">จัดตารางการทำงาน</h2>
+                <h2 className="text-2xl font-bold text-white">สร้างตารางการทำงานใหม่</h2>
                 <p className="text-sm text-orange-100 mt-0.5">กรอกข้อมูลเพื่อสร้างตารางงานใหม่</p>
               </div>
             </div>
@@ -1147,9 +1269,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
                 สาขา
-                <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
-                  ไม่บังคับ
-                </span>
+                <span className="text-red-500 text-sm">*</span>
               </label>
               
               {/* Dropdown Button */}
@@ -1158,11 +1278,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 onClick={() => setShowBranchDropdown(!showBranchDropdown)}
                 className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 bg-white hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all flex items-center justify-between outline-none"
               >
-                <span className="text-gray-700">
-                  {!selectedBranch 
-                    ? 'เลือกสาขา...' 
-                    : availableBranches.find(b => b.code === selectedBranch)?.name || selectedBranch
-                  }
+                <span className="text-gray-700 flex items-center gap-2">
+                  {!selectedBranch ? (
+                    'สาขา: ทั้งหมด'
+                  ) : (
+                    <>
+                      {selectedBranch} ({availableBranches.find(b => b.code === selectedBranch)?.name})
+                    </>
+                  )}
                 </span>
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
@@ -1175,7 +1298,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 </svg>
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Dropdown Menu - ตามภาพ */}
               {showBranchDropdown && (
                 <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-sm max-h-60 overflow-y-auto">
                   <button
@@ -1184,9 +1307,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                       setSelectedBranch('')
                       setShowBranchDropdown(false)
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors text-gray-500 italic"
+                    className="w-full text-left px-4 py-2 hover:bg-orange-50 transition-colors font-medium"
                   >
-                    -- ไม่ระบุสาขา --
+                    สาขา: ทั้งหมด
                   </button>
                   {availableBranches.map((branch) => (
                     <button
@@ -1200,9 +1323,21 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                         selectedBranch === branch.code ? 'bg-orange-100 font-semibold' : ''
                       }`}
                     >
-                      {branch.name}
+                      {branch.code} ({branch.name})
                     </button>
                   ))}
+                </div>
+              )}
+
+              {/* Badge แสดงสาขาที่เลือก */}
+              {selectedBranch && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full text-sm font-medium border border-orange-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    สาขา: {selectedBranch} ({availableBranches.find(b => b.code === selectedBranch)?.name})
+                  </span>
                 </div>
               )}
             </div>
@@ -1215,10 +1350,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
-                แผนก/ตำแหน่งที่จะเห็นตารางนี้ 
-                <span className="text-xs font-normal text-gray-500 ml-auto bg-gray-100 px-2 py-1 rounded-full">
-                  ไม่บังคับ
-                </span>
+                แผนก/ตำแหน่งที่จะเห็นตารางนี้
+                <span className="text-red-500 text-sm">*</span>
               </label>
               
               {/* Dropdown Button */}
@@ -1268,12 +1401,15 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               {selectedTeams.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedTeams.map(team => (
-                    <span key={team} className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {team}
+                    <span key={team} className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-sm font-medium border border-indigo-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                      </svg>
+                      แผนก: {team}
                       <button
                         type="button"
                         onClick={() => toggleTeam(team)}
-                        className="hover:text-orange-900 ml-1 font-bold"
+                        className="hover:text-indigo-900 ml-1 font-bold"
                       >
                         ×
                       </button>
@@ -1291,9 +1427,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
               </svg>
               ช่วงวันที่ทำงาน
-              <span className="text-xs font-normal text-gray-500 ml-auto bg-white px-2 py-1 rounded-full border border-orange-200">
-                ไม่บังคับ
-              </span>
+              <span className="text-red-500 text-sm">*</span>
             </label>
             
             <div className="grid grid-cols-2 gap-3">
@@ -1594,6 +1728,18 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 </div>
               </div>
             </div>
+
+            {/* Badge แสดงช่วงเวลาที่ทำงาน */}
+            {timeStart && timeEnd && (
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  ช่วงเวลา: {timeStart} - {timeEnd}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* สถานที่และข้อมูลเพิ่มเติม */}

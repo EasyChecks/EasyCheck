@@ -3,7 +3,7 @@ import { sampleSchedules } from '../../../data/usersData'
 import CreateAttendance from './CreateAttendance.jsx'
 import { useLocations } from '../../../contexts/LocationContext'
 import { useAuth } from '../../../contexts/useAuth'
-import { MapContainer, TileLayer, Marker, Circle, LayersControl } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, Popup, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -445,32 +445,22 @@ function Attendance() {
           >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">จัดตารางงาน</h2>
+              <h2 className="text-2xl font-bold text-gray-900">ตารางงาน</h2>
               <p className="text-sm text-gray-600 mt-1">ตรวจสอบและปรับตารางให้เหมาะสมกับจำนวนพนักงานและพื้นที่</p>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              <button 
-                onClick={() => setShowCreate(true)} 
-                className="inline-flex items-center justify-center text-base font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-[120px] h-10 px-5 leading-none rounded-xl shadow-sm transition-colors"
-              >
-                สร้างตารางใหม่
-              </button>
-
-              {/* 🏢 Branch filter dropdown (Super Admin only) */}
+              {/* 🏢 Branch filter dropdown (Super Admin only) - ย้ายมาก่อน */}
               {currentUser?.role === 'superadmin' && (
                 <div className="relative" ref={branchFilterDropdownRef}>
                   <button
                     onClick={() => setShowBranchFilterDropdown(!showBranchFilterDropdown)}
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 hover:border-brand-primary text-gray-700 rounded-lg transition-all font-medium text-sm"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span className="min-w-[120px] text-left">
+                    <span className="min-w-[80px] text-left font-semibold">
                       {selectedBranchFilter === 'all' 
-                        ? 'ทุกสาขา' 
-                        : availableBranches.find(b => b.code === selectedBranchFilter)?.name || 'เลือกสาขา'}
+                        ? 'สาขา ทั้งหมด' 
+                        : `${selectedBranchFilter} (${availableBranches.find(b => b.code === selectedBranchFilter)?.name.split(' ')[0] || ''})`}
                     </span>
                     <svg className={`w-4 h-4 transition-transform ${showBranchFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -480,7 +470,7 @@ function Attendance() {
                   {/* Dropdown menu */}
                   {showBranchFilterDropdown && (
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                      {/* ตัวเลือก "ทุกสาขา" */}
+                      {/* ตัวเลือก "สาขา ทั้งหมด" */}
                       <button
                         onClick={() => {
                           setSelectedBranchFilter('all')
@@ -493,10 +483,7 @@ function Attendance() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                          <span>ทุกสาขา</span>
+                          <span>สาขา ทั้งหมด</span>
                         </div>
                       </button>
 
@@ -514,12 +501,7 @@ function Attendance() {
                               : 'text-gray-700 hover:bg-brand-accent'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <span>{branch.name}</span>
-                          </div>
+                          {branch.code} ({branch.name})
                         </button>
                       ))}
                     </div>
@@ -527,13 +509,20 @@ function Attendance() {
                 </div>
               )}
 
+              {/* ปุ่มสร้างตารางใหม่ */}
+              <button 
+                onClick={() => setShowCreate(true)} 
+                className="inline-flex items-center justify-center text-base font-semibold bg-brand-primary hover:bg-gray-700 text-white min-w-[180px] h-10 px-5 leading-none rounded-xl shadow-sm transition-colors"
+              >
+                สร้างตารางการทำงานใหม่
+              </button>
+
               {!selectMode ? (
                 // ปกติ: แสดงปุ่มเข้าสู่โหมดลบ
                 <button 
                   onClick={toggleSelectMode} 
                   className="inline-flex items-center justify-center px-5 py-2.5 bg-destructive hover:bg-destructive/90 text-white rounded-lg shadow-sm transition-colors font-medium text-sm"
                 >
-
                   ลบตาราง
                 </button>
               ) : (

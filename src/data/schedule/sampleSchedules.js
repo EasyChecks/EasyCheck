@@ -8,7 +8,7 @@ export const sampleSchedules = [
     team: 'ทีม A : งานติดตั้ง',
     date: null, // ไม่มีวันที่ = แสดงตลอด
     isPermanent: true, // ตารางถาวร
-    location: 'โบเทค บางนา Hall 101',
+    location: 'สำนักงานใหญ่ TGS กรุงเทพ',
     members: 'นายอภิชาติ รัตนา, นายนันทกร ทูนแก้ว, นายเทวราช วงค์ษาจันทร์',
     type: 'ติดตั้งระบบไฟฟ้า',
     time: '07.00 - 15.00',
@@ -36,8 +36,8 @@ export const sampleSchedules = [
     team: 'ทีม B : งานอีเว้นท์',
     date: null, // ไม่มีวันที่ = แสดงตลอด
     isPermanent: true, // ตารางถาวร
-    location: 'CentralWorld ชั้น 3',
-    members: 'นางพรทิพย์ ภักดี',
+    location: 'สำนักงานใหญ่ TGS กรุงเทพ',
+    members: 'นางสาววิจิตรา เนียมขจร, นายพรชัย ประเสริฐ, นางพรทิพย์ ภักดี',
     type: 'ออกบูธงาน',
     time: '10.00 - 22.00',
     startTime: '10:00',
@@ -61,8 +61,8 @@ export const sampleSchedules = [
     team: 'ทีม C : งาน HR',
     date: null, // ไม่มีวันที่ = แสดงตลอด
     isPermanent: true, // ตารางถาวร
-    location: 'สำนักงานใหญ่ ชั้น 5',
-    members: 'นางสาวสุภาพร จันทร์เพ็ญ',
+    location: 'สำนักงานใหญ่ TGS กรุงเทพ',
+    members: 'นางสาวกัญญา สมศรี, นางสาวสุภาพร จันทร์เพ็ญ, นางสาวอรอุมา วงษ์ทอง',
     type: 'สัมภาษณ์พนักงานใหม่',
     time: '09.00 - 17.00',
     startTime: '09:00',
