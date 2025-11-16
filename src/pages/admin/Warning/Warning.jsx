@@ -36,26 +36,66 @@ function ErrorDialog({ isOpen, message, onClose }) {
 export function AttachmentModal({ data, onClose }) {
   if (!data) return null
   const { att, item } = data
+  const isPDF = att.type === 'pdf' || att.name?.toLowerCase().endsWith('.pdf') || att.url?.toLowerCase().includes('.pdf')
+  const isImage = att.type === 'image' || ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => att.name?.toLowerCase().endsWith(`.${ext}`) || att.url?.toLowerCase().includes(`.${ext}`))
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-c  enter">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="bg-white rounded-lg p-4 max-w-3xl w-full mx-4 z-50 shadow-sm">
-        <div className="flex justify-between items-center mb-3">
-          <div className="font-semibold">{att.name} — {item.name}</div>
-          <button onClick={onClose} className="px-3 py-1 bg-brand-accent rounded">ปิด</button>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col z-[10000]">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-xl text-gray-900 truncate">{att.name}</div>
+            <div className="text-sm text-gray-600 mt-1">ผู้ขอลา: {item.name}</div>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="ml-4 px-5 py-2.5 bg-brand-primary hover:bg-gray-700 text-white rounded-lg font-semibold transition-colors shadow-sm"
+          >
+            ปิด
+          </button>
         </div>
-        <div>
-          {att.type === 'image' ? (
-            <img src={att.url} alt={att.name} className="w-full h-auto rounded" />
-          ) : (
-            <div className="p-6 bg-slate-50 rounded text-sm text-slate-700">
-              <div className="font-semibold mb-2">ไฟล์เอกสาร</div>
-              <div>ชื่อไฟล์: {att.name}</div>
-              <div className="mt-3">
-                <a href={att.url} target="_blank" rel="noreferrer" className="text-primary underline">ดาวน์โหลดไฟล์</a>
+        
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6 bg-gray-50 rounded-b-2xl">
+          <div className="flex items-center justify-center min-h-full">
+            {isPDF ? (
+              <iframe
+                src={att.url}
+                className="w-full h-[600px] rounded-lg border-2 border-gray-300 bg-white"
+                title={att.name}
+              />
+            ) : isImage ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <img 
+                  src={att.url} 
+                  alt={att.name} 
+                  className="rounded-lg shadow-lg object-contain"
+                  style={{ maxWidth: '500px', maxHeight: '280px', width: 'auto', height: 'auto' }}
+                />
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="w-full flex flex-col items-center gap-4">
+                <iframe
+                  src={att.url}
+                  className="w-full max-w-4xl h-[500px] rounded-lg border-2 border-gray-300 bg-white shadow-lg"
+                  title={att.name}
+                />
+                <a
+                  href={att.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary hover:bg-gray-700 text-white rounded-lg font-semibold transition-colors shadow-sm"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  ดาวน์โหลดไฟล์
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -122,12 +162,19 @@ export default function Warning() {
           reason: leave.reason,
           userId: user.id,
           username: user.username,
-          attachments: leave.documents?.map((doc, idx) => ({
-            id: `${leave.id}-doc-${idx}`,
-            name: doc.name || `เอกสาร ${idx + 1}`,
-            url: doc.url || doc,
-            type: doc.type || (typeof doc === 'string' && (doc.includes('.jpg') || doc.includes('.png') || doc.includes('.jpeg')) ? 'image' : 'document')
-          })) || []
+          attachments: leave.documents?.map((doc, idx) => {
+            const docUrl = doc.url || doc
+            const docName = doc.name || `เอกสาร ${idx + 1}`
+            const isImage = typeof docUrl === 'string' && (docUrl.toLowerCase().includes('.jpg') || docUrl.toLowerCase().includes('.png') || docUrl.toLowerCase().includes('.jpeg') || docUrl.toLowerCase().includes('.gif') || docUrl.toLowerCase().includes('.webp'))
+            const isPDF = typeof docUrl === 'string' && (docUrl.toLowerCase().includes('.pdf') || docName.toLowerCase().endsWith('.pdf'))
+            
+            return {
+              id: `${leave.id}-doc-${idx}`,
+              name: docName,
+              url: docUrl,
+              type: doc.type || (isPDF ? 'pdf' : isImage ? 'image' : 'document')
+            }
+          }) || []
         }
       })
   }, [leaveList])
@@ -758,23 +805,51 @@ function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapp
                 {item.attachments && item.attachments.length > 0 && (
                   <div>
                     <h4 className="font-semibold mb-2 text-base">เอกสารแนบ:</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      {item.attachments.map(att => (
-                        <button
-                          key={att.id}
-                          onClick={() => window.dispatchEvent(new CustomEvent('showAttachment', { detail: { att, item } }))}
-                          className="bg-slate-100 rounded-lg h-48 overflow-hidden flex items-center justify-center border border-dashed border-slate-200 hover:border-brand-primary transition-colors"
-                        >
-                          {att.type === 'image' ? (
-                            <img src={att.url} alt={att.name} className="object-cover w-full h-full" />
-                          ) : (
-                            <div className="text-center text-sm text-slate-600 px-2">
-                              <div className="font-semibold">{att.name}</div>
-                              <div className="text-xs mt-1">ไฟล์เอกสาร</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {item.attachments.map(att => {
+                        const isPDF = att.type === 'pdf' || att.name?.toLowerCase().endsWith('.pdf') || att.url?.toLowerCase().includes('.pdf')
+                        const isImage = att.type === 'image' || ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => att.name?.toLowerCase().endsWith(`.${ext}`) || att.url?.toLowerCase().includes(`.${ext}`))
+                        
+                        return (
+                          <button
+                            key={att.id}
+                            onClick={() => window.dispatchEvent(new CustomEvent('showAttachment', { detail: { att, item } }))}
+                            className="bg-white rounded-lg overflow-hidden border-2 border-gray-200 hover:border-brand-primary transition-all hover:shadow-lg group relative"
+                          >
+                            <div className="aspect-video relative">
+                              {isPDF ? (
+                                <div className="w-full h-full flex items-center justify-center bg-red-50">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z"/>
+                                  </svg>
+                                </div>
+                              ) : isImage ? (
+                                <div className="w-full h-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                  <img 
+                                    src={att.url} 
+                                    alt={att.name} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4z"/>
+                                  </svg>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                              </div>
                             </div>
-                          )}
-                        </button>
-                      ))}
+                            <div className="p-2 text-xs text-gray-700 font-medium text-left truncate">
+                              {att.name}
+                            </div>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

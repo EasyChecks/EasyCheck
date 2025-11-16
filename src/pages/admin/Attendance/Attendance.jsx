@@ -813,11 +813,12 @@ function Attendance() {
 
         {/* Delete All Confirmation Modal */}
         {showDeleteAllConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center z-[9998]" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-[9998]" role="dialog" aria-modal="true" style={{ willChange: 'opacity, transform' }}>
             {/* Backdrop with blur and dim */}
             <div
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
               onClick={() => setShowDeleteAllConfirm(false)}
+              style={{ willChange: 'opacity, transform' }}
             />
 
             {/* Modal content card with border, ring and elevated shadow */}
@@ -851,11 +852,12 @@ function Attendance() {
 
         {/* Delete Selected Confirmation Modal */}
         {showDeleteSelectedConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center z-[9998]" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-[9998]" role="dialog" aria-modal="true" style={{ willChange: 'opacity, transform' }}>
             {/* Backdrop with blur and dim */}
             <div
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
               onClick={() => setShowDeleteSelectedConfirm(false)}
+              style={{ willChange: 'opacity, transform' }}
             />
 
             {/* Modal content card with border, ring and elevated shadow */}

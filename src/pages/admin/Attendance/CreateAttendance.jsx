@@ -177,11 +177,21 @@ const ZoomToLocation = React.memo(function ZoomToLocation({ location }) {
       
       prevLocationRef.current = location
       
-      // ใช้ setView แทน flyTo เพื่อความเร็วและความลื่นไหล
-      map.setView([location.latitude, location.longitude], 17, {
+      // ใช้ flyTo เพื่อให้หมุดอยู่ตรงกลางจอเสมอ
+      map.flyTo([location.latitude, location.longitude], 17, {
         animate: true,
-        duration: 0.4 // ลดเวลา animation ให้เร็วขึ้น
+        duration: 0.5, // animation ที่ลื่นไหล
+        easeLinearity: 0.25,
+        // Force center position
+        padding: [0, 0]
       })
+      
+      // Ensure marker is centered by using panTo after flyTo
+      setTimeout(() => {
+        map.panTo([location.latitude, location.longitude], {
+          animate: false
+        })
+      }, 600)
     }
   }, [location?.id, map])
   
@@ -278,7 +288,7 @@ const LocationMapView = React.memo(function LocationMapView({
                 if (ref) markerRefs.current[marker.id] = ref
               }}
             >
-              <Popup>
+              <Popup lazy>
                 <div className="p-2 min-w-[200px]">
                   <div className="flex items-start gap-2 mb-2">
                     <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -323,7 +333,7 @@ const LocationMapView = React.memo(function LocationMapView({
       {newLocationForm.latitude && newLocationForm.longitude && (
         <>
           <Marker position={[parseFloat(newLocationForm.latitude), parseFloat(newLocationForm.longitude)]}>
-            <Popup>
+            <Popup lazy>
               <div className="p-2 min-w-[200px]">
                 <div className="flex items-start gap-2 mb-2">
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -410,6 +420,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [location, setLocation] = useState('')
   const [month, setMonth] = useState('')
   const [members, setMembers] = useState('')
+  const [membersDebounced, setMembersDebounced] = useState('')
   const [type, setType] = useState('')
   const [preparations, setPreparations] = useState('')
   const [tasks, setTasks] = useState('')
@@ -506,7 +517,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       setTimeEnd('')
     }
     setLocation(initialData.location || '')
-    setMembers(initialData.members || '')
+    setMembers('')
     setType(initialData.type || '')
     setPreparations((initialData.preparations || []).join('\n'))
     setTasks((initialData.tasks || []).join('\n'))
@@ -582,6 +593,22 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const tasksRef = useRef(null)
   const goalsRef = useRef(null)
 
+  // Debounce การค้นหาสมาชิกเพื่อลด re-render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMembersDebounced(members)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [members])
+
+  // Debounce การค้นหาสมาชิกเพื่อลด re-render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMembersDebounced(members)
+    }, 300) // รอ 300ms หลังจากหยุดพิมพ์
+    return () => clearTimeout(timer)
+  }, [members])
+
   // ฟัง event เมื่อมีการเพิ่มผู้ใช้ใหม่
   useEffect(() => {
     const handleUserCreated = (event) => {
@@ -644,7 +671,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
   // Filter members based on search - useMemo เพื่อไม่ให้คำนวณซ้ำ
   const filteredMembers = useMemo(() => {
-    const search = members.toLowerCase()
+    const search = membersDebounced.toLowerCase()
     
     // 🔍 แยกสมาชิกที่ถูกเลือกแล้วและยังไม่เลือก
     const selectedIds = selectedMembers.map(m => m.id)
@@ -659,13 +686,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     
     const allFilteredUsers = uniqueUsers
       .filter(user => {
-        // ✅ Super Admin เห็น admin/superadmin ด้วย (ไม่ filter role)
-        // ❌ ลบเงื่อนไข: if (user.role === 'admin' || user.role === 'superadmin') return false
-        
-        // 🔐 ถ้าเป็น admin (ไม่ใช่ superadmin) ให้เห็นเฉพาะสมาชิกในสาขาเดียวกัน
-        if (currentUser?.role === 'admin' && currentUser?.provinceCode) {
-          // ใช้ provinceCode ในการเปรียบเทียบ (เช่น 'BKK', 'CNX', 'PKT')
-          if (user.provinceCode !== currentUser.provinceCode) {
+        // 🔐 ถ้าเป็น admin (ไม่ใช่ superadmin) 
+        if (currentUser?.role === 'admin') {
+          // Admin ไม่เห็น admin/superadmin คนอื่น (เห็นแค่ user ธรรมดา)
+          if (user.role === 'admin' || user.role === 'superadmin') {
+            return false
+          }
+          
+          // Admin เห็นเฉพาะสมาชิกในสาขาเดียวกัน
+          const userBranch = user.provinceCode || user.branchCode
+          const adminBranch = currentUser.provinceCode || currentUser.branchCode
+          if (userBranch !== adminBranch) {
             return false
           }
         }
@@ -712,7 +743,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     
     // 🏆 ส่งสมาชิกที่เลือกแล้วขึ้นก่อน แล้วตามด้วยที่ยังไม่เลือก
     return [...selectedUsers, ...unselectedUsers]
-  }, [members, selectedTeams, currentUser, selectedMembers, selectedBranch, allUsers])
+  }, [membersDebounced, selectedTeams, currentUser, selectedMembers, selectedBranch, allUsers])
 
   // Handle map click to create new location - useCallback เพื่อป้องกัน re-render
   const handleMapClick = useCallback((latlng) => {
@@ -1203,6 +1234,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md overflow-y-auto p-4"
       style={{
+        willChange: 'opacity, transform',
         animation: 'fadeIn 0.3s ease-out forwards'
       }}
     >
@@ -1808,16 +1840,9 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 )}
 
                 {/* Display Members from initialData as non-removable badges */}
-                {!selectedMembers.length && initialData?.members && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {initialData.members.split(',').map((memberName, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center gap-2 bg-brand-primary text-white px-3 py-1.5 rounded-full text-sm font-medium"
-                      >
-                        <span>{memberName.trim()}</span>
-                      </div>
-                    ))}
+                {initialData && selectedMembers.length === 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <span className="text-sm text-gray-500">ไม่มีสมาชิกในตาราง</span>
                   </div>
                 )}
 
@@ -2364,6 +2389,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         <div 
           className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out bg-black/30"
           style={{
+            willChange: 'opacity, transform',
             animation: 'fadeIn 0.3s ease-out forwards',
             pointerEvents: 'auto'
           }}
@@ -2410,7 +2436,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
           </div>
         </div>, document.body) : (
-          <div className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto' }}>
+          <div className="fixed inset-0 flex items-center justify-center z-[100000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto', willChange: 'opacity, transform' }}>
               <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-orange-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
                 <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
@@ -2442,6 +2468,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         <div 
           className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out bg-black/30"
           style={{
+            willChange: 'opacity, transform',
             animation: 'fadeIn 0.3s ease-out forwards',
             pointerEvents: 'auto'
           }}
@@ -2481,7 +2508,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
           </div>
         </div>, document.body) : (
-          <div className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto' }}>
+          <div className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out" style={{ animation: 'fadeIn 0.3s ease-out forwards', pointerEvents: 'auto', willChange: 'opacity, transform' }}>
             <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-sm p-6 max-w-md mx-4 border-2 border-red-400 pointer-events-auto transform" style={{ animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
@@ -2507,6 +2534,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         <div 
           className="fixed inset-0 flex items-center justify-center z-[110000] transition-opacity duration-300 ease-out bg-black/50"
           style={{
+            willChange: 'opacity, transform',
             animation: 'fadeIn 0.3s ease-out forwards',
             pointerEvents: 'auto'
           }}
