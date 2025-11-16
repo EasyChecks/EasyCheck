@@ -238,7 +238,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
                   </div>
                   
                   {/* Show Admin Account if user is admin or superadmin */}
-                  {(user.role === 'admin' || user.role === 'superadmin') && user.adminAccount && (
+                  {(user.role === 'admin' || user.role === 'superadmin') && (
                     <>
                       <div className="pt-3 border-t-2 border-gray-200">
                         <div className="bg-brand-accent rounded-lg p-3 mb-3">
@@ -252,11 +252,15 @@ const UserDetailModal = React.memo(function UserDetailModal({
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-100">
                         <span className="text-gray-600">Username (Admin)</span>
-                        <span className="font-medium text-primary">{user.adminAccount}</span>
+                        <span className="font-medium text-primary">
+                          {user.adminAccount || `ADM${user.employeeId}`}
+                        </span>
                       </div>
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Password (Admin)</span>
-                        <span className="font-medium text-primary">{user.adminPassword || '••••••••'}</span>
+                        <span className="font-medium text-primary">
+                          {user.adminPassword || `Admin@GGS${new Date().getFullYear()}!`}
+                        </span>
                       </div>
                     </>
                   )}
