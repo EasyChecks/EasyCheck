@@ -39,18 +39,12 @@ export const generateEmployeeId = (provinceCode, branchCode, users = []) => {
 export const validateUserData = (newUsers, existingUsers = []) => {
   const errors = [];
   
-  console.log('=== validateUserData Debug ===');
-  console.log('newUsers count:', newUsers.length);
-  console.log('existingUsers count:', existingUsers.length);
-  
   // ตรวจสอบความซ้ำภายใน newUsers เอง
   const seenEmails = new Set();
   const seenNationalIds = new Set();
   const seenUsernames = new Set();
   
   newUsers.forEach((user, index) => {
-    console.log(`User ${index + 1}: nationalId="${user.nationalId}", email="${user.email}"`);
-    
     // Check duplicate email กับข้อมูลเดิม
     if (existingUsers.some(u => u.email === user.email)) {
       errors.push(`แถวที่ ${index + 1}: อีเมล ${user.email} ซ้ำกับข้อมูลที่มีอยู่`);
@@ -64,13 +58,11 @@ export const validateUserData = (newUsers, existingUsers = []) => {
     
     // Check duplicate nationalId กับข้อมูลเดิม
     if (user.nationalId && existingUsers.some(u => u.nationalId === user.nationalId)) {
-      console.log(`❌ Duplicate with existing: ${user.nationalId}`);
       errors.push(`แถวที่ ${index + 1}: เลขบัตรประชาชน ${user.nationalId} ซ้ำกับข้อมูลที่มีอยู่`);
     }
     
     // Check duplicate nationalId ภายใน CSV เอง
     if (user.nationalId && seenNationalIds.has(user.nationalId)) {
-      console.log(`❌ Duplicate within CSV: ${user.nationalId}`);
       errors.push(`แถวที่ ${index + 1}: เลขบัตรประชาชน ${user.nationalId} ซ้ำภายใน CSV`);
     }
     if (user.nationalId) seenNationalIds.add(user.nationalId);
@@ -86,9 +78,6 @@ export const validateUserData = (newUsers, existingUsers = []) => {
     }
     seenUsernames.add(user.username);
   });
-  
-  console.log('Errors found:', errors.length);
-  console.log('==============================');
   
   return errors;
 };
@@ -121,12 +110,6 @@ export const parseCsvData = (csvText) => {
         }
         row[header] = value;
       });
-      
-      // Debug log สำหรับเลขบัตรประชาชน
-      if (row.nationalId) {
-        console.log(`Row ${i}: nationalId = "${row.nationalId}"`);
-      }
-      
       data.push(row);
     }
   }
@@ -267,22 +250,6 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
 
     processedUsers.push(normalUser);
     currentId++;
-
-    // ถ้าเป็น admin หรือ superadmin ให้สร้างรหัสที่ 2 (admin account)
-    if (row.role === 'admin' || row.role === 'superadmin') {
-      const adminEmployeeId = `ADM${provinceCode}${branchCode}${String(index + 1).padStart(3, '0')}`;
-      const adminUser = {
-        ...normalUser,
-        id: currentId,
-        username: adminEmployeeId,
-        employeeId: adminEmployeeId,
-        email: row.adminEmail || row.email.replace('@', '+admin@'),
-        role: row.role,
-        nationalId: '', // ⚠️ ลบเลขบัตรประชาชนออกจาก admin account เพื่อไม่ให้ซ้ำกับ user account
-      };
-      processedUsers.push(adminUser);
-      currentId++;
-    }
   });
 
   return processedUsers;
