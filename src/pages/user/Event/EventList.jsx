@@ -1,15 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../../../contexts/EventContext';
+import { useAuth } from '../../../contexts/useAuth';
 
 export default function EventList() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // ดึงข้อมูล user เพื่อกรองกิจกรรม
   
   // Try-catch for useEvents
   let events = [];
   try {
     const context = useEvents();
-    events = context?.events || [];
+    // 🔥 ใช้ getFilteredEvents แทน events โดยตรง
+    events = context?.getFilteredEvents(user) || [];
   } catch (error) {
     console.error('EventContext error:', error);
     return (

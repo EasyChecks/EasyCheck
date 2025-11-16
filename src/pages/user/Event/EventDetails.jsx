@@ -18,15 +18,17 @@ L.Icon.Default.mergeOptions({
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { events, canJoinEvent, getTimeRemainingToJoin } = useEvents();
+  const { getFilteredEvents, canJoinEvent, getTimeRemainingToJoin } = useEvents();
   const { checkIn, attendance, user } = useAuth()
+  
+  // 🔥 กรองกิจกรรมตาม user ก่อน
+  const filteredEvents = getFilteredEvents(user);
+  const event = filteredEvents.find((e) => e.id === parseInt(id));
   const [timeRemaining, setTimeRemaining] = React.useState(null);
   const [userLocation, setUserLocation] = React.useState(null);
   const [isWithinRadius, setIsWithinRadius] = React.useState(false);
   const [checkingLocation, setCheckingLocation] = React.useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = React.useState(false);
-
-  const event = events.find((e) => e.id === parseInt(id));
 
   // ตรวจสอบว่าผู้ใช้เช็คอินกิจกรรมนี้แล้วหรือยัง (แยกตาม user)
   const getEventCheckInStatus = (eventId, userId) => {
