@@ -34,14 +34,7 @@ const createHTMLTable = (data, metadata) => {
             <span style="font-weight: 600;">วันที่:</span>
             <span>${metadata.startDate || ''} ถึง ${metadata.endDate || ''}</span>
           </div>
-          ${
-            metadata.branches
-              ? `<div>
-            <span style="font-weight: 600;">สาขา:</span>
-            <span>${metadata.branches}</span>
-          </div>`
-              : ''
-          }
+
           <div>
             <span style="font-weight: 600;">จำนวนข้อมูล:</span>
             <span>${data.length} รายการ</span>
@@ -66,10 +59,19 @@ const createHTMLTable = (data, metadata) => {
             <tr style="background: linear-gradient(135deg, #F26623 0%, #E95420 100%);">
   `;
 
-  // Add headers
+  // Add headers with better width control
   headers.forEach(header => {
+    // กำหนดความกว้างตามชนิดของ column
+    let colWidth = '80px';
+    if (header === 'ลำดับ') colWidth = '40px';
+    else if (header === 'รหัสพนักงาน') colWidth = '70px';
+    else if (header === 'ชื่อ-นามสกุล') colWidth = '120px';
+    else if (header === 'อีเมล') colWidth = '110px';
+    else if (header.includes('วัน') || header.includes('มา') || header.includes('ขาด') || header.includes('ลา')) colWidth = '50px';
+    else if (header.includes('เปอร์เซ็นต์')) colWidth = '65px';
+    
     tableHTML += `
-              <th style="padding: 4px 3px; text-align: left; color: white; font-weight: 600; border: 1px solid #D97706; white-space: normal; min-width: 50px; max-width: 100px; word-wrap: break-word; font-size: 8px; line-height: 1.2;">
+              <th style="padding: 6px 4px; text-align: left; color: white; font-weight: 600; border: 1px solid #D97706; white-space: normal; width: ${colWidth}; word-wrap: break-word; font-size: 8px; line-height: 1.3;">
                 ${header}
               </th>
     `;
@@ -91,7 +93,7 @@ const createHTMLTable = (data, metadata) => {
       const formattedValue = formatValue(header, value);
 
       tableHTML += `
-              <td style="padding: 3px 2px; text-align: left; border: 1px solid #E5E7EB; color: #374151; white-space: normal; word-wrap: break-word; max-width: 100px; font-size: 7px; line-height: 1.3;">
+              <td style="padding: 5px 3px; text-align: left; border: 1px solid #E5E7EB; color: #374151; white-space: normal; word-wrap: break-word; font-size: 7.5px; line-height: 1.4; vertical-align: middle;">
                 ${formattedValue}
               </td>
       `;
@@ -119,10 +121,6 @@ const createHTMLTable = (data, metadata) => {
           <div style="font-size: 20px; font-weight: bold; color: #111827;">${metadata.statistics.totalDepartments || 0}</div>
         </div>
         <div>
-          <div style="font-size: 11px; color: #6B7280; margin-bottom: 4px;">จำนวนสาขา</div>
-          <div style="font-size: 20px; font-weight: bold; color: #111827;">${metadata.statistics.totalBranches || 0}</div>
-        </div>
-        <div>
           <div style="font-size: 11px; color: #6B7280; margin-bottom: 4px;">เปอร์เซ็นต์มาตรงเวลา</div>
           <div style="font-size: 20px; font-weight: bold; color: #10B981;">${metadata.statistics.avgAttendanceRate || 0}%</div>
         </div>
@@ -133,7 +131,7 @@ const createHTMLTable = (data, metadata) => {
 
       <!-- Footer Section -->
       <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E5E7EB; text-align: center; font-size: 11px; color: #9CA3AF;">
-        <p style="margin: 0;">รายงานนี้สร้างโดยระบบ EasyCheck • © ${new Date().getFullYear()} GGS Company Limited</p>
+        <p style="margin: 0;">รายงานนี้สร้างโดยระบบ EasyCheck • © ${new Date().getFullYear()}</p>
       </div>
     </div>
   `;

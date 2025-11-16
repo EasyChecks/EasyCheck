@@ -340,9 +340,28 @@ export function EventProvider({ children }) {
     return events.find(evt => evt.id === id)
   }
 
-  // Filter events by user's department/team/assignment
-  const getEventsForUser = (userId, userRole, userDepartment, userPosition) => {
+  // Filter events by user's department/team/assignment + provinceCode
+  const getEventsForUser = (userId, userRole, userDepartment, userPosition, userProvinceCode) => {
     return events.filter(event => {
+      // 🔒 NEW REQUIREMENT: ต้องมีการ assign เท่านั้น (ไม่แสดงถ้าไม่มี assignment)
+      const hasAssignment = 
+        (event.assignedUsers && event.assignedUsers.length > 0) ||
+        (event.assignedDepartments && event.assignedDepartments.length > 0) ||
+        (event.assignedPositions && event.assignedPositions.length > 0) ||
+        (event.teams && event.teams.length > 0)
+      
+      if (!hasAssignment) {
+        return false // ไม่แสดงกิจกรรมที่ไม่มี assignment
+      }
+
+      // 🌍 NEW REQUIREMENT: กรองตามจังหวัด
+      if (event.createdBy?.provinceCode && userProvinceCode) {
+        // ถ้า event มี provinceCode แล้วต้องตรงกับ user เท่านั้น
+        if (event.createdBy.provinceCode !== userProvinceCode) {
+          return false // จังหวัดไม่ตรงกัน -> ไม่แสดง
+        }
+      }
+
       // 1. Check if user is directly assigned (by ID or name)
       if (event.assignedUsers && event.assignedUsers.length > 0) {
         const isAssigned = event.assignedUsers.some(assigned => {
@@ -402,7 +421,7 @@ export function EventProvider({ children }) {
         })
       }
 
-      // If no assignment criteria, don't show the event
+      // If no assignment criteria matched, don't show the event
       return false
     })
   }
@@ -491,8 +510,8 @@ export function EventProvider({ children }) {
       })
     }
     
-    // Manager และ User ใช้ getEventsForUser แทน
-    return getEventsForUser(user.id, user.role, user.department, user.position)
+    // Manager และ User ใช้ getEventsForUser แทน (เพิ่ม provinceCode)
+    return getEventsForUser(user.id, user.role, user.department, user.position, user.provinceCode)
   }
 
   const value = {

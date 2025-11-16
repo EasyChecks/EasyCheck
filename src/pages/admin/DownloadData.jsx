@@ -11,6 +11,7 @@ import {
 } from '../../utils/reportDataGenerator';
 import { downloadPDF } from '../../utils/enhancedPDFGenerator';
 import { StatusText } from '../../components/common/StatusIcons';
+import * as XLSX from 'xlsx';
 
 function DownloadData() {
   const { user: currentUser } = useAuth();
@@ -170,56 +171,172 @@ function DownloadData() {
     setPreviewData(null);
   };
 
-  // Download as Excel (CSV format)
+    // Download as Excel (Real XLSX format using xlsx library)
   const downloadExcel = (data) => {
-    const csvContent = convertToCSV(data);
-    const filename = generateFileName('รายงาน', 'excel', startDate, endDate);
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // กำหนดความกว้างคอลัมน์ตามชนิดของข้อมูล
+    const getColumnWidth = (header) => {
+      if (header === 'ลำดับ') return 8;
+      if (header === 'รหัสพนักงาน') return 15;
+      if (header === 'ชื่อ-นามสกุล') return 25;
+      if (header === 'แผนก' || header === 'ตำแหน่ง') return 20;
+      if (header === 'อีเมล') return 25;
+      if (header === 'เบอร์โทร') return 15;
+      if (header === 'สถานะ') return 12;
+      if (header.includes('วัน') || header.includes('ชั่วโมง')) return 12;
+      if (header.includes('เปอร์เซ็นต์') || header.includes('%')) return 12;
+      if (header.includes('กิจกรรม')) return 15;
+      return 15; // default
+    };
+
+    // ฟังก์ชันสร้างไฟล์ Excel จากข้อมูล
+    const createExcelFile = (dataToExport, filename) => {
+      // สร้าง worksheet จากข้อมูล
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      
+      // ตั้งค่าความกว้างคอลัมน์
+      const headers = Object.keys(dataToExport[0] || {});
+      worksheet['!cols'] = headers.map(header => ({ wch: getColumnWidth(header) }));
+      
+      // จัดตำแหน่งข้อความให้ชิดซ้ายทุกช่อง และบังคับตัวเลขให้เป็น text
+      const range = XLSX.utils.decode_range(worksheet['!ref']);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!worksheet[cellAddress]) continue;
+          
+          // บังคับให้เป็น text (string) แทน number เพื่อให้ชิดซ้าย
+          const cellValue = worksheet[cellAddress].v;
+          if (typeof cellValue === 'number') {
+            worksheet[cellAddress].t = 's'; // เปลี่ยนเป็น string type
+            worksheet[cellAddress].v = String(cellValue); // แปลงเป็น string
+          }
+          
+          // ตั้งค่า style ให้ข้อความชิดซ้าย
+          if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {};
+          worksheet[cellAddress].s.alignment = { 
+            horizontal: 'left', 
+            vertical: 'center' 
+          };
+        }
+      }
+      
+      // สร้าง workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'รายงาน');
+      
+      // ดาวน์โหลดไฟล์
+      XLSX.writeFile(workbook, filename);
+    };
+
+    // ถ้าเลือกหลายออฟฟิศ -> แยกไฟล์ตามออฟฟิศ
+    if (isSuperAdmin && selectedBranches.length > 1) {
+      selectedBranches.forEach(branchId => {
+        const branch = branches.find(b => b.id === branchId);
+        const branchData = data.filter(row => {
+          // กรองข้อมูลตาม provinceCode และ branchCode
+          const userBranchId = `${row['รหัสพนักงาน']?.substring(0, 6) || ''}`;
+          return userBranchId === branchId;
+        });
+        
+        if (branchData.length > 0) {
+          const branchName = branch?.name.replace(/[^a-zA-Z0-9\u0e00-\u0e7f]/g, '_') || branchId;
+          const filename = `รายงาน_${branchName}_${startDate}_${endDate}.xlsx`;
+          createExcelFile(branchData, filename);
+        }
+      });
+    } else {
+      // ออฟฟิศเดียว หรือ Admin
+      const filename = generateFileName('รายงาน', 'excel', startDate, endDate);
+      createExcelFile(data, filename);
+    }
   };
 
   // Download as PDF using enhanced PDF generator
   const handlePDFDownload = async (data) => {
-    const branchNames = isSuperAdmin && selectedBranches.length > 0
-      ? selectedBranches.map(id => branches.find(b => b.id === id)?.name || id).join(', ')
-      : null;
+    // ถ้าเลือกหลายออฟฟิศ -> แยกไฟล์ตามออฟฟิศ
+    if (isSuperAdmin && selectedBranches.length > 1) {
+      for (const branchId of selectedBranches) {
+        const branch = branches.find(b => b.id === branchId);
+        const branchData = data.filter(row => {
+          const userBranchId = `${row['รหัสพนักงาน']?.substring(0, 6) || ''}`;
+          return userBranchId === branchId;
+        });
+        
+        if (branchData.length > 0) {
+          const statistics = calculateStatistics(branchData);
+          const branchName = branch?.name.replace(/[^a-zA-Z0-9฀-๿]/g, '_') || branchId;
+          const filename = `รายงาน_${branchName}_${startDate}_${endDate}.pdf`;
 
-    const statistics = calculateStatistics(data);
-    const filename = generateFileName('รายงาน', 'pdf', startDate, endDate);
+          const metadata = {
+            title: `${selectedReport.title} - ${branch?.name || branchId}`,
+            startDate,
+            endDate,
+            statistics,
+          };
 
-    const metadata = {
-      title: selectedReport.title,
-      startDate,
-      endDate,
-      branches: branchNames,
-      statistics,
-    };
+          await downloadPDF(branchData, metadata, filename);
+        }
+      }
+    } else {
+      // ออฟฟิศเดียว หรือ Admin
+      const statistics = calculateStatistics(data);
+      const filename = generateFileName('รายงาน', 'pdf', startDate, endDate);
 
-    await downloadPDF(data, metadata, filename);
+      const metadata = {
+        title: selectedReport.title,
+        startDate,
+        endDate,
+        statistics,
+      };
+
+      await downloadPDF(data, metadata, filename);
+    }
   };
 
   // Download as CSV
   const downloadCSV = (data) => {
-    const csvContent = convertToCSV(data);
-    const filename = generateFileName('รายงาน', 'csv', startDate, endDate);
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // ถ้าเลือกหลายออฟฟิศ -> แยกไฟล์ตามออฟฟิศ
+    if (isSuperAdmin && selectedBranches.length > 1) {
+      selectedBranches.forEach(branchId => {
+        const branch = branches.find(b => b.id === branchId);
+        const branchData = data.filter(row => {
+          const userBranchId = `${row['รหัสพนักงาน']?.substring(0, 6) || ''}`;
+          return userBranchId === branchId;
+        });
+        
+        if (branchData.length > 0) {
+          const csvContent = convertToCSV(branchData);
+          const branchName = branch?.name.replace(/[^a-zA-Z0-9฀-๿]/g, '_') || branchId;
+          const filename = `รายงาน_${branchName}_${startDate}_${endDate}.csv`;
+          
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', filename);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      });
+    } else {
+      // ออฟฟิศเดียว หรือ Admin
+      const csvContent = convertToCSV(data);
+      const filename = generateFileName('รายงาน', 'csv', startDate, endDate);
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
   };
 
   const handleDownload = async () => {
@@ -257,15 +374,11 @@ function DownloadData() {
           downloadExcel(data);
       }
 
-      const branchInfo = isSuperAdmin && selectedBranches.length > 0 
-        ? `\nสาขา: ${selectedBranches.length} สาขา`
-        : '';
-
       setAlertDialog({
         isOpen: true,
         type: 'success',
         title: 'ดาวน์โหลดสำเร็จ',
-        message: `ดาวน์โหลด ${selectedReport.title} ในรูปแบบ ${selectedFormat.toUpperCase()} เรียบร้อยแล้ว\nวันที่: ${startDate} ถึง ${endDate}${branchInfo}\nจำนวนข้อมูล: ${selectedCount} รายการ`,
+        message: `ดาวน์โหลด ${selectedReport.title} ในรูปแบบ ${selectedFormat.toUpperCase()} เรียบร้อยแล้ว\nวันที่: ${startDate} ถึง ${endDate}\nจำนวนข้อมูล: ${selectedCount} รายการ`,
         autoClose: true
       });
       
@@ -353,7 +466,7 @@ function DownloadData() {
                 ดาวน์โหลดข้อมูล
               </h1>
               <p className="text-gray-500 text-sm mt-1">
-                {isSuperAdmin ? 'เลือกสาขาและข้อมูลที่ต้องการดาวน์โหลด' : 'เลือกข้อมูลที่ต้องการดาวน์โหลด'}
+                {isSuperAdmin ? 'เลือกออฟฟิศและข้อมูลที่ต้องการดาวน์โหลด' : 'เลือกข้อมูลที่ต้องการดาวน์โหลด'}
               </p>
             </div>
           </div>
@@ -443,7 +556,7 @@ function DownloadData() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
-                    เลือกสาขา
+                    เลือกออฟฟิศ
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     {branches.map((branch) => (
@@ -754,10 +867,6 @@ function DownloadData() {
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
                       <div className="text-sm text-purple-600 font-medium mb-1">จำนวนแผนก</div>
                       <div className="text-2xl font-bold text-purple-900">{stats.totalDepartments}</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                      <div className="text-sm text-green-600 font-medium mb-1">จำนวนสาขา</div>
-                      <div className="text-2xl font-bold text-green-900">{stats.totalBranches}</div>
                     </div>
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
                       <div className="text-sm text-orange-600 font-medium mb-1">เปอร์เซ็นต์มาตรงเวลา</div>

@@ -71,16 +71,6 @@ export const generateEnhancedReportData = (
       record['ตำแหน่ง'] = user.position || '-';
       record['อีเมล'] = user.email || '-';
       record['เบอร์โทร'] = user.phone || '-';
-      
-      // แสดงชื่อสาขาแบบเต็ม (กรุงเทพ สาขา 101)
-      if (user.branchCode) {
-        const branchId = `${user.provinceCode}${user.branchCode}`;
-        const branch = mockBranches.find(b => b.id === branchId);
-        record['สาขา'] = branch ? branch.name : branchId;
-      } else {
-        record['สาขา'] = '-';
-      }
-      
       record['สถานะ'] = user.status === 'active' ? 'ทำงานอยู่' : 'ออกจากงาน';
     }
 
@@ -92,8 +82,6 @@ export const generateEnhancedReportData = (
       record['ขาดงาน'] = user.timeSummary.absent || 0;
       record['ลางาน'] = user.timeSummary.leave || 0;
       record['ชั่วโมงทำงาน'] = user.timeSummary.totalHours || '0 ชม.';
-      record['เฉลี่ยเข้างาน'] = user.timeSummary.avgCheckIn || '-';
-      record['เฉลี่ยออกงาน'] = user.timeSummary.avgCheckOut || '-';
     }
 
     // Event Stats
@@ -192,7 +180,7 @@ export const validateSelection = (options, selectedBranches, isSuperAdmin) => {
   if (isSuperAdmin && selectedBranches.length === 0) {
     return {
       isValid: false,
-      message: 'กรุณาเลือกสาขาที่ต้องการดาวน์โหลดข้อมูลอย่างน้อย 1 สาขา',
+      message: 'กรุณาเลือกออฟฟิศที่ต้องการดาวน์โหลดข้อมูลอย่างน้อย 1 แห่ง',
     };
   }
 
@@ -218,13 +206,11 @@ export const calculateStatistics = (data) => {
   }
 
   const departments = new Set();
-  const branches = new Set();
   let totalOnTime = 0;
   let totalWorkDays = 0;
 
   data.forEach(row => {
     if (row['แผนก']) departments.add(row['แผนก']);
-    if (row['สาขา']) branches.add(row['สาขา']);
     if (row['มาตรงเวลา']) totalOnTime += parseInt(row['มาตรงเวลา']) || 0;
     if (row['วันทำงานทั้งหมด']) totalWorkDays += parseInt(row['วันทำงานทั้งหมด']) || 0;
   });
@@ -232,7 +218,6 @@ export const calculateStatistics = (data) => {
   return {
     totalEmployees: data.length,
     totalDepartments: departments.size,
-    totalBranches: branches.size,
     avgAttendanceRate:
       totalWorkDays > 0 ? Math.round((totalOnTime / totalWorkDays) * 100) : 0,
   };
