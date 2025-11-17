@@ -511,6 +511,15 @@ function AdminManageUser() {
     // 5. บันทึก passwords ทั้งหมดลง localStorage
     localStorage.setItem('mockUserPasswords', JSON.stringify(storedPasswords));
     
+    // 6. แจ้งเตือนหน้าอื่นๆ ว่ามีการเพิ่มผู้ใช้ใหม่
+    window.dispatchEvent(new CustomEvent('userCreated', {
+      detail: { 
+        user: newUser,
+        branch: newUser.branchCode,
+        name: newUser.name
+      }
+    }));
+    
     setAlertDialog({
       isOpen: true,
       type: 'success',

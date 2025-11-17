@@ -62,7 +62,14 @@ function Auth() {
       }
       if (e.key === 'Escape' && showReset) {
         setShowReset(false)
-        navigate('/auth', { replace: true })
+        setResetError('')
+        setResetSuccess('')
+        // ตรวจสอบว่ามาจากหน้า Settings หรือไม่
+        if (searchParams.get('mode') === 'reset') {
+          navigate(-1) // กลับไปหน้าก่อนหน้า (Settings)
+        } else {
+          navigate('/auth', { replace: true }) // กลับไปหน้า Login
+        }
       }
     }
     document.addEventListener('keydown', onKey)
@@ -460,7 +467,7 @@ function Auth() {
               </button>
             </div>
 
-            {/* 🔙 ปุ่มกลับหน้า Login (Back to login button) */}
+            {/* 🔙 ปุ่มกลับ (Back button) - แสดงตามหน้าที่มา */}
             <div className="text-center mt-2 sm:text-[18px] md:text-[18px] lg:text[18px] xl:text-[24px] text-[16px]">
               <button
                 type="button"
@@ -468,11 +475,16 @@ function Auth() {
                   setShowReset(false)
                   setResetError('')
                   setResetSuccess('')
-                  navigate('/auth', { replace: true })
+                  // ตรวจสอบว่ามาจากหน้า Settings หรือไม่
+                  if (searchParams.get('mode') === 'reset') {
+                    navigate(-1) // กลับไปหน้าก่อนหน้า (Settings)
+                  } else {
+                    navigate('/auth', { replace: true }) // กลับไปหน้า Login
+                  }
                 }}
                 className="text-gray-500 hover:text-orange-500 transition-colors duration-200 hover:underline underline-offset-4"
               >
-                กลับหน้า Login
+                {searchParams.get('mode') === 'reset' ? 'กลับไปหน้าตั้งค่า' : 'กลับหน้า Login'}
               </button>
             </div>
           </div>
