@@ -101,9 +101,10 @@ function AdminDashboard() {
   // 🆕 Branch options
   const branchOptions = [
     { code: 'all', name: 'ทั้งหมด' },
-    { code: 'BKK', name: 'กรุงเทพ' },
-    { code: 'CNX', name: 'เชียงใหม่' },
-    { code: 'PKT', name: 'ภูเก็ต' }
+    { code: '101', name: 'กรุงเทพ สาขา 1' },
+    { code: '102', name: 'กรุงเทพ สาขา 2' },
+    { code: '201', name: 'เชียงใหม่' },
+    { code: '301', name: 'ภูเก็ต' }
   ]
 
   // Calculate real attendance stats from usersData and localStorage
@@ -532,19 +533,27 @@ function AdminDashboard() {
           
           {/* 🆕 Branch Filter (SuperAdmin only) */}
           {user?.role === 'superadmin' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-gray-700">สาขา:</label>
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="px-4 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
-              >
-                {branchOptions.map(branch => (
-                  <option key={branch.code} value={branch.code}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="appearance-none px-4 py-2.5 pr-10 border-2 border-gray-300 rounded-lg text-sm font-medium text-gray-800 hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none cursor-pointer bg-white min-w-[200px]"
+                  style={{ backgroundImage: 'none' }}
+                >
+                  {branchOptions.map(branch => (
+                    <option key={branch.code} value={branch.code}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
             </div>
           )}
         </div>
