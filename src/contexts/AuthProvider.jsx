@@ -110,17 +110,25 @@ export const AuthProvider = ({ children }) => {
           const stats = calculateAttendanceStats(records)
           setAttendanceStats(stats)
         }
-      } else if (e.key === 'usersData') {
+      }
+      // 🔥 Sync attendance state across tabs
+      else if (user && e.key === `attendance_user_${user.id}_${tabId}`) {
+        if (e.newValue) {
+          const newAttendance = JSON.parse(e.newValue)
+          setAttendance(newAttendance)
+        } else {
+          setAttendance({ status: 'not_checked_in' })
+        }
+      }
+      else if (e.key === 'usersData') {
         if (e.newValue && user) {
           const updatedUsers = JSON.parse(e.newValue)
           const updatedUser = updatedUsers.find(u => u.id === user.id)
           if (updatedUser) {
             // 🔒 ป้องกันไม่ให้ role จาก usersData ทับ role ที่ convert แล้ว
-            // ถ้า user ปัจจุบันมี isAdminAccount = false (Login ด้วยรหัสพนักงาน)
-            // ห้าม merge role จาก usersData เพราะจะทำให้กลับเป็น 'admin' อีก
             const mergedUser = user.isAdminAccount === false
-              ? { ...user, ...updatedUser, role: user.role } // Keep converted role
-              : { ...user, ...updatedUser } // Normal merge
+              ? { ...user, ...updatedUser, role: user.role }
+              : { ...user, ...updatedUser }
             
             setUser(mergedUser)
             localStorage.setItem(`user_${tabId}`, JSON.stringify(mergedUser))

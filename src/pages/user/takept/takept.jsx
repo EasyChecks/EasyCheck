@@ -259,14 +259,15 @@ function TakePhoto() {
         let message = '';
         if (status === 'on_time') {
           message = `เข้างานตรงเวลา ${currentTime} น.`;
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
         } else if (status === 'absent') {
           if (autoCheckOut) {
             // 🔥 ขาดงาน - เข้างานสายเกินขีดจำกัด → Auto check-out ทันที
             message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)\nออกงานอัตโนมัติแล้ว`;
-            checkIn(currentTime, photo, workTimeStart, workTimeEnd, true, locationInfo); // true = auto checkout
+            checkIn(currentTime, photo, workTimeStart, true, locationInfo); // true = auto checkout
           } else {
             message = `ขาดงาน - ไม่ได้เข้างาน (${currentTime} น.)`;
-            checkIn(currentTime, photo, workTimeStart, workTimeEnd, false, locationInfo);
+            checkIn(currentTime, photo, workTimeStart, false, locationInfo);
           }
         }
         
