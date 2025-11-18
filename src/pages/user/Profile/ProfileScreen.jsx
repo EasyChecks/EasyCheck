@@ -302,35 +302,35 @@ function ProfileScreen() {
   return (
     <div className="relative">
       {/* Header with Profile Picture */}
-      <div className="relative bg-gradient-to-r from-brand-primary to-orange-600 rounded-t-2xl overflow-hidden">
+      <div className="relative overflow-hidden bg-gradient-to-r from-brand-primary to-orange-600 rounded-t-2xl">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full"></div>
-          <div className="absolute top-20 -left-10 w-32 h-32 bg-white rounded-full"></div>
+          <div className="absolute w-40 h-40 bg-white rounded-full -top-10 -right-10"></div>
+          <div className="absolute w-32 h-32 bg-white rounded-full top-20 -left-10"></div>
         </div>
         
-        <div className="relative p-6 flex flex-col items-center">
+        <div className="relative flex flex-col items-center p-6">
           {/* Profile Picture */}
           <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
+            <div className="w-24 h-24 p-1 bg-white rounded-full shadow-lg">
               <img
                 src={profileData.profilePic}
                 alt="Profile"
-                className="w-full h-full rounded-full object-cover"
+                className="object-cover w-full h-full rounded-full"
                 loading="lazy"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
-              <div className="w-full h-full rounded-full bg-orange-100 hidden items-center justify-center text-brand-primary font-bold text-2xl">
+              <div className="items-center justify-center hidden w-full h-full text-2xl font-bold bg-orange-100 rounded-full text-brand-primary">
                 {profileData.name?.charAt(0) || 'U'}
               </div>
             </div>
             {/* Edit Button */}
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-brand-primary hover:bg-orange-50 transition-colors"
+              className="absolute bottom-0 right-0 flex items-center justify-center w-8 h-8 transition-colors bg-white rounded-full shadow-md text-brand-primary hover:bg-orange-50"
             >
               <svg className="w-5 h-5 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/>
@@ -347,22 +347,22 @@ function ProfileScreen() {
           </div>
 
           {/* User Info */}
-          <h1 className="text-xl font-bold text-white mb-1">{profileData.name}</h1>
-          <p className="text-orange-100 text-sm mb-1">{profileData.position}</p>
-          <p className="text-orange-200 text-xs">{profileData.department}</p>
+          <h1 className="mb-1 text-xl font-bold text-white">{profileData.name}</h1>
+          <p className="mb-1 text-sm text-orange-100">{profileData.position}</p>
+          <p className="text-xs text-orange-200">{profileData.department}</p>
           
           {/* Status Badge */}
-          <div className="mt-3 px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full">
-            <span className="text-white text-xs font-medium">● สถานะ: {profileData.status}</span>
+          <div className="px-4 py-1 mt-3 rounded-full bg-white/20 backdrop-blur-sm">
+            <span className="text-xs font-medium text-white">● สถานะ: {profileData.status}</span>
           </div>
         </div>
       </div>
 
       <main className="p-4 space-y-4">
         {/* 1. ข้อมูลส่วนตัว */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-gray-800 flex items-center">
+        <div className="p-6 bg-white shadow-md rounded-2xl">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="flex items-center text-lg font-bold text-gray-800">
               <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
@@ -370,52 +370,52 @@ function ProfileScreen() {
             </h2>
             <button
               onClick={() => handleEditClick('personalInfo')}
-              className="px-3 py-1 bg-gradient-to-r from-brand-primary to-orange-600 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
+              className="hidden px-3 py-1 text-sm text-white transition-colors rounded-lg bg-gradient-to-r from-brand-primary to-orange-600 hover:bg-orange-600"
             >
               แก้ไข
             </button>
           </div>
           <div className="space-y-3 text-sm">
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">วันเกิด :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.birthDate}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">วันเกิด :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.birthDate}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">อายุ :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.age}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">อายุ :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.age}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ที่อยู่ :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.address}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ที่อยู่ :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.address}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">เบอร์ติดต่อ :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.phone}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">เบอร์ติดต่อ :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.phone}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">อีเมล :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.email}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">อีเมล :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.email}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">สถานะ :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.maritalStatus}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">สถานะ :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.maritalStatus}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">เลขบัตรประชาชน :</span>
-              <span className="text-gray-800 font-medium">{profileData.personalInfo.idCard}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">เลขบัตรประชาชน :</span>
+              <span className="font-medium text-gray-800">{profileData.personalInfo.idCard}</span>
             </div>
             {profileData.personalInfo.emergencyContact && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-32 flex-shrink-0">ผู้ติดต่อฉุกเฉิน :</span>
-                <span className="text-gray-800 font-medium">{profileData.personalInfo.emergencyContact}</span>
+                <span className="flex-shrink-0 w-32 text-gray-500">ผู้ติดต่อฉุกเฉิน :</span>
+                <span className="font-medium text-gray-800">{profileData.personalInfo.emergencyContact}</span>
               </div>
             )}
           </div>
         </div>
 
         {/* 2. ข้อมูลการทำงาน */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        <div className="p-6 bg-white shadow-md rounded-2xl">
+          <h2 className="flex items-center mb-4 text-lg font-bold text-gray-800">
             <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-5 9h-4v4h4v-4z"/>
             </svg>
@@ -423,59 +423,59 @@ function ProfileScreen() {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ตำแหน่ง :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.position}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ตำแหน่ง :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.position}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">สถานที่ปฏิบัติงาน :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.workplace}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">สถานที่ปฏิบัติงาน :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.workplace}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">รหัสพนักงาน :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.employeeId}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">รหัสพนักงาน :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.employeeId}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">แผนก/งาน/ฝ่าย :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.department}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">แผนก/งาน/ฝ่าย :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.department}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">วันเริ่มงาน :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.startDate}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">วันเริ่มงาน :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.startDate}</span>
             </div>
             {profileData.workInfo.workPeriod && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-32 flex-shrink-0">ระยะเวลาทำงาน :</span>
-                <span className="text-gray-800 font-medium">{profileData.workInfo.workPeriod}</span>
+                <span className="flex-shrink-0 w-32 text-gray-500">ระยะเวลาทำงาน :</span>
+                <span className="font-medium text-gray-800">{profileData.workInfo.workPeriod}</span>
               </div>
             )}
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ประวัติการศึกษา :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.education}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ประวัติการศึกษา :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.education}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ประวัติการทำงาน :</span>
-              <span className="text-gray-800 font-medium whitespace-pre-line">{profileData.workInfo.workHistory}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ประวัติการทำงาน :</span>
+              <span className="font-medium text-gray-800 whitespace-pre-line">{profileData.workInfo.workHistory}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ทักษะทางงาน :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.skills}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ทักษะทางงาน :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.skills}</span>
             </div>
             {profileData.workInfo.certifications && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-32 flex-shrink-0">ใบรับรอง/ประกาศนียบัตร :</span>
-                <span className="text-gray-800 font-medium">{profileData.workInfo.certifications}</span>
+                <span className="flex-shrink-0 w-32 text-gray-500">ใบรับรอง/ประกาศนียบัตร :</span>
+                <span className="font-medium text-gray-800">{profileData.workInfo.certifications}</span>
               </div>
             )}
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ข้อมูลสวัสดิการ :</span>
-              <span className="text-gray-800 font-medium">{profileData.workInfo.benefits}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ข้อมูลสวัสดิการ :</span>
+              <span className="font-medium text-gray-800">{profileData.workInfo.benefits}</span>
             </div>
           </div>
         </div>
 
         {/* 3. ข้อมูลสุขภาพและความสามารถ */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        <div className="p-6 bg-white shadow-md rounded-2xl">
+          <h2 className="flex items-center mb-4 text-lg font-bold text-gray-800">
             <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 16H9v-2h4v2zm3-4H9v-2h7v2z"/>
             </svg>
@@ -483,27 +483,27 @@ function ProfileScreen() {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">ประวัติสุขภาพ :</span>
-              <span className="text-gray-800 font-medium">{profileData.healthInfo.medicalHistory}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">ประวัติสุขภาพ :</span>
+              <span className="font-medium text-gray-800">{profileData.healthInfo.medicalHistory}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">กรุ๊ปเลือด :</span>
-              <span className="text-gray-800 font-medium">{profileData.healthInfo.bloodType}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">กรุ๊ปเลือด :</span>
+              <span className="font-medium text-gray-800">{profileData.healthInfo.bloodType}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">เลขประกันสังคม :</span>
-              <span className="text-gray-800 font-medium">{profileData.healthInfo.socialSecurity}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">เลขประกันสังคม :</span>
+              <span className="font-medium text-gray-800">{profileData.healthInfo.socialSecurity}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-32 flex-shrink-0">เงินเดือน :</span>
-              <span className="text-gray-800 font-medium">{profileData.healthInfo.salary}</span>
+              <span className="flex-shrink-0 w-32 text-gray-500">เงินเดือน :</span>
+              <span className="font-medium text-gray-800">{profileData.healthInfo.salary}</span>
             </div>
           </div>
         </div>
 
         {/* 4. ข้อมูลเพิ่มเติม */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        <div className="p-6 bg-white shadow-md rounded-2xl">
+          <h2 className="flex items-center mb-4 text-lg font-bold text-gray-800">
             <svg className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
             </svg>
@@ -511,41 +511,41 @@ function ProfileScreen() {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex items-start">
-              <span className="text-gray-500 w-40 flex-shrink-0">สถิติการลา :</span>
-              <span className="text-gray-800 font-medium">{profileData.additionalInfo.attendance}</span>
+              <span className="flex-shrink-0 w-40 text-gray-500">สถิติการลา :</span>
+              <span className="font-medium text-gray-800">{profileData.additionalInfo.attendance}</span>
             </div>
             {profileData.additionalInfo.totalHours && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0">ชั่วโมงทำงานรวม :</span>
-                <span className="text-gray-800 font-medium">{profileData.additionalInfo.totalHours}</span>
+                <span className="flex-shrink-0 w-40 text-gray-500">ชั่วโมงทำงานรวม :</span>
+                <span className="font-medium text-gray-800">{profileData.additionalInfo.totalHours}</span>
               </div>
             )}
             {profileData.additionalInfo.avgCheckIn && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0">เวลาเข้างานเฉลี่ย :</span>
-                <span className="text-gray-800 font-medium">{profileData.additionalInfo.avgCheckIn}</span>
+                <span className="flex-shrink-0 w-40 text-gray-500">เวลาเข้างานเฉลี่ย :</span>
+                <span className="font-medium text-gray-800">{profileData.additionalInfo.avgCheckIn}</span>
               </div>
             )}
             {profileData.additionalInfo.avgCheckOut && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0">เวลาออกงานเฉลี่ย :</span>
-                <span className="text-gray-800 font-medium">{profileData.additionalInfo.avgCheckOut}</span>
+                <span className="flex-shrink-0 w-40 text-gray-500">เวลาออกงานเฉลี่ย :</span>
+                <span className="font-medium text-gray-800">{profileData.additionalInfo.avgCheckOut}</span>
               </div>
             )}
             <div className="flex items-start">
-              <span className="text-gray-500 w-40 flex-shrink-0">ผลการประเมินงาน :</span>
-              <span className="text-gray-800 font-medium">{profileData.additionalInfo.performance}</span>
+              <span className="flex-shrink-0 w-40 text-gray-500">ผลการประเมินงาน :</span>
+              <span className="font-medium text-gray-800">{profileData.additionalInfo.performance}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-gray-500 w-40 flex-shrink-0">ประวัติการลงโทษ :</span>
-              <span className="text-gray-800 font-medium">{profileData.additionalInfo.disciplinary}</span>
+              <span className="flex-shrink-0 w-40 text-gray-500">ประวัติการลงโทษ :</span>
+              <span className="font-medium text-gray-800">{profileData.additionalInfo.disciplinary}</span>
             </div>
           </div>
         </div>
 
         {/* ข้อมูลบริษัท */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        <div className="p-6 bg-white shadow-md rounded-2xl">
+          <h2 className="flex items-center mb-4 text-lg font-bold text-gray-800">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2 fill-brand-primary" viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7h-10zm6 10h-4v4h-4v-4H6v-4h4v-4h4v4h4v4z"/></svg>
             ข้อมูลบริษัท
           </h2>
@@ -565,7 +565,7 @@ function ProfileScreen() {
           onClick={handleBackdropClick}
         >
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-brand-primary to-orange-600 text-white p-6 rounded-t-2xl">
+            <div className="sticky top-0 p-6 text-white bg-gradient-to-r from-brand-primary to-orange-600 rounded-t-2xl">
               <h2 className="text-xl font-bold">แก้ไขข้อมูล</h2>
             </div>
             
@@ -573,7 +573,7 @@ function ProfileScreen() {
               {editSection === 'personalInfo' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">วันเกิด</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">วันเกิด</label>
                     <input
                       type="text"
                       value={tempData.birthDate || ''}
@@ -582,7 +582,7 @@ function ProfileScreen() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">อายุ</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">อายุ</label>
                     <input
                       type="text"
                       value={tempData.age || ''}
@@ -591,7 +591,7 @@ function ProfileScreen() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">ที่อยู่</label>
                     <textarea
                       value={tempData.address || ''}
                       onChange={(e) => handleInputChange('address', e.target.value)}
@@ -600,7 +600,7 @@ function ProfileScreen() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">เบอร์ติดต่อ</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">เบอร์ติดต่อ</label>
                     <input
                       type="tel"
                       value={tempData.phone || ''}
@@ -609,7 +609,7 @@ function ProfileScreen() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">อีเมล</label>
                     <input
                       type="email"
                       value={tempData.email || ''}
@@ -618,7 +618,7 @@ function ProfileScreen() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">สถานะ</label>
                     <select
                       value={tempData.maritalStatus || ''}
                       onChange={(e) => handleInputChange('maritalStatus', e.target.value)}
@@ -630,7 +630,7 @@ function ProfileScreen() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">เลขบัตรประชาชน</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">เลขบัตรประชาชน</label>
                     <input
                       type="text"
                       value={tempData.idCard || ''}
@@ -642,10 +642,10 @@ function ProfileScreen() {
               )}
             </div>
 
-            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-2xl flex gap-3">
+            <div className="sticky bottom-0 flex gap-3 px-6 py-4 bg-gray-50 rounded-b-2xl">
               <button
                 onClick={handleCancel}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                className="flex-1 px-4 py-2 font-medium text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-100"
               >
                 ยกเลิก
               </button>
