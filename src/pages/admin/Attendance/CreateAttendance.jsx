@@ -475,6 +475,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     'ฝ่ายบริการ'
   ]
   
+  // 🔄 Mapping ชื่อแผนกภาษาไทย -> ภาษาอังกฤษ (ตรงกับข้อมูลจริงใน usersData)
+  const departmentMapping = {
+    'การเงิน': ['Finance', 'การเงิน', 'finance'],
+    'ฝ่ายบุคคล': ['HR', 'ฝ่ายบุคคล', 'hr', 'human resource'],
+    'ฝ่ายขาย': ['Sales', 'ฝ่ายขาย', 'sales'],
+    'ฝ่ายผลิต': ['Production', 'ฝ่ายผลิต', 'production'],
+    'ฝ่ายไอที': ['IT', 'ฝ่ายไอที', 'it', 'information technology'],
+    'ฝ่ายการตลาด': ['Marketing', 'ฝ่ายการตลาด', 'marketing'],
+    'ฝ่ายบริการ': ['Service', 'ฝ่ายบริการ', 'service', 'customer service']
+  }
+  
   // รายการสาขาที่มี (ตรงกับภาพ)
   const availableBranches = [
     { code: 'BKK', name: 'กรุงเทพฯ', shortName: 'BKK (กรุงเทพฯ)', provinceCode: 'BKK' },
@@ -718,16 +729,22 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
           
           // ตรวจสอบว่า user อยู่ในแผนก/ตำแหน่งที่เลือกหรือไม่
           const matchesTeam = selectedTeams.some(team => {
-            const teamLower = team.toLowerCase()
-            return userDepartment.includes(teamLower) || 
-                   userPosition.includes(teamLower) ||
-                   userRole.includes(teamLower)
+            // ใช้ mapping เพื่อเช็คทั้งชื่อภาษาไทยและภาษาอังกฤษ
+            const mappedDepartments = departmentMapping[team] || [team]
+            
+            return mappedDepartments.some(dept => {
+              const deptLower = dept.toLowerCase()
+              return userDepartment.includes(deptLower) || 
+                     userPosition.includes(deptLower) ||
+                     userRole.includes(deptLower)
+            })
           })
           
           if (!matchesTeam) return false
         }
         
-        // ถ้าไม่มีคำค้นหา แสดงทุกคน (ที่ผ่านการกรองแผนกแล้ว)
+        // ถ้าไม่มีคำค้นหา และเลือกแผนกแล้ว แสดงทุกคน (ที่ผ่านการกรองแผนกแล้ว)
+        // หรือถ้าไม่ได้เลือกแผนก ให้แสดงทุกคนที่ผ่านการกรองข้างบน
         if (!search.trim()) return true
         
         // กรองตามคำค้นหา
@@ -1071,6 +1088,17 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     if (e.key === 'Enter') {
       e.preventDefault()
       
+      // Handle Enter key in members field - select first member from dropdown
+      if (currentField === 'members' && showMembersDropdown && filteredMembers.length > 0) {
+        const firstMember = filteredMembers[0]
+        // ถ้ายังไม่ได้เลือกคนนี้ ให้เลือก
+        if (!selectedMembers.some(m => m.id === firstMember.id)) {
+          toggleMember(firstMember)
+          setMembers('') // เคลียร์ช่องค้นหา
+        }
+        return // ไม่ไปช่องถัดไป
+      }
+      
       // Auto-complete time format for time inputs
       if (currentField === 'timeStart' || currentField === 'timeEnd') {
         const value = currentField === 'timeStart' ? timeStart.trim() : timeEnd.trim()
@@ -1117,7 +1145,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
         nextField.current.focus()
       }
     }
-  }, [timeStart, timeEnd, dateRef, dateEndRef, timeStartRef, timeEndRef, locationRef, membersRef, preparationsRef, tasksRef, goalsRef])
+  }, [timeStart, timeEnd, dateRef, dateEndRef, timeStartRef, timeEndRef, locationRef, membersRef, preparationsRef, tasksRef, goalsRef, showMembersDropdown, filteredMembers, selectedMembers, toggleMember])
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
@@ -1848,14 +1876,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
                 <input 
                   ref={membersRef}
-                  value={selectedMembers.length > 0 ? members : ''} 
+                  value={members} 
                   onChange={e => {
                     setMembers(e.target.value)
                     setShowMembersDropdown(true)
                   }} 
                   onKeyDown={(e) => handleKeyDown(e, 'members')}
                   onFocus={() => {
-                    setMembers('') // ล้างชื่อที่แสดงใน input
                     setShowMembersDropdown(true)
                   }}
                   className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none" 
