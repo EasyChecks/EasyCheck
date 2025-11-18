@@ -107,7 +107,7 @@ const AlertDialog = ({
         className="absolute inset-0 bg-black/30"
         onClick={onClose}
       ></div>
-      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 z-30 relative">
+      <div className="relative z-30 w-full max-w-sm p-6 mx-4 bg-white shadow-2xl rounded-2xl">
         {/* Icon */}
         <div className={`bg-gradient-to-br ${bgColor} p-6 sm:p-8 rounded-t-2xl sm:rounded-t-3xl flex justify-center`}>
           <div className={color}>
@@ -116,17 +116,17 @@ const AlertDialog = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8 text-center">
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
+        <div className="p-6 text-center sm:p-8">
+          <h3 className="mb-3 text-xl font-bold text-gray-800 sm:text-2xl">
             {title}
           </h3>
-          <p className="text-sm sm:text-base text-gray-600 leading-relaxed whitespace-pre-line">
+          <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-line sm:text-base">
             {message}
           </p>
         </div>
 
         {/* Buttons */}
-        <div className="p-4 sm:p-6 pt-0">
+        <div className="p-4 pt-0 sm:p-6">
           {type === 'confirm' ? (
             <div className="flex gap-3">
               <button
