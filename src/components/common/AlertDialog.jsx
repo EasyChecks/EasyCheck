@@ -100,11 +100,14 @@ const AlertDialog = ({
   const { icon, color, bgColor, buttonColor } = getIconAndColor();
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm font-prompt animate-fadeIn"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm sm:max-w-md transform animate-slideUp">
+    <div className={`fixed inset-0 flex items-center justify-center transition-all duration-300 ${
+      isOpen ? 'z-30 opacity-100' : 'z-0 opacity-0 pointer-events-none'
+    }`}>
+      <div 
+        className="absolute inset-0 bg-black/30"
+        onClick={onClose}
+      ></div>
+      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 z-30 relative">
         {/* Icon */}
         <div className={`bg-gradient-to-br ${bgColor} p-6 sm:p-8 rounded-t-2xl sm:rounded-t-3xl flex justify-center`}>
           <div className={color}>

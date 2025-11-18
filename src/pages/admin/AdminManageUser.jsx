@@ -109,7 +109,7 @@ function AdminManageUser() {
   // User Create Modal States
   const [showCreateUser, setShowCreateUser] = useState(false);
   
-  // Debounce search term - รอ 300ms หลังจากพิมพ์เสร็จค่อยค้นหา
+  // Debounce search term - รอ 300ms หลังจากพิมพ์เสร็จคอยค้นหา
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -136,6 +136,9 @@ function AdminManageUser() {
     title: '',
     message: ''
   });
+
+  // Confirm delete candidate (replace window.confirm with modal/toast)
+  const [deleteCandidate, setDeleteCandidate] = useState(null);
 
   // Filter and search users - ใช้ debouncedSearchTerm แทน searchTerm
   const filteredUsers = useMemo(() => {
@@ -341,7 +344,7 @@ function AdminManageUser() {
     closeEditUser();
   };
 
-  // Delete user function
+  // Delete user function (now only prepares confirmation modal)
   const handleDeleteUser = (userToDelete) => {
     // Prevent deleting superadmin if current user is admin
     if (currentUser?.role === 'admin' && userToDelete.role === 'superadmin') {
@@ -355,19 +358,27 @@ function AdminManageUser() {
       return;
     }
 
-    // Confirm deletion
-    const confirmDelete = window.confirm(
-      `คุณแน่ใจหรือไม่ที่จะลบ "${userToDelete.name}"?\n\n` +
-      `การดำเนินการนี้จะลบข้อมูลต่อไปนี้:\n` +
-      `• ข้อมูลพนักงาน\n` +
-      `• บัญชีผู้ใช้งาน (${userToDelete.username})\n` +
-      (userToDelete.adminAccount ? `• บัญชี Admin (${userToDelete.adminAccount})\n` : '') +
-      `• ประวัติการเข้างาน\n` +
-      `• ข้อมูลการลา\n\n` +
-      `การดำเนินการนี้ไม่สามารถย้อนกลับได้!`
-    );
+    // ปิด Detail Modal ก่อน เพื่อให้มองเห็น Deletion Modal ชัดเจน
+    closeDetail();
+    
+    // Open confirmation modal (instead of window.confirm)
+    setDeleteCandidate(userToDelete);
+  };
 
-    if (!confirmDelete) return;
+  // Cancel deletion
+  const cancelDelete = () => {
+    setDeleteCandidate(null);
+    // เด้งกลับมาแสดง Detail Modal อีกครั้ง
+    if (selectedUser) {
+      setShowDetail(true);
+    }
+  };
+
+  // Confirm deletion (perform actual delete logic)
+  const confirmDeleteUser = () => {
+    const userToDelete = deleteCandidate;
+    if (!userToDelete) return;
+    setDeleteCandidate(null); // ปิด confirmation modal
 
     try {
       // 1. Remove from users array
@@ -378,7 +389,7 @@ function AdminManageUser() {
       localStorage.setItem('usersData', JSON.stringify(updatedUsers));
       
       // 3. Remove from logged-in user if it's the same user (localStorage + tabId)
-      const tabId = window.name // ใช้ window.name แทน sessionStorage
+      const tabId = window.name
       if (tabId) {
         const storedUser = localStorage.getItem(`user_${tabId}`)
         if (storedUser) {
@@ -805,21 +816,21 @@ function AdminManageUser() {
 
   return (
     <div className="min-h-screen p-4 sm:p-6 bg-slate-50">
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-orange-100">
+      <div className="p-6 bg-white border border-orange-100 shadow-sm rounded-2xl">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <div className="flex flex-col items-start justify-between gap-4 mb-6 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-900">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[var(--gray-900, #111827)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               จัดการผู้ใช้
             </h1>
-            <p className="text-gray-500 text-sm mt-1">จัดการสิทธิ์การใช้งานและข้อมูลผู้ใช้ในระบบ</p>
+            <p className="mt-1 text-sm text-gray-500">จัดการสิทธิ์การใช้งานและข้อมูลผู้ใช้ในระบบ</p>
           </div>
           <div className="flex items-center gap-2">
             <label className="px-4 py-2.5 bg-brand-primary hover:bg-gray-600 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               นำเข้าไฟล์ csv
@@ -834,7 +845,7 @@ function AdminManageUser() {
               onClick={() => setShowCreateUser(true)}
               className="px-4 py-2.5 bg-brand-primary hover:bg-gray-600 text-white rounded-xl shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
               เพิ่มผู้ใช้งาน
@@ -843,9 +854,9 @@ function AdminManageUser() {
         </div>
 
         {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="flex-1 relative">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex flex-col gap-3 mb-6 sm:flex-row">
+          <div className="relative flex-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -898,9 +909,9 @@ function AdminManageUser() {
         />
 
         {/* Footer legend */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="p-4 mt-6 border border-gray-200 bg-gray-50 rounded-xl">
+          <h3 className="flex items-center gap-2 mb-3 font-semibold text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             คำอธิบาย
@@ -908,26 +919,26 @@ function AdminManageUser() {
           
           {/* สถานะพนักงาน */}
           <div className="mb-3">
-            <h4 className="text-xs font-semibold text-gray-600 mb-2">สถานะพนักงาน:</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+            <h4 className="mb-2 text-xs font-semibold text-gray-600">สถานะพนักงาน:</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                <span className="text-green-600 font-semibold">Active</span>
+                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                <span className="font-semibold text-green-600">Active</span>
                 <span className="text-gray-500">: ยังคงทำงานอยู่</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                <span className="text-red-600 font-semibold">leave</span>
+                <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                <span className="font-semibold text-red-600">leave</span>
                 <span className="text-gray-500">: ลาออกแล้ว</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-                <span className="text-gray-700 font-semibold">Suspended</span>
+                <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
+                <span className="font-semibold text-gray-700">Suspended</span>
                 <span className="text-gray-500">: โดนพักงาน</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-amber-500"></span>
-                <span className="text-amber-700 font-semibold">Pending</span>
+                <span className="font-semibold text-amber-700">Pending</span>
                 <span className="text-gray-500">: รอโปรโมท</span>
               </div>
             </div>
@@ -935,21 +946,21 @@ function AdminManageUser() {
           
           {/* 🆕 สาขา */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-600 mb-2">สาขา:</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+            <h4 className="mb-2 text-xs font-semibold text-gray-600">สาขา:</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                <span className="text-blue-600 font-semibold">BKK</span>
+                <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                <span className="font-semibold text-blue-600">BKK</span>
                 <span className="text-gray-500">: กรุงเทพมหานคร</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-500"></span>
-                <span className="text-purple-600 font-semibold">CNX</span>
+                <span className="w-3 h-3 bg-purple-500 rounded-full"></span>
+                <span className="font-semibold text-purple-600">CNX</span>
                 <span className="text-gray-500">: เชียงใหม่</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-teal-500"></span>
-                <span className="text-teal-600 font-semibold">PKT</span>
+                <span className="w-3 h-3 bg-teal-500 rounded-full"></span>
+                <span className="font-semibold text-teal-600">PKT</span>
                 <span className="text-gray-500">: ภูเก็ต</span>
               </div>
             </div>
@@ -958,7 +969,7 @@ function AdminManageUser() {
       </div>
 
       {/* Lazy-loaded Modals พร้อม Suspense fallback */}
-      <Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div></div>}>
+      <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><div className="w-12 h-12 border-b-2 border-orange-600 rounded-full animate-spin"></div></div>}>
         {/* User Detail Modal Component */}
         {showDetail && selectedUser && (
           <UserDetailModal
@@ -1023,6 +1034,33 @@ function AdminManageUser() {
         message={alertDialog.message}
         autoClose={alertDialog.autoClose}
       />
+
+      {/* Delete confirmation modal (toast/pop-up) */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={cancelDelete}></div>
+          <div className="z-50 w-full max-w-lg p-6 mx-4 bg-white shadow-2xl rounded-xl">
+            <h3 className="mb-2 text-lg font-semibold">ยืนยันการลบ</h3>
+            <p className="text-sm text-gray-700">
+              คุณแน่ใจหรือไม่ที่จะลบ "{deleteCandidate.name}"? การดำเนินการนี้จะลบข้อมูลผู้ใช้งานและข้อมูลที่เกี่ยวข้องทั้งหมด ซึ่งไม่สามารถย้อนกลับได้
+            </p>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                className="px-4 py-2 text-sm text-white bg-red-600 rounded-xl hover:bg-red-700"
+              >
+                ลบเลย
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
