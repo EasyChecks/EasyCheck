@@ -37,7 +37,7 @@ export const sampleSchedules = [
     date: null, // ไม่มีวันที่ = แสดงตลอด
     isPermanent: true, // ตารางถาวร
     location: 'สำนักงานใหญ่ TGS กรุงเทพ',
-    members: 'พรทิพย์ ภักดี, วิชัย ศรีสวัสดิ์, อภิชาติ รัตนา',
+    members: 'พรทิพย์ ภักดี, อภิชาติ รัตนา',
     type: 'ออกบูธงาน',
     time: '10.00 - 22.00',
     startTime: '10:00',

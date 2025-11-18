@@ -106,7 +106,7 @@ export default function ScheduleDetails() {
       </div>
 
       {/* Schedule Header */}
-      <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white px-6 py-8 rounded-3xl shadow-lg mx-4">
+      <div className="bg-gradient-to-r from-brand-primary to-orange-600 text-white px-6 py-8 rounded-3xl shadow-lg">
         <div className="flex items-start space-x-3">
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -122,7 +122,7 @@ export default function ScheduleDetails() {
       </div>
 
       {/* Schedule Details Card */}
-      <div className="px-4 mt-6 pb-20">
+      <div className="mt-6">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Basic Info Section */}
           <div className="p-6 border-b border-gray-100">
