@@ -8,7 +8,6 @@ import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 import { useCamera } from '../../hooks/useCamera'
 import { config } from '../../config'
 import { getCheckInStatus } from '../../utils/attendanceCalculator'
-import { AttendanceWarning } from '../../components/user/AttendanceWarning'
 
 function UserDashboard() {
   const { attendance, user, attendanceRecords } = useAuth()
@@ -151,7 +150,6 @@ function UserDashboard() {
       console.error('Error loading schedules:', error)
       return []
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, refreshKey])
 
   // ฟังก์ชันคำนวณระยะทาง (Haversine formula)
@@ -497,9 +495,6 @@ function UserDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 🚨 Attendance Warning - แสดงสถานะการเข้างานแบบ realtime */}
-      <AttendanceWarning schedules={allSchedules} />
-      
       {/* Check In/Out Card */}
       <div className="bg-white rounded-2xl shadow-lg p-6 text-white">
         <h3 className="mb-4 text-xl font-bold text-black">บันทึกเวลา</h3>

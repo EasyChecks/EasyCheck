@@ -35,9 +35,24 @@ export const minutesToTime = (minutes) => {
  * @returns {number} - จำนวนนาทีที่ต่างกัน (บวก = สาย, ลบ = มาก่อน)
  */
 export const calculateTimeDifference = (checkInTime, shiftStart) => {
-  const checkInMinutes = timeToMinutes(checkInTime);
-  const shiftStartMinutes = timeToMinutes(shiftStart);
-  return checkInMinutes - shiftStartMinutes;
+  let checkInMinutes = timeToMinutes(checkInTime);
+  let shiftStartMinutes = timeToMinutes(shiftStart);
+  
+  let difference = checkInMinutes - shiftStartMinutes;
+  
+  // 🌙 จัดการกะข้ามเที่ยงคืน
+  // ถ้า difference > 12 ชม. (720 นาที) = check-in ก่อนเที่ยงคืน, กะเริ่มหลังเที่ยงคืน
+  // เช่น check-in 23:53 (1433) กะ 00:00 (0) → diff = 1433 → แก้เป็น -7
+  if (difference > 720) {
+    difference = checkInMinutes - (shiftStartMinutes + 1440);
+  }
+  // ถ้า difference < -12 ชม. = check-in หลังเที่ยงคืน, กะเริ่มก่อนเที่ยงคืน  
+  // เช่น check-in 00:05 (5) กะ 23:00 (1380) → diff = -1375 → แก้เป็น 65
+  else if (difference < -720) {
+    difference = (checkInMinutes + 1440) - shiftStartMinutes;
+  }
+  
+  return difference;
 };
 
 /**
@@ -72,8 +87,18 @@ export const calculateAttendanceStatus = (checkInTime, shiftStart, hasApprovedLe
   const timeDifference = calculateTimeDifference(checkInTime, shiftStart);
   const { GRACE_PERIOD_MINUTES, LATE_THRESHOLD_MINUTES } = ATTENDANCE_CONFIG;
 
-  // Scenario 1: มาก่อนเวลา หรือใน grace period
-  if (timeDifference <= 0 || Math.abs(timeDifference) <= GRACE_PERIOD_MINUTES) {
+  // Scenario 1: มาก่อนเวลา (ใน grace period) หรือตรงเวลาพอดี
+  if (timeDifference <= 0 && Math.abs(timeDifference) <= GRACE_PERIOD_MINUTES) {
+    return {
+      status: ATTENDANCE_CONFIG.STATUS.ON_TIME,
+      lateMinutes: 0,
+      shouldAutoCheckout: false,
+      message: 'ตรงเวลา'
+    };
+  }
+  
+  // Scenario 1.5: ตรงเวลาพอดี (0 นาที)
+  if (timeDifference === 0) {
     return {
       status: ATTENDANCE_CONFIG.STATUS.ON_TIME,
       lateMinutes: 0,
@@ -82,7 +107,7 @@ export const calculateAttendanceStatus = (checkInTime, shiftStart, hasApprovedLe
     };
   }
 
-  // Scenario 2: มาสาย (≤30 นาที)
+  // Scenario 2: มาสาย (1-30 นาที)
   if (timeDifference > 0 && timeDifference <= LATE_THRESHOLD_MINUTES) {
     return {
       status: ATTENDANCE_CONFIG.STATUS.LATE,

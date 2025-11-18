@@ -4,7 +4,7 @@ import { useAuth } from '../../../contexts/useAuth';
 import { useLocations } from '../../../contexts/LocationContext';
 import { useEvents } from '../../../contexts/EventContext';
 import { compressImage, getBase64Size } from '../../../utils/imageCompressor';
-import { getCheckInStatus, shouldAutoCheckOut } from '../../../utils/attendanceCalculator';
+import { calculateAttendanceStatus } from '../../../utils/attendanceLogic';
 
 function TakePhoto() {
   const navigate = useNavigate();
@@ -247,29 +247,41 @@ function TakePhoto() {
       const locationInfo = findNearestPlace() || { gps: '13.7563,100.5018', address: 'ในพื้นที่อนุญาต', distance: '-' };
 
       if (attendance.status === 'not_checked_in') {
-        // 🆕 ใช้ percentage-based late detection + auto check-out
+        // 🆕 ใช้ logic ใหม่: calculateAttendanceStatus
         const [startTimeStr, endTimeStr] = schedule.time.split(' - ');
         const workTimeStart = startTimeStr.replace('.', ':'); // แปลง "07.00" เป็น "07:00"
         const workTimeEnd = endTimeStr.replace('.', ':');
         
-        const statusResult = getCheckInStatus(currentTime, workTimeStart, workTimeEnd);
-        const status = statusResult.status; // 'on_time' | 'absent'
-        const autoCheckOut = statusResult.autoCheckOut; // boolean
+        const attendanceResult = calculateAttendanceStatus(currentTime, workTimeStart, false);
+        const { status, lateMinutes, shouldAutoCheckout, message: statusMessage } = attendanceResult;
+        
+        console.log('🔍 Attendance Result:', { status, lateMinutes, shouldAutoCheckout, statusMessage });
         
         let message = '';
+        
+        // แสดง message ตามสถานะ (status จาก ATTENDANCE_CONFIG: 'on_time', 'late', 'absent')
         if (status === 'on_time') {
           message = `เข้างานตรงเวลา ${currentTime} น.`;
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
+        } else if (status === 'late') {
+          message = `มาสาย ${lateMinutes} นาที (${currentTime} น.)`;
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
         } else if (status === 'absent') {
-          if (autoCheckOut) {
+          if (shouldAutoCheckout) {
             // 🔥 ขาดงาน - เข้างานสายเกินขีดจำกัด → Auto check-out ทันที
             message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)\nออกงานอัตโนมัติแล้ว`;
-            checkIn(currentTime, photo, workTimeStart, workTimeEnd, true, locationInfo); // true = auto checkout
+            checkIn(currentTime, photo, workTimeStart, true, locationInfo); // true = auto checkout
           } else {
             message = `ขาดงาน - ไม่ได้เข้างาน (${currentTime} น.)`;
-            checkIn(currentTime, photo, workTimeStart, workTimeEnd, false, locationInfo);
+            checkIn(currentTime, photo, workTimeStart, false, locationInfo);
           }
+        } else {
+          // Fallback ถ้า status ไม่ตรงกับที่คาดหวัง
+          message = statusMessage || `เข้างาน ${currentTime} น.`;
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
         }
         
+        console.log('📝 Final Message:', message);
         setPopupMessage(message);
         
       } else if (attendance.status === 'checked_in') {
