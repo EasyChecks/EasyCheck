@@ -364,21 +364,19 @@ export const AuthProvider = ({ children }) => {
       // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
       const { gps: checkInGPS, address: checkInAddress, distance: checkInDistance } = locationInfo
       
-      // แปลง status จาก ATTENDANCE_CONFIG เป็นรูปแบบเดิม
-      const legacyStatus = status === 'ตรงเวลา' ? 'on_time' : 
-                          status === 'มาสาย' ? 'late' : 
-                          status === 'ขาด' ? 'absent' : 'on_time'
+      // status จาก ATTENDANCE_CONFIG อยู่ในรูป 'on_time', 'late', 'absent' อยู่แล้ว
+      // ไม่ต้องแปลง เพราะ updateUserAttendanceInUsersData รับ 'on_time', 'late', 'absent'
       
       if (finalAutoCheckOut) {
         // 🔥 Auto check-out: บันทึกทั้ง check-in และ check-out พร้อมกัน
-        updateUserAttendanceInUsersData(time, time, photo, photo, legacyStatus, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
+        updateUserAttendanceInUsersData(time, time, photo, photo, status, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
         
         const shiftRecord = {
           checkIn: time,
           checkOut: time,
           checkInPhoto: photo,
           checkOutPhoto: photo,
-          status: legacyStatus,
+          status: status,
           lateMinutes: lateMinutes || 0,
           message
         }
@@ -417,7 +415,7 @@ export const AuthProvider = ({ children }) => {
         }))
       } else {
         // ปกติ: บันทึกแค่ check-in
-        updateUserAttendanceInUsersData(time, null, photo, null, legacyStatus, checkInGPS, checkInAddress, null, null, checkInDistance, null)
+        updateUserAttendanceInUsersData(time, null, photo, null, status, checkInGPS, checkInAddress, null, null, checkInDistance, null)
       }
     } catch (error) {
       console.error('Error in checkIn:', error)
