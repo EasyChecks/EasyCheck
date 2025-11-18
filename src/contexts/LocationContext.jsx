@@ -5,11 +5,11 @@ const LocationContext = createContext()
 
 // Initial locations data
 const initialLocations = [
-  // ========== กรุงเทพ (BKK - Branch 101) ==========
+  // ========== กรุงเทพ สาขา 1 (BKK - Branch 101) ==========
   {
     id: 1,
-    name: 'สำนักงานใหญ่ TGS กรุงเทพ',
-    description: 'สำนักงานใหญ่ ถนนสาทร กรุงเทพฯ',
+    name: 'Tea Time สาขาสยาม',
+    description: 'ร้านชานมสาขาหลัก ย่านสยาม กรุงเทพฯ',
     radius: 150,
     latitude: 13.7245,
     longitude: 100.5316,
@@ -21,50 +21,50 @@ const initialLocations = [
     }
   },
   
-  // ========== เชียงใหม่ (CNX - Branch 102) ==========
+  // ========== กรุงเทพ สาขา 2 (BKK - Branch 102) ==========
   {
     id: 2,
-    name: 'สำนักงานสาขาเชียงใหม่',
-    description: 'สำนักงานสาขา ใกล้ประตูท่าแพ เชียงใหม่',
+    name: 'Tea Time สาขาอโศก',
+    description: 'ร้านชานมสาขา 2 ย่านอโศก กรุงเทพฯ',
+    radius: 120,
+    latitude: 13.7365,
+    longitude: 100.5600,
+    status: 'active',
+    createdBy: {
+      userId: 1,
+      username: 'BKK1020001',
+      branch: '102'
+    }
+  },
+  
+  // ========== เชียงใหม่ (CNX - Branch 201) ==========
+  {
+    id: 3,
+    name: 'Tea Time สาขาเซ็นทรัล เชียงใหม่',
+    description: 'ร้านชานมสาขาเชียงใหม่ ห้างเซ็นทรัลเฟสติวัล',
     radius: 120,
     latitude: 18.7883,
     longitude: 98.9853,
     status: 'active',
     createdBy: {
       userId: 2,
-      username: 'CNX1020001',
-      branch: '102'
+      username: 'CNX2010001',
+      branch: '201'
     }
   },
   
-  // ========== ภูเก็ต (PKT - Branch 201) ==========
+  // ========== ภูเก็ต (PKT - Branch 301) ==========
   {
-    id: 3,
-    name: 'สำนักงานสาขาภูเก็ต',
-    description: 'สำนักงานสาขา เมืองภูเก็ต',
+    id: 4,
+    name: 'Tea Time สาขาป่าตอง',
+    description: 'ร้านชานมสาขาภูเก็ต ชายหาดป่าตอง',
     radius: 130,
     latitude: 7.8804,
     longitude: 98.3923,
     status: 'active',
     createdBy: {
       userId: 5,
-      username: 'PKT2010001',
-      branch: '201'
-    }
-  },
-  
-  // ========== ภาคตะวันตก - กาญจนบุรี (KAN - Branch 301) ==========
-  {
-    id: 4,
-    name: 'สำนักงานสาขากาญจนบุรี',
-    description: 'สำนักงานสาขา เมืองกาญจนบุรี',
-    radius: 140,
-    latitude: 14.0227,
-    longitude: 99.5328,
-    status: 'active',
-    createdBy: {
-      userId: 6,
-      username: 'KAN3010001',
+      username: 'PKT3010001',
       branch: '301'
     }
   }
