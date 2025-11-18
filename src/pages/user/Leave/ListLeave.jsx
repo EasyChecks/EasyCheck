@@ -2,30 +2,31 @@ import React, { useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLeave } from '../../../contexts/LeaveContext'
 
+// หน้าแสดงรายการลาทั้งหมดหรือแยกตามประเภท - เป็นหน้ารายการประวัติ
 function ListLeave() {
     const navigate = useNavigate()
     const location = useLocation()
-    const { leaveList: allLeaveList, lateArrivalList } = useLeave()
+    const { leaveList: allLeaveList, lateArrivalList } = useLeave() // ดึงข้อมูลจาก Context
     
-    // Get selected leave type from navigation state
+    // รับค่าจากการ navigate มา - บอกว่าจะแสดงประเภทไหน
     const selectedLeaveType = location.state?.leaveType || null
-    const viewType = location.state?.viewType || 'leave' // 'leave' or 'lateArrival'
+    const viewType = location.state?.viewType || 'leave' // 'leave' หรือ 'lateArrival'
 
-    // Filter leave list by selected type and sort by date (newest first)
+    // กรองและเรียงลำดัปข้อมูล - ใช้ useMemo เพื่อประสิทธิภาพ
     const leaveList = useMemo(() => {
         let filteredList;
         
         if (viewType === 'lateArrival') {
-            // Show only late arrival requests
+            // แสดงเฉพาะขอเข้างานสาย
             filteredList = lateArrivalList;
         } else {
-            // Show only regular leave requests
+            // แสดงลาปกติ - ถ้าเลือกประเภทก็กรองตามประเภท
             filteredList = selectedLeaveType 
                 ? allLeaveList.filter(leave => leave.leaveType === selectedLeaveType)
                 : allLeaveList;
         }
         
-        // Sort by startDate in descending order (newest first)
+        // เรียงจากใหม่ไปเก่าก่อน (รายการล่าสุดอยู่บนสุด)
         return filteredList.sort((a, b) => {
             const dateA = a.startDate.split('/').reverse().join('');
             const dateB = b.startDate.split('/').reverse().join('');
@@ -33,6 +34,7 @@ function ListLeave() {
         });
     }, [allLeaveList, lateArrivalList, selectedLeaveType, viewType])
 
+    // กำหนดสีสถานะตาม status - เหลือง=รอ, เขียว=อนุมัติ, แดง=ไม่อนุมัติ
     const getStatusColor = (color) => {
         switch(color) {
             case 'yellow':
@@ -46,8 +48,8 @@ function ListLeave() {
         }
     }
 
+    // ไปหน้ารายละเอียดของการลา
     const handleLeaveClick = (leave) => {
-        // Navigate to detail page with leave data
         navigate(`/user/leave/detail/${leave.id}`, { state: { leaveData: leave } })
     }
 

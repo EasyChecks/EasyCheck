@@ -1,49 +1,59 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLeave } from '../../../contexts/LeaveContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import AlertDialog from '../../../components/common/AlertDialog';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
 
 function LeaveRequestModal({ closeModal }) {
-  const { addLeave, addLateArrival, calculateDays, validateLeaveRequest, getLeaveRules } = useLeave();
+  const { addLeave, addLateArrival, calculateDays, validateLeaveRequest, getLeaveRules } = useLeave(); // ดึงฟังก์ชันจาก LeaveContext
+  const { user } = useAuth(); // ดึงข้อมูล user ปัจจุบัน
+  
+  // ตรวจสอบว่าผู้ใช้มีสิทธิ์ลาคลอดหรือไม่ (เฉพาะนาง/นางสาว)
+  const canRequestMaternityLeave = user?.titlePrefix === 'นาง' || user?.titlePrefix === 'นางสาว';
 
-  // Get today's date in yyyy-mm-dd format
+  // ฟังก์ชันดึงวันที่วันนี้ในรูปแบบ yyyy-mm-dd - ใช้กับ input type="date"
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // เดือนต้อง +1 เพราะเริ่มที่ 0
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
+  // state สำหรับเก็บข้อมูลฟอร์มการขอลา - หัวใจหลักของ Modal
   const [formData, setFormData] = useState({
-    requestType: 'leave', // 'leave' or 'lateArrival'
-    leaveType: '',
-    leaveMode: 'fullday', // 'fullday' or 'hourly'
-    startDate: '',
-    endDate: '',
-    startTime: '',
-    endTime: '',
-    reason: '',
-    documents: []
+    requestType: 'leave', // 'leave' หรือ 'lateArrival' - ประเภทคำขอ
+    leaveType: '',        // ประเภทการลา (ลาป่วย, ลากิจ, ฯลฯ)
+    leaveMode: 'fullday', // 'fullday' หรือ 'hourly' - ลาเต็มวันหรือรายชั่วโมง
+    startDate: '',        // วันที่เริ่มต้น
+    endDate: '',          // วันที่สิ้นสุด
+    startTime: '',        // เวลาเริ่มต้น (สำหรับลารายชั่วโมง)
+    endTime: '',          // เวลาสิ้นสุด
+    reason: '',           // เหตุผลในการลา
+    documents: []         // ไฟล์เอกสารแนบ (แปลงเป็น base64)
   });
 
-  // Display dates in dd/mm/yyyy format
+  // state สำหรับแสดงวันที่ในรูปแบบ dd/mm/yyyy - ใช้แสดงผลให้ user อ่านง่าย
   const [displayDates, setDisplayDates] = useState({
     startDate: '',
     endDate: ''
   });
 
-  // Time picker states
-  const [showTimeStartPicker, setShowTimeStartPicker] = useState(false);
-  const [showTimeEndPicker, setShowTimeEndPicker] = useState(false);
-  const timeStartPickerRef = useRef(null);
+  // state สำหรับควบคุมการแสดง/ซ่อน Time Picker
+  const [showTimeStartPicker, setShowTimeStartPicker] = useState(false); // เปิด/ปิด Time Picker เวลาเริ่มต้น
+  const [showTimeEndPicker, setShowTimeEndPicker] = useState(false);     // เปิด/ปิด Time Picker เวลาสิ้นสุด
+  const timeStartPickerRef = useRef(null); // ref สำหรับตรวจจับการคลิกนอก Time Picker
   const timeEndPickerRef = useRef(null);
+  
+  // state สำหรับควบคุมการหมุนของลูกศร dropdown
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const selectRef = useRef(null);
 
-  // Dialog states (prefixed with _ to satisfy ESLint)
-  const [_showAlert, setShowAlert] = useState(false);
-  const [_alertConfig, setAlertConfig] = useState({
-    type: 'success',
+  // state สำหรับ Dialog การแจ้งเตือน
+  const [_showAlert, setShowAlert] = useState(false); // แสดง/ซ่อน Alert Dialog
+  const [_alertConfig, setAlertConfig] = useState({   // config ของ Alert
+    type: 'success', // 'success', 'error', 'warning'
     title: '',
     message: ''
   });
@@ -56,6 +66,10 @@ function LeaveRequestModal({ closeModal }) {
       }
       if (timeEndPickerRef.current && !timeEndPickerRef.current.contains(event.target)) {
         setShowTimeEndPicker(false);
+      }
+      // ปิด dropdown เมื่อคลิกข้างนอก
+      if (selectRef.current && !selectRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
       }
     };
 
@@ -457,18 +471,32 @@ function LeaveRequestModal({ closeModal }) {
               <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
                 ประเภทการลา <span className="text-red-500">*</span>
               </label>
-              <select
-                value={formData.leaveType}
-                onChange={(e) => setFormData({ ...formData, leaveType: e.target.value })}
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
-                required
-              >
-                <option value="">เลือกประเภทการลา</option>
-                <option value="ลาป่วย">ลาป่วย</option>
-                <option value="ลากิจ">ลากิจ</option>
-                <option value="ลาพักร้อน">ลาพักร้อน</option>
-                <option value="ลาคลอด">ลาคลอด</option>
-              </select>
+              <div className="relative" ref={selectRef}>
+                <select
+                  value={formData.leaveType}
+                  onChange={(e) => {
+                    setFormData({ ...formData, leaveType: e.target.value });
+                    setIsDropdownOpen(false);
+                  }}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
+                  className="w-full px-3 sm:px-4 pr-8 sm:pr-10 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors appearance-none bg-white cursor-pointer"
+                  required
+                >
+                  <option value="">เลือกประเภทการลา</option>
+                  <option value="ลาป่วย">ลาป่วย</option>
+                  <option value="ลากิจ">ลากิจ</option>
+                  <option value="ลาพักร้อน">ลาพักร้อน</option>
+                  {canRequestMaternityLeave && (
+                    <option value="ลาคลอด">ลาคลอด</option>
+                  )}
+                </select>
+                <div className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>  
 
               {/* Show leave rules when type is selected */}
               {formData.leaveType && (

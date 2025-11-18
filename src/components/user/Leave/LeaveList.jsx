@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-
+// Component การ์ดแสดงสิทธิ์การลาแต่ละประเภท - แสดงจำนวนวันที่ใช้/วันที่เหลือ พร้อม progress bar
 const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRules }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // ควบคุมการขยาย/ยุบส่วนเงื่อนไข
   const navigate = useNavigate();
 
+  // ไปหน้าดูประวัติการลาแยกตามประเภท
   const handleViewHistory = (e) => {
     e.preventDefault();
     e.stopPropagation();
     navigate('/user/leave/list', { state: { leaveType: title } });
   };
 
+  // สลับเปิด/ปิดส่วนเงื่อนไขการลา
   const toggleExpand = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsExpanded(!isExpanded);
   };
 
-  // Calculate percentage
+  // คำนวณเปอร์เซ็นต์การใช้วันลา
   const percentage = totalDays > 0 ? (daysUsed / totalDays) * 100 : 0;
 
-  // Determine progress bar color based on usage
+  // กำหนดสี progress bar ตามการใช้งาน - เขียวถ้าใช้น้อย, เหลืองถ้าใช้ปานกลาง, แดงถ้าใช้เกือบหมด
   const getProgressColor = () => {
     if (percentage >= 80) return 'bg-red-500';
     if (percentage >= 50) return 'bg-yellow-500';
@@ -108,17 +110,17 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
   );
 };
 
-
+// Component หลักที่แสดงรายการสิทธิ์การลาทั้งหมด + การ์ดขอเข้างานสาย
 function LeaveList({ leaveItems }) {
   const navigate = useNavigate();
 
+  // ไปหน้ารายการลาตามประเภท
   const handleLeaveClick = (leave) => {
-    // Navigate to list page with leave type
     navigate('/user/leave/list', { state: { leaveType: leave.title } });
   };
 
+  // ไปหน้ารายการขอเข้างานสาย
   const handleLateArrivalClick = () => {
-    // Navigate to list page with late arrival view
     navigate('/user/leave/list', { state: { viewType: 'lateArrival' } });
   };
 

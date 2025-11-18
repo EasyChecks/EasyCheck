@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Circle, useMap, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, useMap, Popup } from 'react-leaflet' // Components สำหรับแผนที่
 import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
-import { useLocations } from '../../contexts/LocationContext'
-import { useEvents } from '../../contexts/EventContext'
-import { useAuth } from '../../contexts/useAuth'
-import { usersData } from '../../data/usersData'
+import L from 'leaflet' // Library แผนที่
+import { useLocations } from '../../contexts/LocationContext' // Context จัดการพื้นที่/สถานที่
+import { useEvents } from '../../contexts/EventContext' // Context จัดการกิจกรรม
+import { useAuth } from '../../contexts/useAuth' // Context ข้อมูล user
+import { usersData } from '../../data/usersData' // ข้อมูล user ทั้งหมด
 
-// Add animations style
+// สร้าง CSS animation สำหรับ fade in และ scale in
 const style = document.createElement('style')
 style.textContent = `
   @keyframes fadeIn {
@@ -32,7 +32,7 @@ style.textContent = `
 `
 document.head.appendChild(style)
 
-// Fix for default marker icon
+// แก้ปัญหา marker icon เริ่มต้นของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -40,7 +40,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
-// Custom icons for different marker types
+// Icon สีเขียวสำหรับพื้นที่/สถานที่
 const locationIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjJjNTVlIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
   iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjJjNTVlIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
@@ -51,6 +51,7 @@ const locationIcon = new L.Icon({
   shadowSize: [41, 41]
 })
 
+// Icon สีส้มสำหรับกิจกรรม/Event
 const eventIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjZjk3MzE2IiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
   iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjZjk3MzE2IiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
@@ -61,13 +62,13 @@ const eventIcon = new L.Icon({
   shadowSize: [41, 41]
 })
 
-// Component to auto-fit bounds (only on initial load)
+// Component ปรับมุมมองแผนที่ให้เห็นหมุดทั้งหมดตอนเปิดครั้งแรก - ทำงานครั้งเดียว
 function FitBoundsToMarkers({ locations, disabled }) {
   const map = useMap()
-  const hasInitialized = React.useRef(false)
+  const hasInitialized = React.useRef(false) // เช็คว่าทำไปแล้วหรือยัง
 
   React.useEffect(() => {
-    // Only run once on initial load and if not disabled
+    // ทำครั้งเดียวตอนเปิดครั้งแรก - ไม่ทำซ้ำ
     if (!disabled && !hasInitialized.current && locations && locations.length > 0) {
       hasInitialized.current = true
       const bounds = L.latLngBounds(
@@ -85,10 +86,10 @@ function FitBoundsToMarkers({ locations, disabled }) {
   return null
 }
 
-// Component to fly to specific location
+// Component บินไปยังจุดที่ต้องการ - มี animation ลื่นไหล
 function FlyToLocation({ position, onFlyStart, onFlyEnd }) {
   const map = useMap()
-  const previousPosition = React.useRef(null)
+  const previousPosition = React.useRef(null) // เก็บตำแหน่งก่อนหน้าเพื่อเช็คว่าเปลี่ยนหรือไม่
 
   React.useEffect(() => {
     if (!position) {
@@ -96,7 +97,7 @@ function FlyToLocation({ position, onFlyStart, onFlyEnd }) {
       return
     }
 
-    // Check if position actually changed to prevent duplicate animations
+    // เช็คว่าตำแหน่งเปลี่ยนจริงหรือไม่ - ป้องกันการ animate ซ้ำซ้อน
     if (previousPosition.current && 
         previousPosition.current[0] === position[0] && 
         previousPosition.current[1] === position[1]) {
@@ -524,21 +525,42 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Only handle keys when modal is open and this is the active form
+      if (!formRef.current) return
+      
       if (e.key === 'Escape') {
         e.preventDefault()
+        e.stopPropagation()
         onCancel()
+        return
       }
-      if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'TEXTAREA') {
+      
+      // Handle Enter key for form submission
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const target = e.target
+        const isTextarea = target.tagName === 'TEXTAREA'
+        const isSelect = target.tagName === 'SELECT'
+        const isButton = target.tagName === 'BUTTON'
+        
+        // Don't submit on Enter in textarea, select, or button
+        if (isTextarea || isSelect || isButton) return
+        
         e.preventDefault()
-        if (formRef.current) {
+        e.stopPropagation()
+        
+        if (formRef.current && typeof formRef.current.requestSubmit === 'function') {
+          formRef.current.requestSubmit()
+        } else if (formRef.current) {
+          // Fallback for browsers that don't support requestSubmit
           formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
         }
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
+    // Use capture phase to intercept before other handlers
+    document.addEventListener('keydown', handleKeyDown, true)
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown, true)
     }
   }, [onCancel])
 
@@ -932,7 +954,7 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
     name: item.name || '',
     description: item.description || '',
     radius: item.radius || 100,
-    branchCode: item.branchCode || user?.branchCode || '', // 🆕 รักษา branchCode เดิม
+    branchCode: item.branchCode || item.createdBy?.branch || user?.branchCode || '', // 🆕 รองรับทั้ง branchCode และ createdBy.branch
     locationName: item.locationName || '',
     startDate: item.startDate || item.date || '',
     endDate: item.endDate || item.date || '',
@@ -953,21 +975,42 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Only handle keys when modal is open and this is the active form
+      if (!formRef.current) return
+      
       if (e.key === 'Escape') {
         e.preventDefault()
+        e.stopPropagation()
         onCancel()
+        return
       }
-      if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'TEXTAREA') {
+      
+      // Handle Enter key for form submission
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const target = e.target
+        const isTextarea = target.tagName === 'TEXTAREA'
+        const isSelect = target.tagName === 'SELECT'
+        const isButton = target.tagName === 'BUTTON'
+        
+        // Don't submit on Enter in textarea, select, or button
+        if (isTextarea || isSelect || isButton) return
+        
         e.preventDefault()
-        if (formRef.current) {
+        e.stopPropagation()
+        
+        if (formRef.current && typeof formRef.current.requestSubmit === 'function') {
+          formRef.current.requestSubmit()
+        } else if (formRef.current) {
+          // Fallback for browsers that don't support requestSubmit
           formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
         }
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
+    // Use capture phase to intercept before other handlers
+    document.addEventListener('keydown', handleKeyDown, true)
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown, true)
     }
   }, [onCancel])
 
@@ -1904,7 +1947,11 @@ function MappingAndEvents() {
 
         updateLocation(editItem.id, {
           ...editItem,
-          ...formData
+          ...formData,
+          createdBy: {
+            ...editItem.createdBy,
+            branch: formData.branchCode || editItem.createdBy?.branch
+          }
         })
       } else if (editItem.type === 'event') {
         // Check duplicate name for events (exclude current item)
@@ -1958,7 +2005,11 @@ function MappingAndEvents() {
           assignedPositions: formData.assignedPositions || [],
           startDate: formattedStartDate,
           endDate: formattedEndDate,
-          date: formattedStartDate
+          date: formattedStartDate,
+          createdBy: {
+            ...editItem.createdBy,
+            branch: formData.branchCode || editItem.createdBy?.branch
+          }
         })
       }
       setShowEditModal(false)
@@ -2294,15 +2345,15 @@ function MappingAndEvents() {
                 </h3>
                 <div className="space-y-2 text-sm text-gray-700 ml-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
-                    <span><strong>หมุดสีเขียว</strong> = พื้นที่อนุญาตให้เช็คอิน</span>
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span><strong>หมุดสีเขียว</strong> = พื้นที่อนุญาตให้เข้างาน/ออกงาน</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span><strong>หมุดสีส้ม</strong> = กิจกรรมพิเศษ</span>
+                    <span><strong>หมุดสีส้ม</strong> = กิจกรรมพิเศษที่จัดขึ้นภายในหรือภายนอกบริษัท</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                     <span><strong>หมุดสีแดง</strong> = ตำแหน่งที่กำลังเลือก</span>
                   </div>
                 </div>
@@ -2362,7 +2413,15 @@ function MappingAndEvents() {
 
       {/* Edit Modal */}
       {showEditModal && editItem && (
-        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowEditModal(false)
+              setEditItem(null)
+            }
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full my-8">
             <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-800">
@@ -2402,7 +2461,18 @@ function MappingAndEvents() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCreateModal(false)
+              setCreateType(null)
+              setNewMarkerPosition(null)
+              setSearchMarkerPosition(null)
+              setSearchMarkerName('')
+            }
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full my-8">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
@@ -3008,42 +3078,57 @@ function MappingAndEvents() {
                             ? 'bg-green-100 text-green-700' 
                             : 'bg-orange-100 text-orange-700'
                         }`}>
-                          {isLocation ? 'พื้นที่' : 'กิจกรรม'}
+                          {isLocation ? 'พื้นที่อนุญาต' : 'กิจกรรม'}
                         </div>
                         <h3 className="font-bold text-lg text-gray-800 mb-1">{item.name}</h3>
                         <p className="text-xs text-gray-600 line-clamp-2">{item.description}</p>
                       </div>
                       
-                      {/* Status Badge */}
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                        item.status === 'active' || item.status === 'ongoing'
-                          ? isLocation 
+                      {/* Status Badge - Only for Events */}
+                      {!isLocation && (
+                        <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                          item.status === 'active' 
                             ? 'bg-green-100 text-green-700' 
-                            : 'bg-orange-100 text-orange-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {isLocation 
-                          ? (item.status === 'active' 
-                            ? <>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                                ใช้งาน
-                              </>
-                            : <>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-                                ปิด
-                              </>
-                            )
-                          : item.status === 'ongoing' 
-                          ? <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"/></svg>
+                            : item.status === 'inactive'
+                            ? 'bg-gray-100 text-gray-600'
+                            : item.status === 'ongoing'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {item.status === 'active' && (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              ใช้งาน
+                            </>
+                          )}
+                          {item.status === 'inactive' && (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                              ปิด
+                            </>
+                          )}
+                          {item.status === 'ongoing' && (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                              </svg>
                               ดำเนินการ
                             </>
-                          : <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"/></svg>
+                          )}
+                          {item.status === 'completed' && (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
                               สิ้นสุด
                             </>
-                        }
-                      </span>
+                          )}
+                        </span>
+                      )}
                     </div>
 
                     {/* Quick Info */}

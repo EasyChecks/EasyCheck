@@ -5,16 +5,17 @@ import { useLeave } from '../../../contexts/LeaveContext'
 import ConfirmDialog from '../../../components/common/ConfirmDialog'
 import SuccessDialog from '../../../components/common/SuccessDialog'
 
+// หน้ารายละเอียดของการลาแต่ละรายการ - แสดงข้อมูลครบถ้วนและให้ยกเลิกได้ (ถ้ายังรออนุมัติ)
 function LeaveDetail() {
     const navigate = useNavigate()
     const location = useLocation()
-    const { cancelLeave } = useLeave()
+    const { cancelLeave } = useLeave() // ฟังก์ชันยกเลิกการลา
     
-    // Dialog states
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-    const [showSuccess, setShowSuccess] = useState(false)
+    // state สำหรับควบคุม Dialog
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false) // แสดง confirm dialog
+    const [showSuccess, setShowSuccess] = useState(false) // แสดง success dialog
     
-    // Get leave data from navigation state or use default
+    // ดึงข้อมูลลาที่ส่งมาจากหน้าก่อน - ถ้าไม่มีใช้ค่า default
     const leaveData = location.state?.leaveData || {
         leaveType: 'ลาป่วย',
         days: '4 วัน',
@@ -26,17 +27,18 @@ function LeaveDetail() {
         documents: []
     }
     
+    // ยกเลิกการลา - แล้วกลับหน้าก่อนหน้า
     const handleCancelLeave = () => {
         const success = cancelLeave(leaveData.id)
         if (success) {
             setShowSuccess(true)
-            // Navigate back after success dialog closes
             setTimeout(() => {
-                navigate(-1)
+                navigate(-1) // กลับหน้าเดิม
             }, 2500)
         }
     }
 
+    // กำหนดสีตามสถานะ
     const getStatusColor = (color) => {
         switch(color) {
             case 'yellow':
@@ -50,7 +52,7 @@ function LeaveDetail() {
         }
     }
 
-    // Check if this is a late arrival request
+    // เช็คว่าเป็นการขอเข้างานสายหรือไม่ - เพื่อแสดงข้อความที่เหมาะสม
     const isLateArrival = leaveData.category === 'ขอเข้างานสาย' || leaveData.leaveType === 'ขอเข้างานสาย';
 
     return (
