@@ -253,7 +253,7 @@ export const createAttendanceRecord = (params) => {
 };
 
 /**
- * ⚠️ ป้องกัน double check-in
+ * ⚠️ ป้องกัน double check-in (Legacy - สำหรับกะเดียว)
  * 
  * @param {array} attendanceRecords - บันทึกการเข้างาน
  * @param {string} date - วันที่ต้องการตรวจสอบ
@@ -264,6 +264,33 @@ export const hasCheckedInToday = (attendanceRecords, date) => {
   
   const todayRecord = attendanceRecords.find(record => record.date === date);
   return todayRecord && todayRecord.checkIn;
+};
+
+/**
+ * 🆕 ตรวจสอบว่า check-in กะนี้แล้วหรือยัง (รองรับหลายกะต่อวัน)
+ * 
+ * @param {array} attendanceRecords - บันทึกการเข้างาน
+ * @param {string} date - วันที่ต้องการตรวจสอบ (เช่น '19/11/2568')
+ * @param {number|string} shiftId - ID ของกะที่ต้องการตรวจสอบ
+ * @returns {boolean} - true ถ้ากะนี้ check-in แล้ว
+ */
+export const hasCheckedInForShift = (attendanceRecords, date, shiftId) => {
+  if (!attendanceRecords || !Array.isArray(attendanceRecords)) return false;
+  if (!shiftId) return false; // ไม่ส่ง shiftId = ไม่สามารถเช็คได้
+  
+  const todayRecord = attendanceRecords.find(record => record.date === date);
+  if (!todayRecord) return false;
+  
+  // รองรับทั้ง format เก่า (checkIn object) และ format ใหม่ (shifts array)
+  if (todayRecord.shifts && Array.isArray(todayRecord.shifts)) {
+    // Format ใหม่: เช็คใน shifts array
+    return todayRecord.shifts.some(shift => 
+      shift.shiftId === shiftId && (shift.checkIn || shift.checkInTime)
+    );
+  }
+  
+  // Format เก่า: มี checkIn = ถือว่ากะเดียว check-in แล้ว
+  return todayRecord.checkIn ? true : false;
 };
 
 /**
@@ -442,6 +469,7 @@ export default {
   isCrossMidnightShift,
   createAttendanceRecord,
   hasCheckedInToday,
+  hasCheckedInForShift, // 🆕 เพิ่มฟังก์ชันใหม่
   handleConsecutiveShifts,
   autoCheckoutAtMidnight,
   handleCrossMidnightShift
