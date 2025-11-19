@@ -88,18 +88,42 @@ function UserDashboard() {
       const today = new Date()
       today.setHours(0, 0, 0, 0) // ตั้งเวลาเป็นเที่ยงคืนเพื่อเปรียบเทียบวันที่
       
-      // 🔐 User เห็นเฉพาะตารางที่ Admin สร้าง (ไม่เห็นของ Super Admin)
-      const userVisibleSchedules = schedules.filter(schedule => 
-        schedule.createdBy === 'admin' || !schedule.createdBy
-      )
+      // 🔐 User เห็นตารางที่มีชื่อตัวเอง หรือถ้าเป็น Admin ของสาขานั้น
+      const userVisibleSchedules = schedules.filter(schedule => {
+        // ถ้าตารางมีรายชื่อสมาชิก ให้เช็คว่า user อยู่ในรายชื่อหรือไม่
+        if (schedule.members && schedule.members.trim()) {
+          const memberNames = schedule.members.split(',').map(name => name.trim().toLowerCase())
+          const isInMemberList = memberNames.includes(user?.name?.toLowerCase())
+          
+          if (isInMemberList) {
+            return true // ถ้าชื่ออยู่ในรายการ ให้แสดง
+          }
+        }
+        
+        // ถ้าไม่มีชื่อในรายการสมาชิก แต่เป็น Admin ของสาขานั้น ให้แสดง
+        if (user?.role === 'admin') {
+          const userBranch = user.branch || user.provinceCode || user.employeeId?.substring(0, 3)
+          const scheduleBranch = schedule.branch
+          
+          // ถ้าตารางไม่มี branch (ตารางเก่า) ให้แสดง
+          if (!scheduleBranch) {
+            return schedule.createdBy === 'admin' || !schedule.createdBy
+          }
+          
+          // แสดงตารางของสาขาเดียวกัน
+          return scheduleBranch === userBranch
+        }
+        
+        return false
+      })
       
       // กรองตารางตาม teams (แผนก/ตำแหน่ง) และวันที่
       const userSchedules = userVisibleSchedules.filter(schedule => {
         // 🔐 ตรวจสอบว่า user อยู่ในรายชื่อสมาชิกหรือไม่
         // ⚠️ ยกเว้นตารางเก่าที่ไม่มี createdBy (ตารางตัวอย่าง)
         if (schedule.createdBy && schedule.members && schedule.members.trim()) {
-          const memberNames = schedule.members.split(',').map(name => name.trim())
-          const isInMemberList = memberNames.includes(user?.name)
+          const memberNames = schedule.members.split(',').map(name => name.trim().toLowerCase())
+          const isInMemberList = memberNames.includes(user?.name?.toLowerCase())
           
           if (!isInMemberList) {
             return false // ถ้าไม่ได้อยู่ในรายชื่อสมาชิก ไม่แสดง

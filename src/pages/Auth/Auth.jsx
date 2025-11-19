@@ -258,7 +258,7 @@ function Auth() {
             </label>
             <input
               type="text"
-              placeholder="กรอกชื่อผู้ใช้"
+              placeholder="กรอกรหัสผู้ใช้"
               className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
               value={username}
               onChange={e => setUsername(e.target.value)}
@@ -350,7 +350,7 @@ function Auth() {
         >
           <div className="space-y-6 relative z-10">
             <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-brand-primary to-orange-600 bg-clip-text text-transparent">
-              Reset Password
+              เปลี่ยนรหัสผ่าน
             </header>
 
             {/* ⚠️ ข้อความแสดงข้อผิดพลาด (Error message) */}
@@ -379,7 +379,7 @@ function Auth() {
                   setResetError('')
                 }}
                 type="text"
-                placeholder="กรอกชื่อผู้ใช้"
+                placeholder="กรอกรหัสผู้ใช้"
                 className="bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 w-full outline-none placeholder:text-gray-400 placeholder:text-[14px] sm:placeholder:text-[16px] md:placeholder:text-[16px] lg:placeholder:text-[16px] xl:placeholder:text-[20px] transition-all duration-300 focus:border-orange-400 focus:bg-white focus:shadow-md"
               />
             </div>

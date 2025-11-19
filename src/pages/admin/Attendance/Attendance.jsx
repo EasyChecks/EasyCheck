@@ -70,11 +70,17 @@ function Attendance() {
       return schedules
     }
     
-    // Admin เห็นทั้งตารางจาก Super Admin และตารางที่ตัวเองสร้าง
+    // Admin เห็นเฉพาะตารางของสาขาตัวเอง
     if (currentUser.role === 'admin') {
-      return schedules.filter(s => 
-        s.createdBy === 'superadmin' || s.createdBy === 'admin' || !s.createdBy
-      )
+      const adminBranch = currentUser.branch || currentUser.provinceCode || currentUser.employeeId?.substring(0, 3)
+      
+      return schedules.filter(s => {
+        // ถ้าตารางไม่มี branch (ตารางเก่า) ให้แสดง
+        if (!s.branch) return true
+        
+        // แสดงเฉพาะตารางของสาขาเดียวกัน
+        return s.branch === adminBranch
+      })
     }
     
     return schedules

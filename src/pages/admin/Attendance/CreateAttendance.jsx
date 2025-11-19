@@ -16,6 +16,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
+// Icon สีเขียวสำหรับพื้นที่/สถานที่
+const locationIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjJjNTVlIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj48cGF0aCBmaWxsPSIjMjJjNTVlIiBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDkuNCAxMi41IDI4LjUgMTIuNSAyOC41UzI1IDIxLjkgMjUgMTIuNUMyNSA1LjYgMTkuNCAwIDEyLjUgMHptMCAxN2MtMi41IDAtNC41LTItNC41LTQuNXMyLTQuNSA0LjUtNC41IDQuNSAyIDQuNSA0LjUtMiA0LjUtNC41IDQuNXoiLz48L3N2Zz4=',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
 // Inline styles for animations
 const styles = `
   @keyframes fadeIn {
@@ -284,6 +295,7 @@ const LocationMapView = React.memo(function LocationMapView({
           <React.Fragment key={marker.key}>
             <Marker 
               position={marker.position}
+              icon={locationIcon}
               ref={(ref) => {
                 if (ref) markerRefs.current[marker.id] = ref
               }}
@@ -508,6 +520,8 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
   const [searchLocation, setSearchLocation] = useState('') // ค้นหาสถานที่
   const [selectedLocationPreview, setSelectedLocationPreview] = useState(null) // พื้นที่ที่กำลังดูรายละเอียด
   const mapRef = useRef(null) // ref สำหรับควบคุม map
+  const [isTimeStartFocused, setIsTimeStartFocused] = useState(false) // ติดตามว่าเพิ่ง focus ช่องเวลาเริ่วหรือไม่
+  const [isTimeEndFocused, setIsTimeEndFocused] = useState(false) // ติดตามว่าเพิ่ง focus ช่องเวลาสิ้นสุดหรือไม่
 
   // If initialData provided, prefill fields (support editing)
   useEffect(() => {
@@ -699,14 +713,14 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
       .filter(user => {
         // 🔐 ถ้าเป็น admin (ไม่ใช่ superadmin) 
         if (currentUser?.role === 'admin') {
-          // Admin ไม่เห็น admin/superadmin คนอื่น (เห็นแค่ user ธรรมดา)
-          if (user.role === 'admin' || user.role === 'superadmin') {
+          // Admin ไม่เห็น superadmin
+          if (user.role === 'superadmin') {
             return false
           }
           
-          // Admin เห็นเฉพาะสมาชิกในสาขาเดียวกัน
-          const userBranch = user.provinceCode || user.branchCode
-          const adminBranch = currentUser.provinceCode || currentUser.branchCode
+          // Admin เห็นเฉพาะคนในสาขาเดียวกัน
+          const userBranch = user.provinceCode || user.branchCode || user.branch
+          const adminBranch = currentUser.provinceCode || currentUser.branchCode || currentUser.branch
           if (userBranch !== adminBranch) {
             return false
           }
@@ -1620,10 +1634,38 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     ref={timeStartRef}
                     type="text"
                     value={timeStart}
-                    onChange={(e) => setTimeStart(e.target.value)}
-                    onBlur={(e) => setTimeStart(prev => normalizeTime(prev))}
-                    onFocus={() => setShowTimeStartPicker(true)}
-                    onKeyDown={(e) => handleKeyDown(e, 'timeStart')}
+                    onChange={(e) => {
+                      // ถ้าเพิ่ง focus และพิมพ์ครั้งแรก ใอ้ clear ค่าเดิมก่อน
+                      if (isTimeStartFocused) {
+                        setTimeStart(e.target.value)
+                        setIsTimeStartFocused(false)
+                      } else {
+                        setTimeStart(e.target.value)
+                      }
+                    }}
+                    onBlur={(e) => {
+                      setTimeStart(prev => normalizeTime(prev))
+                      setIsTimeStartFocused(false)
+                    }}
+                    onFocus={(e) => {
+                      setShowTimeStartPicker(true)
+                      setIsTimeStartFocused(true)
+                      e.target.select()
+                    }}
+                    onKeyDown={(e) => {
+                      // ถ้ากดปุ่มลูกศรหรือปุ่มอื่นที่ไม่ใช่ตัวเลข ให้ยกเลิก flag
+                      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                          e.key === 'Home' || e.key === 'End') {
+                        setIsTimeStartFocused(false)
+                      }
+                      // ถ้าเพิ่ง focus และพิมพ์ตัวเลข/ตัวอักษร ให้ clear ค่าเดิมก่อน
+                      else if (isTimeStartFocused && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault()
+                        setTimeStart(e.key)
+                        setIsTimeStartFocused(false)
+                      }
+                      handleKeyDown(e, 'timeStart')
+                    }}
                     placeholder="09:00"
                     className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm"
                   />
@@ -1710,9 +1752,29 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                     type="text"
                     value={timeEnd}
                     onChange={(e) => setTimeEnd(e.target.value)}
-                    onBlur={(e) => setTimeEnd(prev => normalizeTime(prev))}
-                    onFocus={() => setShowTimeEndPicker(true)}
-                    onKeyDown={(e) => handleKeyDown(e, 'timeEnd')}
+                    onBlur={(e) => {
+                      setTimeEnd(prev => normalizeTime(prev))
+                      setIsTimeEndFocused(false)
+                    }}
+                    onFocus={(e) => {
+                      setShowTimeEndPicker(true)
+                      setIsTimeEndFocused(true)
+                      e.target.select()
+                    }}
+                    onKeyDown={(e) => {
+                      // ถ้ากดปุ่มลูกศรหรือปุ่มอื่นที่ไม่ใช่ตัวเลข ให้ยกเลิก flag
+                      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                          e.key === 'Home' || e.key === 'End') {
+                        setIsTimeEndFocused(false)
+                      }
+                      // ถ้าเพิ่ง focus และพิมพ์ตัวเลข/ตัวอักษร ให้ clear ค่าเดิมก่อน
+                      else if (isTimeEndFocused && e.key.length === 1) {
+                        e.preventDefault()
+                        setTimeEnd(e.key)
+                        setIsTimeEndFocused(false)
+                      }
+                      handleKeyDown(e, 'timeEnd')
+                    }}
                     placeholder="17:00"
                     className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm"
                   />
@@ -1741,21 +1803,36 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                             ชั่วโมง
                           </div>
                           <div className="overflow-y-auto max-h-56">
-                            {hours24.map((hour) => (
-                              <button
-                                key={hour}
-                                type="button"
-                                onClick={() => {
-                                  const currentMinute = timeEnd?.split(':')[1] || '00'
-                                  handleTimeSelect(hour, currentMinute, false)
-                                }}
-                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                  timeEnd?.startsWith(hour) ? 'bg-blue-100 font-semibold text-blue-600' : ''
-                                }`}
-                              >
-                                {hour}
-                              </button>
-                            ))}
+                            {hours24.map((hour) => {
+                              // ตรวจสอบว่าเป็นกะดึกหรือไม่ (21:00-23:59)
+                              const startHour = parseInt(timeStart?.split(':')[0] || '0')
+                              const isNightShift = startHour >= 21 && startHour <= 23
+                              
+                              // ถ้าไม่ใช่กะดึก ให้ล็อคชั่วโมงที่ต่ำกว่าเวลาเริ่ม
+                              const hourNum = parseInt(hour)
+                              const isDisabled = !isNightShift && timeStart && hourNum < startHour
+                              
+                              return (
+                                <button
+                                  key={hour}
+                                  type="button"
+                                  disabled={isDisabled}
+                                  onClick={() => {
+                                    const currentMinute = timeEnd?.split(':')[1] || '00'
+                                    handleTimeSelect(hour, currentMinute, false)
+                                  }}
+                                  className={`w-full px-3 py-2 text-center transition-colors ${
+                                    isDisabled 
+                                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                      : timeEnd?.startsWith(hour) 
+                                        ? 'bg-blue-100 font-semibold text-blue-600' 
+                                        : 'hover:bg-blue-50'
+                                  }`}
+                                >
+                                  {hour}
+                                </button>
+                              )
+                            })}
                           </div>
                         </div>
                         
@@ -1765,21 +1842,41 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                             นาที
                           </div>
                           <div className="overflow-y-auto max-h-56">
-                            {minutes.map((minute) => (
-                              <button
-                                key={minute}
-                                type="button"
-                                onClick={() => {
-                                  const currentHour = timeEnd?.split(':')[0] || '00'
-                                  handleTimeSelect(currentHour, minute, false)
-                                }}
-                                className={`w-full px-3 py-2 text-center hover:bg-blue-50 transition-colors ${
-                                  timeEnd?.endsWith(minute) ? 'bg-blue-100 font-semibold text-blue-600' : ''
-                                }`}
-                              >
-                                {minute}
-                              </button>
-                            ))}
+                            {minutes.map((minute) => {
+                              const currentHour = timeEnd?.split(':')[0] || '00'
+                              
+                              // ตรวจสอบว่าเป็นกะดึกหรือไม่
+                              const startHour = parseInt(timeStart?.split(':')[0] || '0')
+                              const startMinute = parseInt(timeStart?.split(':')[1] || '0')
+                              const isNightShift = startHour >= 21 && startHour <= 23
+                              
+                              // ถ้าไม่ใช่กะดึก และชั่วโมงเท่ากับเวลาเริ่ม ให้ล็อคนาทีที่ต่ำกว่า
+                              const currentHourNum = parseInt(currentHour)
+                              const minuteNum = parseInt(minute)
+                              const isDisabled = !isNightShift && timeStart && 
+                                                currentHourNum === startHour && 
+                                                minuteNum < startMinute
+                              
+                              return (
+                                <button
+                                  key={minute}
+                                  type="button"
+                                  disabled={isDisabled}
+                                  onClick={() => {
+                                    handleTimeSelect(currentHour, minute, false)
+                                  }}
+                                  className={`w-full px-3 py-2 text-center transition-colors ${
+                                    isDisabled
+                                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                      : timeEnd?.endsWith(minute) 
+                                        ? 'bg-blue-100 font-semibold text-blue-600' 
+                                        : 'hover:bg-blue-50'
+                                  }`}
+                                >
+                                  {minute}
+                                </button>
+                              )
+                            })}
                           </div>
                         </div>
                       </div>
