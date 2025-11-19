@@ -151,6 +151,7 @@ function AdminManageUser() {
       
       if (adminBranch) {
         filtered = filtered.filter(user => {
+          // แสดงเฉพาะคนในสาขาเดียวกัน (รวม Super Admin ถ้าอยู่สาขาเดียวกัน)
           const userBranch = user.branch || user.provinceCode || user.employeeId?.substring(0, 3);
           return userBranch === adminBranch;
         });
