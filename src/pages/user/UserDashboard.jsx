@@ -364,8 +364,27 @@ function UserDashboard() {
     }
   }, [showBuddyCheckIn, showAttendanceHistory])
 
+  // ตรวจสอบว่ามีกะที่ check-in แล้วแต่ยังไม่ checkout หรือไม่
+  const hasUncheckedOutShift = useMemo(() => {
+    if (!attendanceRecords || attendanceRecords.length === 0) return false
+    
+    const today = new Date().toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+    
+    const todayRecord = attendanceRecords.find(record => record.date === today)
+    if (!todayRecord || !todayRecord.shifts) return false
+    
+    // เช็คว่ามีกะไหนที่ check-in แล้วแต่ยังไม่ checkout
+    return todayRecord.shifts.some(shift => 
+      (shift.checkIn || shift.checkInTime) && !(shift.checkOut || shift.checkOutTime)
+    )
+  }, [attendanceRecords])
+
   // ใช้ attendance จาก context แทน mock data
-  const isCheckedIn = attendance.status === 'checked_in'
+  const isCheckedIn = attendance.status === 'checked_in' || hasUncheckedOutShift
   const buttonColor = isCheckedIn 
     ? 'bg-destructive hover:bg-destructive/90 shadow-lg' 
     : 'bg-white hover:shadow-xl hover:bg-brand-accent-soft border-2 border-brand-primary'
@@ -514,6 +533,14 @@ function UserDashboard() {
       return
     }
 
+    // 🔥 บังคับเลือกกะเมื่อมีหลายกะ
+    if (allSchedules.length > 1 && !selectedShift) {
+      e.preventDefault()
+      setPopupInfoMessage('กรุณาเลือกกะงานก่อนทำรายการ');
+      setShowInfoPopup(true);
+      return
+    }
+
     // ถ้าปิดการตรวจสอบกล้องใน config ให้ไปหน้าถ่ายรูปเลย
     if (!config.features.enableCameraCheck) {
       return // ปล่อยให้ Link ทำงานตามปกติ
@@ -530,8 +557,8 @@ function UserDashboard() {
       // อนุญาตกล้องแล้ว ไปหน้าถ่ายรูป
       navigate('/user/take-photo', { 
         state: { 
-          schedule: selectedShift || allSchedules[0], // 🆕 ใช้ selectedShift
-          shiftId: (selectedShift || allSchedules[0])?.id // 🆕 ส่ง shiftId
+          schedule: selectedShift || allSchedules[0],
+          shiftId: (selectedShift || allSchedules[0])?.time?.replace(/\./g, ':') // normalize เป็น : format
         } 
       })
     } else {

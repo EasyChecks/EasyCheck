@@ -308,9 +308,8 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkIn = (time, photo, workTimeStart = '08:00', autoCheckOutFlag = false, locationInfo = {}, shiftId = null) => {
+  const checkIn = (time, photo, workTimeStart, autoCheckOutFlag = false, locationInfo = {}, shiftId = null) => {
     try {
-      const today = new Date().toISOString().split('T')[0]
       const todayThaiFormat = new Date().toLocaleDateString('th-TH', {
         day: '2-digit',
         month: '2-digit',
@@ -363,7 +362,7 @@ export const AuthProvider = ({ children }) => {
         const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
         if (!finalAutoCheckOut) {
           localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
-          localStorage.setItem(`${userAttendanceKey}_date`, today)
+          localStorage.setItem(`${userAttendanceKey}_date`, todayThaiFormat)
         } else {
           localStorage.removeItem(userAttendanceKey)
           localStorage.removeItem(`${userAttendanceKey}_date`)
@@ -381,7 +380,7 @@ export const AuthProvider = ({ children }) => {
         updateUserAttendanceInUsersData(time, time, photo, photo, status, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
         
         const shiftRecord = {
-          shiftId: shiftId || null, // 🆕 เพิ่ม shiftId
+          shiftId: shiftId || null, // 🆕 shiftId (ใช้ schedule.time เป็น identifier)
           checkIn: time,
           checkOut: time,
           checkInPhoto: photo,
@@ -392,7 +391,7 @@ export const AuthProvider = ({ children }) => {
         }
         
         const updatedRecords = [...attendanceRecords]
-        const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
+        const existingDayIndex = updatedRecords.findIndex(r => r.date === todayThaiFormat)
         
         if (existingDayIndex >= 0) {
           const existingDay = updatedRecords[existingDayIndex]
@@ -404,7 +403,7 @@ export const AuthProvider = ({ children }) => {
           updatedRecords[existingDayIndex] = existingDay
         } else {
           updatedRecords.push({
-            date: today,
+            date: todayThaiFormat,
             shifts: [shiftRecord]
           })
         }
@@ -424,7 +423,49 @@ export const AuthProvider = ({ children }) => {
           detail: { userId: user?.id, stats, records: updatedRecords } 
         }))
       } else {
-        // ปกติ: บันทึกแค่ check-in
+        // 🔥 ปกติ: บันทึก check-in อย่างเดียว
+        const shiftRecord = {
+          shiftId: shiftId || null, // 🆕 shiftId (ใช้ schedule.time เป็น identifier)
+          checkIn: time,
+          checkInPhoto: photo,
+          status: status,
+          lateMinutes: lateMinutes || 0,
+          message
+        }
+        
+        const updatedRecords = [...attendanceRecords]
+        const existingDayIndex = updatedRecords.findIndex(r => r.date === todayThaiFormat)
+        
+        if (existingDayIndex >= 0) {
+          const existingDay = updatedRecords[existingDayIndex]
+          if (!existingDay.shifts) {
+            existingDay.shifts = [shiftRecord]
+          } else {
+            existingDay.shifts.push(shiftRecord)
+          }
+          updatedRecords[existingDayIndex] = existingDay
+        } else {
+          updatedRecords.push({
+            date: todayThaiFormat,
+            shifts: [shiftRecord]
+          })
+        }
+        
+        updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
+        setAttendanceRecords(updatedRecords)
+        
+        if (user) {
+          const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
+          localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
+        }
+        
+        const stats = calculateAttendanceStats(updatedRecords)
+        setAttendanceStats(stats)
+        
+        window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
+          detail: { userId: user?.id, stats, records: updatedRecords } 
+        }))
+        
         updateUserAttendanceInUsersData(time, null, photo, null, status, checkInGPS, checkInAddress, null, null, checkInDistance, null)
       }
     } catch (error) {
@@ -435,7 +476,6 @@ export const AuthProvider = ({ children }) => {
 
   const checkOut = (time, photo, locationInfo = {}, shiftId = null) => {
     try {
-      const today = new Date().toISOString().split('T')[0]
       const todayThaiFormat = new Date().toLocaleDateString('th-TH', {
         day: '2-digit',
         month: '2-digit',
@@ -451,10 +491,17 @@ export const AuthProvider = ({ children }) => {
       // หากะที่ยังไม่ checkout
       let targetShiftIndex = -1
       if (shiftId) {
-        // ถ้าระบุ shiftId มา หากะที่ตรงกับ shiftId และยังไม่ checkout
-        targetShiftIndex = todayRecord.shifts.findIndex(s => 
-          s.shiftId === shiftId && !s.checkOut && !s.checkOutTime
-        )
+        // ลองหาด้วย shiftId ที่ตรงทั้ง : และ . format
+        const normalizedShiftId = shiftId.replace(/\./g, ':')
+        targetShiftIndex = todayRecord.shifts.findIndex(s => {
+          const sId = (s.shiftId || '').replace(/\./g, ':')
+          return sId === normalizedShiftId && !s.checkOut && !s.checkOutTime
+        })
+        
+        // ถ้าหาไม่เจอ ลอง fallback หากะแรกที่ยังไม่ checkout
+        if (targetShiftIndex === -1) {
+          targetShiftIndex = todayRecord.shifts.findIndex(s => !s.checkOut && !s.checkOutTime)
+        }
       } else {
         // ถ้าไม่ระบุ shiftId ใช้กะแรกที่ยังไม่ checkout (backward compatible)
         targetShiftIndex = todayRecord.shifts.findIndex(s => 
@@ -554,6 +601,9 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem(userAttendanceKey)
           localStorage.removeItem(`${userAttendanceKey}_date`)
         }
+      } else {
+        // ถ้ายังมีกะที่ไม่ checkout ให้รักษา status checked_in ไว้
+        setAttendance({ status: 'checked_in' })
       }
       
       // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
