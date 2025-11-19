@@ -247,6 +247,9 @@ function TakePhoto() {
       // 🆕 Get nearest location info with distance
       const locationInfo = findNearestPlace() || { gps: '13.7563,100.5018', address: 'ในพื้นที่อนุญาต', distance: '-' };
 
+      // 🔥 Validate shiftId for multi-shift scenario
+      const finalShiftId = shiftId || null;
+
       if (attendance.status === 'not_checked_in') {
         // 🆕 ใช้ logic ใหม่: calculateAttendanceStatus
         const [startTimeStr, endTimeStr] = schedule.time.split(' - ');
@@ -263,23 +266,23 @@ function TakePhoto() {
         // แสดง message ตามสถานะ (status จาก ATTENDANCE_CONFIG: 'on_time', 'late', 'absent')
         if (status === 'on_time') {
           message = `เข้างานตรงเวลา ${currentTime} น.`;
-          checkIn(currentTime, photo, workTimeStart, false, locationInfo, shiftId); // 🆕 ส่ง shiftId
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
         } else if (status === 'late') {
           message = `มาสาย ${lateMinutes} นาที (${currentTime} น.)`;
-          checkIn(currentTime, photo, workTimeStart, false, locationInfo, shiftId); // 🆕 ส่ง shiftId
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
         } else if (status === 'absent') {
           if (shouldAutoCheckout) {
             // 🔥 ขาดงาน - เข้างานสายเกินขีดจำกัด → Auto check-out ทันที
             message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)\nออกงานอัตโนมัติแล้ว`;
-            checkIn(currentTime, photo, workTimeStart, true, locationInfo, shiftId); // true = auto checkout, 🆕 ส่ง shiftId
+            checkIn(currentTime, photo, workTimeStart, true, locationInfo, finalShiftId);
           } else {
             message = `ขาดงาน - ไม่ได้เข้างาน (${currentTime} น.)`;
-            checkIn(currentTime, photo, workTimeStart, false, locationInfo, shiftId); // 🆕 ส่ง shiftId
+            checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
           }
         } else {
           // Fallback ถ้า status ไม่ตรงกับที่คาดหวัง
           message = statusMessage || `เข้างาน ${currentTime} น.`;
-          checkIn(currentTime, photo, workTimeStart, false, locationInfo, shiftId); // 🆕 ส่ง shiftId
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
         }
         
         console.log('📝 Final Message:', message);
@@ -293,7 +296,7 @@ function TakePhoto() {
           return;
         }
         
-        checkOut(currentTime, photo, locationInfo, shiftId); // 🆕 ส่ง shiftId
+        checkOut(currentTime, photo, locationInfo, finalShiftId);
         setPopupMessage(`ออกงานเวลา ${currentTime} น.`);
       }
     } catch (error) {
