@@ -62,33 +62,27 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
       checkOut: record.checkOut,
       status: record.status
     }];
-
-    let dayStatus = 'absent'; // สถานะของวันนั้นๆ (ดูจาก shift แรก)
     
-    shifts.forEach((shift, index) => {
+    // 🔥 นับสถานะต่อ shift แทนต่อวัน (แก้จาก dayStatus)
+    shifts.forEach((shift) => {
       stats.totalShifts++;
 
-      // ถ้าเป็น shift แรกของวัน ให้นับสถานะ
-      if (index === 0) {
-        // 🔥 ตรวจสอบสถานะแบบละเอียด - ให้ความสำคัญกับการตรวจสอบจริง
-        if (shift.status === 'absent' || !shift.checkIn) {
-          dayStatus = 'absent';
-        } else if (shift.status === 'leave') {
-          dayStatus = 'leave';
+      // ตรวจสอบสถานะของแต่ละ shift
+      if (shift.status === 'absent' || !shift.checkIn) {
+        stats.absent++;
+      } else if (shift.status === 'leave') {
+        stats.leave++;
+      } else if (shift.status === 'late' || shift.status === 'มาสาย') {
+        stats.late++;
+      } else if (shift.status === 'on_time' || shift.status === 'on-time' || shift.status === 'ตรงเวลา') {
+        stats.onTime++;
+      } else if (shift.checkIn && workTimeStart) {
+        // ไม่มีสถานะชัดเจน ให้ตรวจสอบจากเวลา
+        const isActuallyLate = isLate(shift.checkIn, workTimeStart);
+        if (isActuallyLate) {
+          stats.late++;
         } else {
-          // ตรวจสอบว่ามาสายหรือไม่จริงๆ โดยเปรียบเทียบเวลา
-          const isActuallyLate = shift.checkIn && workTimeStart && isLate(shift.checkIn, workTimeStart);
-          
-          if (isActuallyLate && shift.status === 'late') {
-            dayStatus = 'late';
-          } else if (!isActuallyLate || shift.status === 'on-time' || shift.status === 'on_time' || shift.status === 'ตรงเวลา') {
-            dayStatus = 'on_time';
-          } else if (shift.status === 'late' || shift.status === 'มาสาย') {
-            dayStatus = 'late';
-          } else {
-            // Default: ถ้ามี checkIn แต่ไม่ระบุสถานะ ให้ตรวจสอบเวลา
-            dayStatus = isActuallyLate ? 'late' : 'on_time';
-          }
+          stats.onTime++;
         }
       }
 
@@ -109,17 +103,6 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
         }
       }
     });
-
-    // นับสถานะของวัน (นับครั้งเดียวต่อวัน)
-    if (dayStatus === 'absent') {
-      stats.absent++;
-    } else if (dayStatus === 'leave') {
-      stats.leave++;
-    } else if (dayStatus === 'late') {
-      stats.late++;
-    } else if (dayStatus === 'on_time') {
-      stats.onTime++;
-    }
   });
 
   // คำนวณเวลาเข้างานเฉลี่ย

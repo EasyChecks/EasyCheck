@@ -55,6 +55,42 @@ export const migrateAttendanceData = (users) => {
 };
 
 /**
+ * Migration: เพิ่ม timeSummary ให้กับ users ที่ยังไม่มี
+ * @param {Array} users - Array ของ users data
+ * @returns {Array} - Updated users data
+ */
+export const migrateTimeSummary = (users) => {
+  if (!Array.isArray(users)) {
+    console.warn('migrateTimeSummary: users is not an array');
+    return users;
+  }
+
+  const updatedUsers = users.map(user => {
+    // ถ้ามี timeSummary แล้ว ให้ข้ามไป
+    if (user.timeSummary) {
+      return user;
+    }
+
+    // ถ้าไม่มี ให้เพิ่ม default timeSummary
+    return {
+      ...user,
+      timeSummary: {
+        totalWorkDays: 250,
+        onTime: 240,
+        late: 8,
+        absent: 2,
+        leave: 0,
+        totalHours: '2,000 ชม.',
+        avgCheckIn: '08:00',
+        avgCheckOut: '17:30'
+      }
+    };
+  });
+
+  return updatedUsers;
+};
+
+/**
  * Auto-run migration on localStorage data
  * เรียกใช้ตอน app start เพื่ออัพเดทข้อมูลเก่าอัตโนมัติ
  */
@@ -67,12 +103,15 @@ export const runAttendanceMigration = () => {
     }
 
     const users = JSON.parse(storedUsers);
-    const migratedUsers = migrateAttendanceData(users);
+    
+    // 🔥 Run migrations
+    let migratedUsers = migrateAttendanceData(users);
+    migratedUsers = migrateTimeSummary(migratedUsers);
     
     // บันทึกกลับ localStorage
     localStorage.setItem('usersData', JSON.stringify(migratedUsers));
     
-    console.log('✅ Attendance data migration completed successfully');
+    console.log('✅ Attendance data migration completed successfully (includes timeSummary)');
     return migratedUsers;
   } catch (error) {
     console.error('❌ Attendance data migration failed:', error);

@@ -96,52 +96,53 @@ const UserTable = React.memo(function UserTable({
       let checkInData = null;
       let checkOutData = null;
       
-      if (record.shifts && Array.isArray(record.shifts)) {
+      if (record.shifts && Array.isArray(record.shifts) && record.shifts.length > 0) {
         // Format ใหม่ - มี shifts array
+        let targetShift = null;
+        
         if (shiftFilter === 'all') {
-          // แสดงกะแรก (ถ้าต้องการแสดงทุกกะต้องปรับ UI)
-          const shift = record.shifts[0];
-          if (shift) {
-            checkInData = {
-              time: shift.checkIn || '-',
-              gpsStatus: 'อยู่ในระยะ',
-              distance: '15 เมตร',
-              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
-              photo: shift.checkInPhoto || null,
-              status: shift.status || 'on_time',
-              checkedByBuddy: shift.checkedByBuddy || false,
-              buddyName: shift.buddyName || null
-            };
-            checkOutData = shift.checkOut ? {
-              time: shift.checkOut || '-',
-              gpsStatus: 'อยู่ในระยะ',
-              distance: '18 เมตร',
-              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
-              photo: shift.checkOutPhoto || null
-            } : null;
-          }
+          // แสดงกะแรกที่มีข้อมูล
+          targetShift = record.shifts[0];
         } else {
-          // แสดงกะที่เลือก
+          // แสดงกะที่เลือก - ใช้ shiftId หรือ index
           const shiftIndex = parseInt(shiftFilter) - 1;
-          const shift = record.shifts[shiftIndex];
-          if (shift) {
-            checkInData = {
-              time: shift.checkIn || '-',
-              gpsStatus: 'อยู่ในระยะ',
-              distance: '15 เมตร',
-              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
-              photo: shift.checkInPhoto || null,
-              status: shift.status || 'on_time',
-              checkedByBuddy: shift.checkedByBuddy || false,
-              buddyName: shift.buddyName || null
-            };
-            checkOutData = shift.checkOut ? {
-              time: shift.checkOut || '-',
+          targetShift = record.shifts[shiftIndex];
+          
+          // Fallback: ถ้าหาจาก index ไม่เจอ ลองหาจาก time pattern
+          if (!targetShift && record.shifts.length > 0) {
+            // กะที่ 1 มักเป็นเช้า (07:00-15:00), กะที่ 2 มักเป็นบ่าย/เย็น (15:00-21:00)
+            const isEarlyShift = shiftFilter === '1';
+            targetShift = record.shifts.find((shift, idx) => {
+              if (isEarlyShift) {
+                return idx === 0; // กะแรก
+              } else {
+                return idx > 0; // กะที่ 2+
+              }
+            });
+          }
+        }
+        
+        if (targetShift) {
+          checkInData = {
+            time: targetShift.checkIn || targetShift.checkInTime || '-',
+            gpsStatus: 'อยู่ในระยะ',
+            distance: '15 เมตร',
+            location: userScheduleLocation || targetShift.location || 'ไม่มีข้อมูลสถานที่',
+            photo: targetShift.checkInPhoto || null,
+            status: targetShift.status || 'on_time',
+            checkedByBuddy: targetShift.checkedByBuddy || false,
+            buddyName: targetShift.buddyName || null,
+            shiftId: targetShift.shiftId || null
+          };
+          
+          if (targetShift.checkOut || targetShift.checkOutTime) {
+            checkOutData = {
+              time: targetShift.checkOut || targetShift.checkOutTime || '-',
               gpsStatus: 'อยู่ในระยะ',
               distance: '18 เมตร',
-              location: userScheduleLocation || shift.location || 'ไม่มีข้อมูลสถานที่', // 🔥 ใช้สถานที่จาก schedule
-              photo: shift.checkOutPhoto || null
-            } : null;
+              location: userScheduleLocation || targetShift.location || 'ไม่มีข้อมูลสถานที่',
+              photo: targetShift.checkOutPhoto || null
+            };
           }
         }
       } else if (record.checkIn && record.checkIn.time) {
@@ -337,39 +338,58 @@ const UserTable = React.memo(function UserTable({
                               />
                             </div>
                             
-                            {/* 🆕 Shift Selector - ซ่อนถ้าไม่มีกะงาน */}
+                            {/* 🆕 Shift Selector - แสดงถ้า user มีหลายกะงาน */}
                             {(() => {
-                              // 🔥 เช็คว่า user มีกี่กะงาน
+                              // 🔥 เช็คจาก attendance schedules (attendanceSchedules) แทน sampleSchedules
+                              const schedulesJson = localStorage.getItem('attendanceSchedules');
                               const usersDataJson = localStorage.getItem('usersData');
-                              const schedulesJson = localStorage.getItem('sampleSchedules');
                               let userShiftCount = 0;
                               
-                              if (usersDataJson && schedulesJson) {
+                              if (schedulesJson && usersDataJson) {
+                                const schedules = JSON.parse(schedulesJson);
                                 const usersData = JSON.parse(usersDataJson);
                                 const userData = usersData.find(u => u.id === user.id);
-                                const schedules = JSON.parse(schedulesJson);
                                 
-                                if (userData && userData.department) {
-                                  // นับจำนวนตารางงานที่ user มี
+                                if (userData?.department) {
+                                  // นับตารางงานที่ user มีตาม department
                                   userShiftCount = schedules.filter(schedule => {
                                     return schedule.teams && schedule.teams.includes(userData.department);
                                   }).length;
                                 }
                               }
                               
-                              // ถ้าไม่มีตารางงาน ให้ซ่อนปุ่มกะงาน
-                              if (userShiftCount === 0) {
+                              // 🔥 Fallback: เช็คจาก attendance records ของวันนี้ด้วย
+                              if (userShiftCount <= 1) {
+                                const [year, month, day] = selectedDate.split('-');
+                                const thaiYear = parseInt(year) + 543;
+                                const thaiDate = `${day}/${month}/${thaiYear}`;
+                                
+                                if (usersDataJson) {
+                                  const usersData = JSON.parse(usersDataJson);
+                                  const userData = usersData.find(u => u.id === user.id);
+                                  
+                                  if (userData?.attendanceRecords) {
+                                    const todayRecord = userData.attendanceRecords.find(r => r.date === thaiDate);
+                                    if (todayRecord?.shifts && Array.isArray(todayRecord.shifts)) {
+                                      userShiftCount = todayRecord.shifts.length;
+                                    }
+                                  }
+                                }
+                              }
+                              
+                              // ถ้าไม่มีกะ หรือมีแค่กะเดียว ไม่ต้องแสดง selector
+                              if (userShiftCount <= 1) {
                                 return null;
                               }
                               
-                              // ถ้ามี 2+ ตารางงาน แสดงว่ามี 2 กะ
+                              // ถ้ามี 2+ กะ แสดง selector
                               return (
                                 <div className="flex items-center gap-2">
                                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    เลือกกะ ({userShiftCount} ตารางงาน):
+                                    เลือกกะ ({userShiftCount} กะ):
                                   </label>
                                   <select
                                     value={selectedShift}
@@ -377,8 +397,9 @@ const UserTable = React.memo(function UserTable({
                                     className="px-4 py-2 border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm font-medium bg-white cursor-pointer"
                                   >
                                     <option value="all">ทุกกะ</option>
-                                    {userShiftCount >= 1 && <option value="1">กะที่ 1 (เช้า)</option>}
-                                    {userShiftCount >= 2 && <option value="2">กะที่ 2 (บ่าย/เย็น)</option>}
+                                    {Array.from({ length: userShiftCount }, (_, i) => (
+                                      <option key={i + 1} value={String(i + 1)}>กะที่ {i + 1}</option>
+                                    ))}
                                   </select>
                                 </div>
                               );
@@ -388,14 +409,30 @@ const UserTable = React.memo(function UserTable({
                           {/* แสดงข้อมูลถ้ามี หรือ SVG ถ้าไม่มี */}
                           {attendanceData ? (
                             <div className="space-y-4">
-                              {/* 🆕 แสดงข้อความกะที่เลือก */}
+                              {/* 🆕 แสดงข้อความกะที่เลือก พร้อม shiftId */}
                               {selectedShift !== 'all' && (
-                                <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                                  <p className="text-sm font-medium text-blue-900">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
+                                  <p className="text-sm font-medium text-blue-900 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    กำลังแสดงข้อมูล: กะที่ {selectedShift} ({selectedShift === '1' ? 'เช้า' : 'บ่าย/เย็น'})
+                                    <span>กำลังแสดงข้อมูล: <strong>กะที่ {selectedShift}</strong> ({selectedShift === '1' ? 'เช้า' : 'บ่าย/เย็น'})</span>
+                                    {attendanceData.checkIn?.shiftId && (
+                                      <span className="ml-2 text-xs bg-blue-200 px-2 py-0.5 rounded">
+                                        {attendanceData.checkIn.shiftId}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {selectedShift === 'all' && (
+                                <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-lg">
+                                  <p className="text-sm font-medium text-amber-900 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>แสดงข้อมูลกะแรกของวันนี้ (เลือก "เลือกกะ" เพื่อดูกะอื่น)</span>
                                   </p>
                                 </div>
                               )}

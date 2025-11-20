@@ -842,7 +842,16 @@ function UserDashboard() {
               ) : (
                 <div className="space-y-4">
                   {attendanceRecords.map((record, index) => {
-                    const recordDate = new Date(record.date)
+                    // แปลง Thai date format (DD/MM/YYYY+543) เป็น JS Date
+                    let recordDate;
+                    if (record.date && record.date.includes('/')) {
+                      const [day, month, yearThai] = record.date.split('/');
+                      const yearAD = parseInt(yearThai) - 543;
+                      recordDate = new Date(yearAD, parseInt(month) - 1, parseInt(day));
+                    } else {
+                      recordDate = new Date(record.date);
+                    }
+                    
                     const dateStr = recordDate.toLocaleDateString('th-TH', {
                       weekday: 'long',
                       year: 'numeric',

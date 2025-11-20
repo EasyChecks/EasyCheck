@@ -32,13 +32,45 @@ export const AuthProvider = ({ children }) => {
   })
   // เก็บประวัติการลงเวลารายวัน
   const [attendanceRecords, setAttendanceRecords] = useState([])
-  // สถิติการลงเวลา
+  // สถิติการลงเวลา (รวม initial stats จาก usersData)
   const [attendanceStats, setAttendanceStats] = useState({
     totalWorkDays: 0,
     onTime: 0,
     late: 0,
     absent: 0
   })
+
+  // 🔥 Helper function: คำนวณ stats จาก records + historical baseline
+  const calculateStatsWithBaseline = (records, userId) => {
+    const currentStats = calculateAttendanceStats(records)
+    
+    // 🔥 ดึง historical baseline จาก usersData
+    const usersDataJson = localStorage.getItem('usersData')
+    if (usersDataJson && userId) {
+      try {
+        const allUsers = JSON.parse(usersDataJson)
+        const userDataEntry = allUsers.find(u => u.id === userId)
+        
+        if (userDataEntry?.timeSummary) {
+          return {
+            totalWorkDays: (userDataEntry.timeSummary.totalWorkDays || 0) + currentStats.totalWorkDays,
+            onTime: (userDataEntry.timeSummary.onTime || 0) + currentStats.onTime,
+            late: (userDataEntry.timeSummary.late || 0) + currentStats.late,
+            absent: (userDataEntry.timeSummary.absent || 0) + currentStats.absent,
+            leave: (userDataEntry.timeSummary.leave || 0) + currentStats.leave,
+            totalWorkHours: currentStats.totalWorkHours,
+            averageCheckInTime: currentStats.averageCheckInTime,
+            totalShifts: currentStats.totalShifts,
+            averageShiftsPerDay: currentStats.averageShiftsPerDay
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load historical baseline:', error)
+      }
+    }
+    
+    return currentStats
+  }
 
   useEffect(() => {
     try {
@@ -55,8 +87,10 @@ export const AuthProvider = ({ children }) => {
           if (savedRecords) {
             const records = JSON.parse(savedRecords)
             setAttendanceRecords(records)
-            const stats = calculateAttendanceStats(records)
-            setAttendanceStats(stats)
+            
+            // 🔥 ใช้ helper function คำนวณ stats + baseline
+            const statsWithBaseline = calculateStatsWithBaseline(records, userData.id)
+            setAttendanceStats(statsWithBaseline)
           } else {
             // ไม่มีข้อมูล ให้เริ่มต้นเป็น array ว่าง
             setAttendanceRecords([])
@@ -108,8 +142,8 @@ export const AuthProvider = ({ children }) => {
         if (e.newValue) {
           const records = JSON.parse(e.newValue)
           setAttendanceRecords(records)
-          const stats = calculateAttendanceStats(records)
-          setAttendanceStats(stats)
+          const statsWithBaseline = calculateStatsWithBaseline(records, user.id)
+          setAttendanceStats(statsWithBaseline)
         }
       }
       // 🔥 Sync attendance state across tabs
@@ -149,8 +183,8 @@ export const AuthProvider = ({ children }) => {
           // เปรียบเทียบว่าข้อมูลเปลี่ยนหรือไม่
           if (JSON.stringify(records) !== JSON.stringify(attendanceRecords)) {
             setAttendanceRecords(records)
-            const stats = calculateAttendanceStats(records)
-            setAttendanceStats(stats)
+            const statsWithBaseline = calculateStatsWithBaseline(records, user.id)
+            setAttendanceStats(statsWithBaseline)
           }
         }
       }
