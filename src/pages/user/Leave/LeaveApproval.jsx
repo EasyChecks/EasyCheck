@@ -117,16 +117,23 @@ function LeaveApproval() {
     return node;
   };
 
-  // กรองเฉพาะใบลาที่รออนุมัติ - ดึงจาก LeaveContext
   const activePendingLeaves = useMemo(() => {
+    console.log('🔄 [LeaveApproval] Processing leaveList:', leaveList);
+    
     // แปลงข้อมูลจาก leaveList ให้เป็นรูปแบบที่ LeaveApproval ใช้
     let filtered = leaveList
       .filter(leave => leave.status === 'รออนุมัติ')
       .map(leave => {
-        // ดึงข้อมูล user ที่เป็นเจ้าของใบลา
-        const tabId = window.name || '' // ใช้ window.name แทน sessionStorage
-        const currentUserData = tabId ? JSON.parse(localStorage.getItem(`user_${tabId}`) || '{}') : {}
-        const user = usersData.find(u => u.username === currentUserData.username) || usersData[0];
+        console.log('📋 [LeaveApproval] Processing leave:', {
+          leaveId: leave.id,
+          userId: leave.userId,
+          userName: leave.userName,
+          leaveType: leave.leaveType
+        });
+        
+        // 🎯 ใช้ userName จาก leave object โดยตรง
+        const employeeName = leave.userName || 'ไม่ระบุชื่อ';
+        console.log('✅ [LeaveApproval] employeeName =', employeeName);
         
         // แปลงวันที่จาก dd/mm/yyyy เป็น Date object เพื่อหา submittedDate
         const submittedDate = new Date(leave.id).toLocaleDateString('th-TH', {
@@ -142,7 +149,8 @@ function LeaveApproval() {
           const [endDay, endMonth, endYear] = leave.endDate.split('/');
           const start = new Date(startYear, startMonth - 1, startDay);
           const end = new Date(endYear, endMonth - 1, endDay);
-          totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+          const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+          totalDays = `${days} วัน`; // เติม "วัน" ให้
         } else {
           // สำหรับการลารายชั่วโมง แสดงเป็นข้อความ
           totalDays = leave.days; // เช่น "2 ชม." หรือ "2 ชั่วโมง"
@@ -150,7 +158,7 @@ function LeaveApproval() {
         
         return {
           id: leave.id,
-          employeeName: user.name || 'พนักงาน',
+          employeeName: employeeName, // 🔥 ใช้ leave.userName โดยตรง
           leaveType: leave.leaveType,
           startDate: leave.startDate,
           endDate: leave.endDate,
@@ -470,12 +478,9 @@ function LeaveApproval() {
                     <p className="font-semibold text-gray-800 whitespace-nowrap">{leave.endDate}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">จำนวนวัน</p>
+                    <p className="text-xs text-gray-500 mb-1">จำนวน</p>
                     <p className="font-semibold text-gray-800 whitespace-nowrap">
-                      {leave.leaveMode === 'hourly' 
-                        ? leave.totalDays 
-                        : `${leave.totalDays}`
-                      }
+                      {leave.totalDays}
                     </p>
                   </div>
                 </div>
