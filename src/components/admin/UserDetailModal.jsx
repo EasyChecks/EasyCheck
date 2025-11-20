@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { calculateAttendanceStats } from '../../utils/attendanceCalculator';
 
 // ✅ ฟังก์ชันแปลงวันที่ ISO (YYYY-MM-DD) เป็นรูปแบบไทย (DD/MM/YYYY พ.ศ.)
 const formatThaiDate = (isoDate) => {
@@ -29,22 +30,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
   // 🔥 State สำหรับ sync timeSummary แบบ real-time
   const [currentTimeSummary, setCurrentTimeSummary] = useState(user?.timeSummary);
 
-  // ฟัง event จาก AuthProvider เมื่อ timeSummary อัพเดต
-  useEffect(() => {
-    const handleTimeSummaryUpdate = (event) => {
-      if (event.detail.userId === user?.id) {
-        setCurrentTimeSummary(event.detail.timeSummary);
-      }
-    };
-
-    window.addEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
-    
-    return () => {
-      window.removeEventListener('timeSummaryUpdated', handleTimeSummaryUpdate);
-    };
-  }, [user?.id]);
-
-  // อัพเดต timeSummary จาก localStorage เมื่อ user เปลี่ยน
+  // 🆕 คำนวณ stats จาก attendanceRecords + historical baseline
   useEffect(() => {
     if (user) {
       try {
@@ -52,12 +38,41 @@ const UserDetailModal = React.memo(function UserDetailModal({
         if (storedUsers) {
           const users = JSON.parse(storedUsers);
           const currentUser = users.find(u => u.id === user.id);
-          if (currentUser?.timeSummary) {
-            setCurrentTimeSummary(currentUser.timeSummary);
+          
+          if (currentUser) {
+            // 🔥 โหลด historical baseline จาก timeSummary
+            const historicalStats = currentUser.timeSummary || {
+              totalWorkDays: 0,
+              onTime: 0,
+              late: 0,
+              absent: 0,
+              leave: 0
+            };
+            
+            // 🔥 คำนวณ current stats จาก attendanceRecords
+            const currentStats = calculateAttendanceStats(
+              currentUser.attendanceRecords || [],
+              currentUser.schedule?.time
+            );
+            
+            // 🔥 รวม historical + current
+            const combinedStats = {
+              totalWorkDays: (historicalStats.totalWorkDays || 0) + (currentStats.totalWorkDays || 0),
+              onTime: (historicalStats.onTime || 0) + (currentStats.onTime || 0),
+              late: (historicalStats.late || 0) + (currentStats.late || 0),
+              absent: (historicalStats.absent || 0) + (currentStats.absent || 0),
+              leave: (historicalStats.leave || 0) + (currentStats.leave || 0),
+              totalHours: currentUser.timeSummary?.totalHours || `${Math.round(currentStats.totalWorkHours || 0)} ชม.`,
+              avgCheckIn: currentStats.averageCheckInTime || currentUser.timeSummary?.avgCheckIn || '08:00',
+              avgCheckOut: currentUser.timeSummary?.avgCheckOut || '17:30'
+            };
+            
+            setCurrentTimeSummary(combinedStats);
           }
         }
       } catch (error) {
-        console.warn('Failed to load timeSummary:', error);
+        console.warn('Failed to calculate timeSummary:', error);
+        setCurrentTimeSummary(user?.timeSummary);
       }
     }
   }, [user]);
