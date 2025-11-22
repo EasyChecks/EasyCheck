@@ -564,9 +564,11 @@ export const getLegacyUserData = () => {
             employeeId: user.employeeId,
             department: user.department,
             startDate: user.startDate,
-            education: user.education?.join(', ') || '',
+            education: user.education?.map(e => typeof e === 'string' ? e : `${e.degree || ''}${e.institution ? ' - ' + e.institution : ''}${e.year ? ' (' + e.year + ')' : ''}`).join(', ') || '',
             workHistory: user.workHistory?.map(w => `${w.company} (${w.period}) - ${w.position}`).join('\n') || '',
-            skills: user.skills?.join(', ') || '',
+            skills: user.skills?.map(skill => 
+              typeof skill === 'string' ? skill : `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`
+            ).join(', ') || '',
             benefits: 'ประกันสังคม, กองทุนสำรองเลี้ยงชีพ' // Default
           },
           healthInfo: {

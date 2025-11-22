@@ -650,6 +650,7 @@ const UserEditModal = React.memo(function UserEditModal({
                         </svg>
                       </button>
                     </div>
+                    
                   ))}
                 </div>
               ) : (
@@ -679,9 +680,9 @@ const UserEditModal = React.memo(function UserEditModal({
                 <div className="space-y-2 mb-3">
                   {editForm.education.map((edu, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <input
+                        <input
                         type="text"
-                        value={edu}
+                        value={typeof edu === 'string' ? edu : `${edu.degree || ''}${edu.institution ? ' - ' + edu.institution : ''}${edu.year ? ' (' + edu.year + ')' : ''}`}
                         onChange={(e) => {
                           const newEducation = [...editForm.education];
                           newEducation[index] = e.target.value;
@@ -734,7 +735,7 @@ const UserEditModal = React.memo(function UserEditModal({
                     <div key={index} className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-sm">
                       <input
                         type="text"
-                        value={skill}
+                        value={typeof skill === 'string' ? skill : `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`}
                         onChange={(e) => {
                           const newSkills = [...editForm.skills];
                           newSkills[index] = e.target.value;
