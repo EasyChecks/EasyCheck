@@ -129,8 +129,7 @@ function AdminDashboard() {
   // 🆕 Branch options
   const branchOptions = [
     { code: 'all', name: 'สาขา: ทั้งหมด' },
-    { code: '101', name: 'BKK 101 (สยาม)' },
-    { code: '102', name: 'BKK 102 (อโศก)' },
+    { code: 'BKK', name: 'BKK (กรุงเทพ)' },
     { code: 'CNX', name: 'CNX (เชียงใหม่)' },
     { code: 'PKT', name: 'PKT (ภูเก็ต)' }
   ]
