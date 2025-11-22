@@ -68,26 +68,55 @@ function AdminDashboard() {
     if (user?.role !== 'superadmin' || selectedBranch === 'all') {
       return allLocations
     }
-    // SuperAdmin เลือกสาขา - กรองตาม branchCode หรือ provinceCode
-    return allLocations.filter(loc => 
-      loc.branchCode === selectedBranch || 
-      loc.provinceCode === selectedBranch || 
-      loc.createdBy?.branch === selectedBranch
-    )
+    // SuperAdmin เลือกสาขา - กรองจาก createdBy.branch
+    // รองรับทั้งแบบ provinceCode (BKK, CNX, PKT) และ branchCode (101, 102, 201, 301)
+    const branchPrefix = selectedBranch === 'BKK' ? '1' : 
+                        selectedBranch === 'CNX' ? '2' : 
+                        selectedBranch === 'PKT' ? '3' : null
+    
+    const filtered = allLocations.filter(loc => {
+      // เช็คแบบตรงๆ กับ branch code (101, 102, 201, 301)
+      if (loc.createdBy?.branch === selectedBranch) {
+        return true
+      }
+      // เช็คแบบ prefix สำหรับ BKK, CNX, PKT
+      if (branchPrefix && loc.createdBy?.branch?.startsWith(branchPrefix)) {
+        return true
+      }
+      // เช็คจาก branchCode, provinceCode ถ้ามี
+      return loc.branchCode === selectedBranch || 
+             loc.provinceCode === selectedBranch
+    })
+    return filtered
   }, [allLocations, selectedBranch, user?.role])
   
   const events = useMemo(() => {
     if (user?.role !== 'superadmin' || selectedBranch === 'all') {
       return allEvents
     }
-    // SuperAdmin เลือกสาขา - กรองตาม branchCode หรือ provinceCode
-    return allEvents.filter(evt => 
-      evt.branchCode === selectedBranch || 
-      evt.provinceCode === selectedBranch || 
-      evt.createdBy?.branch === selectedBranch
-    )
+    // SuperAdmin เลือกสาขา - กรองจาก createdBy.branch (เหมือน locations)
+    // รองรับทั้งแบบ provinceCode (BKK, CNX, PKT) และ branchCode (101, 102, 201, 301)
+    const branchPrefix = selectedBranch === 'BKK' ? '1' : 
+                        selectedBranch === 'CNX' ? '2' : 
+                        selectedBranch === 'PKT' ? '3' : null
+    
+    const filtered = allEvents.filter(evt => {
+      // เช็คแบบตรงๆ กับ branch code (101, 102, 201, 301)
+      if (evt.createdBy?.branch === selectedBranch) {
+        return true
+      }
+      // เช็คแบบ prefix สำหรับ BKK, CNX, PKT
+      if (branchPrefix && evt.createdBy?.branch?.startsWith(branchPrefix)) {
+        return true
+      }
+      // เช็คจาก branchCode, provinceCode ถ้ามี
+      return evt.branchCode === selectedBranch || 
+             evt.provinceCode === selectedBranch
+    })
+    return filtered
   }, [allEvents, selectedBranch, user?.role])
 
+  const [statsType, setStatsType] = useState('attendance') // attendance, event
   const [expandedLocationIds, setExpandedLocationIds] = useState([]) // Track which locations are expanded
   const locationRefs = useRef({}) // Refs for scrolling to location cards
   const scrollPositions = useRef({}) // Store scroll positions before expanding
@@ -99,11 +128,11 @@ function AdminDashboard() {
   
   // 🆕 Branch options
   const branchOptions = [
-    { code: 'all', name: 'ทั้งหมด' },
-    { code: '101', name: 'กรุงเทพ สาขา 1' },
-    { code: '102', name: 'กรุงเทพ สาขา 2' },
-    { code: '201', name: 'เชียงใหม่' },
-    { code: '301', name: 'ภูเก็ต' }
+    { code: 'all', name: 'สาขา: ทั้งหมด' },
+    { code: '101', name: 'BKK 101 (สยาม)' },
+    { code: '102', name: 'BKK 102 (อโศก)' },
+    { code: 'CNX', name: 'CNX (เชียงใหม่)' },
+    { code: 'PKT', name: 'PKT (ภูเก็ต)' }
   ]
 
   // Calculate real attendance stats from usersData and localStorage
@@ -123,11 +152,26 @@ function AdminDashboard() {
       console.warn('Failed to load usersData from localStorage:', e)
     }
     
-    // 🆕 Filter by branch
+    // 🆕 Filter by branch - รองรับทั้ง branchCode (101, 102) และ provinceCode (BKK, CNX, PKT)
+    const branchPrefix = branchFilter === 'BKK' ? '1' : 
+                        branchFilter === 'CNX' ? '2' : 
+                        branchFilter === 'PKT' ? '3' : null
+    
     const filteredUsers = users.filter(u => {
       if (u.role === 'admin' || u.role === 'superadmin') return false
       if (branchFilter === 'all') return true
-      // Match against provinceCode or branch field
+      
+      // เช็คแบบตรงๆ กับ branchCode (101, 102, 201, 301)
+      if (u.branchCode === branchFilter) {
+        return true
+      }
+      
+      // เช็คแบบ prefix สำหรับ BKK, CNX, PKT
+      if (branchPrefix && u.branchCode?.startsWith(branchPrefix)) {
+        return true
+      }
+      
+      // เช็คจาก provinceCode สำรอง
       return u.provinceCode === branchFilter || u.branch === branchFilter
     })
     
@@ -234,11 +278,26 @@ function AdminDashboard() {
       console.warn('Failed to load usersData from localStorage:', e)
     }
     
-    // 🆕 Filter users by branch
+    // 🆕 Filter users by branch - รองรับทั้ง branchCode (101, 102) และ provinceCode (BKK, CNX, PKT)
+    const branchPrefix = branchFilter === 'BKK' ? '1' : 
+                        branchFilter === 'CNX' ? '2' : 
+                        branchFilter === 'PKT' ? '3' : null
+    
     const filteredUsers = users.filter(u => {
       if (u.role === 'admin' || u.role === 'superadmin') return false
       if (branchFilter === 'all') return true
-      // Match against provinceCode or branch field
+      
+      // เช็คแบบตรงๆ กับ branchCode (101, 102, 201, 301)
+      if (u.branchCode === branchFilter) {
+        return true
+      }
+      
+      // เช็คแบบ prefix สำหรับ BKK, CNX, PKT
+      if (branchPrefix && u.branchCode?.startsWith(branchPrefix)) {
+        return true
+      }
+      
+      // เช็คจาก provinceCode สำรอง
       return u.provinceCode === branchFilter || u.branch === branchFilter
     })
     
@@ -283,12 +342,20 @@ function AdminDashboard() {
 
   // Get title for detail modal
   const getDetailTitle = () => {
-    switch (detailType) {
-      case 'absent': return 'รายชื่อพนักงานที่ขาดงาน'
-      case 'leave': return 'รายชื่อพนักงานที่ลางาน'
-      case 'late': return 'รายชื่อพนักงานที่มาสาย'
-      case 'notParticipated': return 'รายชื่อผู้ที่ยังไม่เข้าร่วมกิจกรรม'
-      default: return 'รายละเอียด'
+    if (statsType === 'attendance') {
+      switch (detailType) {
+        case 'absent': return 'รายชื่อพนักงานที่ขาดงาน'
+        case 'leave': return 'รายชื่อพนักงานที่ลางาน'
+        case 'late': return 'รายชื่อพนักงานที่มาสาย'
+        default: return 'รายละเอียด'
+      }
+    } else {
+      switch (detailType) {
+        case 'notParticipated': return 'รายชื่อผู้ที่ยังไม่เข้าร่วมกิจกรรม'
+        case 'leave': return 'รายชื่อผู้ที่ลางานกิจกรรม'
+        case 'late': return 'รายชื่อผู้ที่มาสายกิจกรรม'
+        default: return 'รายละเอียด'
+      }
     }
   }
   
@@ -552,121 +619,165 @@ function AdminDashboard() {
 
       {/* Main Content */}
       <main className="px-6 py-8 max-w-8xl mx-auto">
-        {/* Section 1: Stats - All in One Row */}
+        {/* Section 1: Stats with Selector */}
         <div className="mb-8">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">ภาพรวมสถิติ</h2>
-            <p className="text-sm text-gray-600 mt-1">สถิติการเข้างานและการเข้าร่วมกิจกรรมทั้งหมด</p>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">
+              {statsType === 'attendance' ? 'สถิติการเข้างาน' : 'สถิติการเข้าร่วมกิจกรรม'}
+            </h2>
+            <div className="flex gap-2 bg-gray-200 rounded-lg p-1">
+              <button
+                onClick={() => setStatsType('attendance')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${statsType === 'attendance'
+                    ? 'bg-white text-brand-primary shadow-sm transform scale-105'
+                    : 'text-gray-600 hover:bg-gray-300'
+                  }`}
+              >
+                การเข้างาน
+              </button>
+              <button
+                onClick={() => setStatsType('event')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${statsType === 'event'
+                    ? 'bg-white text-brand-primary shadow-sm transform scale-105'
+                    : 'text-gray-600 hover:bg-gray-300'
+                  }`}
+              >
+                กิจกรรม
+              </button>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {/* Absent - แสดงจำนวนคนที่ขาด */}
-            <button
-              onClick={() => handleDetailClick('absent', attendanceStats.absentUsers)}
-              className="bg-red-500 rounded-xl shadow-sm p-4 text-white text-left hover:bg-red-600 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white/90 text-xs mb-1">ขาดงาน</h3>
-                  <p className="text-3xl font-bold leading-none">{attendanceStats.absentCount}</p>
-                </div>
-              </div>
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {statsType === 'attendance' ? (
+              <>
+                {/* Absent - แสดงจำนวนคนที่ขาด */}
+                <button
+                  onClick={() => handleDetailClick('absent', attendanceStats.absentUsers)}
+                  className="bg-red-500 rounded-2xl shadow-sm p-6 text-white hover:bg-red-600 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex flex-col justify-between">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-white/90 text-lg font-semibold mb-1">ขาดงาน</h3>
+                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      </div>
+                    </div>
+                    <p className="text-7xl font-bold">{attendanceStats.absentCount}</p>
+                  </div>
+                </button>
 
-            {/* Leave - แสดงจำนวนคนที่ลา (เปลี่ยนเป็นสีฟ้า) */}
-            <button
-              onClick={() => handleDetailClick('leave', attendanceStats.leaveUsers)}
-              className="bg-blue-500 rounded-xl shadow-sm p-4 text-white text-left hover:bg-blue-600 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white/90 text-xs mb-1">ลางาน</h3>
-                  <p className="text-3xl font-bold leading-none">{attendanceStats.leaveCount}</p>
-                </div>
-              </div>
-            </button>
+                {/* Leave - แสดงจำนวนคนที่ลา (เปลี่ยนเป็นสีฟ้า) */}
+                <button
+                  onClick={() => handleDetailClick('leave', attendanceStats.leaveUsers)}
+                  className="bg-blue-500 rounded-2xl shadow-sm p-6 text-white hover:bg-blue-600 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex flex-col justify-between">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
+                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      </div>
+                    </div>
+                    <p className="text-7xl font-bold">{attendanceStats.leaveCount}</p>
+                  </div>
+                </button>
 
-            {/* Late - แสดงจำนวนคนที่มาสาย */}
-            <button
-              onClick={() => handleDetailClick('late', attendanceStats.lateUsers)}
-              className="bg-orange-500 rounded-xl shadow-sm p-4 text-white text-left hover:bg-orange-600 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white/90 text-xs mb-1">มาสาย</h3>
-                  <p className="text-3xl font-bold leading-none">{attendanceStats.lateCount}</p>
-                </div>
-              </div>
-            </button>
+                {/* Late - แสดงจำนวนคนที่มาสาย */}
+                <button
+                  onClick={() => handleDetailClick('late', attendanceStats.lateUsers)}
+                  className="bg-orange-500 rounded-2xl shadow-sm p-6 text-white hover:bg-orange-600 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex flex-col justify-between">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
+                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      </div>
+                    </div>
+                    <p className="text-7xl font-bold">{attendanceStats.lateCount}</p>
+                  </div>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Not Participated - ยังไม่เข้าร่วม */}
+                <button
+                  onClick={() => handleDetailClick('notParticipated', eventStats.notParticipatedUsers)}
+                  className="bg-red-500 rounded-2xl shadow-sm p-6 text-white hover:bg-red-600 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex flex-col justify-between">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-white/90 text-lg font-semibold mb-1">ยังไม่เข้าร่วม</h3>
+                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      </div>
+                    </div>
+                    <p className="text-7xl font-bold">{eventStats.notParticipatedCount}</p>
+                  </div>
+                </button>
 
-            {/* Not Participated - ยังไม่เข้าร่วม */}
-            <button
-              onClick={() => handleDetailClick('notParticipated', eventStats.notParticipatedUsers)}
-              className="bg-red-500 rounded-xl shadow-sm p-4 text-white text-left hover:bg-red-600 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white/90 text-xs mb-1">ยังไม่เข้าร่วม</h3>
-                  <p className="text-3xl font-bold leading-none">{eventStats.notParticipatedCount}</p>
-                </div>
-              </div>
-            </button>
+                {/* Leave Event - ลางานกิจกรรม (เปลี่ยนเป็นสีฟ้า) */}
+                <button
+                  onClick={() => handleDetailClick('leave', eventStats.leaveEventUsers)}
+                  className="bg-blue-500 rounded-2xl shadow-sm p-6 text-white hover:bg-blue-600 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex flex-col justify-between">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
+                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      </div>
+                    </div>
+                    <p className="text-7xl font-bold">{eventStats.leaveEventCount}</p>
+                  </div>
+                </button>
 
-            {/* Leave Event - ลางานกิจกรรม (เปลี่ยนเป็นสีฟ้า) */}
-            <button
-              onClick={() => handleDetailClick('leave', eventStats.leaveEventUsers)}
-              className="bg-blue-500 rounded-xl shadow-sm p-4 text-white text-left hover:bg-blue-600 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white/90 text-xs mb-1">ลางาน</h3>
-                  <p className="text-3xl font-bold leading-none">{eventStats.leaveEventCount}</p>
-                </div>
-              </div>
-            </button>
-
-            {/* Late Event - มาสายกิจกรรม */}
-            <button
-              onClick={() => handleDetailClick('late', eventStats.lateEventUsers)}
-              className="bg-orange-500 rounded-xl shadow-sm p-4 text-white text-left hover:bg-orange-600 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                    <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white/90 text-xs mb-1">มาสาย</h3>
-                  <p className="text-3xl font-bold leading-none">{eventStats.lateEventCount}</p>
-                </div>
-              </div>
-            </button>
+                {/* Late Event - มาสายกิจกรรม */}
+                <button
+                  onClick={() => handleDetailClick('late', eventStats.lateEventUsers)}
+                  className="bg-orange-500 rounded-2xl shadow-sm p-6 text-white hover:bg-orange-600 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex flex-col justify-between">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
+                          <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
+                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      </div>
+                    </div>
+                    <p className="text-7xl font-bold">{eventStats.lateEventCount}</p>
+                  </div>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
