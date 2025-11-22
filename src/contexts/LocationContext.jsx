@@ -78,13 +78,16 @@ export function LocationProvider({ children }) {
       const savedLocations = localStorage.getItem('locations')
       if (savedLocations) {
         const parsed = JSON.parse(savedLocations)
-        // ลบข้อมูลที่ซ้ำกัน (ตาม id)
+        // ลบข้อมูลที่ซ้ำกัน (ตาม id และ name)
         const uniqueLocations = []
         const seenIds = new Set()
+        const seenNames = new Set()
         
         for (const loc of parsed) {
-          if (!seenIds.has(loc.id)) {
+          const normalizedName = loc.name.toLowerCase().trim()
+          if (!seenIds.has(loc.id) && !seenNames.has(normalizedName)) {
             seenIds.add(loc.id)
+            seenNames.add(normalizedName)
             uniqueLocations.push(loc)
           }
         }
@@ -136,6 +139,11 @@ export function LocationProvider({ children }) {
     return locations.find(loc => loc.id === id)
   }
 
+  // Get all locations (unfiltered) - for ID generation
+  const getAllLocations = () => {
+    return locations
+  }
+
   // ✅ Get filtered locations based on user role and branch
   const getFilteredLocations = (user) => {
     if (!user) return []
@@ -169,6 +177,7 @@ export function LocationProvider({ children }) {
     deleteLocation,
     deleteLocations,
     getLocation,
+    getAllLocations,
     getFilteredLocations
   }
 

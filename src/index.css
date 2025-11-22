@@ -45,6 +45,18 @@
   }
 }
 
+/* ซ่อนลูกศร spinner ของ input type="number" ให้หมด - เพื่อ UI ที่สะอาดและเป็นมืออาชีพ */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Custom Scrollbar Styles */
 @layer utilities {
   /* For Webkit browsers (Chrome, Safari, Edge) */

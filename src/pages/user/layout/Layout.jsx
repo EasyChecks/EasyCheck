@@ -206,7 +206,7 @@ function Layout() {
     })
 
     // 3. เตือนวันลาใกล้หมด
-    const vacationRemaining = leaveQuota['ลาพักร้อน'].totalDays - getUsedDays('ลาพักร้อน')
+    const vacationRemaining = leaveQuota['ลาพักร้อน'].totalDays - getUsedDays('ลาพักร้อน', user?.id)
     if (vacationRemaining <= 3 && vacationRemaining > 0) {
       notifs.push({
         id: 'leave-warning-vacation',
