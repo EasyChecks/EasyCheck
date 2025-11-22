@@ -654,17 +654,15 @@ function AdminDashboard() {
                   onClick={() => handleDetailClick('absent', attendanceStats.absentUsers)}
                   className="bg-red-500 rounded-2xl shadow-sm p-6 text-white hover:bg-red-600 transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex flex-col justify-between">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-white/90 text-lg font-semibold mb-1">ขาดงาน</h3>
-                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
-                      </div>
+                  <div className="flex items-center justify-between h-full gap-4">
+                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="60px" viewBox="0 -960 960 960" width="60px" fill="white">
+                        <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white/90 text-lg font-semibold mb-1">ขาดงาน</h3>
+                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{attendanceStats.absentCount}</p>
                   </div>
@@ -675,17 +673,15 @@ function AdminDashboard() {
                   onClick={() => handleDetailClick('leave', attendanceStats.leaveUsers)}
                   className="bg-blue-500 rounded-2xl shadow-sm p-6 text-white hover:bg-blue-600 transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex flex-col justify-between">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
-                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
-                      </div>
+                  <div className="flex items-center justify-between h-full gap-4">
+                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="60px" viewBox="0 -960 960 960" width="60px" fill="white">
+                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
+                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{attendanceStats.leaveCount}</p>
                   </div>
@@ -696,17 +692,15 @@ function AdminDashboard() {
                   onClick={() => handleDetailClick('late', attendanceStats.lateUsers)}
                   className="bg-orange-500 rounded-2xl shadow-sm p-6 text-white hover:bg-orange-600 transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex flex-col justify-between">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
-                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
-                      </div>
+                  <div className="flex items-center justify-between h-full gap-4">
+                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="60px" viewBox="0 -960 960 960" width="60px" fill="white">
+                        <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
+                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{attendanceStats.lateCount}</p>
                   </div>
@@ -719,17 +713,15 @@ function AdminDashboard() {
                   onClick={() => handleDetailClick('notParticipated', eventStats.notParticipatedUsers)}
                   className="bg-red-500 rounded-2xl shadow-sm p-6 text-white hover:bg-red-600 transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex flex-col justify-between">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-white/90 text-lg font-semibold mb-1">ยังไม่เข้าร่วม</h3>
-                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
-                      </div>
+                  <div className="flex items-center justify-between h-full gap-4">
+                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="60px" viewBox="0 -960 960 960" width="60px" fill="white">
+                        <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white/90 text-lg font-semibold mb-1">ยังไม่เข้าร่วม</h3>
+                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{eventStats.notParticipatedCount}</p>
                   </div>
@@ -740,17 +732,15 @@ function AdminDashboard() {
                   onClick={() => handleDetailClick('leave', eventStats.leaveEventUsers)}
                   className="bg-blue-500 rounded-2xl shadow-sm p-6 text-white hover:bg-blue-600 transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex flex-col justify-between">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
-                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
-                      </div>
+                  <div className="flex items-center justify-between h-full gap-4">
+                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="60px" viewBox="0 -960 960 960" width="60px" fill="white">
+                        <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
+                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{eventStats.leaveEventCount}</p>
                   </div>
@@ -761,17 +751,15 @@ function AdminDashboard() {
                   onClick={() => handleDetailClick('late', eventStats.lateEventUsers)}
                   className="bg-orange-500 rounded-2xl shadow-sm p-6 text-white hover:bg-orange-600 transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex flex-col justify-between">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="white">
-                          <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
-                        <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
-                      </div>
+                  <div className="flex items-center justify-between h-full gap-4">
+                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="60px" viewBox="0 -960 960 960" width="60px" fill="white">
+                        <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
+                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{eventStats.lateEventCount}</p>
                   </div>
