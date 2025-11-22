@@ -154,27 +154,69 @@ export default function Warning() {
   const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: '' })
 
   // แปลง leaveList เป็น format สำหรับหน้า Warning
-  const items = useMemo(() => {
-    const allLeaveRequests = []
+  // 🔥 เอา useMemo ออก - บังคับให้ re-calculate ทุกครั้ง
+  const items = (() => {
+    console.log('🔄 [Warning.jsx] Processing leaveList:', leaveList);
+    console.log('🔄 [Warning.jsx] Total leaves:', leaveList.length);
     
-    // ดึงข้อมูลการลาจาก localStorage สำหรับทุก user
-    // ระบบปัจจุบันเก็บ leaveList รวมกันใน localStorage key เดียว
-    // แต่ไม่มี userId เก็บไว้ ดังนั้นเราจะต้องใช้ข้อมูลจาก leaveData ใน usersData
-    
-    // สำหรับตอนนี้ ใช้ข้อมูลจาก leaveList (ของ current user)
-    // และแสดงเฉพาะที่รออนุมัติ
     return leaveList
       .filter(leave => leave.status === 'รออนุมัติ')
       .map(leave => {
-        // ในอนาคตถ้า leave มี userId เก็บไว้ ก็หา user จาก userId
-        // แต่ตอนนี้ใช้ current user หรือข้อมูลทั่วไป
-        const tabId = window.name || '' // ใช้ window.name แทน sessionStorage
-        const currentUserData = tabId ? JSON.parse(localStorage.getItem(`user_${tabId}`) || '{}') : {}
-        const user = usersData.find(u => u.username === currentUserData.username) || usersData[0]
+        console.log('📋 [Warning.jsx] Processing leave:', {
+          leaveId: leave.id,
+          userId: leave.userId,
+          userName: leave.userName,
+          leaveType: leave.leaveType
+        });
+        
+        // 🎯 ใช้ userName จาก leave object โดยตรง (ไม่ต้องไปหา user)
+        const displayName = leave.userName || 'ไม่ระบุชื่อ';
+        const displayUserId = leave.userId || 0;
+        
+        console.log('🎯 [Warning.jsx] displayName =', displayName);
+        
+        // หา user object เพื่อดึง profileImage, position, department
+        let userDetails = null;
+        
+        if (leave.userId) {
+          // ลองหาจาก localStorage ก่อน
+          try {
+            const storedUsers = localStorage.getItem('usersData');
+            if (storedUsers) {
+              const users = JSON.parse(storedUsers);
+              userDetails = users.find(u => u.id === leave.userId);
+            }
+          } catch (e) {
+            console.error('Error reading usersData:', e);
+          }
+          
+          // ถ้าหาไม่เจอ ลองหาจาก mock data
+          if (!userDetails) {
+            userDetails = usersData.find(u => u.id === leave.userId);
+          }
+        }
+        
+        // สร้าง user object สำหรับแสดงผล
+        const user = {
+          id: displayUserId,
+          name: displayName, // ✅ ใช้ leave.userName โดยตรง
+          profileImage: userDetails?.profileImage || `https://i.pravatar.cc/150?u=${displayUserId}`,
+          position: userDetails?.position || 'พนักงาน',
+          department: userDetails?.department || 'ไม่ระบุ',
+          branchCode: userDetails?.branchCode || 'ไม่ระบุ',
+          username: userDetails?.username || `user_${displayUserId}`
+        };
+        
+        console.log('✅ [Warning.jsx] Mapped user:', {
+          leaveId: leave.id,
+          displayName: user.name,
+          userId: user.id,
+          finalName: displayName // 🔥 เพิ่มการ log ชื่อที่จะใช้จริง
+        });
         
         return {
           id: leave.id,
-          name: user.name || 'ไม่ระบุชื่อ',
+          name: displayName, // 🔥 ใช้ displayName โดยตรง ไม่ใช้ user.name
           avatar: user.profileImage || 'https://i.pravatar.cc/150?u=default',
           role: user.position || user.role || 'พนักงาน',
           department: `แผนก: ${user.department || 'ไม่ระบุ'}`,
@@ -189,7 +231,7 @@ export default function Warning() {
           leaveMode: leave.leaveMode || 'fullday',
           days: leave.days,
           reason: leave.reason,
-          userId: user.id,
+          userId: leave.userId || user.id,
           username: user.username,
           attachments: leave.documents?.map((doc, idx) => {
             const docUrl = doc.url || doc
@@ -238,7 +280,7 @@ export default function Warning() {
           }) || []
         }
       })
-  }, [leaveList])
+  })(); // 🔥 เรียกทันที ไม่ใช้ useMemo cache
 
   useEffect(() => {
     Object.values(wrapperRefs.current).forEach(w => {
@@ -362,8 +404,36 @@ export default function Warning() {
   const confirmApprove = () => {
     if (!selectedItem) return
     
+    console.log('👉 Admin approving leave:', selectedItem);
+    
+    // 🔥 หา userId จาก leaveList โดยตรง
+    const leaveFromList = leaveList.find(l => l.id === selectedItem.id);
+    const actualUserId = leaveFromList?.userId || selectedItem.userId;
+    const actualUserName = leaveFromList?.userName || selectedItem.name;
+    
+    console.log('🔍 Leave data:', {
+      leaveId: selectedItem.id,
+      userId: actualUserId,
+      userName: actualUserName,
+      leaveFromList
+    });
+    
     // อัพเดทสถานะเป็น "อนุมัติ"
     updateLeaveStatus(selectedItem.id, 'อนุมัติ')
+    
+    console.log('✅ Leave status updated to: อนุมัติ');
+    
+    // 🔔 STEP 4: Dispatch event เพื่อแจ้งเตือนระบบ sync attendance
+    window.dispatchEvent(new CustomEvent('leaveStatusUpdated', {
+      detail: { 
+        leaveId: selectedItem.id, 
+        status: 'อนุมัติ',
+        userId: actualUserId,
+        userName: actualUserName
+      }
+    }))
+    
+    console.log('📢 Event dispatched: leaveStatusUpdated');
     
     setExpandedIds(prev => prev.filter(x => x !== selectedItem.id))
     setModalData(prev => (prev && prev.item && prev.item.id === selectedItem.id ? null : prev))

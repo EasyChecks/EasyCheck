@@ -114,8 +114,8 @@ const ProfileManager = ({
         </svg>
       ),
       fields: [
-        { name: 'degree', placeholder: 'วุฒิการศึกษา', type: 'text' },
         { name: 'institution', placeholder: 'สถาบัน', type: 'text' },
+        { name: 'degree', placeholder: 'คณะ - สาขาวิชา', type: 'text' },
         { name: 'year', placeholder: 'ปีที่จบ', type: 'number' }
       ],
       display: (item) => (

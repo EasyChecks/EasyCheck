@@ -4,10 +4,23 @@ import { useLeave } from '../../../contexts/LeaveContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import AlertDialog from '../../../components/common/AlertDialog';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
+import CustomDatePicker from '../../../components/common/CustomDatePicker';
 
 function LeaveRequestModal({ closeModal }) {
   const { addLeave, addLateArrival, calculateDays, validateLeaveRequest, getLeaveRules } = useLeave(); // ดึงฟังก์ชันจาก LeaveContext
   const { user } = useAuth(); // ดึงข้อมูล user ปัจจุบัน
+  
+  // 🔍 Debug: ตรวจสอบว่า user ที่ใช้ส่งคำขอลาคือใคร
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 [LeaveRequestModal] Current user:', {
+        id: user?.id,
+        name: user?.name,
+        username: user?.username,
+        role: user?.role
+      });
+    }
+  }, [user]);
   
   // ตรวจสอบว่าผู้ใช้มีสิทธิ์ลาคลอดหรือไม่ (เฉพาะนาง/นางสาว)
   const canRequestMaternityLeave = user?.titlePrefix === 'นาง' || user?.titlePrefix === 'นางสาว';
@@ -46,6 +59,10 @@ function LeaveRequestModal({ closeModal }) {
   const timeStartPickerRef = useRef(null); // ref สำหรับตรวจจับการคลิกนอก Time Picker
   const timeEndPickerRef = useRef(null);
   
+  // state สำหรับเก็บค่าเวลาชั่วคราวใน time picker
+  const [tempStartTime, setTempStartTime] = useState({ hour: '09', minute: '00' });
+  const [tempEndTime, setTempEndTime] = useState({ hour: '17', minute: '00' });
+  
   // state สำหรับควบคุมการหมุนของลูกศร dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const selectRef = useRef(null);
@@ -56,6 +73,15 @@ function LeaveRequestModal({ closeModal }) {
     type: 'success', // 'success', 'error', 'warning'
     title: '',
     message: ''
+  });
+
+  // state สำหรับ validation errors
+  const [validationErrors, setValidationErrors] = useState({
+    leaveType: '',
+    startDate: '',
+    endDate: '',
+    reason: '',
+    documents: ''
   });
 
   // Close time pickers when clicking outside
@@ -79,11 +105,13 @@ function LeaveRequestModal({ closeModal }) {
     };
   }, []);
 
-  // Convert date format from yyyy-mm-dd to dd/mm/yyyy
+  // Convert date format from yyyy-mm-dd to dd/mm/yyyy (พ.ศ.)
   const convertDateFormat = (dateStr) => {
     if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
+    // 🔥 แปลง ค.ศ. เป็น พ.ศ. (+543)
+    const buddhistYear = parseInt(year) + 543;
+    return `${day}/${month}/${buddhistYear}`;
   };
 
   // Convert dd/mm/yyyy to yyyy-mm-dd
@@ -97,6 +125,16 @@ function LeaveRequestModal({ closeModal }) {
   const formatDateForDisplay = (isoDate) => {
     if (!isoDate) return '';
     return convertDateFormat(isoDate);
+  };
+
+  // Get minimum date based on leave type
+  // ลาป่วย and ลากิจ can be retroactive (no min date)
+  // Other leave types can only select today or future dates
+  const getMinDate = () => {
+    if (formData.leaveType === 'ลาป่วย' || formData.leaveType === 'ลากิจ') {
+      return ''; // No restriction for sick leave and personal leave
+    }
+    return getTodayDate(); // Today's date as minimum for other leave types
   };
 
   // Calculate total days
@@ -173,11 +211,20 @@ function LeaveRequestModal({ closeModal }) {
     return input;
   };
 
-  // Handle time selection from picker
+  // Handle time selection from picker (ไม่ปิด picker ทันที)
   const handleTimeSelect = (hour, minute, isStart) => {
-    const timeValue = `${hour}:${minute}`;
+    if (isStart) {
+      setTempStartTime({ hour, minute });
+    } else {
+      setTempEndTime({ hour, minute });
+    }
+  };
+
+  // Confirm time selection and close picker
+  const confirmTimeSelection = (isStart) => {
     const todayDate = getTodayDate();
     if (isStart) {
+      const timeValue = `${tempStartTime.hour}:${tempStartTime.minute}`;
       setFormData({ 
         ...formData, 
         startTime: timeValue,
@@ -186,6 +233,7 @@ function LeaveRequestModal({ closeModal }) {
       });
       setShowTimeStartPicker(false);
     } else {
+      const timeValue = `${tempEndTime.hour}:${tempEndTime.minute}`;
       setFormData({ 
         ...formData, 
         endTime: timeValue,
@@ -193,6 +241,23 @@ function LeaveRequestModal({ closeModal }) {
         endDate: todayDate
       });
       setShowTimeEndPicker(false);
+    }
+  };
+
+  // Open time picker and set initial temp values
+  const openTimePicker = (isStart) => {
+    if (isStart) {
+      if (formData.startTime) {
+        const [hour, minute] = formData.startTime.split(':');
+        setTempStartTime({ hour, minute });
+      }
+      setShowTimeStartPicker(true);
+    } else {
+      if (formData.endTime) {
+        const [hour, minute] = formData.endTime.split(':');
+        setTempEndTime({ hour, minute });
+      }
+      setShowTimeEndPicker(true);
     }
   };
 
@@ -246,8 +311,83 @@ function LeaveRequestModal({ closeModal }) {
     setShowAlert(true);
   };
 
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {
+      leaveType: '',
+      startDate: '',
+      endDate: '',
+      reason: '',
+      documents: ''
+    };
+    let isValid = true;
+
+    // Validate leave type for regular leave
+    if (formData.requestType === 'leave' && !formData.leaveType) {
+      errors.leaveType = 'กรุณาเลือกประเภทการลา';
+      isValid = false;
+    }
+
+    // Validate dates
+    if (formData.requestType === 'leave' && formData.leaveMode === 'fullday') {
+      if (!formData.startDate) {
+        errors.startDate = 'กรุณาเลือกวันที่เริ่มต้น';
+        isValid = false;
+      }
+      if (!formData.endDate) {
+        errors.endDate = 'กรุณาเลือกวันที่สิ้นสุด';
+        isValid = false;
+      }
+    }
+
+    // Validate reason
+    if (!formData.reason || !formData.reason.trim()) {
+      errors.reason = 'กรุณาระบุเหตุผล';
+      isValid = false;
+    }
+
+    // Validate documents for sick leave 3+ days
+    if (formData.requestType === 'leave' && formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday') {
+      const totalDays = calculateDays(
+        convertDateFormat(formData.startDate),
+        convertDateFormat(formData.endDate)
+      );
+      if (totalDays >= 3 && (!formData.documents || formData.documents.length === 0)) {
+        errors.documents = 'กรุณาแนบใบรับรองแพทย์สำหรับการลาป่วย 3 วันขึ้นไป';
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  // Clear validation error for specific field
+  const clearError = (field) => {
+    setValidationErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Clear previous validation errors
+    setValidationErrors({
+      leaveType: '',
+      startDate: '',
+      endDate: '',
+      reason: '',
+      documents: ''
+    });
+
+    // Validate form before submission
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstError = document.querySelector('.error-message');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
 
     // Handle late arrival request
     if (formData.requestType === 'lateArrival') {
@@ -307,6 +447,19 @@ function LeaveRequestModal({ closeModal }) {
       }
     }
 
+    // Validate document requirements
+    // Check if sick leave for 3+ days requires medical certificate
+    if (formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday') {
+      const totalDays = calculateDays(
+        convertDateFormat(formData.startDate),
+        convertDateFormat(formData.endDate)
+      );
+      if (totalDays >= 3 && (!formData.documents || formData.documents.length === 0)) {
+        showAlertDialog('error', 'ไม่สามารถส่งคำขอลาได้', 'การลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องแนบใบรับรองแพทย์');
+        return;
+      }
+    }
+
     // Prepare leave data
     let leaveData;
 
@@ -317,8 +470,13 @@ function LeaveRequestModal({ closeModal }) {
         endDate: convertDateFormat(formData.endDate),
         reason: formData.reason,
         documents: formData.documents,
-        leaveMode: 'fullday'
+        leaveMode: 'fullday',
+        userId: user?.id, // 🆕 เพิ่ม userId สำหรับ integration
+        userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
       };
+      
+      // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+      console.log('📝 [LeaveRequestModal] Fullday leave data:', leaveData);
     } else {
       // Hourly leave
       leaveData = {
@@ -329,8 +487,13 @@ function LeaveRequestModal({ closeModal }) {
         endTime: formData.endTime,
         reason: formData.reason,
         documents: formData.documents,
-        leaveMode: 'hourly'
+        leaveMode: 'hourly',
+        userId: user?.id, // 🆕 เพิ่ม userId สำหรับ integration
+        userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
       };
+      
+      // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+      console.log('📝 [LeaveRequestModal] Hourly leave data:', leaveData);
     }
 
     // Validate against leave rules
@@ -339,6 +502,23 @@ function LeaveRequestModal({ closeModal }) {
       // Show validation errors
       const errorMessage = validation.errors.join('\n');
       showAlertDialog('error', 'ไม่สามารถส่งคำขอลาได้', errorMessage);
+      return;
+    }
+
+    // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+    console.log('📤 [LeaveRequestModal] Submitting leave:', {
+      userId: leaveData.userId,
+      userName: leaveData.userName,
+      leaveType: leaveData.leaveType,
+      startDate: leaveData.startDate,
+      endDate: leaveData.endDate,
+      currentUser: user
+    });
+    
+    // ⚠️ ตรวจสอบว่า userId และ userName ไม่เป็น undefined
+    if (!leaveData.userId || !leaveData.userName) {
+      console.error('❌ Missing userId or userName!', { user, leaveData });
+      showAlertDialog('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง');
       return;
     }
 
@@ -374,24 +554,20 @@ function LeaveRequestModal({ closeModal }) {
           }
         }
         
-        input[type="date"]::-webkit-calendar-picker-indicator {
-          cursor: pointer;
-          position: absolute;
-          right: 12px;
-          z-index: 1;
+        /* Slide down animation for custom date picker */
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        input[type="date"] {
-          position: relative;
-          color: transparent;
-        }
-        input[type="date"]:focus {
-          color: transparent;
-        }
-        input[type="date"]::-webkit-datetime-edit {
-          color: transparent;
-        }
-        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-          color: transparent;
+        
+        .animate-slideDown {
+          animation: slideDown 0.2s ease-out;
         }
       `}</style>
       <div className="w-full max-w-xs mt-4 bg-white shadow-2xl rounded-2xl sm:rounded-3xl sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
@@ -454,7 +630,7 @@ function LeaveRequestModal({ closeModal }) {
                   reason: '',
                   documents: []
                 })}
-                className={`px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${formData.requestType === 'lateArrival'
+                className={`px-2 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${formData.requestType === 'lateArrival'
                     ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white border-orange-500 shadow-lg'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
                   }`}
@@ -475,13 +651,29 @@ function LeaveRequestModal({ closeModal }) {
                 <select
                   value={formData.leaveType}
                   onChange={(e) => {
-                    setFormData({ ...formData, leaveType: e.target.value });
+                    const selectedType = e.target.value;
+                    // ถ้าเลือกลาคลอดหรือประเภทอื่นที่ไม่ใช่ ลาป่วย/ลากิจ/ลาพักร้อน ให้บังคับเป็น fullday
+                    const newLeaveMode = (selectedType === 'ลาป่วย' || selectedType === 'ลากิจ' || selectedType === 'ลาพักร้อน') 
+                      ? formData.leaveMode 
+                      : 'fullday';
+                    
+                    setFormData({ 
+                      ...formData, 
+                      leaveType: selectedType,
+                      leaveMode: newLeaveMode,
+                      startTime: newLeaveMode === 'fullday' ? '' : formData.startTime,
+                      endTime: newLeaveMode === 'fullday' ? '' : formData.endTime
+                    });
                     setIsDropdownOpen(false);
+                    clearError('leaveType');
                   }}
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
-                  className="w-full px-3 sm:px-4 pr-8 sm:pr-10 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors appearance-none bg-white cursor-pointer"
-                  required
+                  className={`w-full px-3 sm:px-4 pr-8 sm:pr-10 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none transition-colors appearance-none bg-white cursor-pointer ${
+                    validationErrors.leaveType 
+                      ? 'border-red-400 focus:border-red-500' 
+                      : 'border-gray-200 focus:border-orange-500'
+                  }`}
                 >
                   <option value="">เลือกประเภทการลา</option>
                   <option value="ลาป่วย">ลาป่วย</option>
@@ -490,62 +682,78 @@ function LeaveRequestModal({ closeModal }) {
                   {canRequestMaternityLeave && (
                     <option value="ลาคลอด">ลาคลอด</option>
                   )}
+                  <option value="ลาเพื่อทำหมัน">ลาเพื่อทำหมัน</option>
+                  <option value="ลาเพื่อรับราชการทหาร">ลาเพื่อรับราชการทหาร</option>
+                  <option value="ลาเพื่อฝึกอบรม">ลาเพื่อฝึกอบรม</option>
+                  <option value="ลาไม่รับค่าจ้าง">ลาไม่รับค่าจ้าง</option>
                 </select>
                 <div className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-              </div>  
+              </div>
+              {validationErrors.leaveType && (
+                <div className="flex items-center gap-1.5 mt-1.5 text-red-600 error-message">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-xs sm:text-sm font-medium">{validationErrors.leaveType}</span>
+                </div>
+              )}  
 
               {/* Show leave rules when type is selected */}
               {formData.leaveType && (
-                <div className="p-3 mt-3 border-2 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 rounded-xl sm:p-4">
-                  <div className="flex items-start gap-2 mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="flex-1">
-                      <h4 className="mb-2 text-sm font-semibold text-amber-800 sm:text-base">เงื่อนไขการลา{formData.leaveType}</h4>
-                      <ul className="space-y-1.5">
-                        {getLeaveRules(formData.leaveType).map((rule, index) => (
-                          <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-amber-900">
-                            <span className="text-amber-600 mt-0.5">•</span>
-                            <span>{rule}</span>
-                          </li>
-                        ))}
-                      </ul>
+                <>
+                  <div className="p-3 mt-3 border-2 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 rounded-xl sm:p-4">
+                    <div className="flex items-start gap-2 mb-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <h4 className="mb-2 text-sm font-semibold text-amber-800 sm:text-base">เงื่อนไขการ{formData.leaveType}</h4>
+                        <ul className="space-y-1.5">
+                          {getLeaveRules(formData.leaveType).map((rule, index) => (
+                            <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-amber-900">
+                              <span className="text-amber-600 mt-0.5">•</span>
+                              <span>{rule}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </div>              
+                </>
               )}
             </div>
           )}
 
           {/* Show late arrival rules */}
           {formData.requestType === 'lateArrival' && (
-            <div className="p-3 border-2 bg-gradient-to-br from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
-              <div className="flex items-start gap-2 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="flex-1">
-                  <h4 className="mb-2 text-sm font-semibold text-orange-800 sm:text-base">เงื่อนไขการขอเข้างานสาย</h4>
-                  <ul className="space-y-1.5">
-                    {getLeaveRules('ขอเข้างานสาย').map((rule, index) => (
-                      <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-orange-900">
-                        <span className="text-brand-primary mt-0.5">•</span>
-                        <span>{rule}</span>
-                      </li>
-                    ))}
-                  </ul>
+            <>
+              <div className="p-3 border-2 bg-gradient-to-br from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
+                <div className="flex items-start gap-2 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="mb-2 text-sm font-semibold text-orange-800 sm:text-base">เงื่อนไขการขอเข้างานสาย</h4>
+                    <ul className="space-y-1.5">
+                      {getLeaveRules('ขอเข้างานสาย').map((rule, index) => (
+                        <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-orange-900">
+                          <span className="text-brand-primary mt-0.5">•</span>
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </div>                            
+            </>
           )}
 
-          {/* Leave Mode Selection - Only show for regular leave */}
-          {formData.requestType === 'leave' && (
+          {/* Leave Mode Selection - Only show for ลาป่วย, ลากิจ, ลาพักร้อน */}
+          {formData.requestType === 'leave' && (formData.leaveType === 'ลาป่วย' || formData.leaveType === 'ลากิจ' || formData.leaveType === 'ลาพักร้อน') && (
             <div>
               <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
                 รูปแบบการลา <span className="text-red-500">*</span>
@@ -571,7 +779,7 @@ function LeaveRequestModal({ closeModal }) {
                     }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                  ลารายชั่วโมง
+                  ลาเป็นชั่วโมง
                 </button>
               </div>
             </div>
@@ -592,7 +800,7 @@ function LeaveRequestModal({ closeModal }) {
                     value={formatDateForDisplay(getTodayDate())}
                     readOnly
                     className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
-                    required
+
                   />
                   <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -629,13 +837,13 @@ function LeaveRequestModal({ closeModal }) {
                       }}
                       placeholder="เช่น 09:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
-                      required
+
                     />
                     
                     <button
                       type="button"
                       onClick={() => {
-                        setShowTimeStartPicker(!showTimeStartPicker);
+                        openTimePicker(true);
                         setShowTimeEndPicker(false);
                       }}
                       className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
@@ -648,24 +856,21 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeStartPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {hours24.map((hour) => (
                                 <button
                                   key={hour}
                                   type="button"
-                                  onClick={() => {
-                                    const currentMinute = formData.startTime?.split(':')[1] || '00';
-                                    handleTimeSelect(hour, currentMinute, true);
-                                  }}
+                                  onClick={() => handleTimeSelect(hour, tempStartTime.minute, true)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.startTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempStartTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -679,17 +884,14 @@ function LeaveRequestModal({ closeModal }) {
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {minutes.map((minute) => (
                                 <button
                                   key={minute}
                                   type="button"
-                                  onClick={() => {
-                                    const currentHour = formData.startTime?.split(':')[0] || '00';
-                                    handleTimeSelect(currentHour, minute, true);
-                                  }}
+                                  onClick={() => handleTimeSelect(tempStartTime.hour, minute, true)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.startTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempStartTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -697,6 +899,16 @@ function LeaveRequestModal({ closeModal }) {
                               ))}
                             </div>
                           </div>
+                        </div>
+                        {/* Confirm Button */}
+                        <div className="p-2 border-t border-gray-200 bg-gray-50">
+                          <button
+                            type="button"
+                            onClick={() => confirmTimeSelection(true)}
+                            className="w-full py-2 text-sm font-semibold text-white transition-colors rounded-lg bg-brand-primary hover:bg-orange-600"
+                          >
+                            ตกลง
+                          </button>
                         </div>
                       </div>
                     )}
@@ -722,13 +934,13 @@ function LeaveRequestModal({ closeModal }) {
                       }}
                       placeholder="เช่น 10:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
-                      required
+
                     />
                     
                     <button
                       type="button"
                       onClick={() => {
-                        setShowTimeEndPicker(!showTimeEndPicker);
+                        openTimePicker(false);
                         setShowTimeStartPicker(false);
                       }}
                       className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
@@ -741,24 +953,21 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeEndPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {hours24.map((hour) => (
                                 <button
                                   key={hour}
                                   type="button"
-                                  onClick={() => {
-                                    const currentMinute = formData.endTime?.split(':')[1] || '00';
-                                    handleTimeSelect(hour, currentMinute, false);
-                                  }}
+                                  onClick={() => handleTimeSelect(hour, tempEndTime.minute, false)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.endTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempEndTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -772,17 +981,14 @@ function LeaveRequestModal({ closeModal }) {
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {minutes.map((minute) => (
                                 <button
                                   key={minute}
                                   type="button"
-                                  onClick={() => {
-                                    const currentHour = formData.endTime?.split(':')[0] || '00';
-                                    handleTimeSelect(currentHour, minute, false);
-                                  }}
+                                  onClick={() => handleTimeSelect(tempEndTime.hour, minute, false)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.endTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempEndTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -790,6 +996,16 @@ function LeaveRequestModal({ closeModal }) {
                               ))}
                             </div>
                           </div>
+                        </div>
+                        {/* Confirm Button */}
+                        <div className="p-2 border-t border-gray-200 bg-gray-50">
+                          <button
+                            type="button"
+                            onClick={() => confirmTimeSelection(false)}
+                            className="w-full py-2 text-sm font-semibold text-white transition-colors rounded-lg bg-brand-primary hover:bg-orange-600"
+                          >
+                            ตกลง
+                          </button>
                         </div>
                       </div>
                     )}
@@ -802,54 +1018,40 @@ function LeaveRequestModal({ closeModal }) {
             formData.leaveMode === 'fullday' ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               {/* Start Date */}
-              <div>
-                <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
-                  วันที่เริ่มต้น <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => {
-                      setFormData({ ...formData, startDate: e.target.value });
-                      setDisplayDates({ ...displayDates, startDate: formatDateForDisplay(e.target.value) });
-                    }}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
-                    required
-                    style={{ colorScheme: 'light' }}
-                  />
-                  {displayDates.startDate && (
-                    <div className="absolute pr-2 text-sm text-gray-700 -translate-y-1/2 bg-white pointer-events-none left-3 top-1/2 sm:text-base">
-                      {displayDates.startDate}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <CustomDatePicker
+                value={formData.startDate}
+                onChange={(newDate) => {
+                  setFormData({ 
+                    ...formData, 
+                    startDate: newDate,
+                    endDate: formData.endDate && new Date(formData.endDate) < new Date(newDate) ? newDate : formData.endDate
+                  });
+                  setDisplayDates({ 
+                    ...displayDates, 
+                    startDate: formatDateForDisplay(newDate),
+                    endDate: formData.endDate && new Date(formData.endDate) < new Date(newDate) ? formatDateForDisplay(newDate) : displayDates.endDate
+                  });
+                }}
+                minDate={getMinDate()}
+                label="วันที่เริ่มต้น"
+                required={true}
+                error={validationErrors.startDate}
+                clearError={() => clearError('startDate')}
+              />
 
               {/* End Date */}
-              <div>
-                <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
-                  วันที่สิ้นสุด <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => {
-                      setFormData({ ...formData, endDate: e.target.value });
-                      setDisplayDates({ ...displayDates, endDate: formatDateForDisplay(e.target.value) });
-                    }}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
-                    required
-                    style={{ colorScheme: 'light' }}
-                  />
-                  {displayDates.endDate && (
-                    <div className="absolute pr-2 text-sm text-gray-700 -translate-y-1/2 bg-white pointer-events-none left-3 top-1/2 sm:text-base">
-                      {displayDates.endDate}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <CustomDatePicker
+                value={formData.endDate}
+                onChange={(newDate) => {
+                  setFormData({ ...formData, endDate: newDate });
+                  setDisplayDates({ ...displayDates, endDate: formatDateForDisplay(newDate) });
+                }}
+                minDate={formData.startDate || getMinDate()}
+                label="วันที่สิ้นสุด"
+                required={true}
+                error={validationErrors.endDate}
+                clearError={() => clearError('endDate')}
+              />
             </div>
             ) : (
               /* Hourly Mode - Date and Time */
@@ -865,7 +1067,7 @@ function LeaveRequestModal({ closeModal }) {
                     value={formatDateForDisplay(getTodayDate())}
                     readOnly
                     className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
-                    required
+
                   />
                   <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -916,13 +1118,13 @@ function LeaveRequestModal({ closeModal }) {
                       }}
                       placeholder="เช่น 09:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
-                      required
+
                     />
                     
                     <button
                       type="button"
                       onClick={() => {
-                        setShowTimeStartPicker(!showTimeStartPicker);
+                        openTimePicker(true);
                         setShowTimeEndPicker(false);
                       }}
                       className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
@@ -935,31 +1137,21 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeStartPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {hours24.map((hour) => (
                                 <button
                                   key={hour}
                                   type="button"
-                                  onClick={() => {
-                                    const todayDate = getTodayDate();
-                                    const currentMinute = formData.startTime?.split(':')[1] || '00';
-                                    setFormData({
-                                      ...formData,
-                                      startTime: `${hour}:${currentMinute}`,
-                                      startDate: todayDate,
-                                      endDate: todayDate
-                                    });
-                                    setShowTimeStartPicker(false);
-                                  }}
+                                  onClick={() => handleTimeSelect(hour, tempStartTime.minute, true)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.startTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempStartTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -973,24 +1165,14 @@ function LeaveRequestModal({ closeModal }) {
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {minutes.map((minute) => (
                                 <button
                                   key={minute}
                                   type="button"
-                                  onClick={() => {
-                                    const todayDate = getTodayDate();
-                                    const currentHour = formData.startTime?.split(':')[0] || '00';
-                                    setFormData({
-                                      ...formData,
-                                      startTime: `${currentHour}:${minute}`,
-                                      startDate: todayDate,
-                                      endDate: todayDate
-                                    });
-                                    setShowTimeStartPicker(false);
-                                  }}
+                                  onClick={() => handleTimeSelect(tempStartTime.hour, minute, true)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.startTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempStartTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -998,6 +1180,16 @@ function LeaveRequestModal({ closeModal }) {
                               ))}
                             </div>
                           </div>
+                        </div>
+                        {/* Confirm Button */}
+                        <div className="p-2 border-t border-gray-200 bg-gray-50">
+                          <button
+                            type="button"
+                            onClick={() => confirmTimeSelection(true)}
+                            className="w-full py-2 text-sm font-semibold text-white transition-colors rounded-lg bg-brand-primary hover:bg-orange-600"
+                          >
+                            ตกลง
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1037,13 +1229,13 @@ function LeaveRequestModal({ closeModal }) {
                       }}
                       placeholder="เช่น 17:00"
                       className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-colors"
-                      required
+
                     />
                     
                     <button
                       type="button"
                       onClick={() => {
-                        setShowTimeEndPicker(!showTimeEndPicker);
+                        openTimePicker(false);
                         setShowTimeStartPicker(false);
                       }}
                       className="absolute text-gray-500 transition-colors -translate-y-1/2 right-2 sm:right-3 top-1/2 hover:text-brand-primary"
@@ -1056,31 +1248,21 @@ function LeaveRequestModal({ closeModal }) {
 
                     {/* Custom Time Picker Dropdown */}
                     {showTimeEndPicker && (
-                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400 max-h-64">
+                      <div className="absolute z-50 w-full mt-1 overflow-hidden bg-white border-2 rounded-lg shadow-2xl border-orange-400">
                         <div className="flex">
                           {/* Hours Column */}
                           <div className="flex-1 border-r border-gray-200">
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               ชั่วโมง
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {hours24.map((hour) => (
                                 <button
                                   key={hour}
                                   type="button"
-                                  onClick={() => {
-                                    const todayDate = getTodayDate();
-                                    const currentMinute = formData.endTime?.split(':')[1] || '00';
-                                    setFormData({
-                                      ...formData,
-                                      endTime: `${hour}:${currentMinute}`,
-                                      startDate: todayDate,
-                                      endDate: todayDate
-                                    });
-                                    setShowTimeEndPicker(false);
-                                  }}
+                                  onClick={() => handleTimeSelect(hour, tempEndTime.minute, false)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.endTime?.startsWith(hour) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempEndTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {hour}
@@ -1094,24 +1276,14 @@ function LeaveRequestModal({ closeModal }) {
                             <div className="py-2 text-xs font-semibold text-center text-white bg-brand-primary sm:text-sm">
                               นาที
                             </div>
-                            <div className="overflow-y-auto max-h-56">
+                            <div className="overflow-y-auto max-h-48">
                               {minutes.map((minute) => (
                                 <button
                                   key={minute}
                                   type="button"
-                                  onClick={() => {
-                                    const todayDate = getTodayDate();
-                                    const currentHour = formData.endTime?.split(':')[0] || '00';
-                                    setFormData({
-                                      ...formData,
-                                      endTime: `${currentHour}:${minute}`,
-                                      startDate: todayDate,
-                                      endDate: todayDate
-                                    });
-                                    setShowTimeEndPicker(false);
-                                  }}
+                                  onClick={() => handleTimeSelect(tempEndTime.hour, minute, false)}
                                   className={`w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-center hover:bg-orange-50 transition-colors ${
-                                    formData.endTime?.endsWith(minute) ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                                    tempEndTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
                                   }`}
                                 >
                                   {minute}
@@ -1119,6 +1291,16 @@ function LeaveRequestModal({ closeModal }) {
                               ))}
                             </div>
                           </div>
+                        </div>
+                        {/* Confirm Button */}
+                        <div className="p-2 border-t border-gray-200 bg-gray-50">
+                          <button
+                            type="button"
+                            onClick={() => confirmTimeSelection(false)}
+                            className="w-full py-2 text-sm font-semibold text-white transition-colors rounded-lg bg-brand-primary hover:bg-orange-600"
+                          >
+                            ตกลง
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1161,69 +1343,95 @@ function LeaveRequestModal({ closeModal }) {
           <div>
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
               {formData.requestType === 'lateArrival' ? 'เหตุผลที่เข้างานสาย' : 'เหตุผลในการลา'} <span className="text-red-500">*</span>
-              {formData.requestType === 'lateArrival' && (
-                <span className="ml-1 text-xs text-brand-primary">(ต้องเป็นเหตุสุดวิสัย)</span>
-              )}
             </label>
             <textarea
               value={formData.reason}
-              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, reason: e.target.value });
+                clearError('reason');
+              }}
               rows={formData.requestType === 'lateArrival' ? 4 : 3}
               placeholder={formData.requestType === 'lateArrival' 
-                ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตุ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
+                ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตแ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
                 : "กรุณาระบุเหตุผลในการลา..."}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors resize-none"
-              required
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none transition-colors resize-none ${
+                validationErrors.reason 
+                  ? 'border-red-400 focus:border-red-500' 
+                  : 'border-gray-200 focus:border-orange-500'
+              }`}
             />
+            {validationErrors.reason && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-red-600 error-message">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs sm:text-sm font-medium">{validationErrors.reason}</span>
+              </div>
+            )}
+            
+            {/* Warning messages below reason textarea */}
+            {formData.requestType === 'lateArrival' && (
+              <div className="flex items-start gap-2 mt-2 p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-red-700 mb-1">หลักฐานที่ต้องแนบ:</p>
+                  <p className="text-xs sm:text-sm text-red-600">
+                    ควรแนบรูปภาพหลักฐาน (เช่น รูปถ่ายเหตุการณ์, ใบรับรองจากหน่วยงานที่เกี่ยวข้อง) เพื่อช่วยในการพิจารณาอนุมัติ
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {formData.requestType === 'leave' && formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday' && getTotalDays() >= 3 && (
+              <div className="flex items-start gap-2 mt-2 p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-red-700 mb-1">เอกสารที่ต้องแนบ:</p>
+                  <p className="text-xs sm:text-sm text-red-600">
+                    การลาป่วยตั้งแต่ 3 วันขึ้นไป <span className="font-semibold">จำเป็นต้องแนบใบรับรองแพทย์</span> จึงจะสามารถส่งคำขอลาได้
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Document Upload */}
           <div>
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
-              เอกสารแนบ 
+              เอกสารแนบ
               {formData.requestType === 'leave' && formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday' && getTotalDays() >= 3 && (
-                <span className="text-red-500"> * (จำเป็นสำหรับลาป่วย 3 วันขึ้นไป)</span>
-              )}
-              {formData.requestType === 'lateArrival' && (
-                <span className="ml-1 text-xs text-brand-primary">(แนะนำให้แนบหลักฐานประกอบ)</span>
+                <span className="text-red-500"> *</span>
               )}
             </label>
-
-            {/* Warning for sick leave 3+ days */}
-            {formData.requestType === 'leave' && formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday' && getTotalDays() >= 3 && (
-              <div className="p-2 mb-2 border-2 border-red-200 rounded-lg bg-red-50 sm:p-3">
-                <div className="flex items-start gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <p className="text-xs font-medium text-red-800 sm:text-sm">
-                    การลาป่วยตั้งแต่ 3 วันขึ้นไป จำเป็นต้องแนบใบรับรองแพทย์
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Info for late arrival */}
-            {formData.requestType === 'lateArrival' && (
-              <div className="p-2 mb-2 border-2 rounded-lg bg-orange-50 border-orange-200 sm:p-3">
-                <div className="flex items-start gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-xs font-medium sm:text-sm text-orange-800">
-                    การแนบรูปภาพหลักฐาน (เช่น รูปถ่ายเหตุการณ์, ใบรับรองจากหน่วยงานที่เกี่ยวข้อง) จะช่วยในการพิจารณาอนุมัติ
-                  </p>
-                </div>
-              </div>
-            )}
 
             <input
               type="file"
               multiple
               accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-              onChange={handleFileChange}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 file:cursor-pointer file:font-medium"
+              onChange={(e) => {
+                handleFileChange(e);
+                if (e.target.files.length > 0) {
+                  clearError('documents');
+                }
+              }}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm border-2 rounded-xl focus:outline-none transition-colors file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 file:cursor-pointer file:font-medium ${
+                validationErrors.documents 
+                  ? 'border-red-400 focus:border-red-500' 
+                  : 'border-gray-200 focus:border-orange-500'
+              }`}
             />
+            {validationErrors.documents && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-red-600 error-message">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs sm:text-sm font-medium">{validationErrors.documents}</span>
+              </div>
+            )}
             <p className="flex items-center gap-1 mt-1 text-xs text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

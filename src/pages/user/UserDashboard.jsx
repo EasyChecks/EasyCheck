@@ -8,6 +8,7 @@ import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 import { useCamera } from '../../hooks/useCamera'
 import { config } from '../../config'
 import { getCheckInStatus } from '../../utils/attendanceCalculator'
+import { shouldBlockCheckIn } from '../../utils/leaveAttendanceIntegration'
 
 function UserDashboard() {
   const { attendance, user, attendanceRecords } = useAuth()
@@ -33,6 +34,8 @@ function UserDashboard() {
   const [popupInfoMessage, setPopupInfoMessage] = useState('');
   const [checkingCamera, setCheckingCamera] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0) // For real-time updates
+  const [selectedShift, setSelectedShift] = useState(null) // 🆕 เก็บกะที่เลือก
+  const [leaveBlockInfo, setLeaveBlockInfo] = useState(null) // 🔄 STEP 2: เก็บข้อมูลการลา
 
   // 🔥 Real-time schedule updates (เหมือนการเข้า-ออกงาน)
   useEffect(() => {
@@ -72,6 +75,69 @@ function UserDashboard() {
     }
   }, [])
 
+  // 🔄 STEP 2: ตรวจสอบว่าวันนี้มีการลาที่อนุมัติหรือไม่
+  useEffect(() => {
+    if (user) {
+      const today = new Date().toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+      
+      const blockInfo = shouldBlockCheckIn(user.id, today)
+      setLeaveBlockInfo(blockInfo)
+      
+      console.log('🏖️ [UserDashboard] Leave check:', {
+        userId: user.id,
+        date: today,
+        blocked: blockInfo.blocked,
+        reason: blockInfo.reason,
+        leaveData: blockInfo.leaveData
+      });
+      
+      // 🔍 Debug: ตรวจสอบ leaveList
+      const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
+      const myLeaves = leaveList.filter(l => !l.userId || l.userId === user.id);
+      const approvedLeaves = myLeaves.filter(l => l.status === 'อนุมัติ');
+      const pendingLeaves = myLeaves.filter(l => l.status === 'รออนุมัติ');
+      
+      console.log('📄 [UserDashboard] Leave summary:', {
+        total: leaveList.length,
+        myLeaves: myLeaves.length,
+        approved: approvedLeaves.length,
+        pending: pendingLeaves.length,
+        approvedToday: approvedLeaves.filter(l => 
+          l.startDate <= today && l.endDate >= today
+        ).length
+      });
+    }
+  }, [user, refreshKey]) // refreshKey เพื่อให้ตรวจสอบใหม่เมื่อมีการอัพเดท
+  
+  // 🔔 STEP 2.1: ฟังการเปลี่ยนแปลงของ leaveList (เมื่อ admin อนุมัติ)
+  useEffect(() => {
+    const handleLeaveUpdate = (e) => {
+      if (e.key === 'leaveList') {
+        console.log('📢 leaveList updated, refreshing leave status...');
+        setRefreshKey(prev => prev + 1); // Force refresh
+      }
+    };
+    
+    // ฟัง storage event (cross-tab)
+    window.addEventListener('storage', handleLeaveUpdate);
+    
+    // ฟัง custom event (same tab)
+    const handleLeaveStatusUpdated = (e) => {
+      console.log('📢 Leave status updated event:', e.detail);
+      setRefreshKey(prev => prev + 1); // Force refresh
+    };
+    window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    
+    return () => {
+      window.removeEventListener('storage', handleLeaveUpdate);
+      window.removeEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    };
+  }, []);
+
   // โหลดตารางงานทั้งหมดจาก localStorage
   const allSchedules = useMemo(() => {
     const savedSchedules = localStorage.getItem('attendanceSchedules')
@@ -87,18 +153,42 @@ function UserDashboard() {
       const today = new Date()
       today.setHours(0, 0, 0, 0) // ตั้งเวลาเป็นเที่ยงคืนเพื่อเปรียบเทียบวันที่
       
-      // 🔐 User เห็นเฉพาะตารางที่ Admin สร้าง (ไม่เห็นของ Super Admin)
-      const userVisibleSchedules = schedules.filter(schedule => 
-        schedule.createdBy === 'admin' || !schedule.createdBy
-      )
+      // 🔐 User เห็นตารางที่มีชื่อตัวเอง หรือถ้าเป็น Admin ของสาขานั้น
+      const userVisibleSchedules = schedules.filter(schedule => {
+        // ถ้าตารางมีรายชื่อสมาชิก ให้เช็คว่า user อยู่ในรายชื่อหรือไม่
+        if (schedule.members && schedule.members.trim()) {
+          const memberNames = schedule.members.split(',').map(name => name.trim().toLowerCase())
+          const isInMemberList = memberNames.includes(user?.name?.toLowerCase())
+          
+          if (isInMemberList) {
+            return true // ถ้าชื่ออยู่ในรายการ ให้แสดง
+          }
+        }
+        
+        // ถ้าไม่มีชื่อในรายการสมาชิก แต่เป็น Admin ของสาขานั้น ให้แสดง
+        if (user?.role === 'admin') {
+          const userBranch = user.branch || user.provinceCode || user.employeeId?.substring(0, 3)
+          const scheduleBranch = schedule.branch
+          
+          // ถ้าตารางไม่มี branch (ตารางเก่า) ให้แสดง
+          if (!scheduleBranch) {
+            return schedule.createdBy === 'admin' || !schedule.createdBy
+          }
+          
+          // แสดงตารางของสาขาเดียวกัน
+          return scheduleBranch === userBranch
+        }
+        
+        return false
+      })
       
       // กรองตารางตาม teams (แผนก/ตำแหน่ง) และวันที่
       const userSchedules = userVisibleSchedules.filter(schedule => {
         // 🔐 ตรวจสอบว่า user อยู่ในรายชื่อสมาชิกหรือไม่
         // ⚠️ ยกเว้นตารางเก่าที่ไม่มี createdBy (ตารางตัวอย่าง)
         if (schedule.createdBy && schedule.members && schedule.members.trim()) {
-          const memberNames = schedule.members.split(',').map(name => name.trim())
-          const isInMemberList = memberNames.includes(user?.name)
+          const memberNames = schedule.members.split(',').map(name => name.trim().toLowerCase())
+          const isInMemberList = memberNames.includes(user?.name?.toLowerCase())
           
           if (!isInMemberList) {
             return false // ถ้าไม่ได้อยู่ในรายชื่อสมาชิก ไม่แสดง
@@ -151,6 +241,24 @@ function UserDashboard() {
       return []
     }
   }, [user, refreshKey])
+
+  // 🆕 หากะที่ check-in แล้ว (สำหรับแสดงสถานะ)
+  const shiftsCheckedIn = useMemo(() => {
+    const today = new Date().toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    const todayRecord = attendanceRecords.find(r => r.date === today)
+    
+    if (!todayRecord || !todayRecord.shifts) return []
+    
+    // ดึง shiftId ที่มีการ check-in แล้ว
+    return todayRecord.shifts
+      .filter(shift => shift.checkIn || shift.checkInTime)
+      .map(shift => shift.shiftId)
+      .filter(id => id !== null && id !== undefined)
+  }, [attendanceRecords])
 
   // ฟังก์ชันคำนวณระยะทาง (Haversine formula)
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -321,8 +429,27 @@ function UserDashboard() {
     }
   }, [showBuddyCheckIn, showAttendanceHistory])
 
+  // ตรวจสอบว่ามีกะที่ check-in แล้วแต่ยังไม่ checkout หรือไม่
+  const hasUncheckedOutShift = useMemo(() => {
+    if (!attendanceRecords || attendanceRecords.length === 0) return false
+    
+    const today = new Date().toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+    
+    const todayRecord = attendanceRecords.find(record => record.date === today)
+    if (!todayRecord || !todayRecord.shifts) return false
+    
+    // เช็คว่ามีกะไหนที่ check-in แล้วแต่ยังไม่ checkout
+    return todayRecord.shifts.some(shift => 
+      (shift.checkIn || shift.checkInTime) && !(shift.checkOut || shift.checkOutTime)
+    )
+  }, [attendanceRecords])
+
   // ใช้ attendance จาก context แทน mock data
-  const isCheckedIn = attendance.status === 'checked_in'
+  const isCheckedIn = attendance.status === 'checked_in' || hasUncheckedOutShift
   const buttonColor = isCheckedIn 
     ? 'bg-destructive hover:bg-destructive/90 shadow-lg' 
     : 'bg-white hover:shadow-xl hover:bg-brand-accent-soft border-2 border-brand-primary'
@@ -471,6 +598,14 @@ function UserDashboard() {
       return
     }
 
+    // 🔥 บังคับเลือกกะเมื่อมีหลายกะ
+    if (allSchedules.length > 1 && !selectedShift) {
+      e.preventDefault()
+      setPopupInfoMessage('กรุณาเลือกกะงานก่อนทำรายการ');
+      setShowInfoPopup(true);
+      return
+    }
+
     // ถ้าปิดการตรวจสอบกล้องใน config ให้ไปหน้าถ่ายรูปเลย
     if (!config.features.enableCameraCheck) {
       return // ปล่อยให้ Link ทำงานตามปกติ
@@ -485,7 +620,12 @@ function UserDashboard() {
 
     if (result.success) {
       // อนุญาตกล้องแล้ว ไปหน้าถ่ายรูป
-      navigate('/user/take-photo', { state: { schedule: allSchedules[0] } })
+      navigate('/user/take-photo', { 
+        state: { 
+          schedule: selectedShift || allSchedules[0],
+          shiftId: (selectedShift || allSchedules[0])?.time?.replace(/\./g, ':') // normalize เป็น : format
+        } 
+      })
     } else {
       // ไม่อนุญาตกล้อง แสดง error
       setPopupInfoMessage(result.error || 'ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้องในการตั้งค่าเบราว์เซอร์')
@@ -521,6 +661,53 @@ function UserDashboard() {
           </div>
         )}
         
+        {/* 🆕 UI เลือกกะ (แสดงเมื่อมีมากกว่า 1 กะ) */}
+        {allSchedules.length > 1 && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <h4 className="text-sm font-bold text-gray-800 mb-3">เลือกกะที่ต้องการเข้างาน:</h4>
+            <div className="grid grid-cols-2 gap-3">
+              {allSchedules.map((schedule, index) => {
+                const hasCheckedIn = shiftsCheckedIn.includes(schedule.id)
+                const isSelected = selectedShift?.id === schedule.id
+                
+                return (
+                  <button
+                    key={schedule.id}
+                    onClick={() => !hasCheckedIn && setSelectedShift(schedule)}
+                    disabled={hasCheckedIn}
+                    className={`p-3 rounded-lg text-left border-2 transition-all ${
+                      isSelected 
+                        ? 'bg-brand-primary text-white border-brand-primary shadow-md' 
+                        : hasCheckedIn
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-gray-800 border-gray-300 hover:border-brand-primary hover:bg-orange-50'
+                    }`}
+                  >
+                    <div className="font-bold text-sm mb-1">กะที่ {index + 1}</div>
+                    <div className={`text-xs ${isSelected ? 'text-white/90' : 'text-gray-600'}`}>
+                      {schedule.team}
+                    </div>
+                    <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
+                      {schedule.time}
+                    </div>
+                    {hasCheckedIn && (
+                      <div className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                        เข้างานแล้ว
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            {!selectedShift && (
+              <p className="text-xs text-gray-500 mt-2 text-center">กรุณาเลือกกะก่อนเข้างาน</p>
+            )}
+          </div>
+        )}
+        
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -537,7 +724,7 @@ function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            {/* ปุ่มเช็คอิน/เช็คเอาท์ - พร้อมการขออนุญาตกล้อง + popup เตือน */}
+            {/* 🔄 STEP 2: แสดงปุ่ม disabled ถ้ามีการลา */}
             {checkingCamera ? (
               <button
                 disabled
@@ -548,14 +735,37 @@ function UserDashboard() {
                   <span className='text-black'>กำลังตรวจสอบกล้อง...</span>
                 </div>
               </button>
+            ) : leaveBlockInfo?.blocked ? (
+              <button
+                disabled
+                className="bg-gray-300 text-gray-500 px-8 py-3 rounded-full font-bold shadow-md cursor-not-allowed opacity-60"
+                title={leaveBlockInfo.reason}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  ไม่สามารถเข้างานได้
+                </div>
+              </button>
             ) : (
               <Link 
                 to={isButtonDisabled ? "#" : "/user/take-photo"}
-                state={{ schedule: allSchedules[0] }}
+                state={{ 
+                  schedule: selectedShift || allSchedules[0], // 🆕 ใช้ selectedShift ถ้ามี
+                  shiftId: (selectedShift || allSchedules[0])?.id // 🆕 ส่ง shiftId
+                }}
                 onClick={(e) => {
                   if (isButtonDisabled) {
                     e.preventDefault();
                     setPopupInfoMessage('คุณต้องอยู่ในพื้นที่อนุญาตเท่านั้นจึงจะสามารถเช็คอินได้');
+                    setShowInfoPopup(true);
+                    return;
+                  }
+                  // 🆕 เช็คว่าต้องเลือกกะก่อน (ถ้ามี > 1 กะ)
+                  if (allSchedules.length > 1 && !selectedShift) {
+                    e.preventDefault();
+                    setPopupInfoMessage('กรุณาเลือกกะที่ต้องการเข้างานก่อน');
                     setShowInfoPopup(true);
                     return;
                   }
@@ -710,7 +920,16 @@ function UserDashboard() {
               ) : (
                 <div className="space-y-4">
                   {attendanceRecords.map((record, index) => {
-                    const recordDate = new Date(record.date)
+                    // แปลง Thai date format (DD/MM/YYYY+543) เป็น JS Date
+                    let recordDate;
+                    if (record.date && record.date.includes('/')) {
+                      const [day, month, yearThai] = record.date.split('/');
+                      const yearAD = parseInt(yearThai) - 543;
+                      recordDate = new Date(yearAD, parseInt(month) - 1, parseInt(day));
+                    } else {
+                      recordDate = new Date(record.date);
+                    }
+                    
                     const dateStr = recordDate.toLocaleDateString('th-TH', {
                       weekday: 'long',
                       year: 'numeric',

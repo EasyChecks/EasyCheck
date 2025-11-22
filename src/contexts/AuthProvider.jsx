@@ -6,8 +6,13 @@ import {
   handleConsecutiveShifts,
   autoCheckoutAtMidnight,
   handleCrossMidnightShift,
-  hasCheckedInToday
+  hasCheckedInToday,
+  hasCheckedInForShift // 🆕 เพิ่มฟังก์ชันตรวจสอบ per-shift
 } from '../utils/attendanceLogic'
+import { 
+  syncApprovedLeavesToAttendance, 
+  setupLeaveApprovalListener 
+} from '../utils/leaveAttendanceIntegration'
 
 const getOrCreateTabId = () => {
   let tabId = sessionStorage.getItem('tabId')
@@ -31,13 +36,45 @@ export const AuthProvider = ({ children }) => {
   })
   // เก็บประวัติการลงเวลารายวัน
   const [attendanceRecords, setAttendanceRecords] = useState([])
-  // สถิติการลงเวลา
+  // สถิติการลงเวลา (รวม initial stats จาก usersData)
   const [attendanceStats, setAttendanceStats] = useState({
     totalWorkDays: 0,
     onTime: 0,
     late: 0,
     absent: 0
   })
+
+  // 🔥 Helper function: คำนวณ stats จาก records + historical baseline
+  const calculateStatsWithBaseline = (records, userId) => {
+    const currentStats = calculateAttendanceStats(records)
+    
+    // 🔥 ดึง historical baseline จาก usersData
+    const usersDataJson = localStorage.getItem('usersData')
+    if (usersDataJson && userId) {
+      try {
+        const allUsers = JSON.parse(usersDataJson)
+        const userDataEntry = allUsers.find(u => u.id === userId)
+        
+        if (userDataEntry?.timeSummary) {
+          return {
+            totalWorkDays: (userDataEntry.timeSummary.totalWorkDays || 0) + currentStats.totalWorkDays,
+            onTime: (userDataEntry.timeSummary.onTime || 0) + currentStats.onTime,
+            late: (userDataEntry.timeSummary.late || 0) + currentStats.late,
+            absent: (userDataEntry.timeSummary.absent || 0) + currentStats.absent,
+            leave: (userDataEntry.timeSummary.leave || 0) + currentStats.leave,
+            totalWorkHours: currentStats.totalWorkHours,
+            averageCheckInTime: currentStats.averageCheckInTime,
+            totalShifts: currentStats.totalShifts,
+            averageShiftsPerDay: currentStats.averageShiftsPerDay
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load historical baseline:', error)
+      }
+    }
+    
+    return currentStats
+  }
 
   useEffect(() => {
     try {
@@ -54,8 +91,10 @@ export const AuthProvider = ({ children }) => {
           if (savedRecords) {
             const records = JSON.parse(savedRecords)
             setAttendanceRecords(records)
-            const stats = calculateAttendanceStats(records)
-            setAttendanceStats(stats)
+            
+            // 🔥 ใช้ helper function คำนวณ stats + baseline
+            const statsWithBaseline = calculateStatsWithBaseline(records, userData.id)
+            setAttendanceStats(statsWithBaseline)
           } else {
             // ไม่มีข้อมูล ให้เริ่มต้นเป็น array ว่าง
             setAttendanceRecords([])
@@ -100,6 +139,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, [tabId])
 
+  // 🔄 STEP 1: Sync การลาที่อนุมัติแล้ว กับ attendance records
+  useEffect(() => {
+    if (user) {
+      // Sync การลาทั้งหมดที่อนุมัติแล้ว
+      syncApprovedLeavesToAttendance(user.id, user.name)
+      
+      // Setup listener สำหรับการอนุมัติคำขอลาใหม่
+      const cleanup = setupLeaveApprovalListener(user.id, user.name)
+      
+      return cleanup
+    }
+  }, [user])
+
   useEffect(() => {
     const handleStorageChange = (e) => {
       // 🔥 ฟังการเปลี่ยนแปลงของ attendanceRecords ของ user นี้
@@ -107,8 +159,8 @@ export const AuthProvider = ({ children }) => {
         if (e.newValue) {
           const records = JSON.parse(e.newValue)
           setAttendanceRecords(records)
-          const stats = calculateAttendanceStats(records)
-          setAttendanceStats(stats)
+          const statsWithBaseline = calculateStatsWithBaseline(records, user.id)
+          setAttendanceStats(statsWithBaseline)
         }
       }
       // 🔥 Sync attendance state across tabs
@@ -148,8 +200,8 @@ export const AuthProvider = ({ children }) => {
           // เปรียบเทียบว่าข้อมูลเปลี่ยนหรือไม่
           if (JSON.stringify(records) !== JSON.stringify(attendanceRecords)) {
             setAttendanceRecords(records)
-            const stats = calculateAttendanceStats(records)
-            setAttendanceStats(stats)
+            const statsWithBaseline = calculateStatsWithBaseline(records, user.id)
+            setAttendanceStats(statsWithBaseline)
           }
         }
       }
@@ -307,9 +359,8 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkIn = (time, photo, workTimeStart = '08:00', autoCheckOutFlag = false, locationInfo = {}) => {
+  const checkIn = (time, photo, workTimeStart, autoCheckOutFlag = false, locationInfo = {}, shiftId = null) => {
     try {
-      const today = new Date().toISOString().split('T')[0]
       const todayThaiFormat = new Date().toLocaleDateString('th-TH', {
         day: '2-digit',
         month: '2-digit',
@@ -317,8 +368,16 @@ export const AuthProvider = ({ children }) => {
       })
       
       // 🔥 ตรวจสอบว่า check-in ไปแล้วหรือยัง
-      if (hasCheckedInToday(attendanceRecords, todayThaiFormat)) {
-        throw new Error('คุณได้ check-in ไปแล้ววันนี้')
+      // ถ้ามี shiftId ใช้ hasCheckedInForShift (รองรับหลายกะ)
+      // ถ้าไม่มี shiftId ใช้ hasCheckedInToday (backward compatible - กะเดียว)
+      if (shiftId) {
+        if (hasCheckedInForShift(attendanceRecords, todayThaiFormat, shiftId)) {
+          throw new Error('คุณได้ check-in กะนี้ไปแล้ว')
+        }
+      } else {
+        if (hasCheckedInToday(attendanceRecords, todayThaiFormat)) {
+          throw new Error('คุณได้ check-in ไปแล้ววันนี้')
+        }
       }
       
       // 🎯 ใช้ logic ใหม่: calculateAttendanceStatus
@@ -354,7 +413,7 @@ export const AuthProvider = ({ children }) => {
         const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
         if (!finalAutoCheckOut) {
           localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
-          localStorage.setItem(`${userAttendanceKey}_date`, today)
+          localStorage.setItem(`${userAttendanceKey}_date`, todayThaiFormat)
         } else {
           localStorage.removeItem(userAttendanceKey)
           localStorage.removeItem(`${userAttendanceKey}_date`)
@@ -372,6 +431,7 @@ export const AuthProvider = ({ children }) => {
         updateUserAttendanceInUsersData(time, time, photo, photo, status, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
         
         const shiftRecord = {
+          shiftId: shiftId || null, // 🆕 shiftId (ใช้ schedule.time เป็น identifier)
           checkIn: time,
           checkOut: time,
           checkInPhoto: photo,
@@ -382,7 +442,7 @@ export const AuthProvider = ({ children }) => {
         }
         
         const updatedRecords = [...attendanceRecords]
-        const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
+        const existingDayIndex = updatedRecords.findIndex(r => r.date === todayThaiFormat)
         
         if (existingDayIndex >= 0) {
           const existingDay = updatedRecords[existingDayIndex]
@@ -394,7 +454,7 @@ export const AuthProvider = ({ children }) => {
           updatedRecords[existingDayIndex] = existingDay
         } else {
           updatedRecords.push({
-            date: today,
+            date: todayThaiFormat,
             shifts: [shiftRecord]
           })
         }
@@ -414,7 +474,49 @@ export const AuthProvider = ({ children }) => {
           detail: { userId: user?.id, stats, records: updatedRecords } 
         }))
       } else {
-        // ปกติ: บันทึกแค่ check-in
+        // 🔥 ปกติ: บันทึก check-in อย่างเดียว
+        const shiftRecord = {
+          shiftId: shiftId || null, // 🆕 shiftId (ใช้ schedule.time เป็น identifier)
+          checkIn: time,
+          checkInPhoto: photo,
+          status: status,
+          lateMinutes: lateMinutes || 0,
+          message
+        }
+        
+        const updatedRecords = [...attendanceRecords]
+        const existingDayIndex = updatedRecords.findIndex(r => r.date === todayThaiFormat)
+        
+        if (existingDayIndex >= 0) {
+          const existingDay = updatedRecords[existingDayIndex]
+          if (!existingDay.shifts) {
+            existingDay.shifts = [shiftRecord]
+          } else {
+            existingDay.shifts.push(shiftRecord)
+          }
+          updatedRecords[existingDayIndex] = existingDay
+        } else {
+          updatedRecords.push({
+            date: todayThaiFormat,
+            shifts: [shiftRecord]
+          })
+        }
+        
+        updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
+        setAttendanceRecords(updatedRecords)
+        
+        if (user) {
+          const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
+          localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
+        }
+        
+        const stats = calculateAttendanceStats(updatedRecords)
+        setAttendanceStats(stats)
+        
+        window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
+          detail: { userId: user?.id, stats, records: updatedRecords } 
+        }))
+        
         updateUserAttendanceInUsersData(time, null, photo, null, status, checkInGPS, checkInAddress, null, null, checkInDistance, null)
       }
     } catch (error) {
@@ -423,18 +525,55 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkOut = (time, photo, locationInfo = {}) => {
+  const checkOut = (time, photo, locationInfo = {}, shiftId = null) => {
     try {
-      const today = new Date().toISOString().split('T')[0]
+      const todayThaiFormat = new Date().toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+      
+      // 🔥 หากะที่ต้องการ checkout
+      const todayRecord = attendanceRecords.find(r => r.date === todayThaiFormat)
+      if (!todayRecord || !todayRecord.shifts || todayRecord.shifts.length === 0) {
+        throw new Error('ไม่พบข้อมูลการ check-in')
+      }
+      
+      // หากะที่ยังไม่ checkout
+      let targetShiftIndex = -1
+      if (shiftId) {
+        // ลองหาด้วย shiftId ที่ตรงทั้ง : และ . format
+        const normalizedShiftId = shiftId.replace(/\./g, ':')
+        targetShiftIndex = todayRecord.shifts.findIndex(s => {
+          const sId = (s.shiftId || '').replace(/\./g, ':')
+          return sId === normalizedShiftId && !s.checkOut && !s.checkOutTime
+        })
+        
+        // ถ้าหาไม่เจอ ลอง fallback หากะแรกที่ยังไม่ checkout
+        if (targetShiftIndex === -1) {
+          targetShiftIndex = todayRecord.shifts.findIndex(s => !s.checkOut && !s.checkOutTime)
+        }
+      } else {
+        // ถ้าไม่ระบุ shiftId ใช้กะแรกที่ยังไม่ checkout (backward compatible)
+        targetShiftIndex = todayRecord.shifts.findIndex(s => 
+          !s.checkOut && !s.checkOutTime
+        )
+      }
+      
+      if (targetShiftIndex === -1) {
+        throw new Error(shiftId ? 'ไม่พบกะที่ต้องการออกงาน หรือออกงานไปแล้ว' : 'ไม่พบกะที่ยังไม่ออกงาน')
+      }
+      
+      const targetShift = todayRecord.shifts[targetShiftIndex]
       
       // 🔥 ตรวจสอบกะข้ามวัน - ถ้าเลยเที่ยงให้ตัดอัตโนมัติ
       let finalCheckoutTime = time
       let isAutoCheckout = false
       let autoCheckoutReason = null
       
-      if (user?.shift && attendance.checkInTime) {
+      if (user?.shift && targetShift.checkIn) {
         const checkInRecord = {
-          time: attendance.checkInTime,
+          time: targetShift.checkIn,
           location: locationInfo.address || 'อยู่ในพื้นที่',
           address: locationInfo.address || 'ในพื้นที่อนุญาต'
         }
@@ -469,56 +608,28 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      const newAttendance = {
-        ...attendance,
-        checkOutTime: finalCheckoutTime,
-        status: 'not_checked_in',
-        checkOutPhoto: photo,
-        isAutoCheckout,
-        autoCheckoutReason
-      }
-      
-      const shiftRecord = {
-        checkIn: attendance.checkInTime,
-        checkOut: finalCheckoutTime,
-        checkInPhoto: attendance.checkInPhoto,
-        checkOutPhoto: photo,
-        status: attendance.checkInStatus || 'on_time',
-        lateMinutes: attendance.lateMinutes || 0,
-        message: attendance.message || '',
-        isAutoCheckout,
-        autoCheckoutReason
-      }
-      
+      // 🔥 อัพเดทข้อมูล checkout ในกะที่ถูกต้อง
       const updatedRecords = [...attendanceRecords]
-      const existingDayIndex = updatedRecords.findIndex(r => r.date === today)
+      const existingDayIndex = updatedRecords.findIndex(r => r.date === todayThaiFormat)
       
       if (existingDayIndex >= 0) {
-        const existingDay = updatedRecords[existingDayIndex]
-        if (!existingDay.shifts) {
-          existingDay.shifts = [{
-            checkIn: existingDay.checkIn,
-            checkOut: existingDay.checkOut,
-            status: existingDay.status
-          }]
-          delete existingDay.checkIn
-          delete existingDay.checkOut
-          delete existingDay.status
+        // อัพเดทกะที่ checkout
+        updatedRecords[existingDayIndex].shifts[targetShiftIndex] = {
+          ...targetShift,
+          checkOut: finalCheckoutTime,
+          checkOutPhoto: photo,
+          isAutoCheckout,
+          autoCheckoutReason
         }
-        existingDay.shifts.push(shiftRecord)
-        updatedRecords[existingDayIndex] = existingDay
       } else {
-        updatedRecords.push({
-          date: today,
-          shifts: [shiftRecord]
-        })
+        throw new Error('ไม่พบข้อมูลวันนี้ในระบบ')
       }
       
       updatedRecords.sort((a, b) => new Date(b.date) - new Date(a.date))
       
       setAttendanceRecords(updatedRecords)
       
-      // 🔥 บันทึก attendanceRecords แยกตาม user (ชื่อชัดเจน)
+      // 🔥 บันทึก attendanceRecords แยกตาม user
       if (user) {
         const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
         localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
@@ -527,18 +638,37 @@ export const AuthProvider = ({ children }) => {
       const stats = calculateAttendanceStats(updatedRecords)
       setAttendanceStats(stats)
       
-      setAttendance(newAttendance)
+      // 🔥 เช็คว่าทุกกะ checkout หมดหรือยัง
+      const allShiftsCheckedOut = updatedRecords[existingDayIndex].shifts.every(s => 
+        s.checkOut || s.checkOutTime
+      )
       
-      // 🔥 รีเซ็ต attendance state หลัง checkout (เพื่อให้วันพรุ่งนี้เริ่มใหม่)
-      if (user) {
-        const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
-        localStorage.removeItem(userAttendanceKey) // ลบ state เพราะออกงานแล้ว
-        localStorage.removeItem(`${userAttendanceKey}_date`) // ลบวันที่ด้วย
+      // ถ้าทุกกะ checkout แล้ว รีเซ็ต attendance state
+      if (allShiftsCheckedOut) {
+        setAttendance({ status: 'not_checked_in' })
+        
+        if (user) {
+          const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
+          localStorage.removeItem(userAttendanceKey)
+          localStorage.removeItem(`${userAttendanceKey}_date`)
+        }
+      } else {
+        // ถ้ายังมีกะที่ไม่ checkout ให้รักษา status checked_in ไว้
+        setAttendance({ status: 'checked_in' })
       }
       
       // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
       const { gps: checkOutGPS, address: checkOutAddress, distance: checkOutDistance } = locationInfo
-      updateUserAttendanceInUsersData(attendance.checkInTime, time, attendance.checkInPhoto, photo, shiftRecord.status, null, null, checkOutGPS, checkOutAddress, null, checkOutDistance)
+      updateUserAttendanceInUsersData(
+        targetShift.checkIn, 
+        finalCheckoutTime, 
+        targetShift.checkInPhoto, 
+        photo, 
+        targetShift.status, 
+        null, null, 
+        checkOutGPS, checkOutAddress, 
+        null, checkOutDistance
+      )
       
       // ✅ Trigger custom event สำหรับ real-time sync
       window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
@@ -546,7 +676,7 @@ export const AuthProvider = ({ children }) => {
       }))
     } catch (error) {
       console.error('Error in checkOut:', error)
-      throw new Error('ไม่สามารถบันทึกเวลาออกงานได้ กรุณาลองใหม่อีกครั้ง')
+      throw new Error(error.message || 'ไม่สามารถบันทึกเวลาออกงานได้ กรุณาลองใหม่อีกครั้ง')
     }
   }
 

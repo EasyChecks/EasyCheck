@@ -5,6 +5,7 @@ import { useLocations } from '../../../contexts/LocationContext';
 import { useEvents } from '../../../contexts/EventContext';
 import { compressImage, getBase64Size } from '../../../utils/imageCompressor';
 import { calculateAttendanceStatus } from '../../../utils/attendanceLogic';
+import { shouldBlockCheckIn } from '../../../utils/leaveAttendanceIntegration';
 
 function TakePhoto() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ function TakePhoto() {
   const [currentLocation, setCurrentLocation] = useState(null); // 🆕 GPS location
 
   const schedule = location.state?.schedule || { time: '09:00 - 18:00' };
+  const shiftId = location.state?.shiftId || null; // 🆕 รับ shiftId จาก UserDashboard
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -199,6 +201,21 @@ function TakePhoto() {
     const now = new Date();
     const currentTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
     
+    // ✋ STEP 3: ตรวจสอบว่ามีการลาที่อนุมัติหรือไม่
+    const today = new Date().toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    
+    const blockInfo = shouldBlockCheckIn(user.id, today)
+    
+    if (blockInfo.blocked) {
+      setPopupInfoMessage(`❌ ${blockInfo.reason}\n\nคุณไม่สามารถ check-in ได้`);
+      setShowInfoPopup(true);
+      return;
+    }
+    
     console.log('🔍 Confirm Photo Debug:', {
       now: now.toLocaleTimeString('th-TH'),
       currentTime,
@@ -246,6 +263,9 @@ function TakePhoto() {
       // 🆕 Get nearest location info with distance
       const locationInfo = findNearestPlace() || { gps: '13.7563,100.5018', address: 'ในพื้นที่อนุญาต', distance: '-' };
 
+      // 🔥 Validate shiftId for multi-shift scenario
+      const finalShiftId = shiftId || null;
+
       if (attendance.status === 'not_checked_in') {
         // 🆕 ใช้ logic ใหม่: calculateAttendanceStatus
         const [startTimeStr, endTimeStr] = schedule.time.split(' - ');
@@ -262,23 +282,23 @@ function TakePhoto() {
         // แสดง message ตามสถานะ (status จาก ATTENDANCE_CONFIG: 'on_time', 'late', 'absent')
         if (status === 'on_time') {
           message = `เข้างานตรงเวลา ${currentTime} น.`;
-          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
         } else if (status === 'late') {
           message = `มาสาย ${lateMinutes} นาที (${currentTime} น.)`;
-          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
         } else if (status === 'absent') {
           if (shouldAutoCheckout) {
             // 🔥 ขาดงาน - เข้างานสายเกินขีดจำกัด → Auto check-out ทันที
             message = `ขาดงาน - เข้างานสายเกินกำหนด (${currentTime} น.)\nออกงานอัตโนมัติแล้ว`;
-            checkIn(currentTime, photo, workTimeStart, true, locationInfo); // true = auto checkout
+            checkIn(currentTime, photo, workTimeStart, true, locationInfo, finalShiftId);
           } else {
             message = `ขาดงาน - ไม่ได้เข้างาน (${currentTime} น.)`;
-            checkIn(currentTime, photo, workTimeStart, false, locationInfo);
+            checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
           }
         } else {
           // Fallback ถ้า status ไม่ตรงกับที่คาดหวัง
           message = statusMessage || `เข้างาน ${currentTime} น.`;
-          checkIn(currentTime, photo, workTimeStart, false, locationInfo);
+          checkIn(currentTime, photo, workTimeStart, false, locationInfo, finalShiftId);
         }
         
         console.log('📝 Final Message:', message);
@@ -292,7 +312,7 @@ function TakePhoto() {
           return;
         }
         
-        checkOut(currentTime, photo, locationInfo);
+        checkOut(currentTime, photo, locationInfo, finalShiftId);
         setPopupMessage(`ออกงานเวลา ${currentTime} น.`);
       }
     } catch (error) {
