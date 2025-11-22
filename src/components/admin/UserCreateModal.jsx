@@ -140,11 +140,11 @@ const UserCreateModal = memo(function UserCreateModal({
 
   // eslint-disable-next-line no-unused-vars
   const branches = [
-    { code: '101', name: 'สำนักงานใหญ่' },
-    { code: '102', name: 'สาขาที่ 2' },
-    { code: '103', name: 'สาขาที่ 3' },
-    { code: '201', name: 'สาขาย่อย 1' },
-    { code: '202', name: 'สาขาย่อย 2' },
+    { code: '101', name: 'รหัสสาขากรุงเทพ' },
+    // { code: '102', name: 'สาขาที่ 2' },
+    // { code: '103', name: 'สาขาที่ 3' },
+    { code: '201', name: 'รหัสสาขาเชียงใหม่' },
+    { code: '301', name: 'รหัสสาขาภูเก็ต' },
   ];
 
   const bloodTypes = ['A', 'B', 'AB', 'O'];
@@ -246,7 +246,7 @@ const UserCreateModal = memo(function UserCreateModal({
     if (!formData.position) newErrors.position = 'กรุณาเลือกตำแหน่ง';
     if (!formData.nationalId.trim()) newErrors.nationalId = 'กรุณากรอกเลขบัตรประชาชน';
     if (!formData.provinceCode) newErrors.provinceCode = 'กรุณาเลือกจังหวัด';
-    if (!formData.branchCode) newErrors.branchCode = 'กรุณาเลือกสาขา';
+    if (!formData.branchCode) newErrors.branchCode = 'กรุณาเลือกรหัสสาขา';
 
     // Validate email format
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -363,7 +363,8 @@ const UserCreateModal = memo(function UserCreateModal({
       // ประวัติการทำงาน
       workHistory: formData.workHistory.length > 0 ? formData.workHistory : undefined,
       // การศึกษา
-      education: formData.education.length > 0 ? formData.education : undefined,
+      // ใช้ฟิลด์ 'educations' ที่เก็บรายการการศึกษาใน state (เดิมพิมพ์ผิดเป็น education)
+      education: formData.educations && formData.educations.length > 0 ? formData.educations : undefined,
       // ทักษะ
       skills: formData.skills.length > 0 ? formData.skills : undefined,
       // เริ่มต้น timeSummary เป็น 0
@@ -439,7 +440,7 @@ const UserCreateModal = memo(function UserCreateModal({
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={handleClose}
+      // onClick={handleClose}
     >
       <div 
         className="bg-white rounded-2xl shadow-sm w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
@@ -620,9 +621,9 @@ const UserCreateModal = memo(function UserCreateModal({
             </div>
 
             {/* สาขา */}
-            {/* <div className="disabled">
+            <div className="disabled">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                สาขา <span className="text-red-500">*</span>
+                รหัสสาขา <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.branchCode}
@@ -631,13 +632,13 @@ const UserCreateModal = memo(function UserCreateModal({
                   errors.branchCode ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
-                <option value="">เลือกสาขา</option>
+                <option value="">เลือกรหัสสาขา</option>
                 {branches.map(b => (
                   <option key={b.code} value={b.code}>{b.name} ({b.code})</option>
                 ))}
               </select>
               {errors.branchCode && <p className="text-red-500 text-sm mt-1">{errors.branchCode}</p>}
-            </div> */}
+            </div>
 
             {/* Preview รหัสพนักงาน */}
             {previewEmployeeId && (

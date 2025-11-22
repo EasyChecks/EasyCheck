@@ -216,7 +216,14 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
       groupHealthInsurance: row.groupHealthInsurance || '', // 🆕 เปลี่ยนจาก healthInsurance
       profileImage: row.profileImage || `https://i.pravatar.cc/300?img=${Math.floor(Math.random() * 70) + 1}`, // 🆕 random avatar
       skills: row.skills ? row.skills.split('|').map(s => s.trim()).filter(Boolean) : [], // 🆕 filter empty
-      education: row.education ? row.education.split('|').map(e => e.trim()).filter(Boolean) : [], // 🆕 filter empty
+      // Parse education entries: support both plain strings and 'institution;degree;year' structured entries
+      education: (row.education || '').split('|').map(e => e.trim()).filter(Boolean).map(e => {
+        const parts = e.split(';').map(p => p.trim());
+        if (parts.length === 3) {
+          return { institution: parts[0], degree: parts[1], year: parts[2] };
+        }
+        return e;
+      }),
       certifications: row.certifications ? row.certifications.split('|').map(c => c.trim()).filter(Boolean) : [], // 🆕 เพิ่ม certifications
       workHistory: row.workHistory ? 
         row.workHistory.split('|').map(w => {
@@ -247,6 +254,25 @@ export const processCsvUsers = (csvData, existingUsers = []) => {
         avgCheckOut: '17:00'
       }
     };
+
+    // Compute age from birthDate if not provided (support YYYY-MM-DD and DD/MM/YYYY formats)
+    if (!normalUser.age && normalUser.birthDate) {
+      const parseBirthYear = (b) => {
+        if (!b) return NaN;
+        // ISO format 2020-01-01
+        if (/^\d{4}-\d{2}-\d{2}$/.test(b)) return new Date(b).getFullYear();
+        // Thai DD/MM/YYYY
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(b)) {
+          const parts = b.split('/');
+          return parseInt(parts[2], 10);
+        }
+        const d = new Date(b);
+        return isNaN(d.getTime()) ? NaN : d.getFullYear();
+      };
+
+      const birthYear = parseBirthYear(normalUser.birthDate);
+      if (!isNaN(birthYear)) normalUser.age = String(new Date().getFullYear() - birthYear);
+    }
 
     processedUsers.push(normalUser);
     currentId++;

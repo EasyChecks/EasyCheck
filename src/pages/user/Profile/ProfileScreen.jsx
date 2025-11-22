@@ -30,14 +30,24 @@ function ProfileScreen() {
       ? user.workHistory.map(w => `${w.period}: ${w.position} ที่ ${w.company}`).join('\n')
       : '';
     
-    // แปลง skills array เป็น string
+    // แปลง skills array เป็น string (รองรับทั้ง object และ string)
+    const formatSkill = (skill) => {
+      if (!skill) return '';
+      if (typeof skill === 'string') return skill;
+      return `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`;
+    };
     const skillsText = user?.skills && Array.isArray(user.skills)
-      ? user.skills.join(', ')
+      ? user.skills.map(formatSkill).join(', ')
       : '';
     
-    // แปลง education array เป็น string
+    // แปลง education array เป็น string (รองรับทั้ง object และ string)
+    const formatEducation = (edu) => {
+      if (!edu) return '';
+      if (typeof edu === 'string') return edu;
+      return `${edu.degree || edu.level || ''}${edu.institution ? ' - ' + edu.institution : ''}${edu.year ? ' (' + edu.year + ')' : ''}`;
+    };
     const educationText = user?.education && Array.isArray(user.education)
-      ? user.education.join(', ')
+      ? user.education.map(formatEducation).join(', ')
       : 'ปริญญาตรี';
     
     // แปลง certifications array เป็น string
@@ -129,12 +139,22 @@ function ProfileScreen() {
               ? updatedUser.workHistory.map(w => `${w.period}: ${w.position} ที่ ${w.company}`).join('\n')
               : '';
             
+            const formatSkill = (skill) => {
+              if (!skill) return '';
+              if (typeof skill === 'string') return skill;
+              return `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`;
+            };
             const skillsText = updatedUser.skills && Array.isArray(updatedUser.skills)
-              ? updatedUser.skills.join(', ')
+              ? updatedUser.skills.map(formatSkill).join(', ')
               : '';
             
+            const formatEducation = (edu) => {
+              if (!edu) return '';
+              if (typeof edu === 'string') return edu;
+              return `${edu.degree || edu.level || ''}${edu.institution ? ' - ' + edu.institution : ''}${edu.year ? ' (' + edu.year + ')' : ''}`;
+            };
             const educationText = updatedUser.education && Array.isArray(updatedUser.education)
-              ? updatedUser.education.join(', ')
+              ? updatedUser.education.map(formatEducation).join(', ')
               : 'ปริญญาตรี';
             
             const certificationsText = updatedUser.certifications && Array.isArray(updatedUser.certifications)
