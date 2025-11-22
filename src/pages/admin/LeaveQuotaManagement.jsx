@@ -30,6 +30,7 @@ function LeaveQuotaManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterBranch, setFilterBranch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const [quotaSettings, setQuotaSettings] = useState(() => {
@@ -149,6 +150,15 @@ function LeaveQuotaManagement() {
   const getFilteredUsers = () => {
     let filtered = usersData.filter(u => u.role === 'user' || u.role === 'manager');
     
+    // กรองตามสาขา - Super Admin เห็นทั้งหมด, Admin เห็นเฉพาะสาขาตัวเอง
+    if (user.role === 'admin') {
+      // Admin เห็นเฉพาะสาขาตัวเอง
+      filtered = filtered.filter(u => u.branchCode === user.branchCode);
+    } else if (filterBranch) {
+      // Super Admin สามารถเลือกกรองตามสาขา
+      filtered = filtered.filter(u => u.branchCode === filterBranch);
+    }
+    
     // กรองตามแผนก
     if (filterDepartment) {
       filtered = filtered.filter(u => u.department === filterDepartment);
@@ -166,8 +176,17 @@ function LeaveQuotaManagement() {
     return filtered;
   };
 
-  // ดึงรายชื่อแผนกทั้งหมด
+  // ดึงรายชื่อแผนกและสาขาทั้งหมด
   const departments = [...new Set(usersData.map(u => u.department))].filter(Boolean);
+  const branches = [...new Set(usersData.map(u => u.branchCode))].filter(Boolean).sort();
+  
+  // Mapping รหัสสาขากับชื่อจังหวัด
+  const branchNames = {
+    '101': 'กรุงเทพฯ สาขาที่ 1',
+    '102': 'กรุงเทพฯ สาขาที่ 2',
+    '201': 'เชียงใหม่',
+    '301': 'ภูเก็ต'
+  };
 
   // Handle user selection
   const handleSelectUser = (user) => {
@@ -274,9 +293,9 @@ function LeaveQuotaManagement() {
             ค้นหาและเลือกพนักงาน
           </label>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
             {/* Search Combobox */}
-            <div className="md:col-span-2 relative">
+            <div className={`${user?.role === 'superadmin' ? 'md:col-span-2' : 'md:col-span-3'} relative`}>
               <div className="relative">
                 <input
                   type="text"
@@ -317,7 +336,9 @@ function LeaveQuotaManagement() {
                         <div className="sticky top-0 bg-gray-50 px-4 py-2 border-b border-gray-200">
                           <p className="text-xs text-gray-600 font-semibold">
                             พบ {getFilteredUsers().length} คน
-                            {filterDepartment && ` ในแผนก ${filterDepartment}`}
+                            {filterBranch && ` • ${branchNames[filterBranch] || `สาขา ${filterBranch}`}`}
+                            {filterDepartment && ` • แผนก ${filterDepartment}`}
+                            {!filterBranch && !filterDepartment && user?.role === 'admin' && ` • ${branchNames[user.branchCode] || `สาขา ${user.branchCode}`}`}
                           </p>
                         </div>
                         {getFilteredUsers().map(user => (
@@ -335,6 +356,7 @@ function LeaveQuotaManagement() {
                                 </p>
                                 <p className="text-sm text-gray-500">
                                   {user.employeeId} - {user.department}
+                                  {user.branchCode && ` (${branchNames[user.branchCode] || `สาขา ${user.branchCode}`})`}
                                 </p>
                               </div>
                               {selectedUser?.id === user.id && (
@@ -358,6 +380,27 @@ function LeaveQuotaManagement() {
                 </>
               )}
             </div>
+
+            {/* Branch Filter - เฉพาะ Super Admin */}
+            {user?.role === 'superadmin' && (
+              <div className="relative">
+                <select
+                  value={filterBranch}
+                  onChange={(e) => setFilterBranch(e.target.value)}
+                  className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-orange-200 outline-none transition-all appearance-none bg-white"
+                >
+                  <option value="">ทุกสาขา ({branches.length} สาขา)</option>
+                  {branches.map(branch => (
+                    <option key={branch} value={branch}>
+                      {branchNames[branch] || `สาขา ${branch}`}
+                    </option>
+                  ))}
+                </select>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
 
             {/* Department Filter */}
             <div className="relative">
