@@ -385,11 +385,16 @@ const createPage2HTML = (user) => {
         </div>
         <div style="background: white; padding: 20px; border: 2px solid #FFF2EC; border-top: none; border-radius: 0 0 8px 8px;">
           <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-            ${user.skills.map((skill) => `
+            ${user.skills.map((skill) => {
+              const formatted = typeof skill === 'string'
+                ? skill
+                : `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`;
+              return `
               <span style="font-size: 13px; font-weight: 500; color: #000000;">
-                ${skill}
+                ${formatted}
               </span>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         </div>
       </div>

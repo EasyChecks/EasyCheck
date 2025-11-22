@@ -593,12 +593,17 @@ const UserDetailModal = React.memo(function UserDetailModal({
                     การศึกษา
                   </h4>
                   <div className="space-y-2">
-                    {user.education.map((edu, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span className="text-gray-700">{edu}</span>
-                      </div>
-                    ))}
+                    {user.education.map((edu, index) => {
+                      const formatted = typeof edu === 'string'
+                        ? edu
+                        : `${edu.degree || ''}${edu.institution ? ' - ' + edu.institution : ''}${edu.year ? ' (' + edu.year + ')' : ''}`;
+                      return (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="text-gray-700">{formatted}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -613,11 +618,16 @@ const UserDetailModal = React.memo(function UserDetailModal({
                     ทักษะ
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {user.skills.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 text-xs font-medium rounded-full bg-brand-accent text-primary">
-                        {skill}
-                      </span>
-                    ))}
+                    {user.skills.map((skill, index) => {
+                      const formatted = typeof skill === 'string'
+                        ? skill
+                        : `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`;
+                      return (
+                        <span key={index} className="px-3 py-1 text-xs font-medium rounded-full bg-brand-accent text-primary">
+                          {formatted}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}

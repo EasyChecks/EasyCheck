@@ -191,7 +191,10 @@ export const generateUserPDF = async (user) => {
         </div>
         <div style="background: white; padding: 20px; border: 2px solid #FFF2EC; border-radius: 0 0 8px 8px;">
           <ul style="margin: 0; padding-left: 20px; color: #000000; font-size: 14px; line-height: 1.8;">
-            ${user.education.map(edu => `<li style="margin-bottom: 8px;">${edu}</li>`).join('')}
+            ${user.education.map(edu => {
+              const ed = typeof edu === 'string' ? edu : `${edu.degree || edu.level || ''}${edu.institution ? ' - ' + edu.institution : ''}${edu.year ? ' (' + edu.year + ')' : ''}`;
+              return `<li style="margin-bottom: 8px;">${ed}</li>`;
+            }).join('')}
           </ul>
         </div>
       </div>
@@ -208,11 +211,16 @@ export const generateUserPDF = async (user) => {
         </div>
         <div style="background: white; padding: 20px; border: 2px solid #FFF2EC; border-radius: 0 0 8px 8px;">
           <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            ${user.skills.map(skill => `
+            ${user.skills.map(skill => {
+              const formatted = typeof skill === 'string'
+                ? skill
+                : `${skill.name || ''}${skill.level ? ' - ' + skill.level : ''}${skill.years ? ' (' + skill.years + ' ปี)' : ''}`;
+              return `
               <span style="display: inline-block; padding: 8px 16px; background: linear-gradient(to right, #FFF2EC, #FFF2EC); color: #F26623; border-radius: 20px; font-size: 13px; font-weight: 600;">
-                ${skill}
+                ${formatted}
               </span>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         </div>
       </div>
