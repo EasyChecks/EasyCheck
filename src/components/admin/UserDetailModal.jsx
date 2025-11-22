@@ -102,7 +102,7 @@ const UserDetailModal = React.memo(function UserDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative px-6 py-8 overflow-hidden bg-primary">
+        <div className="relative px-6 py-8 bg-primary">
           <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full bg-white/10"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 -mb-24 -ml-24 rounded-full bg-white/10"></div>
           
