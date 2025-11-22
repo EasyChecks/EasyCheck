@@ -31,6 +31,7 @@ const GroupNotificationScreen = lazy(() => import("./pages/admin/GroupNotificati
 const AdminManageUser = lazy(() => import("./pages/admin/AdminManageUser.jsx"));
 const DownloadData = lazy(() => import("./pages/admin/DownloadData.jsx"));
 const MappingAndEvents = lazy(() => import("./pages/admin/MappingAndEvents.jsx"));
+const LeaveQuotaManagement = lazy(() => import("./pages/admin/LeaveQuotaManagement.jsx"));
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
@@ -92,6 +93,10 @@ const router = createBrowserRouter([
       {
         path: 'warning',
         element: <Suspense fallback={<PageLoader />}><Warning /></Suspense>
+      },
+      {
+        path: 'leave-quota',
+        element: <Suspense fallback={<PageLoader />}><LeaveQuotaManagement /></Suspense>
       }
     ]
   },  

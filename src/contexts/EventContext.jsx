@@ -260,7 +260,25 @@ export function EventProvider({ children }) {
   const [events, setEvents] = useState(() => {
     try {
       const savedEvents = localStorage.getItem('easycheck_events')
-      return savedEvents ? JSON.parse(savedEvents) : defaultEvents
+      if (savedEvents) {
+        const parsed = JSON.parse(savedEvents)
+        // ลบข้อมูลที่ซ้ำกัน (ตาม id และ name)
+        const uniqueEvents = []
+        const seenIds = new Set()
+        const seenNames = new Set()
+        
+        for (const evt of parsed) {
+          const normalizedName = evt.name.toLowerCase().trim()
+          if (!seenIds.has(evt.id) && !seenNames.has(normalizedName)) {
+            seenIds.add(evt.id)
+            seenNames.add(normalizedName)
+            uniqueEvents.push(evt)
+          }
+        }
+        
+        return uniqueEvents
+      }
+      return defaultEvents
     } catch (error) {
       console.error('Error loading events from localStorage:', error)
       return defaultEvents
@@ -271,8 +289,6 @@ export function EventProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem('easycheck_events', JSON.stringify(events))
-      // debug log to help trace persistence
-      console.debug('[EventContext] saved events to localStorage, count=', Array.isArray(events) ? events.length : 0)
     } catch (error) {
       console.error('Error saving events to localStorage:', error)
     }
@@ -285,7 +301,6 @@ export function EventProvider({ children }) {
         try {
           const newEvents = JSON.parse(e.newValue || '[]')
           setEvents(newEvents)
-          console.debug('[EventContext] localStorage changed, syncing events')
         } catch (error) {
           console.error('Error parsing events from localStorage:', error)
         }
@@ -302,15 +317,6 @@ export function EventProvider({ children }) {
       try {
         const base = Array.isArray(prev) ? prev : []
         const newEvents = [...base, event]
-        console.debug('[EventContext] addEvent - adding', event, 'new length', newEvents.length)
-        
-        // Trigger storage event for cross-tab sync
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'easycheck_events',
-          newValue: JSON.stringify(newEvents),
-          oldValue: JSON.stringify(base)
-        }))
-        
         return newEvents
       } catch (e) {
         console.error('[EventContext] addEvent error:', e)
@@ -491,6 +497,11 @@ export function EventProvider({ children }) {
     }
   }
 
+  // Get all events (unfiltered) - for ID generation
+  const getAllEvents = () => {
+    return events
+  }
+
   // ✅ Get filtered events based on user role and branch
   const getFilteredEvents = (user) => {
     if (!user) return []
@@ -521,6 +532,7 @@ export function EventProvider({ children }) {
     updateEvent,
     deleteEvent,
     getEvent,
+    getAllEvents,
     getEventsForUser,
     getFilteredEvents,
     canJoinEvent,
