@@ -9,6 +9,10 @@ import {
   hasCheckedInToday,
   hasCheckedInForShift // 🆕 เพิ่มฟังก์ชันตรวจสอบ per-shift
 } from '../utils/attendanceLogic'
+import { 
+  syncApprovedLeavesToAttendance, 
+  setupLeaveApprovalListener 
+} from '../utils/leaveAttendanceIntegration'
 
 const getOrCreateTabId = () => {
   let tabId = sessionStorage.getItem('tabId')
@@ -134,6 +138,19 @@ export const AuthProvider = ({ children }) => {
       setLoading(false)
     }
   }, [tabId])
+
+  // 🔄 STEP 1: Sync การลาที่อนุมัติแล้ว กับ attendance records
+  useEffect(() => {
+    if (user) {
+      // Sync การลาทั้งหมดที่อนุมัติแล้ว
+      syncApprovedLeavesToAttendance(user.id, user.name)
+      
+      // Setup listener สำหรับการอนุมัติคำขอลาใหม่
+      const cleanup = setupLeaveApprovalListener(user.id, user.name)
+      
+      return cleanup
+    }
+  }, [user])
 
   useEffect(() => {
     const handleStorageChange = (e) => {

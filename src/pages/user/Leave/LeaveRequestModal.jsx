@@ -10,6 +10,18 @@ function LeaveRequestModal({ closeModal }) {
   const { addLeave, addLateArrival, calculateDays, validateLeaveRequest, getLeaveRules } = useLeave(); // ดึงฟังก์ชันจาก LeaveContext
   const { user } = useAuth(); // ดึงข้อมูล user ปัจจุบัน
   
+  // 🔍 Debug: ตรวจสอบว่า user ที่ใช้ส่งคำขอลาคือใคร
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 [LeaveRequestModal] Current user:', {
+        id: user?.id,
+        name: user?.name,
+        username: user?.username,
+        role: user?.role
+      });
+    }
+  }, [user]);
+  
   // ตรวจสอบว่าผู้ใช้มีสิทธิ์ลาคลอดหรือไม่ (เฉพาะนาง/นางสาว)
   const canRequestMaternityLeave = user?.titlePrefix === 'นาง' || user?.titlePrefix === 'นางสาว';
 
@@ -93,11 +105,13 @@ function LeaveRequestModal({ closeModal }) {
     };
   }, []);
 
-  // Convert date format from yyyy-mm-dd to dd/mm/yyyy
+  // Convert date format from yyyy-mm-dd to dd/mm/yyyy (พ.ศ.)
   const convertDateFormat = (dateStr) => {
     if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
+    // 🔥 แปลง ค.ศ. เป็น พ.ศ. (+543)
+    const buddhistYear = parseInt(year) + 543;
+    return `${day}/${month}/${buddhistYear}`;
   };
 
   // Convert dd/mm/yyyy to yyyy-mm-dd
@@ -456,8 +470,13 @@ function LeaveRequestModal({ closeModal }) {
         endDate: convertDateFormat(formData.endDate),
         reason: formData.reason,
         documents: formData.documents,
-        leaveMode: 'fullday'
+        leaveMode: 'fullday',
+        userId: user?.id, // 🆕 เพิ่ม userId สำหรับ integration
+        userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
       };
+      
+      // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+      console.log('📝 [LeaveRequestModal] Fullday leave data:', leaveData);
     } else {
       // Hourly leave
       leaveData = {
@@ -468,8 +487,13 @@ function LeaveRequestModal({ closeModal }) {
         endTime: formData.endTime,
         reason: formData.reason,
         documents: formData.documents,
-        leaveMode: 'hourly'
+        leaveMode: 'hourly',
+        userId: user?.id, // 🆕 เพิ่ม userId สำหรับ integration
+        userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
       };
+      
+      // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+      console.log('📝 [LeaveRequestModal] Hourly leave data:', leaveData);
     }
 
     // Validate against leave rules
@@ -478,6 +502,23 @@ function LeaveRequestModal({ closeModal }) {
       // Show validation errors
       const errorMessage = validation.errors.join('\n');
       showAlertDialog('error', 'ไม่สามารถส่งคำขอลาได้', errorMessage);
+      return;
+    }
+
+    // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+    console.log('📤 [LeaveRequestModal] Submitting leave:', {
+      userId: leaveData.userId,
+      userName: leaveData.userName,
+      leaveType: leaveData.leaveType,
+      startDate: leaveData.startDate,
+      endDate: leaveData.endDate,
+      currentUser: user
+    });
+    
+    // ⚠️ ตรวจสอบว่า userId และ userName ไม่เป็น undefined
+    if (!leaveData.userId || !leaveData.userName) {
+      console.error('❌ Missing userId or userName!', { user, leaveData });
+      showAlertDialog('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง');
       return;
     }
 

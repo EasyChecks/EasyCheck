@@ -5,6 +5,7 @@ import { useLocations } from '../../../contexts/LocationContext';
 import { useEvents } from '../../../contexts/EventContext';
 import { compressImage, getBase64Size } from '../../../utils/imageCompressor';
 import { calculateAttendanceStatus } from '../../../utils/attendanceLogic';
+import { shouldBlockCheckIn } from '../../../utils/leaveAttendanceIntegration';
 
 function TakePhoto() {
   const navigate = useNavigate();
@@ -199,6 +200,21 @@ function TakePhoto() {
   const confirmPhoto = () => {
     const now = new Date();
     const currentTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    
+    // ✋ STEP 3: ตรวจสอบว่ามีการลาที่อนุมัติหรือไม่
+    const today = new Date().toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    
+    const blockInfo = shouldBlockCheckIn(user.id, today)
+    
+    if (blockInfo.blocked) {
+      setPopupInfoMessage(`❌ ${blockInfo.reason}\n\nคุณไม่สามารถ check-in ได้`);
+      setShowInfoPopup(true);
+      return;
+    }
     
     console.log('🔍 Confirm Photo Debug:', {
       now: now.toLocaleTimeString('th-TH'),

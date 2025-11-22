@@ -125,6 +125,9 @@ export const LeaveProvider = ({ children }) => {
 
     // ฟังก์ชันเพิ่มคำขอลาใหม่ - หัวใจสำคัญของระบบลา
     const addLeave = (leaveData) => {
+        // 🔍 Debug: ตรวจสอบข้อมูลที่รับเข้ามา
+        console.log('📥 [LeaveContext.addLeave] Received leaveData:', leaveData);
+        
         let days, period;
         
         // เช็คว่าเป็นการลารายชั่วโมงหรือเต็มวัน
@@ -162,20 +165,22 @@ export const LeaveProvider = ({ children }) => {
             reason: leaveData.reason,
             status: 'รออนุมัติ', // สถานะเริ่มต้นเป็นรออนุมัติเสมอ
             statusColor: 'yellow', // สีเหลืองสำหรับรออนุมัติ
-            documents: leaveData.documents || []
+            documents: leaveData.documents || [],
+            userId: leaveData.userId, // 🆕 เก็บ userId สำหรับ integration
+            userName: leaveData.userName // 🆕 เก็บ userName สำหรับ integration
         };
+        
+        // 🔍 Debug: ตรวจสอบ newLeave object ที่สร้างขึ้น
+        console.log('✅ [LeaveContext.addLeave] Created newLeave:', newLeave);
         setLeaveList(prev => [newLeave, ...prev]); // เพิ่มเข้าไปด้านหน้าสุด (รายการใหม่อยู่บนสุด)
+        
+        // 🔥 บันทึกลง localStorage ทันที
+        const updatedList = [newLeave, ...leaveList];
+        localStorage.setItem('leaveList', JSON.stringify(updatedList));
         
         // ส่งสัญญาณแจ้งเตือนทันทีที่มีการขอลา - ทำให้คอมโพเนนต์อื่นรู้ทันที
         window.dispatchEvent(new CustomEvent('leaveRequestCreated', {
             detail: { leave: newLeave }
-        }));
-        
-        // ส่งสัญญาณไปที่แท็บอื่นด้วย - กรณีเปิดหลายแท็บ
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: 'leaveList',
-            newValue: JSON.stringify([newLeave, ...leaveList]),
-            url: window.location.href
         }));
         
         return newLeave; // ส่งข้อมูลลากลับไปให้ผู้เรียกใช้
@@ -370,6 +375,9 @@ export const LeaveProvider = ({ children }) => {
                 return leave;
             });
             console.log('All leaves after update:', updated)
+            
+            // 🔥 บันทึกลง localStorage (สำคัญมาก!)
+            localStorage.setItem('leaveList', JSON.stringify(updated));
             
             // ส่งสัญญาณไปที่แท็บอื่นด้วย - cross-tab sync
             window.dispatchEvent(new StorageEvent('storage', {

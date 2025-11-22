@@ -8,6 +8,7 @@ import { AttendanceStatsRow } from '../../components/common/AttendanceStatsCard'
 import { useCamera } from '../../hooks/useCamera'
 import { config } from '../../config'
 import { getCheckInStatus } from '../../utils/attendanceCalculator'
+import { shouldBlockCheckIn } from '../../utils/leaveAttendanceIntegration'
 
 function UserDashboard() {
   const { attendance, user, attendanceRecords } = useAuth()
@@ -34,6 +35,7 @@ function UserDashboard() {
   const [checkingCamera, setCheckingCamera] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0) // For real-time updates
   const [selectedShift, setSelectedShift] = useState(null) // 🆕 เก็บกะที่เลือก
+  const [leaveBlockInfo, setLeaveBlockInfo] = useState(null) // 🔄 STEP 2: เก็บข้อมูลการลา
 
   // 🔥 Real-time schedule updates (เหมือนการเข้า-ออกงาน)
   useEffect(() => {
@@ -72,6 +74,69 @@ function UserDashboard() {
       window.removeEventListener('storage', handleStorageChange)
     }
   }, [])
+
+  // 🔄 STEP 2: ตรวจสอบว่าวันนี้มีการลาที่อนุมัติหรือไม่
+  useEffect(() => {
+    if (user) {
+      const today = new Date().toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+      
+      const blockInfo = shouldBlockCheckIn(user.id, today)
+      setLeaveBlockInfo(blockInfo)
+      
+      console.log('🏖️ [UserDashboard] Leave check:', {
+        userId: user.id,
+        date: today,
+        blocked: blockInfo.blocked,
+        reason: blockInfo.reason,
+        leaveData: blockInfo.leaveData
+      });
+      
+      // 🔍 Debug: ตรวจสอบ leaveList
+      const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
+      const myLeaves = leaveList.filter(l => !l.userId || l.userId === user.id);
+      const approvedLeaves = myLeaves.filter(l => l.status === 'อนุมัติ');
+      const pendingLeaves = myLeaves.filter(l => l.status === 'รออนุมัติ');
+      
+      console.log('📄 [UserDashboard] Leave summary:', {
+        total: leaveList.length,
+        myLeaves: myLeaves.length,
+        approved: approvedLeaves.length,
+        pending: pendingLeaves.length,
+        approvedToday: approvedLeaves.filter(l => 
+          l.startDate <= today && l.endDate >= today
+        ).length
+      });
+    }
+  }, [user, refreshKey]) // refreshKey เพื่อให้ตรวจสอบใหม่เมื่อมีการอัพเดท
+  
+  // 🔔 STEP 2.1: ฟังการเปลี่ยนแปลงของ leaveList (เมื่อ admin อนุมัติ)
+  useEffect(() => {
+    const handleLeaveUpdate = (e) => {
+      if (e.key === 'leaveList') {
+        console.log('📢 leaveList updated, refreshing leave status...');
+        setRefreshKey(prev => prev + 1); // Force refresh
+      }
+    };
+    
+    // ฟัง storage event (cross-tab)
+    window.addEventListener('storage', handleLeaveUpdate);
+    
+    // ฟัง custom event (same tab)
+    const handleLeaveStatusUpdated = (e) => {
+      console.log('📢 Leave status updated event:', e.detail);
+      setRefreshKey(prev => prev + 1); // Force refresh
+    };
+    window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    
+    return () => {
+      window.removeEventListener('storage', handleLeaveUpdate);
+      window.removeEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
+    };
+  }, []);
 
   // โหลดตารางงานทั้งหมดจาก localStorage
   const allSchedules = useMemo(() => {
@@ -659,7 +724,7 @@ function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            {/* ปุ่มเช็คอิน/เช็คเอาท์ - พร้อมการขออนุญาตกล้อง + popup เตือน */}
+            {/* 🔄 STEP 2: แสดงปุ่ม disabled ถ้ามีการลา */}
             {checkingCamera ? (
               <button
                 disabled
@@ -668,6 +733,19 @@ function UserDashboard() {
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-gray-400 border-b-transparent rounded-full animate-spin"></div>
                   <span className='text-black'>กำลังตรวจสอบกล้อง...</span>
+                </div>
+              </button>
+            ) : leaveBlockInfo?.blocked ? (
+              <button
+                disabled
+                className="bg-gray-300 text-gray-500 px-8 py-3 rounded-full font-bold shadow-md cursor-not-allowed opacity-60"
+                title={leaveBlockInfo.reason}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  ไม่สามารถเข้างานได้
                 </div>
               </button>
             ) : (
