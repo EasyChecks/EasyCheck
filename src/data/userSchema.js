@@ -48,7 +48,7 @@ export const UserSchema = {
   department: String, // HR, IT, Marketing, Finance, etc.
   position: String, // ตำแหน่งงาน
   provinceCode: String, // BKK, CNX, PKT, etc.
-  branchCode: String, // 101, 102, 201, etc.
+  branchCode: String, // 101, 201, 301, etc.
   salary: String, // เงินเดือน (เก็บเป็น String เพื่อรองรับ format)
   startDate: String, // YYYY-MM-DD
   workPeriod: String, // เช่น "5 ปี" (คำนวณจาก startDate)

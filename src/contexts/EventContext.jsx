@@ -79,59 +79,9 @@ const defaultEvents = [
     }
   },
 
-  // ========== กรุงเทพ สาขา 2 (BKK - Branch 102) ==========
-  {
-    id: 4,
-    name: 'โปรโมชั่น Buy 1 Get 1 Free',
-    date: '16/11/2025',
-    startDate: '16/11/2025',
-    endDate: '16/11/2025',
-    description: 'จัดโปรโมชั่นพิเศษ ซื้อ 1 แถม 1 สำหรับเมนูชานมทุกขนาด เฉพาะสาขาอโศก',
-    locationName: 'Tea Time สาขาอโศก',
-    latitude: 13.7365,
-    longitude: 100.5600,
-    radius: 100,
-    status: 'ongoing',
-    startTime: '10:00',
-    endTime: '20:00',
-    teams: ['พนักงานขาย', 'การตลาด'],
-    assignedUsers: [],
-    assignedDepartments: ['Sales'],
-    assignedPositions: ['Sales Staff', 'Barista'],
-    createdBy: {
-      userId: 1,
-      username: 'BKK1010001',
-      branch: '102'
-    }
-  },
-  {
-    id: 5,
-    name: 'Workshop สร้างเมนูเครื่องดื่มพิเศษ',
-    date: '19/11/2025',
-    startDate: '19/11/2025',
-    endDate: '19/11/2025',
-    description: 'อบรมเชิงปฏิบัติการพัฒนาสูตรเครื่องดื่มใหม่ และการตกแต่งเพื่อ Instagram',
-    locationName: 'Tea Time Lab สาขาเอกมัย',
-    latitude: 13.7280,
-    longitude: 100.5850,
-    radius: 150,
-    status: 'ongoing',
-    startTime: '09:00',
-    endTime: '16:00',
-    teams: ['Product Development', 'บาริสต้า'],
-    assignedUsers: [],
-    assignedDepartments: ['R&D', 'Operations'],
-    assignedPositions: ['Head Barista'],
-    createdBy: {
-      userId: 1,
-      username: 'BKK1010001',
-      branch: '102'
-    }
-  },
-
   // ========== เชียงใหม่ (CNX - Branch 201) ==========
   {
-    id: 6,
+    id: 4,
     name: 'เปิดสาขาใหม่ ห้างเซ็นทรัลเฟสติวัล',
     date: '17/11/2025',
     startDate: '17/11/2025',
@@ -205,7 +155,7 @@ const defaultEvents = [
 
   // ========== ภูเก็ต (PKT - Branch 301) ==========
   {
-    id: 9,
+    id: 5,
     name: 'ชิมชาเมนูพิเศษชายหาด',
     date: '22/11/2025',
     startDate: '22/11/2025',
@@ -229,7 +179,7 @@ const defaultEvents = [
     }
   },
   {
-    id: 10,
+    id: 6,
     name: 'ตรวจสอบมาตรฐานความสะอาด',
     date: '26/11/2025',
     startDate: '26/11/2025',

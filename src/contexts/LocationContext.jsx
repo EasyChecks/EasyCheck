@@ -5,7 +5,7 @@ const LocationContext = createContext()
 
 // Initial locations data
 const initialLocations = [
-  // ========== กรุงเทพ สาขา 1 (BKK - Branch 101) ==========
+  // ========== กรุงเทพมหานคร (BKK - Branch 101) ==========
   {
     id: 1,
     name: 'Tea Time สาขาสยาม',
@@ -21,25 +21,9 @@ const initialLocations = [
     }
   },
   
-  // ========== กรุงเทพ สาขา 2 (BKK - Branch 102) ==========
-  {
-    id: 2,
-    name: 'Tea Time สาขาอโศก',
-    description: 'ร้านชานมสาขา 2 ย่านอโศก กรุงเทพฯ',
-    radius: 120,
-    latitude: 13.7365,
-    longitude: 100.5600,
-    status: 'active',
-    createdBy: {
-      userId: 1,
-      username: 'BKK1020001',
-      branch: '102'
-    }
-  },
-  
   // ========== เชียงใหม่ (CNX - Branch 201) ==========
   {
-    id: 3,
+    id: 2,
     name: 'Tea Time สาขาเซ็นทรัล เชียงใหม่',
     description: 'ร้านชานมสาขาเชียงใหม่ ห้างเซ็นทรัลเฟสติวัล',
     radius: 120,
@@ -55,7 +39,7 @@ const initialLocations = [
   
   // ========== ภูเก็ต (PKT - Branch 301) ==========
   {
-    id: 4,
+    id: 3,
     name: 'Tea Time สาขาป่าตอง',
     description: 'ร้านชานมสาขาภูเก็ต ชายหาดป่าตอง',
     radius: 130,
