@@ -56,6 +56,53 @@ const UserCreateModal = memo(function UserCreateModal({
   // State สำหรับ dynamic fields
   const [currentWorkHistory, setCurrentWorkHistory] = useState({ position: '', company: '', period: '' });
 
+  // 🆕 State สำหรับ editable dropdown options
+  const [editableProvinces, setEditableProvinces] = useState(() => {
+    const saved = localStorage.getItem('dropdown_provinces');
+    return saved ? JSON.parse(saved) : [
+      { code: 'BKK', name: 'กรุงเทพฯ' },
+      { code: 'CNX', name: 'เชียงใหม่' },
+      { code: 'PKT', name: 'ภูเก็ต' },
+    ];
+  });
+  const [editableDepartments, setEditableDepartments] = useState(() => {
+    const saved = localStorage.getItem('dropdown_departments');
+    return saved ? JSON.parse(saved) : [
+      'การเงิน',
+      'ฝ่ายบุคคล',
+      'ฝ่ายขาย',
+      'ฝ่ายผลิต',
+      'ฝ่ายไอที',
+      'ฝ่ายการตลาด',
+      'ฝ่ายบริการ'
+    ];
+  });
+  const [editablePositions, setEditablePositions] = useState(() => {
+    const saved = localStorage.getItem('dropdown_positions');
+    return saved ? JSON.parse(saved) : [
+      'พนักงาน',
+      'หัวหน้าทีม',
+      'ผู้จัดการ',
+      'ผู้อำนวยการ',
+      'ผู้บริหาร'
+    ];
+  });
+  const [editableStatuses, setEditableStatuses] = useState(() => {
+    const saved = localStorage.getItem('dropdown_statuses');
+    return saved ? JSON.parse(saved) : [
+      { value: 'active', label: 'ทำงานอยู่ (Active)' },
+      { value: 'leave', label: 'ลาออกแล้ว (Leave)' },
+      { value: 'suspended', label: 'โดนพักงาน (Suspended)' },
+      { value: 'pending', label: 'รอโปรโมท (Pending)' }
+    ];
+  });
+
+  // Input fields สำหรับเพิ่ม option ใหม่
+  const [newProvince, setNewProvince] = useState({ code: '', name: '' });
+  const [newDepartment, setNewDepartment] = useState('');
+  const [newPosition, setNewPosition] = useState('');
+  const [newStatus, setNewStatus] = useState({ value: '', label: '' });
+
   // ป้องกันการ scroll พื้นหลังเมื่อ modal เปิด
   useEffect(() => {
     if (isOpen) {
@@ -69,13 +116,29 @@ const UserCreateModal = memo(function UserCreateModal({
     };
   }, [isOpen]);
 
-  // Province และ Branch options  
-  const provinces = [
-    { code: 'BKK', name: 'กรุงเทพฯ' },
-    { code: 'CNX', name: 'เชียงใหม่' },
-    { code: 'PKT', name: 'ภูเก็ต' },
-  ];
+  // 🆕 Persist editable options to localStorage
+  useEffect(() => {
+    localStorage.setItem('dropdown_provinces', JSON.stringify(editableProvinces));
+  }, [editableProvinces]);
 
+  useEffect(() => {
+    localStorage.setItem('dropdown_departments', JSON.stringify(editableDepartments));
+  }, [editableDepartments]);
+
+  useEffect(() => {
+    localStorage.setItem('dropdown_positions', JSON.stringify(editablePositions));
+  }, [editablePositions]);
+
+  useEffect(() => {
+    localStorage.setItem('dropdown_statuses', JSON.stringify(editableStatuses));
+  }, [editableStatuses]);
+
+  // 🔄 ใช้ editable versions แทน hardcoded constants
+  const provinces = editableProvinces;
+  const departments = editableDepartments;
+  const positions = editablePositions;
+
+  // eslint-disable-next-line no-unused-vars
   const branches = [
     { code: '101', name: 'สำนักงานใหญ่' },
     { code: '102', name: 'สาขาที่ 2' },
@@ -84,25 +147,52 @@ const UserCreateModal = memo(function UserCreateModal({
     { code: '202', name: 'สาขาย่อย 2' },
   ];
 
-  const departments = [
-    'การเงิน',
-    'ฝ่ายบุคคล',
-    'ฝ่ายขาย',
-    'ฝ่ายผลิต',
-    'ฝ่ายไอที',
-    'ฝ่ายการตลาด',
-    'ฝ่ายบริการ'
-  ];
-
-  const positions = [
-    'พนักงาน',
-    'หัวหน้าทีม',
-    'ผู้จัดการ',
-    'ผู้อำนวยการ',
-    'ผู้บริหาร'
-  ];
-
   const bloodTypes = ['A', 'B', 'AB', 'O'];
+
+  // 🆕 Functions สำหรับจัดการ dropdown options
+  const addProvince = () => {
+    if (newProvince.code && newProvince.name) {
+      setEditableProvinces([...editableProvinces, { ...newProvince }]);
+      setNewProvince({ code: '', name: '' });
+    }
+  };
+
+  const removeProvince = (code) => {
+    setEditableProvinces(editableProvinces.filter(p => p.code !== code));
+  };
+
+  const addDepartment = () => {
+    if (newDepartment.trim() && !editableDepartments.includes(newDepartment.trim())) {
+      setEditableDepartments([...editableDepartments, newDepartment.trim()]);
+      setNewDepartment('');
+    }
+  };
+
+  const removeDepartment = (dept) => {
+    setEditableDepartments(editableDepartments.filter(d => d !== dept));
+  };
+
+  const addPosition = () => {
+    if (newPosition.trim() && !editablePositions.includes(newPosition.trim())) {
+      setEditablePositions([...editablePositions, newPosition.trim()]);
+      setNewPosition('');
+    }
+  };
+
+  const removePosition = (pos) => {
+    setEditablePositions(editablePositions.filter(p => p !== pos));
+  };
+
+  const addStatus = () => {
+    if (newStatus.value && newStatus.label) {
+      setEditableStatuses([...editableStatuses, { ...newStatus }]);
+      setNewStatus({ value: '', label: '' });
+    }
+  };
+
+  const removeStatus = (value) => {
+    setEditableStatuses(editableStatuses.filter(s => s.value !== value));
+  };
 
   // Handle input change
   const handleInputChange = (field, value) => {
@@ -449,23 +539,88 @@ const UserCreateModal = memo(function UserCreateModal({
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 จังหวัด <span className="text-red-500">*</span>
               </label>
-              <select
-                value={formData.provinceCode}
-                onChange={(e) => handleInputChange('provinceCode', e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent ${
-                  errors.provinceCode ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">เลือกจังหวัด</option>
-                {provinces.map(p => (
-                  <option key={p.code} value={p.code}>{p.name} ({p.code})</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.provinceCode}
+                  onChange={(e) => handleInputChange('provinceCode', e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent ${
+                    errors.provinceCode ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="">เลือกจังหวัด</option>
+                  {provinces.map(p => (
+                    <option key={p.code} value={p.code}>
+                      {p.name} ({p.code})
+                      {editableProvinces.length > 3 && (
+                        <button
+                          type="button"
+                          onClick={() => removeProvince(p.code)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                          title="ลบจังหวัดนี้"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* 🆕 เพิ่มจังหวัดใหม่ */}
+              <details className="mt-2">
+                <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  จัดการจังหวัด
+                </summary>
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <div className="flex gap-2 flex-col ">
+                    <input
+                      type="text"
+                      placeholder="รหัส (เช่น BKK)"
+                      value={newProvince.code}
+                      onChange={(e) => setNewProvince({ ...newProvince, code: e.target.value.toUpperCase() })}
+                      className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      maxLength={3}
+                    />
+                    <input
+                      type="text"
+                      placeholder="ชื่อจังหวัด"
+                      value={newProvince.name}
+                      onChange={(e) => setNewProvince({ ...newProvince, name: e.target.value })}
+                      className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addProvince}
+                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
+                      เพิ่ม
+                    </button>
+                  </div>
+                  {/* รายการจังหวัดปัจจุบัน */}
+                  <div className="flex flex-wrap gap-1">
+                    {editableProvinces.map(p => (
+                      <span key={p.code} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs">
+                        {p.name}
+                        <button
+                          type="button"
+                          onClick={() => removeProvince(p.code)}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                          title="ลบ"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </details>
               {errors.provinceCode && <p className="text-red-500 text-sm mt-1">{errors.provinceCode}</p>}
             </div>
 
             {/* สาขา */}
-            <div>
+            {/* <div className="disabled">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 สาขา <span className="text-red-500">*</span>
               </label>
@@ -482,7 +637,7 @@ const UserCreateModal = memo(function UserCreateModal({
                 ))}
               </select>
               {errors.branchCode && <p className="text-red-500 text-sm mt-1">{errors.branchCode}</p>}
-            </div>
+            </div> */}
 
             {/* Preview รหัสพนักงาน */}
             {previewEmployeeId && (
@@ -530,7 +685,7 @@ const UserCreateModal = memo(function UserCreateModal({
             </div>
 
             {/* เลขบัตรประชาชน */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-1">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 เลขบัตรประชาชน <span className="text-red-500">*</span>
               </label>
@@ -570,6 +725,50 @@ const UserCreateModal = memo(function UserCreateModal({
                   <option key={dept} value={dept}>{dept}</option>
                 ))}
               </select>
+              {/* 🆕 เพิ่มแผนกใหม่ */}
+              <details className="mt-2">
+                <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  จัดการแผนก
+                </summary>
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="ชื่อแผนกใหม่"
+                      value={newDepartment}
+                      onChange={(e) => setNewDepartment(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDepartment())}
+                      className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addDepartment}
+                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
+                      เพิ่ม
+                    </button>
+                  </div>
+                  {/* รายการแผนกปัจจุบัน */}
+                  <div className="flex flex-wrap gap-1">
+                    {editableDepartments.map(dept => (
+                      <span key={dept} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs">
+                        {dept}
+                        <button
+                          type="button"
+                          onClick={() => removeDepartment(dept)}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                          title="ลบ"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </details>
               {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department}</p>}
             </div>
 
@@ -590,6 +789,50 @@ const UserCreateModal = memo(function UserCreateModal({
                   <option key={pos} value={pos}>{pos}</option>
                 ))}
               </select>
+              {/* 🆕 เพิ่มตำแหน่งใหม่ */}
+              <details className="mt-2">
+                <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  จัดการตำแหน่ง
+                </summary>
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="ชื่อตำแหน่งใหม่"
+                      value={newPosition}
+                      onChange={(e) => setNewPosition(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPosition())}
+                      className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addPosition}
+                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
+                      เพิ่ม
+                    </button>
+                  </div>
+                  {/* รายการตำแหน่งปัจจุบัน */}
+                  <div className="flex flex-wrap gap-1">
+                    {editablePositions.map(pos => (
+                      <span key={pos} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs">
+                        {pos}
+                        <button
+                          type="button"
+                          onClick={() => removePosition(pos)}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                          title="ลบ"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </details>
               {errors.position && <p className="text-red-500 text-sm mt-1">{errors.position}</p>}
             </div>
 
@@ -626,11 +869,60 @@ const UserCreateModal = memo(function UserCreateModal({
                 onChange={(e) => handleInputChange('status', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
               >
-                <option value="active">ทำงานอยู่ (Active)</option>
-                <option value="leave">ลาออกแล้ว (Leave)</option>
-                <option value="suspended">โดนพักงาน (Suspended)</option>
-                <option value="pending">รอโปรโมท (Pending)</option>
+                {editableStatuses.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
               </select>
+              {/* 🆕 เพิ่มสถานะใหม่ */}
+              <details className="mt-2">
+                <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  จัดการสถานะ
+                </summary>
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <div className="flex gap-2 flex-col">
+                    <input
+                      type="text"
+                      placeholder="รหัส (เช่น active)"
+                      value={newStatus.value}
+                      onChange={(e) => setNewStatus({ ...newStatus, value: e.target.value.toLowerCase() })}
+                      className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="ชื่อสถานะ"
+                      value={newStatus.label}
+                      onChange={(e) => setNewStatus({ ...newStatus, label: e.target.value })}
+                      className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addStatus}
+                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
+                      เพิ่ม
+                    </button>
+                  </div>
+                  {/* รายการสถานะปัจจุบัน */}
+                  <div className="flex flex-wrap gap-1">
+                    {editableStatuses.map(s => (
+                      <span key={s.value} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs">
+                        {s.label}
+                        <button
+                          type="button"
+                          onClick={() => removeStatus(s.value)}
+                          className="text-red-500 hover:text-red-700 ml-1"
+                          title="ลบ"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </details>
             </div>
 
             {/* วันเกิด */}
@@ -902,46 +1194,8 @@ const UserCreateModal = memo(function UserCreateModal({
 
           {/* 📋 Profile Management - 6 Categories */}
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-brand-primary">
-              ข้อมูลโปรไฟล์ (Profile Management)
-            </h2>
             
             <div className="space-y-6">
-              {/* Positions */}
-              <ProfileManager
-                category="position"
-                items={formData.positions}
-                onAdd={(item) => handleAddProfile('positions', item)}
-                onRemove={(index) => handleRemoveProfile('positions', index)}
-                onRemoveAll={() => handleRemoveAllProfiles('positions')}
-              />
-
-              {/* Departments */}
-              <ProfileManager
-                category="department"
-                items={formData.departments}
-                onAdd={(item) => handleAddProfile('departments', item)}
-                onRemove={(index) => handleRemoveProfile('departments', index)}
-                onRemoveAll={() => handleRemoveAllProfiles('departments')}
-              />
-
-              {/* Salaries */}
-              <ProfileManager
-                category="salary"
-                items={formData.salaries}
-                onAdd={(item) => handleAddProfile('salaries', item)}
-                onRemove={(index) => handleRemoveProfile('salaries', index)}
-                onRemoveAll={() => handleRemoveAllProfiles('salaries')}
-              />
-
-              {/* Relationships */}
-              <ProfileManager
-                category="relationship"
-                items={formData.relationships}
-                onAdd={(item) => handleAddProfile('relationships', item)}
-                onRemove={(index) => handleRemoveProfile('relationships', index)}
-                onRemoveAll={() => handleRemoveAllProfiles('relationships')}
-              />
 
               {/* Education */}
               <ProfileManager
