@@ -95,14 +95,14 @@ const UserDetailModal = React.memo(function UserDetailModal({
   return (
     <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
-      onClick={onClose}
+      {/* onClick={onClose} */}
     >
       <div 
         className="bg-white rounded-2xl shadow-sm w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative px-6 py-8 overflow-hidden bg-primary">
+        <div className="relative px-6 py-8 bg-primary">
           <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full bg-white/10"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 -mb-24 -ml-24 rounded-full bg-white/10"></div>
           
