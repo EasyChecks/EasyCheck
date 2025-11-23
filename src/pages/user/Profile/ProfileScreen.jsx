@@ -18,7 +18,7 @@ const convertToThaiDate = (isoDate) => {
 };
 
 function ProfileScreen() {
-  const { user } = useAuth(); // ดึงข้อมูล user จาก context
+  const { user } = useAuth();
   
   // State สำหรับเก็บข้อมูลที่แก้ไขได้
   const [profileData, setProfileData] = useState(() => {
@@ -118,6 +118,7 @@ function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [editSection, setEditSection] = useState('');
   const [tempData, setTempData] = useState({});
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const fileInputRef = useRef(null);
 
   // บันทึกข้อมูลลง localStorage เมื่อมีการเปลี่ยนแปลง
@@ -294,6 +295,14 @@ function ProfileScreen() {
     setIsEditing(false);
     setEditSection('');
     setTempData({});
+    
+    // แสดง popup สำเร็จ
+    setShowSaveSuccess(true);
+    
+    // ซ่อน popup หลังจาก 3 วินาที
+    setTimeout(() => {
+      setShowSaveSuccess(false);
+    }, 3000);
   };
 
   // ฟังก์ชันยกเลิก
@@ -390,7 +399,7 @@ function ProfileScreen() {
             </h2>
             <button
               onClick={() => handleEditClick('personalInfo')}
-              className="hidden px-3 py-1 text-sm text-white transition-colors rounded-lg bg-gradient-to-r from-brand-primary to-orange-600 hover:bg-orange-600"
+              className="px-3 py-1 text-sm text-white transition-colors rounded-lg bg-gradient-to-r from-brand-primary to-orange-600 hover:bg-orange-600"
             >
               แก้ไข
             </button>
@@ -679,6 +688,42 @@ function ProfileScreen() {
           </div>
         </div>
       )}
+
+      {/* Success Popup */}
+      {showSaveSuccess && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
+          <div className="w-full max-w-sm p-8 bg-white shadow-2xl pointer-events-auto rounded-2xl animate-fade-in">
+            {/* Success Icon */}
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full">
+              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            
+            {/* Message */}
+            <h3 className="mb-2 text-lg font-bold text-center text-gray-800">บันทึกสำเร็จ</h3>
+            <p className="text-sm text-center text-gray-600">ข้อมูลของคุณถูกอัปเดตเรียบร้อยแล้ว</p>
+          </div>
+        </div>
+      )}
+
+      {/* Add animation styles */}
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

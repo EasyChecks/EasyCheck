@@ -257,14 +257,14 @@ export const usersData = [
     phone: '0823456789', 
     department: 'Marketing',
     provinceCode: 'BKK',
-    branchCode: '102',
-    username: 'BKK1020001',
+    branchCode: '101',
+    username: 'BKK1010004',
     password: '3567891234567',
     nationalId: '3567891234567',
     birthDate: '1990-03-15',
     age: '35',
     position: 'Digital Marketing Specialist',
-    employeeId: 'BKK1020001',
+    employeeId: 'BKK1010004',
     bloodType: 'A',
     salary: '45000',
     idCardNumber: '3567891234567',
@@ -432,37 +432,58 @@ export const usersData = [
 
 // Helper function: แปลง usersData เป็น format สำหรับ Auth.jsx
 export const getUserForAuth = (employeeId) => {
-  // Try to get updated users from localStorage first (for role changes made by admin)
-  let usersList = usersData;
+  let usersList = usersData; // เริ่มต้นจากข้อมูล Hardcoded
+
   try {
-    const storedUsers = localStorage.getItem('usersData');
-    if (storedUsers) {
-      usersList = JSON.parse(storedUsers);
+    // 1. ลองดึงจาก 'users' (ที่หน้า Reset Password บันทึกไป)
+    const storedUsersNew = localStorage.getItem('users');
+    // 2. ลองดึงจาก 'usersData' (เผื่อระบบเก่า)
+    const storedUsersOld = localStorage.getItem('usersData');
+
+    if (storedUsersNew) {
+      usersList = JSON.parse(storedUsersNew);
+    } else if (storedUsersOld) {
+      usersList = JSON.parse(storedUsersOld);
     }
   } catch (e) {
-    // If localStorage fails, use default usersData
     console.warn('Failed to read users from localStorage:', e);
   }
 
-  const user = usersList.find(u => u.username === employeeId || u.adminAccount === employeeId);
+  // แปลง input เป็นตัวพิมพ์เล็กเพื่อค้นหาแบบไม่สน case
+  const searchId = employeeId.toLowerCase();
+
+  const user = usersList.find(u => 
+    (u.username && u.username.toLowerCase() === searchId) || 
+    (u.adminAccount && u.adminAccount.toLowerCase() === searchId)
+  );
+
   if (!user) return null;
 
   // ถ้าเป็นบัญชี Admin (ADMBKK...)
-  if (employeeId.startsWith('ADM')) {
+  if (user.adminAccount && user.adminAccount.toLowerCase() === searchId) {
+    // 🛠️ PATCH: ตรวจสอบรหัสผ่านล่าสุดจาก mockUserPasswords ด้วย
+    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
+    const overridePassword = storedPasswords[user.adminAccount.toLowerCase()];
+
     return {
       ...user,
       username: user.adminAccount,
-      role: user.role, // admin หรือ superadmin
-      password: user.adminPassword,
+      role: user.role,
+      password: overridePassword || user.adminPassword, // ใช้รหัสใหม่ถ้ามี
       isAdminAccount: true,
       name: `${user.name} (${user.role === 'superadmin' ? 'Super Admin' : 'Admin'})`
     };
   }
 
   // ถ้าเป็นบัญชีพนักงานธรรมดา
+  // 🛠️ PATCH: ตรวจสอบรหัสผ่านล่าสุดจาก mockUserPasswords ด้วย (กรณี Reset Password)
+  const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
+  const overridePassword = storedPasswords[user.username.toLowerCase()];
+
   const normalUserData = {
     ...user,
-    role: (user.role === 'admin' || user.role === 'superadmin') ? 'user' : user.role, // แสดงเป็น user ตอนเช็คชื่อ
+    role: (user.role === 'admin' || user.role === 'superadmin') ? 'user' : user.role,
+    password: overridePassword || user.password, // ใช้รหัสใหม่ถ้ามี
     isAdminAccount: false
   };
 
@@ -849,40 +870,39 @@ export const mockEventChartData = {
 };
 
 export const mockLoginAPI = async (username, password) => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // จำลอง Delay นิดหน่อย
+  await new Promise(resolve => setTimeout(resolve, 800));
 
+  const targetUsername = username.toLowerCase();
+
+  // 1. ดึงข้อมูล User ล่าสุด (ผ่านฟังก์ชันที่เราแก้ไปด้านบน)
   let user = getUserForAuth(username);
 
-  if (!user) {
-    try {
-      const storedUsers = JSON.parse(localStorage.getItem('usersData') || '[]');
-      user = storedUsers.find(u =>
-        u.username === username ||
-        u.employeeId === username ||
-        u.adminAccount === username
-      );
-
-      if (user && username === user.adminAccount) {
-        user = {
-          ...user,
-          username: user.adminAccount,
-          isAdminAccount: true
-        };
-      }
-    } catch (e) {
-      console.warn('Failed to read users from localStorage:', e);
-    }
-  }
+  // 2. ดึงตารางรหัสผ่านที่ถูกแก้ (Overrides)
+  const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
 
   if (user) {
-    const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}');
-    const correctPassword = storedPasswords[username.toLowerCase()] || user.password;
+    // 3. ตรวจสอบรหัสผ่าน: ลำดับความสำคัญ -> 1.ในตาราง Override, 2.ใน User object ที่ดึงมา
+    let correctPassword = user.password;
 
+    // ถ้ามีในตาราง override ให้ใช้อันนี้เป็นหลัก (เพราะหน้า Reset Password เขียนลงที่นี่)
+    if (storedPasswords[targetUsername]) {
+      correctPassword = storedPasswords[targetUsername];
+    }
+
+    // 4. เปรียบเทียบรหัสผ่าน
     if (password === correctPassword) {
       const { password: _, adminPassword: __, ...userWithoutPassword } = user;
       return { success: true, user: userWithoutPassword };
     }
+  }
+  
+  // กรณี Fallback: ถ้าหา User ไม่เจอจริงๆ ลองเช็คใน UsersData ดิบ
+  if (!user) {
+     const rawUser = usersData.find(u => u.username.toLowerCase() === targetUsername);
+     if (rawUser && rawUser.password === password) {
+         return { success: true, user: rawUser };
+     }
   }
 
   return { success: false };

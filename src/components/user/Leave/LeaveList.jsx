@@ -43,7 +43,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <span className="hidden sm:inline">ดูประวัติ</span>
+          <span>ดูประวัติ</span>
         </button>
       </div>
       
@@ -139,7 +139,7 @@ function LeaveList({ leaveItems }) {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <span className="hidden sm:inline">ดูประวัติ</span>
+            <span>ดูประวัติ</span>
           </button>
         </div>
         
@@ -148,24 +148,24 @@ function LeaveList({ leaveItems }) {
         </p>
 
         <div className="border-t border-gray-200 pt-3">
-          <p className="text-xs sm:text-sm font-medium text-brand-primary mb-2 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <p className="text-xs sm:text-sm font-semibold text-brand-primary mb-3 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            ข้อกำหนดสำคัญ:
+            <span>ข้อกำหนดสำคัญ:</span>
           </p>
-          <ul className="space-y-1.5 text-xs sm:text-sm text-gray-700">
-            <li className="flex items-start gap-2">
-              <span className="text-brand-primary mt-0.5">•</span>
-              <span>ต้องเป็นเหตุสุดวิสัยที่เกิดขึ้นในระหว่างเดินทางมาทำงาน</span>
+          <ul className="pl-3 sm:pl-4 space-y-2 sm:space-y-2.5 text-xs sm:text-sm text-gray-700">
+            <li className="flex items-center gap-2.5">
+              <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-brand-primary rounded-full flex-shrink-0"></span>
+              <span className="flex-1 leading-relaxed">ต้องเป็นเหตุสุดวิสัยที่เกิดขึ้นในระหว่างเดินทางมาทำงาน</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-brand-primary mt-0.5">•</span>
-              <span>ระบุเหตุผลที่ชัดเจนและสมเหตุสมผล</span>
+            <li className="flex items-center gap-2.5">
+              <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-brand-primary rounded-full flex-shrink-0"></span>
+              <span className="flex-1 leading-relaxed">ระบุเหตุผลที่ชัดเจนและสมเหตุสมผล</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-brand-primary mt-0.5">•</span>
-              <span>แนบหลักฐานประกอบ (แนะนำ)</span>
+            <li className="flex items-center gap-2.5">
+              <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-brand-primary rounded-full flex-shrink-0"></span>
+              <span className="flex-1 leading-relaxed">แนบหลักฐานประกอบ (แนะนำ)</span>
             </li>
           </ul>
         </div>
