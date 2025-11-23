@@ -6,6 +6,7 @@ import { useLocations } from '../../contexts/LocationContext' // Context จั�
 import { useEvents } from '../../contexts/EventContext' // Context จัดการกิจกรรม
 import { useAuth } from '../../contexts/useAuth' // Context ข้อมูล user
 import { usersData } from '../../data/usersData' // ข้อมูล user ทั้งหมด
+import CustomDatePicker from '../../components/common/CustomDatePicker' // Custom Date Picker
 
 // สร้าง CSS animation สำหรับ fade in และ scale in
 const style = document.createElement('style')
@@ -499,16 +500,29 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
   )
 }
 
+// Helper functions สำหรับแปลงรูปแบบวันที่
+const convertDDMMYYYYtoYYYYMMDD = (ddmmyyyy) => {
+  if (!ddmmyyyy || !ddmmyyyy.includes('/')) return ddmmyyyy
+  const [d, m, y] = ddmmyyyy.split('/')
+  return `${y}-${m}-${d}`
+}
+
+const convertYYYYMMDDtoDDMMYYYY = (yyyymmdd) => {
+  if (!yyyymmdd || !yyyymmdd.includes('-')) return yyyymmdd
+  const [y, m, d] = yyyymmdd.split('-')
+  return `${d}/${m}/${y}`
+}
+
 // Create Form Component
-function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
+function CreateForm({ type, position, onSubmit, onCancel, user, onShowError, isSubmitting }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     radius: 100,
     branchCode: user?.branchCode || '', // 🆕 Default to user's branch
     locationName: '',
-    startDate: '',
-    endDate: '',
+    startDate: '', // เก็บเป็น yyyy-mm-dd สำหรับ CustomDatePicker
+    endDate: '',   // เก็บเป็น yyyy-mm-dd สำหรับ CustomDatePicker
     startTime: '09:00',
     endTime: '17:00',
     assignedUsers: [],
@@ -517,11 +531,53 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
     assignedPositions: []
   })
 
-  const startDateRef = useRef(null)
-  const endDateRef = useRef(null)
+  // State สำหรับ Custom Time Picker
+  const [showTimeStartPicker, setShowTimeStartPicker] = useState(false)
+  const [showTimeEndPicker, setShowTimeEndPicker] = useState(false)
+  const [tempStartTime, setTempStartTime] = useState({ hour: '09', minute: '00' })
+  const [tempEndTime, setTempEndTime] = useState({ hour: '17', minute: '00' })
+  
   const formRef = useRef(null)
+  const timeStartPickerRef = useRef(null)
+  const timeEndPickerRef = useRef(null)
 
-  const pad = (n) => n.toString().padStart(2, '0')
+  // ปิด time picker เมื่อคลิกข้างนอก
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (timeStartPickerRef.current && !timeStartPickerRef.current.contains(event.target)) {
+        setShowTimeStartPicker(false)
+      }
+      if (timeEndPickerRef.current && !timeEndPickerRef.current.contains(event.target)) {
+        setShowTimeEndPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Generate hours and minutes for time picker
+  const hours24 = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
+
+  // จัดการเลือกเวลา
+  const handleTimeSelect = (hour, minute, isStart) => {
+    if (isStart) {
+      setTempStartTime({ hour, minute })
+    } else {
+      setTempEndTime({ hour, minute })
+    }
+  }
+
+  // ยืนยันการเลือกเวลา
+  const confirmTimeSelection = (isStart) => {
+    if (isStart) {
+      setFormData({ ...formData, startTime: `${tempStartTime.hour}:${tempStartTime.minute}` })
+      setShowTimeStartPicker(false)
+    } else {
+      setFormData({ ...formData, endTime: `${tempEndTime.hour}:${tempEndTime.minute}` })
+      setShowTimeEndPicker(false)
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -564,36 +620,15 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
     }
   }, [onCancel])
 
-  const normalizeDate = (input) => {
-    if (!input) return ''
-    const s = input.trim()
-    
-    // Already in YYYY-MM-DD format from date picker
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
-
-    // DD/MM/YYYY or DD-MM-YYYY
-    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
-    if (dmy) {
-      const d = pad(parseInt(dmy[1], 10))
-      const m = pad(parseInt(dmy[2], 10))
-      const y = dmy[3]
-      return `${y}-${m}-${d}`
-    }
-
-    // Try parsing as date
-    const parsed = new Date(s)
-    if (!isNaN(parsed)) {
-      const y = parsed.getFullYear()
-      const m = pad(parsed.getMonth() + 1)
-      const d = pad(parsed.getDate())
-      return `${y}-${m}-${d}`
-    }
-
-    return s
-  }
-
   const handleSubmit = (e) => {
     e.preventDefault()
+    e.stopPropagation()
+    
+    // ป้องกันการ submit ซ้ำใน form level
+    if (isSubmitting) {
+      return
+    }
+    
     if (!formData.name.trim()) {
       onShowError('กรุณากรอกชื่อ')
       return
@@ -605,23 +640,9 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
     
     // Validate dates if event type
     if (type === 'event') {
-      // แปลงวันที่เป็น Date object เพื่อเปรียบเทียบ
-      let startDateObj, endDateObj
-      
-      // ถ้าเป็นรูปแบบ DD/MM/YYYY
-      if (formData.startDate.includes('/')) {
-        const [d1, m1, y1] = formData.startDate.split('/')
-        startDateObj = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1))
-      } else {
-        startDateObj = new Date(formData.startDate)
-      }
-      
-      if (formData.endDate.includes('/')) {
-        const [d2, m2, y2] = formData.endDate.split('/')
-        endDateObj = new Date(parseInt(y2), parseInt(m2) - 1, parseInt(d2))
-      } else {
-        endDateObj = new Date(formData.endDate)
-      }
+      // CustomDatePicker ส่งมาในรูปแบบ YYYY-MM-DD แล้ว
+      const startDateObj = new Date(formData.startDate)
+      const endDateObj = new Date(formData.endDate)
       
       if (startDateObj > endDateObj) {
         onShowError('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
@@ -641,7 +662,14 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
       }
     }
     
-    onSubmit(formData)
+    // แปลงวันที่จาก yyyy-mm-dd เป็น dd/mm/yyyy ก่อนส่ง
+    const dataToSubmit = {
+      ...formData,
+      startDate: formData.startDate ? convertYYYYMMDDtoDDMMYYYY(formData.startDate) : '',
+      endDate: formData.endDate ? convertYYYYMMDDtoDDMMYYYY(formData.endDate) : ''
+    }
+    
+    onSubmit(dataToSubmit)
   }
 
   return (
@@ -749,108 +777,20 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              วันที่เริ่มกิจกรรม <span className="text-red-500">*</span>
-            </label>
-            <div className="relative w-full">
-              <button
-                type="button"
-                onClick={() => {
-                  if (startDateRef.current) {
-                    startDateRef.current.showPicker?.() || startDateRef.current.click()
-                  }
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                  <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                </svg>
-              </button>
-
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="DD/MM/YYYY"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                onBlur={(e) => {
-                  const normalized = normalizeDate(e.target.value)
-                  if (normalized) {
-                    // แปลงเป็น DD/MM/YYYY เพื่อแสดง
-                    const [year, month, day] = normalized.split('-')
-                    setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
-                  }
-                }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
-
-              <input
-                ref={startDateRef}
-                type="date"
-                className="sr-only"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [year, month, day] = e.target.value.split('-')
-                    setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              วันที่สิ้นสุดกิจกรรม <span className="text-red-500">*</span>
-            </label>
-            <div className="relative w-full">
-              <button
-                type="button"
-                onClick={() => {
-                  if (endDateRef.current) {
-                    endDateRef.current.showPicker?.() || endDateRef.current.click()
-                  }
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                  <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                </svg>
-              </button>
-
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="DD/MM/YYYY"
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                onBlur={(e) => {
-                  const normalized = normalizeDate(e.target.value)
-                  if (normalized) {
-                    // แปลงเป็น DD/MM/YYYY เพื่อแสดง
-                    const [year, month, day] = normalized.split('-')
-                    setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
-                  }
-                }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
-
-              <input
-                ref={endDateRef}
-                type="date"
-                className="sr-only"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [year, month, day] = e.target.value.split('-')
-                    setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
-                  }
-                }}
-              />
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <CustomDatePicker
+              label="วันที่เริ่มกิจกรรม"
+              value={formData.startDate}
+              onChange={(value) => setFormData({ ...formData, startDate: value })}
+              required={true}
+            />
+            
+            <CustomDatePicker
+              label="วันที่สิ้นสุด"
+              value={formData.endDate}
+              onChange={(value) => setFormData({ ...formData, endDate: value })}
+              required={true}
+            />
           </div>
 
           {/* Time Selection */}
@@ -859,25 +799,180 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 เวลาเริ่ม <span className="text-red-500">*</span>
               </label>
-              <input
-                type="time"
-                value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
+              <div className="relative" ref={timeStartPickerRef}>
+                <input
+                  type="text"
+                  value={formData.startTime}
+                  onFocus={() => {
+                    setShowTimeStartPicker(true)
+                    const [hour, minute] = formData.startTime.split(':')
+                    setTempStartTime({ hour, minute })
+                  }}
+                  readOnly
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors cursor-pointer"
+                  placeholder="เช่น 09:00"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTimeStartPicker(!showTimeStartPicker)
+                    if (!showTimeStartPicker) {
+                      const [hour, minute] = formData.startTime.split(':')
+                      setTempStartTime({ hour, minute })
+                    }
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
+                    <path d="M12 7v6l4 2" strokeWidth="1.5" />
+                  </svg>
+                </button>
+
+                {showTimeStartPicker && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-brand-primary rounded-lg shadow-2xl overflow-hidden">
+                    <div className="flex">
+                      <div className="flex-1 border-r border-gray-200">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          ชั่วโมง
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {hours24.map((hour) => (
+                            <button
+                              key={hour}
+                              type="button"
+                              onClick={() => handleTimeSelect(hour, tempStartTime.minute, true)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempStartTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {hour}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          นาที
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {minutes.map((minute) => (
+                            <button
+                              key={minute}
+                              type="button"
+                              onClick={() => handleTimeSelect(tempStartTime.hour, minute, true)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempStartTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {minute}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-2 border-t border-gray-200 bg-gray-50">
+                      <button
+                        type="button"
+                        onClick={() => confirmTimeSelection(true)}
+                        className="w-full py-2 text-sm font-semibold text-white bg-brand-primary hover:bg-orange-600 rounded-lg transition-colors"
+                      >
+                        ตกลง
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 เวลาสิ้นสุด <span className="text-red-500">*</span>
               </label>
-              <input
-                type="time"
-                value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
+              <div className="relative" ref={timeEndPickerRef}>
+                <input
+                  type="text"
+                  value={formData.endTime}
+                  onFocus={() => {
+                    setShowTimeEndPicker(true)
+                    const [hour, minute] = formData.endTime.split(':')
+                    setTempEndTime({ hour, minute })
+                  }}
+                  readOnly
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors cursor-pointer"
+                  placeholder="เช่น 17:00"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTimeEndPicker(!showTimeEndPicker)
+                    if (!showTimeEndPicker) {
+                      const [hour, minute] = formData.endTime.split(':')
+                      setTempEndTime({ hour, minute })
+                    }
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
+                    <path d="M12 7v6l4 2" strokeWidth="1.5" />
+                  </svg>
+                </button>
+
+                {showTimeEndPicker && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-brand-primary rounded-lg shadow-2xl overflow-hidden">
+                    <div className="flex">
+                      <div className="flex-1 border-r border-gray-200">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          ชั่วโมง
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {hours24.map((hour) => (
+                            <button
+                              key={hour}
+                              type="button"
+                              onClick={() => handleTimeSelect(hour, tempEndTime.minute, false)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempEndTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {hour}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          นาที
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {minutes.map((minute) => (
+                            <button
+                              key={minute}
+                              type="button"
+                              onClick={() => handleTimeSelect(tempEndTime.hour, minute, false)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempEndTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {minute}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-2 border-t border-gray-200 bg-gray-50">
+                      <button
+                        type="button"
+                        onClick={() => confirmTimeSelection(false)}
+                        className="w-full py-2 text-sm font-semibold text-white bg-brand-primary hover:bg-orange-600 rounded-lg transition-colors"
+                      >
+                        ตกลง
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -888,7 +983,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
             </h3>
 
             <MultiSelect
-              label="เลือกพนักงานเฉพาะราย"
+              label="เลือกพนักงานรายบุคคล"
               selected={formData.assignedUsers}
               onChange={(values) => setFormData({ ...formData, assignedUsers: values })}
               options={usersData.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => ({
@@ -900,7 +995,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
             />
 
             <MultiSelect
-              label="เลือกตาม Department (แผนก)"
+              label="เลือกตามแผนก"
               selected={formData.assignedDepartments}
               onChange={(values) => setFormData({ ...formData, assignedDepartments: values })}
               options={[...new Set(usersData.map(u => u.department))].filter(Boolean).map(dept => ({
@@ -935,13 +1030,16 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
         </button>
         <button
           type="submit"
+          disabled={isSubmitting}
           className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
-            type === 'location'
-              ? 'bg-gray-600 hover:hover:bg-gray-700'
-              : 'bg-brand-primary hover:bg-gray-700'
+            isSubmitting 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : type === 'location'
+                ? 'bg-gray-600 hover:hover:bg-gray-700'
+                : 'bg-brand-primary hover:bg-gray-700'
           }`}
         >
-          สร้าง{type === 'location' ? 'พื้นที่' : 'กิจกรรม'}
+          {isSubmitting ? 'กำลังบันทึก...' : `สร้าง${type === 'location' ? 'พื้นที่' : 'กิจกรรม'}`}
         </button>
       </div>
     </form>
@@ -949,15 +1047,15 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError }) {
 }
 
 // Edit Form Component
-function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
+function EditForm({ type, item, onSubmit, onCancel, user, onShowError, isSubmitting }) {
   const [formData, setFormData] = useState({
     name: item.name || '',
     description: item.description || '',
     radius: item.radius || 100,
     branchCode: item.branchCode || item.createdBy?.branch || user?.branchCode || '', // 🆕 รองรับทั้ง branchCode และ createdBy.branch
     locationName: item.locationName || '',
-    startDate: item.startDate || item.date || '',
-    endDate: item.endDate || item.date || '',
+    startDate: item.startDate ? convertDDMMYYYYtoYYYYMMDD(item.startDate) : (item.date ? convertDDMMYYYYtoYYYYMMDD(item.date) : ''),
+    endDate: item.endDate ? convertDDMMYYYYtoYYYYMMDD(item.endDate) : (item.date ? convertDDMMYYYYtoYYYYMMDD(item.date) : ''),
     startTime: item.startTime || '09:00',
     endTime: item.endTime || '17:00',
     status: item.status || 'ongoing',
@@ -967,11 +1065,59 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
     assignedPositions: item.assignedPositions || []
   })
 
-  const startDateRef = useRef(null)
-  const endDateRef = useRef(null)
-  const formRef = useRef(null)
+  // State สำหรับ Custom Time Picker
+  const [showTimeStartPicker, setShowTimeStartPicker] = useState(false)
+  const [showTimeEndPicker, setShowTimeEndPicker] = useState(false)
+  const [tempStartTime, setTempStartTime] = useState({ 
+    hour: item.startTime?.split(':')[0] || '09', 
+    minute: item.startTime?.split(':')[1] || '00' 
+  })
+  const [tempEndTime, setTempEndTime] = useState({ 
+    hour: item.endTime?.split(':')[0] || '17', 
+    minute: item.endTime?.split(':')[1] || '00' 
+  })
 
-  const pad = (n) => n.toString().padStart(2, '0')
+  const formRef = useRef(null)
+  const timeStartPickerRef = useRef(null)
+  const timeEndPickerRef = useRef(null)
+
+  // ปิด time picker เมื่อคลิกข้างนอก
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (timeStartPickerRef.current && !timeStartPickerRef.current.contains(event.target)) {
+        setShowTimeStartPicker(false)
+      }
+      if (timeEndPickerRef.current && !timeEndPickerRef.current.contains(event.target)) {
+        setShowTimeEndPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Generate hours and minutes for time picker
+  const hours24 = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
+
+  // จัดการเลือกเวลา
+  const handleTimeSelect = (hour, minute, isStart) => {
+    if (isStart) {
+      setTempStartTime({ hour, minute })
+    } else {
+      setTempEndTime({ hour, minute })
+    }
+  }
+
+  // ยืนยันการเลือกเวลา
+  const confirmTimeSelection = (isStart) => {
+    if (isStart) {
+      setFormData({ ...formData, startTime: `${tempStartTime.hour}:${tempStartTime.minute}` })
+      setShowTimeStartPicker(false)
+    } else {
+      setFormData({ ...formData, endTime: `${tempEndTime.hour}:${tempEndTime.minute}` })
+      setShowTimeEndPicker(false)
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1014,33 +1160,15 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
     }
   }, [onCancel])
 
-  const normalizeDate = (input) => {
-    if (!input) return ''
-    const s = input.trim()
-    
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
-
-    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
-    if (dmy) {
-      const d = pad(parseInt(dmy[1], 10))
-      const m = pad(parseInt(dmy[2], 10))
-      const y = dmy[3]
-      return `${y}-${m}-${d}`
-    }
-
-    const parsed = new Date(s)
-    if (!isNaN(parsed)) {
-      const y = parsed.getFullYear()
-      const m = pad(parsed.getMonth() + 1)
-      const d = pad(parsed.getDate())
-      return `${y}-${m}-${d}`
-    }
-
-    return s
-  }
-
   const handleSubmit = (e) => {
     e.preventDefault()
+    e.stopPropagation()
+    
+    // ป้องกันการ submit ซ้ำใน form level
+    if (isSubmitting) {
+      return
+    }
+    
     if (!formData.name.trim()) {
       onShowError('กรุณากรอกชื่อ')
       return
@@ -1051,21 +1179,9 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
     }
     
     if (type === 'event') {
-      let startDateObj, endDateObj
-      
-      if (formData.startDate.includes('/')) {
-        const [d1, m1, y1] = formData.startDate.split('/')
-        startDateObj = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1))
-      } else {
-        startDateObj = new Date(formData.startDate)
-      }
-      
-      if (formData.endDate.includes('/')) {
-        const [d2, m2, y2] = formData.endDate.split('/')
-        endDateObj = new Date(parseInt(y2), parseInt(m2) - 1, parseInt(d2))
-      } else {
-        endDateObj = new Date(formData.endDate)
-      }
+      // CustomDatePicker ส่งมาในรูปแบบ YYYY-MM-DD แล้ว
+      const startDateObj = new Date(formData.startDate)
+      const endDateObj = new Date(formData.endDate)
       
       if (startDateObj > endDateObj) {
         onShowError('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด')
@@ -1085,7 +1201,14 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
       }
     }
     
-    onSubmit(formData)
+    // แปลงวันที่จาก yyyy-mm-dd เป็น dd/mm/yyyy ก่อนส่ง
+    const dataToSubmit = {
+      ...formData,
+      startDate: formData.startDate ? convertYYYYMMDDtoDDMMYYYY(formData.startDate) : '',
+      endDate: formData.endDate ? convertYYYYMMDDtoDDMMYYYY(formData.endDate) : ''
+    }
+    
+    onSubmit(dataToSubmit)
   }
 
   return (
@@ -1175,107 +1298,20 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              วันที่เริ่มกิจกรรม <span className="text-red-500">*</span>
-            </label>
-            <div className="relative w-full">
-              <button
-                type="button"
-                onClick={() => {
-                  if (startDateRef.current) {
-                    startDateRef.current.showPicker?.() || startDateRef.current.click()
-                  }
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                  <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                </svg>
-              </button>
+          <CustomDatePicker
+            label="วันที่เริ่มกิจกรรม"
+            value={formData.startDate}
+            onChange={(value) => setFormData({ ...formData, startDate: value })}
+            required={true}
+          />
 
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="DD/MM/YYYY"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                onBlur={(e) => {
-                  const normalized = normalizeDate(e.target.value)
-                  if (normalized) {
-                    const [year, month, day] = normalized.split('-')
-                    setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
-                  }
-                }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
-
-              <input
-                ref={startDateRef}
-                type="date"
-                className="sr-only"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [year, month, day] = e.target.value.split('-')
-                    setFormData({ ...formData, startDate: `${day}/${month}/${year}` })
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              วันที่สิ้นสุดกิจกรรม <span className="text-red-500">*</span>
-            </label>
-            <div className="relative w-full">
-              <button
-                type="button"
-                onClick={() => {
-                  if (endDateRef.current) {
-                    endDateRef.current.showPicker?.() || endDateRef.current.click()
-                  }
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 z-10"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                  <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                </svg>
-              </button>
-
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="DD/MM/YYYY"
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                onBlur={(e) => {
-                  const normalized = normalizeDate(e.target.value)
-                  if (normalized) {
-                    const [year, month, day] = normalized.split('-')
-                    setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
-                  }
-                }}
-                className="w-full px-4 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
-
-              <input
-                ref={endDateRef}
-                type="date"
-                className="sr-only"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [year, month, day] = e.target.value.split('-')
-                    setFormData({ ...formData, endDate: `${day}/${month}/${year}` })
-                  }
-                }}
-              />
-            </div>
-          </div>
+          <CustomDatePicker
+            label="วันที่สิ้นสุดกิจกรรม"
+            value={formData.endDate}
+            onChange={(value) => setFormData({ ...formData, endDate: value })}
+            minDate={formData.startDate}
+            required={true}
+          />
 
           {/* Time Selection */}
           <div className="grid grid-cols-2 gap-4">
@@ -1283,25 +1319,180 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 เวลาเริ่ม <span className="text-red-500">*</span>
               </label>
-              <input
-                type="time"
-                value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
+              <div className="relative" ref={timeStartPickerRef}>
+                <input
+                  type="text"
+                  value={formData.startTime}
+                  onFocus={() => {
+                    setShowTimeStartPicker(true)
+                    const [hour, minute] = formData.startTime.split(':')
+                    setTempStartTime({ hour, minute })
+                  }}
+                  readOnly
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors cursor-pointer"
+                  placeholder="เช่น 09:00"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTimeStartPicker(!showTimeStartPicker)
+                    if (!showTimeStartPicker) {
+                      const [hour, minute] = formData.startTime.split(':')
+                      setTempStartTime({ hour, minute })
+                    }
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
+                    <path d="M12 7v6l4 2" strokeWidth="1.5" />
+                  </svg>
+                </button>
+
+                {showTimeStartPicker && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-brand-primary rounded-lg shadow-2xl overflow-hidden">
+                    <div className="flex">
+                      <div className="flex-1 border-r border-gray-200">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          ชั่วโมง
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {hours24.map((hour) => (
+                            <button
+                              key={hour}
+                              type="button"
+                              onClick={() => handleTimeSelect(hour, tempStartTime.minute, true)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempStartTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {hour}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          นาที
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {minutes.map((minute) => (
+                            <button
+                              key={minute}
+                              type="button"
+                              onClick={() => handleTimeSelect(tempStartTime.hour, minute, true)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempStartTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {minute}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-2 border-t border-gray-200 bg-gray-50">
+                      <button
+                        type="button"
+                        onClick={() => confirmTimeSelection(true)}
+                        className="w-full py-2 text-sm font-semibold text-white bg-brand-primary hover:bg-orange-600 rounded-lg transition-colors"
+                      >
+                        ตกลง
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 เวลาสิ้นสุด <span className="text-red-500">*</span>
               </label>
-              <input
-                type="time"
-                value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors"
-                required
-              />
+              <div className="relative" ref={timeEndPickerRef}>
+                <input
+                  type="text"
+                  value={formData.endTime}
+                  onFocus={() => {
+                    setShowTimeEndPicker(true)
+                    const [hour, minute] = formData.endTime.split(':')
+                    setTempEndTime({ hour, minute })
+                  }}
+                  readOnly
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-brand-primary focus:outline-none transition-colors cursor-pointer"
+                  placeholder="เช่น 17:00"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTimeEndPicker(!showTimeEndPicker)
+                    if (!showTimeEndPicker) {
+                      const [hour, minute] = formData.endTime.split(':')
+                      setTempEndTime({ hour, minute })
+                    }
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
+                    <path d="M12 7v6l4 2" strokeWidth="1.5" />
+                  </svg>
+                </button>
+
+                {showTimeEndPicker && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-brand-primary rounded-lg shadow-2xl overflow-hidden">
+                    <div className="flex">
+                      <div className="flex-1 border-r border-gray-200">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          ชั่วโมง
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {hours24.map((hour) => (
+                            <button
+                              key={hour}
+                              type="button"
+                              onClick={() => handleTimeSelect(hour, tempEndTime.minute, false)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempEndTime.hour === hour ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {hour}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-brand-primary text-white text-center py-2 text-sm font-semibold">
+                          นาที
+                        </div>
+                        <div className="overflow-y-auto max-h-48">
+                          {minutes.map((minute) => (
+                            <button
+                              key={minute}
+                              type="button"
+                              onClick={() => handleTimeSelect(tempEndTime.hour, minute, false)}
+                              className={`w-full px-3 py-2 text-sm text-center hover:bg-orange-50 transition-colors ${
+                                tempEndTime.minute === minute ? 'bg-orange-100 font-semibold text-brand-primary' : ''
+                              }`}
+                            >
+                              {minute}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-2 border-t border-gray-200 bg-gray-50">
+                      <button
+                        type="button"
+                        onClick={() => confirmTimeSelection(false)}
+                        className="w-full py-2 text-sm font-semibold text-white bg-brand-primary hover:bg-orange-600 rounded-lg transition-colors"
+                      >
+                        ตกลง
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1340,7 +1531,7 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
             />
 
             <MultiSelect
-              label="เลือกตาม Department (แผนก)"
+              label="เลือกตามแผนก"
               selected={formData.assignedDepartments}
               onChange={(values) => setFormData({ ...formData, assignedDepartments: values })}
               options={[...new Set(usersData.map(u => u.department))].filter(Boolean).map(dept => ({
@@ -1351,7 +1542,7 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
             />
 
             <MultiSelect
-              label="เลือกตาม Position (ตำแหน่ง)"
+              label="เลือกตามตำแหน่ง"
               selected={formData.assignedPositions}
               onChange={(values) => setFormData({ ...formData, assignedPositions: values })}
               options={[...new Set(usersData.map(u => u.position))].filter(Boolean).map(pos => ({
@@ -1374,13 +1565,16 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
         </button>
         <button
           type="submit"
+          disabled={isSubmitting}
           className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors text-white ${
-            type === 'location'
-              ? 'bg-gray-600 hover:hover:bg-gray-700'
-              : 'bg-brand-primary hover:bg-gray-700'
+            isSubmitting 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : type === 'location'
+                ? 'bg-gray-600 hover:hover:bg-gray-700'
+                : 'bg-brand-primary hover:bg-gray-700'
           }`}
         >
-          บันทึก
+          {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
         </button>
       </div>
     </form>
@@ -1389,12 +1583,16 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError }) {
 
 function MappingAndEvents() {
   const { user } = useAuth()
-  const { getFilteredLocations, deleteLocation, addLocation, updateLocation } = useLocations()
-  const { getFilteredEvents, deleteEvent, addEvent, updateEvent } = useEvents()
+  const { getFilteredLocations, getAllLocations, deleteLocation, addLocation, updateLocation } = useLocations()
+  const { getFilteredEvents, getAllEvents, deleteEvent, addEvent, updateEvent } = useEvents()
   
-  // ✅ ใช้ฟังก์ชันกรองตาม branch
+  // ✅ ใช้ฟังก์ชันกรองตาม branch สำหรับแสดงผล
   const locations = getFilteredLocations(user)
   const events = getFilteredEvents(user)
+  
+  // ✅ ใช้ข้อมูลทั้งหมด (unfiltered) สำหรับคำนวณ ID ใหม่
+  const allLocations = getAllLocations()
+  const allEvents = getAllEvents()
   
   const [activeTab, setActiveTab] = useState('all') // 'all', 'locations' or 'events'
   const [mapType, setMapType] = useState('default') // 'default' or 'satellite'
@@ -1431,6 +1629,9 @@ function MappingAndEvents() {
     message: '',
     onConfirm: () => { }
   })
+  
+  // Prevent double submission
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const defaultCenter = [13.7606, 100.5034]
 
@@ -1799,10 +2000,17 @@ function MappingAndEvents() {
 
   // Handle create location/event
   const handleCreate = async (formData) => {
+    // ป้องกันการ submit ซ้ำ
+    if (isSubmitting) {
+      return
+    }
+    
+    setIsSubmitting(true)
+    
     try {
       if (createType === 'location') {
-        // Check duplicate name for locations
-        const isDuplicate = locations.some(loc => 
+        // Check duplicate name for locations - ใช้ allLocations เพื่อเช็คชื่อซ้ำกับข้อมูลทั้งหมด
+        const isDuplicate = allLocations.some(loc => 
           loc.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
@@ -1810,10 +2018,13 @@ function MappingAndEvents() {
             isOpen: true,
             message: 'มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
           })
+          setIsSubmitting(false) // Reset flag เมื่อเจอ error
           return
         }
 
-        const newId = locations.length > 0 ? Math.max(...locations.map(l => l.id)) + 1 : 1
+        // ใช้ allLocations เพื่อคำนวณ ID ที่ไม่ซ้ำ (ไม่ใช่ filtered locations)
+        const newId = allLocations.length > 0 ? Math.max(...allLocations.map(l => l.id)) + 1 : 1
+        
         addLocation({
           id: newId,
           ...formData,
@@ -1829,8 +2040,8 @@ function MappingAndEvents() {
           }
         })
       } else if (createType === 'event') {
-        // Check duplicate name for events
-        const isDuplicate = events.some(evt => 
+        // Check duplicate name for events - ใช้ allEvents เพื่อเช็คชื่อซ้ำกับข้อมูลทั้งหมด
+        const isDuplicate = allEvents.some(evt => 
           evt.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
@@ -1838,10 +2049,12 @@ function MappingAndEvents() {
             isOpen: true,
             message: 'มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
           })
+          setIsSubmitting(false) // Reset flag เมื่อเจอ error
           return
         }
 
-        const newId = events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1
+        // ใช้ allEvents เพื่อคำนวณ ID ที่ไม่ซ้ำ (ไม่ใช่ filtered events)
+        const newId = allEvents.length > 0 ? Math.max(...allEvents.map(e => e.id)) + 1 : 1
 
         let formattedStartDate = formData.startDate
         let formattedEndDate = formData.endDate
@@ -1899,6 +2112,9 @@ function MappingAndEvents() {
         isOpen: true,
         message: 'เกิดข้อผิดพลาดในการสร้าง กรุณาลองใหม่อีกครั้ง'
       })
+    } finally {
+      // Reset flag หลังจากทำเสร็จ (ไม่ว่าจะสำเร็จหรือไม่)
+      setTimeout(() => setIsSubmitting(false), 500)
     }
   }
 
@@ -1930,18 +2146,26 @@ function MappingAndEvents() {
 
   // Handle edit location/event
   const handleEdit = async (formData) => {
+    // ป้องกันการ submit ซ้ำ
+    if (isSubmitting) {
+      return
+    }
+    
+    setIsSubmitting(true)
+    
     try {
       if (editItem.type === 'location') {
-        // Check duplicate name for locations (exclude current item)
-        const isDuplicate = locations.some(loc => 
+        // Check duplicate name for locations (exclude current item) - ใช้ allLocations
+        const isDuplicate = allLocations.some(loc => 
           loc.id !== editItem.id && 
           loc.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
         if (isDuplicate) {
           setErrorDialog({
             isOpen: true,
-            message: 'มีพื้นที่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
+            message: 'มีพื้นท้ี่ชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
           })
+          setIsSubmitting(false) // Reset flag
           return
         }
 
@@ -1954,8 +2178,8 @@ function MappingAndEvents() {
           }
         })
       } else if (editItem.type === 'event') {
-        // Check duplicate name for events (exclude current item)
-        const isDuplicate = events.some(evt => 
+        // Check duplicate name for events (exclude current item) - ใช้ allEvents
+        const isDuplicate = allEvents.some(evt => 
           evt.id !== editItem.id && 
           evt.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
         )
@@ -1964,6 +2188,7 @@ function MappingAndEvents() {
             isOpen: true,
             message: 'มีกิจกรรมชื่อนี้อยู่แล้ว กรุณาใช้ชื่ออื่น'
           })
+          setIsSubmitting(false) // Reset flag
           return
         }
 
@@ -2024,6 +2249,9 @@ function MappingAndEvents() {
         isOpen: true,
         message: 'เกิดข้อผิดพลาดในการแก้ไข กรุณาลองใหม่อีกครั้ง'
       })
+    } finally {
+      // Reset flag หลังจากทำเสร็จ
+      setTimeout(() => setIsSubmitting(false), 500)
     }
   }
 
@@ -2453,6 +2681,7 @@ function MappingAndEvents() {
                 onShowError={(message) => {
                   setErrorDialog({ isOpen: true, message })
                 }}
+                isSubmitting={isSubmitting}
               />
             </div>
           </div>
@@ -2537,6 +2766,7 @@ function MappingAndEvents() {
                   onShowError={(message) => {
                     setErrorDialog({ isOpen: true, message })
                   }}
+                  isSubmitting={isSubmitting}
                 />
               )}
             </div>
@@ -2870,9 +3100,10 @@ function MappingAndEvents() {
                     center={[location.latitude, location.longitude]}
                     radius={location.radius}
                     pathOptions={{
-                      color: 'green',
-                      fillColor: 'green',
-                      fillOpacity: 0.2
+                      color: '#22c55e',
+                      fillColor: '#22c55e',
+                      fillOpacity: 0.25,
+                      weight: 2
                     }}
                   />
                 </React.Fragment>
@@ -2955,9 +3186,10 @@ function MappingAndEvents() {
                     center={[event.latitude, event.longitude]}
                     radius={event.radius}
                     pathOptions={{
-                      color: event.status === 'ongoing' ? 'orange' : 'gray',
-                      fillColor: event.status === 'ongoing' ? 'orange' : 'gray',
-                      fillOpacity: 0.2
+                      color: '#f97316',
+                      fillColor: '#f97316',
+                      fillOpacity: 0.25,
+                      weight: 2
                     }}
                   />
                 </React.Fragment>

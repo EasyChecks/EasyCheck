@@ -3,7 +3,8 @@
 // ===================================
 
 export const mockBranches = [
-  { id: 'BKK101', name: 'กรุงเทพ สาขา 101', provinceCode: 'BKK' },
-  { id: 'CNX201', name: 'เชียงใหม่ สาขา 201', provinceCode: 'CNX' },
-  { id: 'PKT301', name: 'ภูเก็ต สาขา 301', provinceCode: 'PKT' },
+  { id: 'BKK101', name: 'BKK 101 (สยาม)', provinceCode: 'BKK', branchCode: '101' },
+  { id: 'BKK102', name: 'BKK 102 (อโศก)', provinceCode: 'BKK', branchCode: '102' },
+  { id: 'CNX201', name: 'CNX (เชียงใหม่)', provinceCode: 'CNX', branchCode: '201' },
+  { id: 'PKT301', name: 'PKT (ภูเก็ต)', provinceCode: 'PKT', branchCode: '301' },
 ];
