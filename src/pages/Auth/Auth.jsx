@@ -243,7 +243,7 @@ function Auth() {
       >
         <div className="space-y-6">
           <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-brand-primary to-orange-600 bg-clip-text text-transparent">
-            Login
+            ลงชื่อเข้าใช้
           </header>
 
           {error && (
