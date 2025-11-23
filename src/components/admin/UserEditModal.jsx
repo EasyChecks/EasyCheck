@@ -28,7 +28,6 @@ const UserEditModal = React.memo(function UserEditModal({
   return (
     <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
-      onClick={onClose}
     >
       <div 
         className="bg-white rounded-2xl shadow-sm w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
