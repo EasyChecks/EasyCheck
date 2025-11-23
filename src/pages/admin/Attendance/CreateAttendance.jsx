@@ -7,6 +7,7 @@ import { useLocations } from '../../../contexts/LocationContext'
 import { useAuth } from '../../../contexts/useAuth'
 import { usersData } from '../../../data/usersData'
 import PageModal from '../../../components/common/PageModal'
+import CustomDatePicker from '../../../components/common/CustomDatePicker'
 
 // Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl
@@ -1494,7 +1495,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
             </div>
           )}
 
-          {/* ช่วงวันที่ทำงาน - ปรับ Layout ใหม่ */}
+          {/* ช่วงวันที่ทำงาน - ใช้ Custom Date Picker */}
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-4">
             <label className="flex items-center gap-2 text-base font-semibold text-gray-800 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
@@ -1504,83 +1505,41 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               <span className="text-red-500 text-sm">*</span>
             </label>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* วันที่เริ่มต้น */}
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1.5 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
                   วันที่เริ่มต้น
                 </label>
-                <div className="relative w-full">
-                  <button
-                    type="button"
-                    onClick={() => openNativePicker(dateRef)}
-                    aria-label="เปิดตัวเลือกวันที่เริ่ม"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-600 z-10 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                      <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                    </svg>
-                  </button>
-
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="YYYY-MM-DD"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    onBlur={e => setDate(prev => normalizeDate(prev))}
-                    onKeyDown={(e) => handleKeyDown(e, 'date')}
-                    className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none text-sm"
-                    aria-label="วันที่เริ่มต้น"
-                  />
-
-                  <input
-                    ref={dateRef}
-                    type="date"
-                    className="sr-only"
-                    onChange={e => setDate(e.target.value)}
-                  />
-                </div>
+                <CustomDatePicker
+                  value={date}
+                  onChange={(newDate) => {
+                    setDate(newDate);
+                    // ถ้า dateEnd มีค่าและน้อยกว่า date ใหม่ ให้ clear dateEnd
+                    if (dateEnd && newDate && new Date(dateEnd) < new Date(newDate)) {
+                      setDateEnd('');
+                    }
+                  }}
+                  minDate={null}
+                  label=""
+                  required={false}
+                />
               </div>
 
+              {/* วันที่สิ้นสุด */}
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1.5 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
                   วันที่สิ้นสุด
                 </label>
-                <div className="relative w-full">
-                  <button
-                    type="button"
-                    onClick={() => openNativePicker(dateEndRef)}
-                    aria-label="เปิดตัวเลือกวันที่สิ้นสุด"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-600 z-10 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="1.5" />
-                      <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-                    </svg>
-                  </button>
-
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="YYYY-MM-DD"
-                    value={dateEnd}
-                    onChange={e => setDateEnd(e.target.value)}
-                    onBlur={e => setDateEnd(prev => normalizeDate(prev))}
-                    onKeyDown={(e) => handleKeyDown(e, 'dateEnd')}
-                    className="w-full border-2 border-gray-200 bg-white rounded-lg px-3 py-2.5 pr-10 hover:border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none text-sm"
-                    aria-label="วันที่สิ้นสุด"
-                  />
-
-                  <input
-                    ref={dateEndRef}
-                    type="date"
-                    className="sr-only"
-                    onChange={e => setDateEnd(e.target.value)}
-                  />
-                </div>
+                <CustomDatePicker
+                  value={dateEnd}
+                  onChange={setDateEnd}
+                  minDate={date || null}
+                  label=""
+                  required={false}
+                />
               </div>
             </div>
             
