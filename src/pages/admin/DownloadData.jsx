@@ -22,7 +22,7 @@ function DownloadData() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedBranches, setSelectedBranches] = useState([]);
-  const [branchSearchQuery, setBranchSearchQuery] = useState(''); // 🆕 ช่องค้นหาออฟฟิศ
+  const [branchSearchQuery, setBranchSearchQuery] = useState(''); // 🆕 ช่องค้นหาสาขา
   const [selectedOptions, setSelectedOptions] = useState({
     attendanceData: true,
     personalData: true,
@@ -44,6 +44,23 @@ function DownloadData() {
   const branches = mockBranches;
   const reports = mockReports;
   const dataOptions = mockDataOptions;
+
+  // 🆕 กรองสาขาตามคำค้นหา
+  const filteredBranches = branches.filter(branch => 
+    branch.name.toLowerCase().includes(branchSearchQuery.toLowerCase()) ||
+    branch.id.toLowerCase().includes(branchSearchQuery.toLowerCase())
+  );
+
+  // 🆕 ฟังก์ชันเลือก/ยกเลิกทั้งหมด
+  const handleSelectAllBranches = () => {
+    if (selectedBranches.length === filteredBranches.length) {
+      // ถ้าเลือกครบแล้ว → ยกเลิกทั้งหมด
+      setSelectedBranches([]);
+    } else {
+      // เลือกทั้งหมด (เฉพาะที่กรองแล้ว)
+      setSelectedBranches(filteredBranches.map(b => b.id));
+    }
+  };
 
   // 🆕 ฟังการเปลี่ยนแปลง usersData จาก AdminManageUser
   useEffect(() => {
@@ -96,28 +113,9 @@ function DownloadData() {
     setShowModal(false);
     setSelectedReport(null);
     setSelectedBranches([]);
-    setBranchSearchQuery(''); // 🆕 Reset search
     setShowPreview(false);
     setPreviewData(null);
   };
-
-  // 🆕 ฟังก์ชันเลือกทั้งหมด / ยกเลิกทั้งหมด
-  const handleSelectAllBranches = () => {
-    const filteredBranchIds = filteredBranches.map(b => b.id);
-    if (selectedBranches.length === filteredBranchIds.length) {
-      // ถ้าเลือกครบแล้ว ให้ยกเลิกทั้งหมด
-      setSelectedBranches([]);
-    } else {
-      // เลือกทั้งหมดที่กรองแล้ว
-      setSelectedBranches(filteredBranchIds);
-    }
-  };
-
-  // 🆕 กรองออฟฟิศตามคำค้นหา
-  const filteredBranches = branches.filter(branch => 
-    branch.name.toLowerCase().includes(branchSearchQuery.toLowerCase()) ||
-    branch.id.toLowerCase().includes(branchSearchQuery.toLowerCase())
-  );
 
   const handleOptionToggle = (optionId) => {
     setSelectedOptions(prev => ({
@@ -581,75 +579,58 @@ function DownloadData() {
                     </h3>
                     <button
                       onClick={handleSelectAllBranches}
-                      className="px-3 py-1.5 text-sm font-medium text-brand-primary hover:bg-orange-50 rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-brand-primary hover:bg-orange-50 rounded-lg transition-colors border border-orange-200 hover:border-orange-300"
                     >
                       {selectedBranches.length === filteredBranches.length && filteredBranches.length > 0 ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'}
                     </button>
                   </div>
                   
-                  {/* Search Box */}
-                  <div className="mb-3 relative">
-                    <input
-                      type="text"
-                      value={branchSearchQuery}
-                      onChange={(e) => setBranchSearchQuery(e.target.value)}
-                      placeholder="ค้นหาออฟฟิศ..."
-                      className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-xl focus:border-brand-primary focus:outline-none transition-colors text-sm"
-                    />
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    {branchSearchQuery && (
-                      <button
-                        onClick={() => setBranchSearchQuery('')}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Branch List */}
-                  {filteredBranches.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {/* ช่องค้นหา */}
+                  <div className="mb-3">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={branchSearchQuery}
+                        onChange={(e) => setBranchSearchQuery(e.target.value)}
+                        placeholder="ค้นหาสาขา..."
+                        className="w-full px-4 py-2.5 pl-10 border-2 border-gray-200 rounded-xl focus:border-brand-primary focus:outline-none transition-colors"
+                      />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      <p className="text-sm">ไม่พบออฟฟิศที่ค้นหา</p>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {filteredBranches.map((branch) => (
-                        <label
-                          key={branch.id}
-                          className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                            selectedBranches.includes(branch.id)
-                              ? 'bg-orange-50 border-orange-300 shadow-sm'
-                              : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedBranches.includes(branch.id)}
-                            onChange={() => handleBranchToggle(branch.id)}
-                            className="w-5 h-5 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 cursor-pointer"
-                          />
-                          <div className="flex-1">
-                            <div className="font-semibold text-gray-800 text-sm">{branch.name}</div>
-                            <div className="text-xs text-gray-500">{branch.id}</div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredBranches.length > 0 ? filteredBranches.map((branch) => (
+                      <label
+                        key={branch.id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                          selectedBranches.includes(branch.id)
+                            ? 'bg-orange-50 border-orange-300 shadow-sm'
+                            : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedBranches.includes(branch.id)}
+                          onChange={() => handleBranchToggle(branch.id)}
+                          className="w-5 h-5 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800 text-sm">{branch.name}</div>
+                          <div className="text-xs text-gray-500">{branch.id}</div>
+                        </div>
+                      </label>
+                    )) : (
+                      <div className="col-span-2 text-center py-8 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <p className="text-sm">ไม่พบสาขาที่ค้นหา</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
