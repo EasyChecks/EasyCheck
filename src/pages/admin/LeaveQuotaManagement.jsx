@@ -152,11 +152,11 @@ function LeaveQuotaManagement() {
     
     // กรองตามสาขา - Super Admin เห็นทั้งหมด, Admin เห็นเฉพาะสาขาตัวเอง
     if (user.role === 'admin') {
-      // Admin เห็นเฉพาะสาขาตัวเอง
-      filtered = filtered.filter(u => u.branchCode === user.branchCode);
+      // Admin เห็นเฉพาะสาขาตัวเอง (ใช้ provinceCode)
+      filtered = filtered.filter(u => u.provinceCode === user.provinceCode);
     } else if (filterBranch) {
-      // Super Admin สามารถเลือกกรองตามสาขา
-      filtered = filtered.filter(u => u.branchCode === filterBranch);
+      // Super Admin สามารถเลือกกรองตามสาขา (ใช้ provinceCode)
+      filtered = filtered.filter(u => u.provinceCode === filterBranch);
     }
     
     // กรองตามแผนก
@@ -178,14 +178,14 @@ function LeaveQuotaManagement() {
 
   // ดึงรายชื่อแผนกและสาขาทั้งหมด
   const departments = [...new Set(usersData.map(u => u.department))].filter(Boolean);
-  const branches = [...new Set(usersData.map(u => u.branchCode))].filter(Boolean).sort();
+  // ใช้ provinceCode แทน branchCode
+  const branches = [...new Set(usersData.map(u => u.provinceCode))].filter(Boolean).sort();
   
-  // Mapping รหัสสาขากับชื่อจังหวัด
+  // Mapping provinceCode กับชื่อจังหวัด
   const branchNames = {
-    '101': 'กรุงเทพฯ สาขาที่ 1',
-    '102': 'กรุงเทพฯ สาขาที่ 2',
-    '201': 'เชียงใหม่',
-    '301': 'ภูเก็ต'
+    'BKK': 'กรุงเทพมหานคร',
+    'CNX': 'เชียงใหม่',
+    'PKT': 'ภูเก็ต'
   };
 
   // Handle user selection
@@ -336,9 +336,9 @@ function LeaveQuotaManagement() {
                         <div className="sticky top-0 bg-gray-50 px-4 py-2 border-b border-gray-200">
                           <p className="text-xs text-gray-600 font-semibold">
                             พบ {getFilteredUsers().length} คน
-                            {filterBranch && ` • ${branchNames[filterBranch] || `สาขา ${filterBranch}`}`}
+                            {filterBranch && ` • ${branchNames[filterBranch] || filterBranch}`}
                             {filterDepartment && ` • แผนก ${filterDepartment}`}
-                            {!filterBranch && !filterDepartment && user?.role === 'admin' && ` • ${branchNames[user.branchCode] || `สาขา ${user.branchCode}`}`}
+                            {!filterBranch && !filterDepartment && user?.role === 'admin' && ` • ${branchNames[user.provinceCode] || user.provinceCode}`}
                           </p>
                         </div>
                         {getFilteredUsers().map(user => (
@@ -356,7 +356,7 @@ function LeaveQuotaManagement() {
                                 </p>
                                 <p className="text-sm text-gray-500">
                                   {user.employeeId} - {user.department}
-                                  {user.branchCode && ` (${branchNames[user.branchCode] || `สาขา ${user.branchCode}`})`}
+                                  {user.provinceCode && ` (${branchNames[user.provinceCode] || user.provinceCode})`}
                                 </p>
                               </div>
                               {selectedUser?.id === user.id && (
@@ -389,10 +389,10 @@ function LeaveQuotaManagement() {
                   onChange={(e) => setFilterBranch(e.target.value)}
                   className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-orange-200 outline-none transition-all appearance-none bg-white"
                 >
-                  <option value="">ทุกสาขา ({branches.length} สาขา)</option>
+                  <option value="">สาขา: ทั้งหมด</option>
                   {branches.map(branch => (
                     <option key={branch} value={branch}>
-                      {branchNames[branch] || `สาขา ${branch}`}
+                      {branch} ({branchNames[branch]})
                     </option>
                   ))}
                 </select>
