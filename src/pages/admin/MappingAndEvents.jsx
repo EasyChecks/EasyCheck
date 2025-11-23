@@ -726,8 +726,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError, isS
             required
           >
             <option value="">เลือกสาขา</option>
-            <option value="101">BKK-101 (กรุงเทพ สาขา 1)</option>
-            <option value="102">BKK-102 (กรุงเทพ สาขา 2)</option>
+            <option value="101">BKK-101 (กรุงเทพมหานคร)</option>
             <option value="201">CNX-201 (เชียงใหม่)</option>
             <option value="301">PKT-301 (ภูเก็ต)</option>
           </select>
@@ -1251,8 +1250,7 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError, isSubmitt
             required
           >
             <option value="">เลือกสาขา</option>
-            <option value="101">BKK-101 (กรุงเทพ สาขา 1)</option>
-            <option value="102">BKK-102 (กรุงเทพ สาขา 2)</option>
+            <option value="101">BKK-101 (กรุงเทพมหานคร)</option>
             <option value="201">CNX-201 (เชียงใหม่)</option>
             <option value="301">PKT-301 (ภูเก็ต)</option>
           </select>
