@@ -484,7 +484,7 @@ function Auth() {
                 }}
                 className="text-gray-500 hover:text-orange-500 transition-colors duration-200 hover:underline underline-offset-4"
               >
-                {searchParams.get('mode') === 'reset' ? 'กลับไปหน้าตั้งค่า' : 'กลับหน้า Login'}
+                {searchParams.get('mode') === 'reset' ? 'กลับไปหน้าตั้งค่า' : 'กลับหน้า ลงชื่อเข้าใช้'}
               </button>
             </div>
           </div>
