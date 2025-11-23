@@ -2209,7 +2209,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                เป้าหมาย <span className="text-xs text-gray-500">(แต่ละบรรทัด)</span>
+                เป้าหมาย <span className="text-xs text-gray-500">(แต่ละบรรทัดคือเป้าหมาย)</span>
               </label>
               <textarea 
                 ref={goalsRef}
