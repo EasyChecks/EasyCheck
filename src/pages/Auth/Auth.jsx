@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/useAuth'
 import PuffLoader from '../../components/common/PuffLoader'
-import { getUserForAuth, mockLoginAPI, getFallbackAdminAccount } from '../../data/usersData' // Import helper functions
+import { getUserForAuth, mockLoginAPI, getFallbackAdminAccount, usersData as initialUsersData } from '../../data/usersData'
 
 
 function Auth() {
@@ -131,7 +131,7 @@ function Auth() {
     }
   }
 
-  function handleResetConfirm() {
+function handleResetConfirm() {
     setResetError('')
     setResetSuccess('')
     
@@ -145,38 +145,61 @@ function Auth() {
       return
     }
 
+    // ดึงรหัสผ่านปัจจุบันจากระบบ Mock
     const storedPasswords = JSON.parse(localStorage.getItem('mockUserPasswords') || '{}')
     
+    // ดึงข้อมูล User มาตรวจสอบ
     const userData = getUserForAuth(Username)
     
     if (userData) {
+      // ตรวจสอบว่ารหัสผ่านเดิมถูกไหม
       if (userData.password !== Password) {
         setResetError('รหัสผ่านเดิมไม่ถูกต้อง')
         return
       }
 
-      // 💾 อัปเดตรหัสผ่านของ user ใน localStorage
-      const users = JSON.parse(localStorage.getItem('users') || '[]')
-      const updatedUsers = users.map(user => {
-        if (user.username === Username) {
-          return { ...user, password: NewPassword }
+      // =======================================================
+      // 🛠️ ส่วนที่แก้ไข: เปลี่ยนการบันทึกให้ถูกต้อง (Key: usersData)
+      // =======================================================
+      
+      // 1. อ่านข้อมูลจาก usersData (ถ้าไม่มีให้ใช้ข้อมูลตั้งต้น)
+      let allUsers = []
+      const storedUsersData = localStorage.getItem('usersData')
+      
+      if (storedUsersData) {
+        allUsers = JSON.parse(storedUsersData)
+      } else {
+        // ถ้ายังไม่เคยบันทึก ให้ใช้ข้อมูลดิบจากไฟล์ usersData.js
+        allUsers = initialUsersData
+      }
+
+      // 2. ค้นหา User คนนั้นแล้วเปลี่ยนรหัสผ่านใน List
+      const updatedUsers = allUsers.map(user => {
+        // เช็คชื่อ Username (ใช้ตัวพิมพ์เล็กเพื่อความชัวร์)
+        if (user.username.toLowerCase() === Username.toLowerCase()) {
+           return { ...user, password: NewPassword }
         }
         return user
       })
-      localStorage.setItem('users', JSON.stringify(updatedUsers))
 
-      // 🔐 ถ้า user เป็น admin หรือ superadmin ให้อัปเดตรหัสผ่าน admin account ด้วย
-      if (userData.role === 'admin' || userData.role === 'superadmin') {
-        const adminUsername = `ADM${userData.employeeId}`
-        const updatedPasswords = {
-          ...storedPasswords,
-          [adminUsername.toLowerCase()]: NewPassword
-        }
-        localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
+      // 3. บันทึกกลับลงไปใน 'usersData' (เพื่อให้ตรงกับที่ระบบ Login อ่าน)
+      localStorage.setItem('usersData', JSON.stringify(updatedUsers))
+
+      // 4. อัปเดตตารางรหัสผ่านสำรอง (mockUserPasswords) ด้วย เพื่อความชัวร์
+      const updatedPasswords = { ...storedPasswords }
+      updatedPasswords[Username.toLowerCase()] = NewPassword
+      
+      // ถ้าเป็น Admin ให้แก้รหัสของ User ที่ Link กันด้วย
+      if (userData.adminAccount) {
+         updatedPasswords[userData.adminAccount.toLowerCase()] = NewPassword
       }
 
-      setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
+      localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
+      // =======================================================
+
+      setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า ลงชื่อเข้าใช้...')
     } else {
+      // กรณีไม่พบ User ในระบบ (Fallback Logic)
       const fallbackAccount = getFallbackAdminAccount(Username, storedPasswords)
 
       if (!fallbackAccount) {
@@ -189,6 +212,7 @@ function Auth() {
         return
       }
 
+      // อัปเดตรหัสผ่านสำหรับ Fallback Account
       const normalizedUsername = fallbackAccount.username.toLowerCase()
       const updatedPasswords = {
         ...storedPasswords,
@@ -200,29 +224,13 @@ function Auth() {
       }
 
       localStorage.setItem('mockUserPasswords', JSON.stringify(updatedPasswords))
-
-      if (fallbackAccount.employeeId) {
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const updatedUsers = users.map(user => {
-          if (user.employeeId === fallbackAccount.employeeId && (user.role === 'admin' || user.role === 'superadmin')) {
-            return { ...user, password: NewPassword }
-          }
-          return user
-        })
-        localStorage.setItem('users', JSON.stringify(updatedUsers))
-      }
-
-      setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า Login...')
+      setResetSuccess('เปลี่ยนรหัสผ่านสำเร็จ! กำลังกลับสู่หน้า ลงชื่อเข้าใช้...')
     }
 
+    // รีโหลดหน้าเว็บเพื่อให้ข้อมูลอัปเดตทันที
     setTimeout(() => {
-      setShowReset(false)
-      setUsernameReset('')
-      setPasswordReset('')
-      setNewPassword('')
-      setResetSuccess('')
-      navigate('/auth', { replace: true })
-    }, 2000)
+      window.location.href = '/auth'
+    }, 1500)
   }
 
   return (
@@ -243,7 +251,7 @@ function Auth() {
       >
         <div className="space-y-6">
           <header className="w-full flex items-center justify-center text-center font-prompt font-bold md:text-[36px] lg:text-[40px] xl:text-[48px] text-[30px] py-3 bg-gradient-to-r from-brand-primary to-orange-600 bg-clip-text text-transparent">
-            Login
+            ลงชื่อเข้าใช้
           </header>
 
           {error && (
@@ -484,7 +492,7 @@ function Auth() {
                 }}
                 className="text-gray-500 hover:text-orange-500 transition-colors duration-200 hover:underline underline-offset-4"
               >
-                {searchParams.get('mode') === 'reset' ? 'กลับไปหน้าตั้งค่า' : 'กลับหน้า Login'}
+                {searchParams.get('mode') === 'reset' ? 'กลับไปหน้าตั้งค่า' : 'กลับหน้า ลงชื่อเข้าใช้'}
               </button>
             </div>
           </div>

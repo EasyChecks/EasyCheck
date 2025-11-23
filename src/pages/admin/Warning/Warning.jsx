@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useLeave } from '../../../contexts/LeaveContext'
 import { usersData } from '../../../data/usersData'
+import { useAuth } from '../../../contexts/useAuth'
 import ConfirmDialog from '../../../components/common/ConfirmDialog'
 import SuccessDialog from '../../../components/common/SuccessDialog'
 
@@ -133,10 +134,18 @@ export function AttachmentModal({ data, onClose }) {
 
 export default function Warning() {
   const { leaveList, updateLeaveStatus } = useLeave()
+  const { user: currentUser } = useAuth() // 🔥 เพิ่ม: ดึง currentUser เพื่อเช็ค role
   const [expandedIds, setExpandedIds] = useState([]) // ✅ เปลี่ยนจาก id เดียวเป็น array
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ทั้งหมด')
   const [combinedFilter, setCombinedFilter] = useState('ทั้งหมด')
+  
+  // รายการสาขาที่มี (เหมือนหน้า Attendance)
+  const availableBranches = [
+    { code: 'BKK', name: 'กรุงเทพฯ (BKK)' },
+    { code: 'CNX', name: 'เชียงใหม่ (CNX)' },
+    { code: 'PKT', name: 'ภูเก็ต (PKT)' }
+  ]
   const wrapperRefs = useRef({})
   const innerRefs = useRef({})
   const endListenersRef = useRef({})
@@ -178,13 +187,22 @@ export default function Warning() {
         // หา user object เพื่อดึง profileImage, position, department
         let userDetails = null;
         
-        if (leave.userId) {
-          // ลองหาจาก localStorage ก่อน
+        if (leave.userName) {
+          // ลองหาจาก localStorage ก่อน (ใช้ userName แทน userId)
           try {
             const storedUsers = localStorage.getItem('usersData');
             if (storedUsers) {
               const users = JSON.parse(storedUsers);
-              userDetails = users.find(u => u.id === leave.userId);
+              userDetails = users.find(u => u.name === leave.userName);
+              console.log('🔍 [Debug] Looking for userName:', leave.userName, 'Found:', !!userDetails);
+              if (userDetails) {
+                console.log('✅ [Debug] User details:', {
+                  id: userDetails.id,
+                  name: userDetails.name,
+                  department: userDetails.department,
+                  branchCode: userDetails.branchCode
+                });
+              }
             }
           } catch (e) {
             console.error('Error reading usersData:', e);
@@ -192,7 +210,8 @@ export default function Warning() {
           
           // ถ้าหาไม่เจอ ลองหาจาก mock data
           if (!userDetails) {
-            userDetails = usersData.find(u => u.id === leave.userId);
+            userDetails = usersData.find(u => u.name === leave.userName);
+            console.log('🔍 [Debug] Fallback to usersData:', !!userDetails);
           }
         }
         
@@ -204,15 +223,23 @@ export default function Warning() {
           position: userDetails?.position || 'พนักงาน',
           department: userDetails?.department || 'ไม่ระบุ',
           branchCode: userDetails?.branchCode || 'ไม่ระบุ',
-          username: userDetails?.username || `user_${displayUserId}`
         };
         
-        console.log('✅ [Warning.jsx] Mapped user:', {
-          leaveId: leave.id,
-          displayName: user.name,
-          userId: user.id,
-          finalName: displayName // 🔥 เพิ่มการ log ชื่อที่จะใช้จริง
-        });
+        let branchDisplay = user.branchCode;
+        let standardCode = user.branchCode; // ตัวแปรสำหรับเก็บรหัสสาขา (เช่น BKK)
+
+        const foundBranch = availableBranches.find(b => b.code === user.branchCode);
+        
+        if (foundBranch) {
+            branchDisplay = foundBranch.name;
+            standardCode = foundBranch.code; 
+        } else {
+            const branchMap = { '101': 'กรุงเทพฯ (BKK)', '102': 'เชียงใหม่ (CNX)', '103': 'ภูเก็ต (PKT)' };
+            const codeMap = { '101': 'BKK', '102': 'CNX', '103': 'PKT' }; // Map รหัสตัวเลขเป็นรหัสตัวอักษร
+
+            if (branchMap[user.branchCode]) branchDisplay = branchMap[user.branchCode];
+            if (codeMap[user.branchCode]) standardCode = codeMap[user.branchCode];
+        }
         
         return {
           id: leave.id,
@@ -220,7 +247,8 @@ export default function Warning() {
           avatar: user.profileImage || 'https://i.pravatar.cc/150?u=default',
           role: user.position || user.role || 'พนักงาน',
           department: `แผนก: ${user.department || 'ไม่ระบุ'}`,
-          branch: `สาขา: ${user.branchCode || 'ไม่ระบุ'}`,
+          branch: `สาขา: ${branchDisplay || 'ไม่ระบุ'}`,
+          rawBranchCode: standardCode, 
           type: `ประเภท: ${leave.leaveType}`,
           file: leave.documents && leave.documents.length > 0 ? `เอกสาร: ${leave.documents.length} ไฟล์` : 'ไม่มีเอกสารแนบ',
           time: new Date(leave.id).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
@@ -491,16 +519,37 @@ export default function Warning() {
     return () => window.removeEventListener('showAttachment', handler)
   }, [])
 
-  // Get combined filter options (departments only)
+  // Get combined filter options (departments for admin, branches for superadmin)
   const getCombinedFilterOptions = () => {
     const options = ['ทั้งหมด']
     
-    // Add departments with prefix
-    const departments = [...new Set(items.map(item => {
-      if (item.department?.includes(':')) return item.department.split(':')[1].trim()
-      return item.department
-    }).filter(Boolean))]
-    departments.forEach(dept => options.push(`แผนก: ${dept}`))
+    // 🔥 ตรวจสอบ role ของ currentUser
+    const isSuperAdmin = currentUser?.role === 'superadmin'
+    
+    if (isSuperAdmin) {
+      // Super Admin เห็นสาขา แบบ Attendance (BKK (กรุงเทพฯ (BKK)))
+      availableBranches.forEach(branch => {
+        options.push(`${branch.code} (${branch.name})`)
+      })
+    } else {
+      // Admin เห็นแผนก
+      try {
+        const storedUsers = localStorage.getItem('usersData')
+        if (storedUsers) {
+          const users = JSON.parse(storedUsers)
+          const departments = [...new Set(
+            users
+              .map(u => u.department)
+              .filter(Boolean)
+              .filter(d => d !== 'ไม่ระบุ')
+          )].sort()
+          
+          departments.forEach(dept => options.push(`แผนก: ${dept}`))
+        }
+      } catch (e) {
+        console.error('Error loading filter options:', e)
+      }
+    }
     
     return options
   }
@@ -524,13 +573,22 @@ export default function Warning() {
       matchesStatus = actualType === statusFilter
     }
 
-    // Combined filter (department only)
+    // Combined filter (department for admin, branch for superadmin)
     let matchesFilter = true
     if (combinedFilter !== 'ทั้งหมด') {
-      const actualDept = item.department?.includes(':') ? item.department.split(':')[1].trim() : item.department
+      const isSuperAdmin = currentUser?.role === 'superadmin'
       
-      if (combinedFilter.startsWith('แผนก: ')) {
-        matchesFilter = actualDept === combinedFilter.replace('แผนก: ', '')
+      if (isSuperAdmin) {
+        // Super Admin กรองตามสาขา (format: "BKK (กรุงเทพฯ (BKK))")
+        const selectedBranchCode = combinedFilter.split(' ')[0] // ดึง BKK จาก "BKK (กรุงเทพฯ (BKK))"
+        matchesFilter = item.rawBranchCode === selectedBranchCode
+      } else {
+        // Admin กรองตามแผนก
+        const actualDept = item.department?.includes(':') ? item.department.split(':')[1].trim() : item.department
+        
+        if (combinedFilter.startsWith('แผนก: ')) {
+          matchesFilter = actualDept === combinedFilter.replace('แผนก: ', '')
+        }
       }
     }
 
@@ -605,7 +663,10 @@ export default function Warning() {
               >
                 {getCombinedFilterOptions().map(option => (
                   <option key={option} value={option}>
-                    {option === 'ทั้งหมด' ? 'ทั้งหมด (แผนก)' : option}
+                    {option === 'ทั้งหมด' 
+                      ? (currentUser?.role === 'superadmin' ? 'ทั้งหมด (สาขา)' : 'ทั้งหมด (แผนก)')
+                      : option
+                    }
                   </option>
                 ))}
               </select>
@@ -652,6 +713,7 @@ export default function Warning() {
                   onToggle={handleToggle}
                   onApprove={handleApprove}
                   onReject={handleReject}
+                  currentUser={currentUser}
                   wrapperRefCallback={(id, el) => {
                     if (el && !el.dataset.warnInit) {
                       el.style.overflow = 'hidden'
@@ -840,7 +902,10 @@ export default function Warning() {
   )
 }
 
-function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapperRefCallback, innerRefCallback }) {
+function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapperRefCallback, innerRefCallback, currentUser }) {
+  // เช็ค Role เหมือนเดิม
+  const isSuperAdmin = currentUser?.role === 'superadmin'
+
   return (
     <div className="relative rounded-xl p-4 text-gray-900 border-2 shadow-sm h-fit transition-colors border-gray-200">
       {/* top-right: time pill (always shown) */}
@@ -857,9 +922,21 @@ function NotificationCard({ item, expanded, onToggle, onApprove, onReject, wrapp
             <img src={item.avatar} alt="avatar" className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 flex-shrink-0" />
             <div className="flex-1 pr-16">
               <h3 className="font-semibold text-lg">{item.name}</h3>
-              <div className="text-sm text-gray-600 mt-0.5 space-y-0.5">
-                <div className="leading-tight">{item.role}</div>
-                <div className="leading-tight">{item.department}</div>
+
+              <div className="text-sm text-gray-600 mt-1">
+                
+                {/* 1. ถ้าเป็น Super Admin ให้โชว์สาขาด้วย (Admin จะไม่เห็นบรรทัดนี้) */}
+                {isSuperAdmin && (
+                   <div className="font-medium text-gray-600 mb-0.5 flex items-center gap-1">
+                     {item.branch}
+                   </div>
+                )}
+
+                {/* 2. แสดงแผนกเสมอ (ทั้ง Admin และ Super Admin เห็นเหมือนกัน) */}
+                <div className="flex items-center gap-1">
+                   {item.department}
+                </div>
+
               </div>
             </div>
           </div>

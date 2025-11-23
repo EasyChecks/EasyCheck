@@ -1331,7 +1331,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
               onChange={e => setTeam(e.target.value)} 
               onKeyDown={(e) => handleKeyDown(e, 'team')}
               className="w-full border-2 border-gray-200 rounded-lg px-4 py-2.5 hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none" 
-              placeholder="ระบุชื่อทีม เช่น ทีมพัฒนา" 
+              placeholder="ระบุชื่อทีม เช่น ทีมครัว, ทีมแคชเชียร์, และอื่นๆ" 
             />
           </div>
 
@@ -2188,7 +2188,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 onKeyDown={(e) => handleKeyDown(e, 'preparations')}
                 className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none resize-none" 
                 rows={3} 
-                placeholder="เช่น: โน๊ตบุ๊ค, เอกสาร, อุปกรณ์" 
+                placeholder="เช่น: ใบชา, ไข่มุก, นมข้น, เครื่องซีลแก้ว, ผ้ากันเปื้อน, และอื่นๆ" 
               />
             </div>
 
@@ -2203,13 +2203,13 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 onKeyDown={(e) => handleKeyDown(e, 'tasks')}
                 className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none resize-none" 
                 rows={3} 
-                placeholder="เช่น: ประชุมทีม, จัดทำรายงาน" 
+                placeholder="เช่น: ต้มไข่มุกรอบเช้า, เช็คสต็อกใบชา, นับเงินทอน, เคลียร์ออเดอร์ Grab, และอื่นๆ" 
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                เป้าหมาย <span className="text-xs text-gray-500">(แต่ละบรรทัด)</span>
+                เป้าหมาย <span className="text-xs text-gray-500">(แต่ละบรรทัดคือเป้าหมาย)</span>
               </label>
               <textarea 
                 ref={goalsRef}
@@ -2218,7 +2218,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
                 onKeyDown={(e) => handleKeyDown(e, 'goals')}
                 className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 hover:border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all outline-none resize-none" 
                 rows={2} 
-                placeholder="เช่น: เสร็จทันเวลา, คุณภาพงานดี" 
+                placeholder="เช่น: ไข่มุกนุ่มหนึบ, เสิร์ฟไวภายใน 3 นาที, ยอดขายทะลุเป้า, ลูกค้าชม, และอื่นๆ" 
               />
             </div>
           </div>
