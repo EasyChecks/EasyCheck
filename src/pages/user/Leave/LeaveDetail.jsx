@@ -124,9 +124,7 @@ function LeaveDetail() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-gray-800 font-bold text-sm sm:text-base">
-                                    {isLateArrival ? 'เวลา' : 'ช่วงเวลา'}
-                                </h3>
+                                <h3 className="text-gray-800 font-bold text-sm sm:text-base">ช่วงเวลา</h3>
                             </div>
                             <p className="text-gray-700 text-sm sm:text-base ml-8 sm:ml-10 lg:ml-12 font-medium">
                                 {leaveData.period}
@@ -141,9 +139,7 @@ function LeaveDetail() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-gray-800 font-bold text-sm sm:text-base">
-                                    {isLateArrival ? 'เหตุผลที่เข้างานสาย' : 'เหตุผลในการลา'}
-                                </h3>
+                                <h3 className="text-gray-800 font-bold text-sm sm:text-base">เหตุผล</h3>
                             </div>
                             <p className="text-gray-700 text-sm sm:text-base ml-8 sm:ml-10 lg:ml-12 font-medium leading-relaxed">
                                 {leaveData.reason}
@@ -220,18 +216,18 @@ function LeaveDetail() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>{isLateArrival ? 'ยกเลิกการขอเข้าสาย' : 'ยกเลิกการลา'}</span>
+                        <span>ยกเลิกการลา</span>
                     </button>
                 </div>
             )}
 
-            {/* Confirm Cancel Dialog */}
+            {/* ConfirmDialog สำหรับยกเลิก */}
             <ConfirmDialog
                 isOpen={showCancelConfirm}
                 onClose={() => setShowCancelConfirm(false)}
                 onConfirm={handleCancelLeave}
-                title={isLateArrival ? 'ยกเลิกการขอเข้าสาย' : 'ยกเลิกการลา'}
-                message={isLateArrival ? 'คุณต้องการยกเลิกการขอเข้างานสายนี้หรือไม่?' : 'คุณต้องการยกเลิกการลานี้หรือไม่?'}
+                title="ยกเลิกการลา"
+                message="คุณต้องการยกเลิกการลานี้หรือไม่?"
                 confirmText="ตกลง"
                 cancelText="ยกเลิก"
                 type="danger"
@@ -242,7 +238,7 @@ function LeaveDetail() {
                 isOpen={showSuccess}
                 onClose={() => setShowSuccess(false)}
                 title="สำเร็จ!"
-                message={isLateArrival ? 'ยกเลิกการขอเข้างานสายเรียบร้อยแล้ว' : 'ยกเลิกการลาเรียบร้อยแล้ว'}
+                message="ยกเลิกการลาเรียบร้อยแล้ว"
                 autoClose={true}
                 autoCloseDelay={2000}
             />

@@ -4,7 +4,7 @@ import { useAuth } from '../../../contexts/useAuth';
 import { useLocations } from '../../../contexts/LocationContext';
 import { useEvents } from '../../../contexts/EventContext';
 import { compressImage, getBase64Size } from '../../../utils/imageCompressor';
-import { calculateAttendanceStatus } from '../../../utils/attendanceLogic';
+import { calculateAttendanceStatus, getApprovedLateArrivalRequest } from '../../../utils/attendanceLogic';
 import { shouldBlockCheckIn } from '../../../utils/leaveAttendanceIntegration';
 
 function TakePhoto() {
@@ -272,7 +272,17 @@ function TakePhoto() {
         const workTimeStart = startTimeStr.replace('.', ':'); // แปลง "07.00" เป็น "07:00"
         const workTimeEnd = endTimeStr.replace('.', ':');
         
-        const attendanceResult = calculateAttendanceStatus(currentTime, workTimeStart, false);
+        // 🔥 ดึงวันที่ปัจจุบันในรูปแบบ dd/mm/yyyy (พ.ศ.)
+        const today = new Date().toLocaleDateString('th-TH', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        
+        // 🔥 ตรวจสอบคำขอเข้างานสายที่อนุมัติแล้ว
+        const lateArrivalRequest = getApprovedLateArrivalRequest(user.id, today);
+        
+        const attendanceResult = calculateAttendanceStatus(currentTime, workTimeStart, false, lateArrivalRequest);
         const { status, lateMinutes, shouldAutoCheckout, message: statusMessage } = attendanceResult;
         
         console.log('🔍 Attendance Result:', { status, lateMinutes, shouldAutoCheckout, statusMessage });

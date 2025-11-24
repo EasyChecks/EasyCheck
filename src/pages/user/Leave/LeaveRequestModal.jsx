@@ -420,7 +420,7 @@ function LeaveRequestModal({ closeModal }) {
 
       setTimeout(() => {
         closeModal();
-      }, 3000);
+      }, 1500);
       return;
     }
 
@@ -528,7 +528,7 @@ function LeaveRequestModal({ closeModal }) {
     // Close modal after showing success
     setTimeout(() => {
       closeModal();
-    }, 3000);
+    }, 1500);
   };
 
   return (

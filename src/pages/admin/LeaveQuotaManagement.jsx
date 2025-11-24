@@ -148,14 +148,22 @@ function LeaveQuotaManagement() {
 
   // ฟังก์ชันกรองและค้นหาพนักงาน
   const getFilteredUsers = () => {
-    let filtered = usersData.filter(u => u.role === 'user' || u.role === 'manager');
+    let filtered = [];
     
-    // กรองตามสาขา - Super Admin เห็นทั้งหมด, Admin เห็นเฉพาะสาขาตัวเอง
-    if (user.role === 'admin') {
-      // Admin เห็นเฉพาะสาขาตัวเอง (ใช้ provinceCode)
-      filtered = filtered.filter(u => u.provinceCode === user.provinceCode);
-    } else if (filterBranch) {
-      // Super Admin สามารถเลือกกรองตามสาขา (ใช้ provinceCode)
+    // กรองตามสิทธิ์
+    if (user.role === 'superadmin') {
+      // Super Admin สามารถจัดการทุกคน (รวม admin และ superadmin) ยกเว้นตัวเอง
+      filtered = usersData.filter(u => u.id !== user.id);
+    } else if (user.role === 'admin' && user.department === 'HR') {
+      // HR Admin จัดการได้เฉพาะ user และ manager ในสาขาตัวเอง
+      filtered = usersData.filter(u => 
+        (u.role === 'user' || u.role === 'manager') && 
+        u.provinceCode === user.provinceCode
+      );
+    }
+    
+    // กรองตามสาขา (สำหรับ Super Admin)
+    if (user.role === 'superadmin' && filterBranch) {
       filtered = filtered.filter(u => u.provinceCode === filterBranch);
     }
     

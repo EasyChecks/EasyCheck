@@ -9,6 +9,7 @@
  */
 
 import ATTENDANCE_CONFIG from '../config/attendanceConfig';
+import { getApprovedLateArrivalRequest } from './attendanceLogic';
 
 /**
  * 🔍 ตรวจสอบว่าพนักงานมีการลาที่ได้รับอนุมัติในวันนี้หรือไม่
@@ -410,6 +411,7 @@ export const setupLeaveApprovalListener = (userId, userName) => {
 
 export default {
   getApprovedLeaveForDate,
+  getApprovedLateArrivalRequest, // 🔥 export จาก attendanceLogic.js
   createLeaveAttendanceRecord,
   syncApprovedLeavesToAttendance,
   shouldBlockCheckIn,
