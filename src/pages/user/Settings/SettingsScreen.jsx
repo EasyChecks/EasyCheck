@@ -124,8 +124,8 @@ function SettingsScreen() {
         onClick={handleLogout}
         className="flex items-center justify-center w-full py-4 space-x-2 font-bold text-white transition-colors bg-red-500 shadow-md rounded-2xl hover:bg-red-600"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="http://www.w3.org/2000/svg" width="24px" fill="white">
-          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffffff">
+          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"></path>
         </svg>
         <span>ออกจากระบบ</span>
       </button>
