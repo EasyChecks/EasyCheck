@@ -660,8 +660,8 @@ function AdminDashboard() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white/90 text-lg font-semibold mb-1">ขาดงาน</h3>
-                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      <h3 className="text-white/90 text-2xl font-semibold mb-1">ขาดงาน</h3>
+                      <p className="text-base text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{attendanceStats.absentCount}</p>
                   </div>
@@ -679,8 +679,8 @@ function AdminDashboard() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
-                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      <h3 className="text-white/90 text-2xl font-semibold mb-1">ลางาน</h3>
+                      <p className="text-base text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{attendanceStats.leaveCount}</p>
                   </div>
@@ -698,8 +698,8 @@ function AdminDashboard() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
-                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      <h3 className="text-white/90 text-2xl font-semibold mb-1">มาสาย</h3>
+                      <p className="text-base text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{attendanceStats.lateCount}</p>
                   </div>
@@ -719,8 +719,8 @@ function AdminDashboard() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white/90 text-lg font-semibold mb-1">ยังไม่เข้าร่วม</h3>
-                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      <h3 className="text-white/90 text-2xl font-semibold mb-1">ยังไม่เข้าร่วม</h3>
+                      <p className="text-base text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{eventStats.notParticipatedCount}</p>
                   </div>
@@ -738,8 +738,8 @@ function AdminDashboard() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white/90 text-lg font-semibold mb-1">ลางาน</h3>
-                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      <h3 className="text-white/90 text-2xl font-semibold mb-1">ลางาน</h3>
+                      <p className="text-base text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{eventStats.leaveEventCount}</p>
                   </div>
@@ -757,8 +757,8 @@ function AdminDashboard() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white/90 text-lg font-semibold mb-1">มาสาย</h3>
-                      <p className="text-sm text-white/80">คลิกเพื่อดูรายละเอียด →</p>
+                      <h3 className="text-white/90 text-2xl font-semibold mb-1">มาสาย</h3>
+                      <p className="text-base text-white/80">คลิกเพื่อดูรายละเอียด →</p>
                     </div>
                     <p className="text-7xl font-bold">{eventStats.lateEventCount}</p>
                   </div>
