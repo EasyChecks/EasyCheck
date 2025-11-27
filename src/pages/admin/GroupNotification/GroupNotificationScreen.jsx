@@ -5,7 +5,7 @@ import { usersData } from '../../../data/usersData';
 // (เหมือนเดิม)
 const Toast = ({ message, type, onClose }) => {
     useEffect(() => {
-        const timer = setTimeout(onClose, 4000);
+        const timer = setTimeout(onClose, 1500);
         return () => clearTimeout(timer);
     }, [onClose]);
 
