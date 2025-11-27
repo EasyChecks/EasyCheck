@@ -1,12 +1,16 @@
+// หน้าจัดการพื้นที่ (Locations) และกิจกรรม (Events) บนแผนที่
+// สำหรับ Admin สร้าง/แก้ไข/ลบ พื้นที่เช็คอินและกิจกรรมพิเศษ
+// รองรับการกำหนดรัศมี ผู้รับผิดชอบ วันเวลา และค้นหาตำแหน่งบนแผนที่
+
 import React, { useState, useRef, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Circle, useMap, Popup } from 'react-leaflet' // Components สำหรับแผนที่
+import { MapContainer, TileLayer, Marker, Circle, useMap, Popup } from 'react-leaflet' // Components สำหรับแผนที่ Leaflet
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet' // Library แผนที่
-import { useLocations } from '../../contexts/LocationContext' // Context จัดการพื้นที่/สถานที่
-import { useEvents } from '../../contexts/EventContext' // Context จัดการกิจกรรม
-import { useAuth } from '../../contexts/useAuth' // Context ข้อมูล user
-import { usersData } from '../../data/usersData' // ข้อมูล user ทั้งหมด
-import CustomDatePicker from '../../components/common/CustomDatePicker' // Custom Date Picker
+import { useLocations } from '../../contexts/LocationContext' // Context จัดการพื้นที่เช็คอิน (สถานที่ถาวร)
+import { useEvents } from '../../contexts/EventContext' // Context จัดการกิจกรรมพิเศษ (มีวันเวลาเริ่มต้น-สิ้นสุด)
+import { useAuth } from '../../contexts/useAuth' // Context ข้อมูล user (role, branch)
+import { usersData } from '../../data/usersData' // ข้อมูล user ทั้งหมด สำหรับกำหนดผู้รับผิดชอบ
+import CustomDatePicker from '../../components/common/CustomDatePicker' // Custom Date Picker แบบไทย
 
 // สร้าง CSS animation สำหรับ fade in และ scale in
 const style = document.createElement('style')
@@ -64,9 +68,11 @@ const eventIcon = new L.Icon({
 })
 
 // Component ปรับมุมมองแผนที่ให้เห็นหมุดทั้งหมดตอนเปิดครั้งแรก - ทำงานครั้งเดียว
+// ใช้ fitBounds เพื่อแสดงหมุดทั้งหมดใน viewport พอดี
+// disabled = true จะปิดการทำงาน (เมื่อกำลัง fly ไปหมุดที่เลือก)
 function FitBoundsToMarkers({ locations, disabled }) {
   const map = useMap()
-  const hasInitialized = React.useRef(false) // เช็คว่าทำไปแล้วหรือยัง
+  const hasInitialized = React.useRef(false) // เช็คว่าทำไปแล้วหรือยัง ป้องกันการทำซ้ำ
 
   React.useEffect(() => {
     // ทำครั้งเดียวตอนเปิดครั้งแรก - ไม่ทำซ้ำ
@@ -88,9 +94,11 @@ function FitBoundsToMarkers({ locations, disabled }) {
 }
 
 // Component บินไปยังจุดที่ต้องการ - มี animation ลื่นไหล
+// เมื่อคลิกหมุดจากรายการด้านข้าง แผนที่จะ fly ไปที่ตำแหน่งนั้นแบบ smooth
+// คำนวณ offset เพื่อให้หมุดอยู่ตรงกลางพื้นที่ที่เห็น (ไม่ถูกบังด้วย sidebar)
 function FlyToLocation({ position, onFlyStart, onFlyEnd }) {
   const map = useMap()
-  const previousPosition = React.useRef(null) // เก็บตำแหน่งก่อนหน้าเพื่อเช็คว่าเปลี่ยนหรือไม่
+  const previousPosition = React.useRef(null) // เก็บตำแหน่งก่อนหน้าเพื่อเช็คว่าเปลี่ยนหรือไม่ ป้องกัน animate ซ้ำ
 
   React.useEffect(() => {
     if (!position) {
@@ -187,7 +195,8 @@ function FlyToLocation({ position, onFlyStart, onFlyEnd }) {
   return null
 }
 
-// Component to handle map clicks
+// Component สำหรับจัดการการคลิกบนแผนที่
+// เมื่อคลิกบนแผนที่ จะสร้างหมุดชั่วคราวและเปิด Modal สร้างพื้นที่/กิจกรรม
 function MapClickHandler({ onMapClick }) {
   const map = useMap()
 
@@ -201,7 +210,8 @@ function MapClickHandler({ onMapClick }) {
   return null
 }
 
-// Component to show temporary search marker
+// Component แสดงหมุดชั่วคราว (สีแดง) สำหรับผลการค้นหาหรือตำแหน่งที่คลิก
+// จะแสดง popup พร้อมปุ่มสร้างพื้นที่/กิจกรรมที่ตำแหน่งนี้
 function SearchMarker({ position, name, onClick }) {
   const markerRef = useRef(null)
   
@@ -256,11 +266,13 @@ function SearchMarker({ position, name, onClick }) {
   )
 }
 
-// Multi-Select Component with Search
+// Component Multi-Select with Search - เลือกหลายรายการพร้อมค้นหา
+// ใช้สำหรับเลือกผู้รับผิดชอบกิจกรรม (พนักงาน/แผนก/ตำแหน่ง)
+// รองรับการค้นหา ลบรายการ และแสดงข้อมูลเพิ่มเติม (secondary)
 function MultiSelect({ selected, onChange, options, placeholder, label }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const dropdownRef = useRef(null)
+  const [isOpen, setIsOpen] = useState(false) // เปิด/ปิด dropdown
+  const [searchTerm, setSearchTerm] = useState('') // คำค้นหา
+  const dropdownRef = useRef(null) // ใช้สำหรับปิด dropdown เมื่อคลิกข้างนอก
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -373,7 +385,8 @@ function MultiSelect({ selected, onChange, options, placeholder, label }) {
   )
 }
 
-// Custom Success Dialog
+// Custom Success Dialog - แสดงข้อความเมื่อดำเนินการสำเร็จ
+// รองรับ Enter/Escape เพื่อปิด, แสดง icon เขียว
 function SuccessDialog({ isOpen, message, onClose }) {
   useEffect(() => {
     if (isOpen) {
@@ -412,7 +425,8 @@ function SuccessDialog({ isOpen, message, onClose }) {
   )
 }
 
-// Custom Error Dialog
+// Custom Error Dialog - แสดงข้อความข้อผิดพลาด
+// รองรับ Enter/Escape เพื่อปิด, แสดง icon ส้ม
 function ErrorDialog({ isOpen, message, onClose }) {
   useEffect(() => {
     if (isOpen) {
@@ -451,7 +465,8 @@ function ErrorDialog({ isOpen, message, onClose }) {
   )
 }
 
-// Custom Confirm Dialog
+// Custom Confirm Dialog - ยืนยันการดำเนินการ (เช่น ลบพื้นที่/กิจกรรม)
+// รองรับ Enter ยืนยัน, Escape ยกเลิก, แสดง icon แดง
 function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
   useEffect(() => {
     if (isOpen) {
@@ -501,34 +516,43 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
 }
 
 // Helper functions สำหรับแปลงรูปแบบวันที่
+// localStorage เก็บแบบ dd/mm/yyyy แต่ CustomDatePicker ใช้ yyyy-mm-dd
+// ต้องแปลงไปมาเมื่อ load/save ข้อมูล
+
+// แปลงจาก dd/mm/yyyy (ไทย) เป็น yyyy-mm-dd (input date)
 const convertDDMMYYYYtoYYYYMMDD = (ddmmyyyy) => {
   if (!ddmmyyyy || !ddmmyyyy.includes('/')) return ddmmyyyy
   const [d, m, y] = ddmmyyyy.split('/')
   return `${y}-${m}-${d}`
 }
 
+// แปลงจาก yyyy-mm-dd (input date) เป็น dd/mm/yyyy (ไทย)
 const convertYYYYMMDDtoDDMMYYYY = (yyyymmdd) => {
   if (!yyyymmdd || !yyyymmdd.includes('-')) return yyyymmdd
   const [y, m, d] = yyyymmdd.split('-')
   return `${d}/${m}/${y}`
 }
 
-// Create Form Component
+// Create Form Component - ฟอร์มสร้างพื้นที่/กิจกรรมใหม่
+// type = 'location' (พื้นที่เช็คอิน) หรือ 'event' (กิจกรรมพิเศษ)
+// position = [lat, lng] พิกัดที่เลือกบนแผนที่
+// isSubmitting = ป้องกันการกด submit ซ้ำ
 function CreateForm({ type, position, onSubmit, onCancel, user, onShowError, isSubmitting }) {
+  // State สำหรับข้อมูลฟอร์ม
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    radius: 100,
-    branchCode: user?.branchCode || '', // 🆕 Default to user's branch
-    locationName: '',
-    startDate: '', // เก็บเป็น yyyy-mm-dd สำหรับ CustomDatePicker
-    endDate: '',   // เก็บเป็น yyyy-mm-dd สำหรับ CustomDatePicker
-    startTime: '09:00',
-    endTime: '17:00',
-    assignedUsers: [],
-    assignedRoles: [],
-    assignedDepartments: [],
-    assignedPositions: []
+    name: '', // ชื่อพื้นที่/กิจกรรม (required)
+    description: '', // คำอธิบายเพิ่มเติม
+    radius: 100, // รัศมีเช็คอิน (เมตร) 50-1000
+    branchCode: user?.branchCode || '', // สาขา (SuperAdmin เลือกได้, อื่นๆ ใช้ของตัวเอง)
+    locationName: '', // ชื่อสถานที่ (event เท่านั้น)
+    startDate: '', // วันที่เริ่ม (yyyy-mm-dd สำหรับ CustomDatePicker)
+    endDate: '',   // วันที่สิ้นสุด (yyyy-mm-dd)
+    startTime: '09:00', // เวลาเริ่ม
+    endTime: '17:00', // เวลาสิ้นสุด
+    assignedUsers: [], // พนักงานที่รับผิดชอบ (event เท่านั้น)
+    assignedRoles: [], // Role ที่รับผิดชอบ (ไม่ได้ใช้งาน)
+    assignedDepartments: [], // แผนกที่รับผิดชอบ (event เท่านั้น)
+    assignedPositions: [] // ตำแหน่งที่รับผิดชอบ (event เท่านั้น)
   })
 
   // State สำหรับ Custom Time Picker
@@ -1045,19 +1069,22 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError, isS
   )
 }
 
-// Edit Form Component
+// Edit Form Component - ฟอร์มแก้ไขพื้นที่/กิจกรรม
+// item = ข้อมูลพื้นที่/กิจกรรมที่ต้องการแก้ไข
+// โหลดข้อมูลเดิมมาแสดงในฟอร์ม แล้วส่งกลับเมื่อ submit
 function EditForm({ type, item, onSubmit, onCancel, user, onShowError, isSubmitting }) {
+  // โหลดข้อมูลเดิมมาแสดงในฟอร์ม
   const [formData, setFormData] = useState({
     name: item.name || '',
     description: item.description || '',
     radius: item.radius || 100,
-    branchCode: item.branchCode || item.createdBy?.branch || user?.branchCode || '', // 🆕 รองรับทั้ง branchCode และ createdBy.branch
+    branchCode: item.branchCode || item.createdBy?.branch || user?.branchCode || '', // รองรับทั้ง branchCode และ createdBy.branch (backward compatible)
     locationName: item.locationName || '',
-    startDate: item.startDate ? convertDDMMYYYYtoYYYYMMDD(item.startDate) : (item.date ? convertDDMMYYYYtoYYYYMMDD(item.date) : ''),
+    startDate: item.startDate ? convertDDMMYYYYtoYYYYMMDD(item.startDate) : (item.date ? convertDDMMYYYYtoYYYYMMDD(item.date) : ''), // แปลงจาก dd/mm/yyyy
     endDate: item.endDate ? convertDDMMYYYYtoYYYYMMDD(item.endDate) : (item.date ? convertDDMMYYYYtoYYYYMMDD(item.date) : ''),
     startTime: item.startTime || '09:00',
     endTime: item.endTime || '17:00',
-    status: item.status || 'ongoing',
+    status: item.status || 'ongoing', // ongoing = ดำเนินการ, completed = สิ้นสุด
     assignedUsers: item.assignedUsers || [],
     assignedRoles: item.assignedRoles || [],
     assignedDepartments: item.assignedDepartments || [],
@@ -1579,57 +1606,68 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError, isSubmitt
   )
 }
 
+// Main Component - หน้าจัดการพื้นที่และกิจกรรม
 function MappingAndEvents() {
-  const { user } = useAuth()
+  // ดึงข้อมูล user และ functions จาก Context
+  const { user } = useAuth() // ข้อมูล user (role, branchCode)
   const { getFilteredLocations, getAllLocations, deleteLocation, addLocation, updateLocation } = useLocations()
   const { getFilteredEvents, getAllEvents, deleteEvent, addEvent, updateEvent } = useEvents()
   
   // ✅ ใช้ฟังก์ชันกรองตาม branch สำหรับแสดงผล
+  // SuperAdmin เห็นทั้งหมด, Admin/Manager เห็นเฉพาะสาขาของตัวเอง
   const locations = getFilteredLocations(user)
   const events = getFilteredEvents(user)
   
   // ✅ ใช้ข้อมูลทั้งหมด (unfiltered) สำหรับคำนวณ ID ใหม่
+  // เพื่อป้องกัน ID ซ้ำข้ามสาขา
   const allLocations = getAllLocations()
   const allEvents = getAllEvents()
   
-  const [activeTab, setActiveTab] = useState('all') // 'all', 'locations' or 'events'
-  const [mapType, setMapType] = useState('default') // 'default' or 'satellite'
-  const [searchQuery, setSearchQuery] = useState('')
-  const [mapSearchQuery, setMapSearchQuery] = useState('') // For map location search
-  const [mapSearchResults, setMapSearchResults] = useState([])
-  const [isSearchingMap, setIsSearchingMap] = useState(false)
-  const [searchMarkerPosition, setSearchMarkerPosition] = useState(null) // For temporary search marker
-  const [searchMarkerName, setSearchMarkerName] = useState('') // Name of searched location
-  const [openIds, setOpenIds] = useState([])
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [createType, setCreateType] = useState(null) // 'location' or 'event'
-  const [newMarkerPosition, setNewMarkerPosition] = useState(null)
-  const [isFlying, setIsFlying] = useState(false) // Track if map is currently flying
-  const wrapperRefs = useRef({})
-  const innerRefs = useRef({})
-  const endListenersRef = useRef({})
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editItem, setEditItem] = useState(null)
-  const [showHelpModal, setShowHelpModal] = useState(false)
-  const [showDetailModal, setShowDetailModal] = useState(false)
-  const [detailItem, setDetailItem] = useState(null)
-  const mapSearchTimeoutRef = useRef(null)
-  const [flyToPosition, setFlyToPosition] = useState(null)
-  const [selectedMarkerId, setSelectedMarkerId] = useState(null)
-  const markerRefs = useRef({})
+  // === State สำหรับ UI ===
+  const [activeTab, setActiveTab] = useState('all') // แท็บที่เลือก: 'all', 'locations', 'events'
+  const [mapType, setMapType] = useState('default') // ประเภทแผนที่: 'default' (road), 'satellite'
+  const [searchQuery, setSearchQuery] = useState('') // คำค้นหาในรายการด้านข้าง
+  const [mapSearchQuery, setMapSearchQuery] = useState('') // คำค้นหาตำแหน่งบนแผนที่
+  const [mapSearchResults, setMapSearchResults] = useState([]) // ผลการค้นหาตำแหน่ง
+  const [isSearchingMap, setIsSearchingMap] = useState(false) // สถานะกำลังค้นหา
+  const [searchMarkerPosition, setSearchMarkerPosition] = useState(null) // ตำแหน่งหมุดชั่วคราว (สีแดง)
+  const [searchMarkerName, setSearchMarkerName] = useState('') // ชื่อตำแหน่งที่ค้นหา
+  const [openIds, setOpenIds] = useState([]) // ID ของรายการที่เปิดรายละเอียด
+  const [showCreateModal, setShowCreateModal] = useState(false) // แสดง Modal สร้างพื้นที่/กิจกรรม
+  const [createType, setCreateType] = useState(null) // ประเภทที่จะสร้าง: 'location' หรือ 'event'
+  const [newMarkerPosition, setNewMarkerPosition] = useState(null) // ตำแหน่งสำหรับสร้างพื้นที่/กิจกรรมใหม่
+  const [isFlying, setIsFlying] = useState(false) // สถานะแผนที่กำลังบิน (ป้องกันการ fitBounds ขณะบิน)
+  
+  // === Refs สำหรับ Animation และ DOM ===
+  const wrapperRefs = useRef({}) // ref ของ wrapper สำหรับ expand/collapse animation
+  const innerRefs = useRef({}) // ref ของ inner content
+  const endListenersRef = useRef({}) // listeners สำหรับ transitionend event
+  const mapSearchTimeoutRef = useRef(null) // timeout สำหรับ debounce การค้นหาแผนที่
+  const markerRefs = useRef({}) // ref ของ marker แต่ละตัวบนแผนที่
+  
+  // === State สำหรับ Modal ===
+  const [showEditModal, setShowEditModal] = useState(false) // แสดง Modal แก้ไข
+  const [editItem, setEditItem] = useState(null) // ข้อมูลรายการที่จะแก้ไข
+  const [showHelpModal, setShowHelpModal] = useState(false) // แสดง Modal วิธีใช้
+  const [showDetailModal, setShowDetailModal] = useState(false) // แสดง Modal รายละเอียด
+  const [detailItem, setDetailItem] = useState(null) // ข้อมูลรายการที่จะแสดงรายละเอียด
+  
+  // === State สำหรับการ Fly ไปยังตำแหน่ง ===
+  const [flyToPosition, setFlyToPosition] = useState(null) // ตำแหน่งที่จะบินไป
+  const [selectedMarkerId, setSelectedMarkerId] = useState(null) // ID ของ marker ที่เลือก (เพื่อเปิด popup)
 
-  // Dialog states
-  const [successDialog, setSuccessDialog] = useState({ isOpen: false, message: '' })
-  const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: '' })
-  const [confirmDialog, setConfirmDialog] = useState({
+  // === Dialog States ===
+  const [successDialog, setSuccessDialog] = useState({ isOpen: false, message: '' }) // Dialog แสดงความสำเร็จ
+  const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: '' }) // Dialog แสดงข้อผิดพลาด
+  const [confirmDialog, setConfirmDialog] = useState({ // Dialog ยืนยันการดำเนินการ
     isOpen: false,
     title: '',
     message: '',
     onConfirm: () => { }
   })
   
-  // Prevent double submission
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // === State ป้องกันการ Submit ซ้ำ ===
+  const [isSubmitting, setIsSubmitting] = useState(false) // ป้องกันกดปุ่มสร้าง/แก้ไข ซ้ำก่อนเสร็จ
 
   const defaultCenter = [13.7606, 100.5034]
 

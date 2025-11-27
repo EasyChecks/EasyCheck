@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import LeaveRequestModal from './LeaveRequestModal';
 import Nav from '../../../components/user/nav/Nav';
-import LeaveList from '../../../components/user/Leave/LeaveList';
+import LeaveDashboard from '../../../components/user/Leave/LeaveDashboard';
 import { useLeave } from '../../../contexts/LeaveContext';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -10,7 +10,7 @@ function LeaveScreen() {
   const { getLeaveSummary } = useLeave(); // ดึงฟังก์ชันสรุปสิทธิ์การลามาจาก Context
   const { user } = useAuth(); // ดึงข้อมูล user ปัจจุบัน
   
-  // 🔥 ดึงข้อมูลสิทธิ์การลาของ user คนนี้เท่านั้น (ส่ง user.id)
+  // ดึงข้อมูลสิทธิ์การลาของ user คนนี้เท่านั้น (ส่ง user.id)
   const allLeaveData = getLeaveSummary(user?.id);
   
   // กรองข้อมูลลาคลอดออกสำหรับผู้ใช้ที่ไม่ใช่นาง/นางสาว - ทำให้ชายไม่เห็นรายการลาคลอด
@@ -28,7 +28,7 @@ function LeaveScreen() {
 
       {/* เนื้อหาหลัก - แสดงรายการสิทธิ์การลา */}
       <main className="relative z-0">
-        <LeaveList leaveItems={userLeaveData} />
+        <LeaveDashboard leaveItems={userLeaveData} />
       </main>
 
       {/* ปุ่มลอยสำหรับขอลา - ติดอยู่ที่มุมล่างขวา */}

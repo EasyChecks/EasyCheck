@@ -15,18 +15,6 @@ function LeaveDetail() {
     const [showCancelConfirm, setShowCancelConfirm] = useState(false) // แสดง confirm dialog
     const [showSuccess, setShowSuccess] = useState(false) // แสดง success dialog
     
-    // ดึงข้อมูลลาที่ส่งมาจากหน้าก่อน - ถ้าไม่มีใช้ค่า default
-    const leaveData = location.state?.leaveData || {
-        leaveType: 'ลาป่วย',
-        days: '4 วัน',
-        category: 'ลาป่วย',
-        period: '23/09/2025 → 26/09/2025',
-        reason: 'test',
-        status: 'รออนุมัติ',
-        statusColor: 'yellow',
-        documents: []
-    }
-    
     // ยกเลิกการลา - แล้วกลับหน้าก่อนหน้า
     const handleCancelLeave = () => {
         const success = cancelLeave(leaveData.id)
@@ -163,7 +151,7 @@ function LeaveDetail() {
                             ) : (
                                 <div className="ml-8 sm:ml-10 lg:ml-12 space-y-2">
                                     {leaveData.documents.map((doc, index) => {
-                                        // 🔥 เช็คว่าเป็น URL รูปหรือไม่
+                                        // เช็คว่าเป็น URL รูปหรือไม่
                                         const isImage = typeof doc === 'string' && (
                                             doc.startsWith('data:image') || 
                                             doc.startsWith('http') || 
@@ -206,7 +194,7 @@ function LeaveDetail() {
                 </div>
             </div>
 
-            {/* Bottom Button - Show only when status is "รออนุมัติ" */}
+            {/* แสดงปุ่มยกเลิกการลาถ้าสถานะเป็นรออนุมัติ */}
             {leaveData.status === 'รออนุมัติ' && (
                 <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 bg-gradient-to-t from-white via-white to-transparent backdrop-blur-sm">
                     <button 
