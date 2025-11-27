@@ -139,7 +139,7 @@ const HistoryDetailModal = ({ notification, onClose, recipientOptions = [], onDe
     const getChannelIcons = () => {
         const channels = [];
         if (notification.channels.line) channels.push({ name: 'LINE', icon: <LineIcon className="w-5 h-5" />, color: 'bg-gray-600' });
-        if (notification.channels.sms) channels.push({ name: 'SMS', icon: <SmsIcon className="w-5 h-5" />, color: 'bg-orange-600' });
+        if (notification.channels.sms) channels.push({ name: 'SMS', icon: <SmsIcon className="w-5 h-5" />, color: 'bg-gray-600' });
         if (notification.channels.email) channels.push({ name: 'Email', icon: <EmailIcon className="w-5 h-5" />, color: 'bg-gray-600' });
         return channels;
     };
