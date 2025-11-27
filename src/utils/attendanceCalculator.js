@@ -71,12 +71,13 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
       // Normalize status keys and values
       const statusKey = (shift.status || '').toString().toLowerCase();
 
-      if (statusKey === 'absent' || statusKey === 'ขาด' || !shift.checkIn) {
-        stats.absent++;
+      // 🚨 สำคัญ: ตรวจสอบ 'leave' ก่อน 'absent' เพื่อไม่ให้วันลาถูกนับเป็นขาด
+      if (statusKey === 'leave' || statusKey === 'ลา') {
+        stats.leave++;
         return;
       }
-      if (statusKey === 'leave' || statusKey === 'ลา' || statusKey === 'leave') {
-        stats.leave++;
+      if (statusKey === 'absent' || statusKey === 'ขาด' || !shift.checkIn) {
+        stats.absent++;
         return;
       }
       if (statusKey === 'late' || statusKey === 'มาสาย') {

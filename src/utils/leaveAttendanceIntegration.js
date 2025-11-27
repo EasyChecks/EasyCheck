@@ -249,14 +249,14 @@ export const syncApprovedLeavesToAttendance = (userId, userName) => {
   try {
     const leaveList = localStorage.getItem('leaveList');
     if (!leaveList) {
-      // console.log('🚨 No leave list found');
+      console.log('🚨 [syncApprovedLeavesToAttendance] No leave list found');
       return 0;
     }
 
     const leaves = JSON.parse(leaveList);
     let syncedCount = 0;
     
-    // console.log('🔍 Total leaves in system:', leaves.length);
+    console.log('🔍 [syncApprovedLeavesToAttendance] Total leaves in system:', leaves.length);
     
     //  กรองเฉพาะการลาที่อนุมัติแล้ว และเป็นของ user นี้
     const approvedLeaves = leaves.filter(leave => {
@@ -264,21 +264,21 @@ export const syncApprovedLeavesToAttendance = (userId, userName) => {
       const isMyLeave = !leave.userId || leave.userId === userId; // backward compatible
       
       if (isApproved && !isMyLeave) {
-        console.log('⛔ Skipping leave for different user:', leave.userId, 'vs', userId);
+        console.log('⛔ [syncApprovedLeavesToAttendance] Skipping leave for different user:', leave.userId, 'vs', userId);
       }
       
       return isApproved && isMyLeave;
     });
     
-    // console.log(`✅ Found ${approvedLeaves.length} approved leaves for user ${userId}`);
+    console.log(`✅ [syncApprovedLeavesToAttendance] Found ${approvedLeaves.length} approved leaves for user ${userId}`);
     
     approvedLeaves.forEach(leave => {
-      // console.log('📄 Processing leave:', {
-      //   type: leave.leaveType,
-      //   start: leave.startDate,
-      //   end: leave.endDate,
-      //   userId: leave.userId
-      // });
+      console.log('📄 [syncApprovedLeavesToAttendance] Processing leave:', {
+        type: leave.leaveType,
+        start: leave.startDate,
+        end: leave.endDate,
+        userId: leave.userId
+      });
       
       // สร้าง attendance records สำหรับทุกวันในช่วงการลา
       if (leave.startDate && leave.endDate) {
@@ -301,7 +301,7 @@ export const syncApprovedLeavesToAttendance = (userId, userName) => {
       }
     });
     
-    // console.log(`✅ Synced ${syncedCount} approved leaves to attendance records`);
+    console.log(`✅ [syncApprovedLeavesToAttendance] Synced ${syncedCount} approved leaves to attendance records for user ${userId}`);
     return syncedCount;
   } catch (error) {
     console.error('Error syncing approved leaves:', error);
@@ -395,8 +395,11 @@ export const shouldBlockCheckIn = (userId, date) => {
  */
 export const setupLeaveApprovalListener = (userId, userName) => {
   const handleLeaveStatusUpdated = (event) => {
-    if (event.detail && event.detail.status === 'อนุมัติ') {
-      // console.log('🔔 Leave approved, syncing to attendance...');
+    // ตรวจสอบทั้ง event.detail.status และ event.detail.newStatus (เผื่อไว้สำหรับ backward compatibility)
+    const status = event.detail?.newStatus || event.detail?.status;
+    
+    if (status === 'อนุมัติ') {
+      console.log('🔔 [leaveAttendanceIntegration] Leave approved, syncing to attendance for user:', userId);
       syncApprovedLeavesToAttendance(userId, userName);
     }
   };

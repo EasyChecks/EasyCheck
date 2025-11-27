@@ -170,6 +170,12 @@ export const AuthProvider = ({ children }) => {
           setAttendanceStatsWithBaseline(statsWithBaseline)
         }
       }
+      // 🔥 เมื่อ leaveList เปลี่ยนแปลง → sync approved leaves ทันที
+      // เพราะอาจมีการอนุมัติคำขอลาใหม่จาก admin หรือแท็บอื่น
+      else if (e.key === 'leaveList' && user) {
+        console.log('📝 [AuthProvider] leaveList changed - syncing approved leaves...')
+        syncApprovedLeavesToAttendance(user.id, user.name)
+      }
       // Sync attendance state across tabs
       else if (user && e.key === `attendance_user_${user.id}_${tabId}`) {
         if (e.newValue) {
@@ -196,7 +202,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // เพิ่ม interval ตรวจสอบทุก 2 วินาที (สำหรับ same-tab updates)
+    // เพิ่ม interval ตรวจสอบทุก 5 วินาที (สำหรับ same-tab updates)
     const interval = setInterval(() => {
       if (user) {
         const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
@@ -213,8 +219,12 @@ export const AuthProvider = ({ children }) => {
             setAttendanceStatsWithBaseline(statsWithBaseline)
           }
         }
+        
+        // 🔥 Sync approved leaves ทุก 5 วินาที เพื่อให้แม่นยำ
+        // (ในกรณี admin อนุมัติจากแท็บอื่นหรือ device อื่น)
+        syncApprovedLeavesToAttendance(user.id, user.name)
       }
-    }, 2000)
+    }, 5000)
 
     window.addEventListener('storage', handleStorageChange)
     return () => {
