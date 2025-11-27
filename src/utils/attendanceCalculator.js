@@ -63,30 +63,47 @@ export const calculateAttendanceStats = (attendanceRecords = [], options = {}) =
       status: record.status
     }];
     
-    // 🔥 นับสถานะต่อ shift แทนต่อวัน (แก้จาก dayStatus)
-    shifts.forEach((shift) => {
-      stats.totalShifts++;
+    stats.totalShifts += shifts.length;
 
-      // ตรวจสอบสถานะของแต่ละ shift
-      if (shift.status === 'absent' || !shift.checkIn) {
+    // 🔥 นับสถานะเป็นต่อ shift (ถ้ามี 2 กะ ให้เพิ่ม 2 ใน onTime/late/absent)
+    shifts.forEach((s) => {
+      const shift = s || {};
+      // Normalize status keys and values
+      const statusKey = (shift.status || '').toString().toLowerCase();
+
+      if (statusKey === 'absent' || statusKey === 'ขาด' || !shift.checkIn) {
         stats.absent++;
-      } else if (shift.status === 'leave') {
+        return;
+      }
+      if (statusKey === 'leave' || statusKey === 'ลา' || statusKey === 'leave') {
         stats.leave++;
-      } else if (shift.status === 'late' || shift.status === 'มาสาย') {
+        return;
+      }
+      if (statusKey === 'late' || statusKey === 'มาสาย') {
         stats.late++;
-      } else if (shift.status === 'on_time' || shift.status === 'on-time' || shift.status === 'ตรงเวลา') {
+        return;
+      }
+      if (statusKey === 'on_time' || statusKey === 'on-time' || statusKey === 'ตรงเวลา' || statusKey === 'on time') {
         stats.onTime++;
-      } else if (shift.checkIn && workTimeStart) {
-        // ไม่มีสถานะชัดเจน ให้ตรวจสอบจากเวลา
+        return;
+      }
+
+      // ถ้าไม่มี status ให้คาดเดาจากเวลา checkIn
+      if (shift.checkIn && workTimeStart) {
         const isActuallyLate = isLate(shift.checkIn, workTimeStart);
         if (isActuallyLate) {
           stats.late++;
         } else {
           stats.onTime++;
         }
+      } else {
+        // Fallback: ถ้าไม่มีข้อมูล ให้ถือว่าขาด
+        stats.absent++;
       }
+    });
 
-      // คำนวณชั่วโมงทำงาน (รวมทุกกะ)
+    // คำนวณชั่วโมงทำงาน (รวมทุกกะ)
+    shifts.forEach((shift) => {
       if (shift.checkIn && shift.checkOut) {
         const checkInTime = parseTime(shift.checkIn);
         const checkOutTime = parseTime(shift.checkOut);

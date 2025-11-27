@@ -56,14 +56,96 @@ export const calculateTimeDifference = (checkInTime, shiftStart) => {
 };
 
 /**
- * 🎯 ฟังก์ชันหลัก: คำนวณสถานะการเข้างาน
+ * 📝 ตรวจสอบคำขอเข้างานสายที่ได้รับอนุมัติ
+ * 
+ * @param {string} userId - รหัสพนักงาน
+ * @param {string} date - วันที่ (dd/mm/yyyy)
+ * @returns {object|null} - ข้อมูลคำขอเข้างานสาย หรืหรือ null
+ */
+export const getApprovedLateArrivalRequest = (userId, date) => {
+  try {
+    const leaveList = localStorage.getItem('leaveList');
+    if (!leaveList) return null;
+
+    const leaves = JSON.parse(leaveList);
+    
+    // หาคำขอเข้างานสายที่อนุมัติแล้วในวันนี้
+    const approvedRequest = leaves.find(leave => {
+      const isLateArrival = leave.leaveType === 'ขอเข้างานสาย';
+      const isApproved = leave.status === 'อนุมัติ';
+      const isMyRequest = !leave.userId || leave.userId === userId;
+      const isToday = leave.startDate === date;
+      
+      return isLateArrival && isApproved && isMyRequest && isToday;
+    });
+    
+    return approvedRequest || null;
+  } catch (error) {
+    console.error('Error checking approved late arrival:', error);
+    return null;
+  }
+};
+
+/**
+ * ⚠️ ตรวจสอบว่า check-in ภายในเวลาที่แจ้งขอเข้างานสายหรือไม่
+ * 
+ * กฎ:
+ * - ถ้าแจ้งว่าจะมาเวลา 10:00 ต้อง check-in ก่อน 10:30 (ภายใน 30 นาที)
+ * - ถ้า check-in หลัง 10:30 = ถือว่าขาดงานทันที
+ * 
+ * @param {string} checkInTime - เวลา check-in จริง (HH:MM)
+ * @param {object} lateArrivalRequest - ข้อมูลคำขอเข้างานสาย
+ * @returns {object} - { valid: boolean, reason: string, status: string }
+ */
+export const validateLateArrivalCheckIn = (checkInTime, lateArrivalRequest) => {
+  if (!lateArrivalRequest) {
+    return { valid: true, reason: null, status: null };
+  }
+  
+  // เวลาที่แจ้งว่าจะมา = endTime ของคำขอ
+  const declaredArrivalTime = lateArrivalRequest.endTime;
+  if (!declaredArrivalTime) {
+    return { valid: true, reason: null, status: null };
+  }
+  
+  const checkInMinutes = timeToMinutes(checkInTime);
+  const declaredMinutes = timeToMinutes(declaredArrivalTime);
+  
+  // คำนวณเวลาสูงสุดที่อนุญาต = เวลาที่แจ้ง + 30 นาที
+  const maxAllowedMinutes = declaredMinutes + ATTENDANCE_CONFIG.LATE_THRESHOLD_MINUTES;
+  
+  // ถ้า check-in หลังเวลาสูงสุด = ขาดงานทันที
+  if (checkInMinutes > maxAllowedMinutes) {
+    const lateMinutes = checkInMinutes - declaredMinutes;
+    return {
+      valid: false,
+      reason: `คุณแจ้งว่าจะมาเวลา ${declaredArrivalTime} แต่ check-in เวลา ${checkInTime} (สายเกิน ${lateMinutes} นาที) ถือว่าขาดงาน`,
+      status: ATTENDANCE_CONFIG.STATUS.ABSENT,
+      shouldAutoCheckout: true
+    };
+  }
+  
+  // check-in ภายในเวลา
+  const earlyMinutes = declaredMinutes - checkInMinutes;
+  return {
+    valid: true,
+    reason: earlyMinutes > 0 
+      ? `มาก่อนเวลาที่แจ้ง ${earlyMinutes} นาที` 
+      : `มาตรงตามเวลาที่แจ้ง`,
+    status: ATTENDANCE_CONFIG.STATUS.LATE
+  };
+};
+
+/**
+ * 🎯 ฟังก์ชันหลัก: คำนวณสถานะการเข้างาน (พร้อมตรวจสอบคำขอเข้างานสาย)
  * 
  * @param {string} checkInTime - เวลา check-in (HH:MM)
  * @param {string} shiftStart - เวลาเริ่มกะ (HH:MM)
- * @param {boolean} hasApprovedLeave - มีการลาที่อนุมัติหรือไม่
+ * @param {boolean} hasApprovedLeave - มีการลาที่อนุมัติหรือไล่
+ * @param {object|null} lateArrivalRequest - คำขอเข้างานสายที่อนุมัติ
  * @returns {object} - { status, lateMinutes, shouldAutoCheckout, message }
  */
-export const calculateAttendanceStatus = (checkInTime, shiftStart, hasApprovedLeave = false) => {
+export const calculateAttendanceStatus = (checkInTime, shiftStart, hasApprovedLeave = false, lateArrivalRequest = null) => {
   // กรณีลา
   if (hasApprovedLeave) {
     return {
@@ -71,6 +153,29 @@ export const calculateAttendanceStatus = (checkInTime, shiftStart, hasApprovedLe
       lateMinutes: 0,
       shouldAutoCheckout: false,
       message: 'ลางาน'
+    };
+  }
+  
+  // 🔥 กรณีมีคำขอเข้างานสายที่อนุมัติแล้ว
+  if (lateArrivalRequest && checkInTime) {
+    const validation = validateLateArrivalCheckIn(checkInTime, lateArrivalRequest);
+    
+    if (!validation.valid) {
+      // check-in หลังเวลาที่แจ้ง = ขาดงานทันที
+      return {
+        status: validation.status,
+        lateMinutes: null,
+        shouldAutoCheckout: validation.shouldAutoCheckout,
+        message: validation.reason
+      };
+    }
+    
+    // check-in ภายในเวลา = มาสายตามที่แจ้ง
+    return {
+      status: validation.status,
+      lateMinutes: timeToMinutes(checkInTime) - timeToMinutes(shiftStart),
+      shouldAutoCheckout: false,
+      message: `มาสาย (มีคำขออนุมัติ) - ${validation.reason}`
     };
   }
 
@@ -263,7 +368,14 @@ export const hasCheckedInToday = (attendanceRecords, date) => {
   if (!attendanceRecords || !Array.isArray(attendanceRecords)) return false;
   
   const todayRecord = attendanceRecords.find(record => record.date === date);
-  return todayRecord && todayRecord.checkIn;
+  if (!todayRecord) return false;
+  // Legacy format: top-level checkIn
+  if (todayRecord.checkIn) return true;
+  // New format: shifts array
+  if (todayRecord.shifts && Array.isArray(todayRecord.shifts)) {
+    return todayRecord.shifts.some(shift => shift.checkIn || shift.checkInTime)
+  }
+  return false;
 };
 
 /**

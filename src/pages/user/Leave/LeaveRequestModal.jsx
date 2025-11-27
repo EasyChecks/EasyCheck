@@ -13,7 +13,7 @@ function LeaveRequestModal({ closeModal }) {
   // 🔍 Debug: ตรวจสอบว่า user ที่ใช้ส่งคำขอลาคือใคร
   useEffect(() => {
     if (user) {
-      console.log('🔍 [LeaveRequestModal] Current user:', {
+      console.log(' [LeaveRequestModal] Current user:', {
         id: user?.id,
         name: user?.name,
         username: user?.username,
@@ -420,7 +420,7 @@ function LeaveRequestModal({ closeModal }) {
 
       setTimeout(() => {
         closeModal();
-      }, 3000);
+      }, 1500);
       return;
     }
 
@@ -471,12 +471,12 @@ function LeaveRequestModal({ closeModal }) {
         reason: formData.reason,
         documents: formData.documents,
         leaveMode: 'fullday',
-        userId: user?.id, // 🆕 เพิ่ม userId สำหรับ integration
-        userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
+        userId: user?.id, //  เพิ่ม userId สำหรับ integration
+        userName: user?.name //  เพิ่ม userName สำหรับ integration
       };
       
       // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
-      console.log('📝 [LeaveRequestModal] Fullday leave data:', leaveData);
+      // console.log('[LeaveRequestModal] Fullday leave data:', leaveData);
     } else {
       // Hourly leave
       leaveData = {
@@ -492,8 +492,8 @@ function LeaveRequestModal({ closeModal }) {
         userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
       };
       
-      // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
-      console.log('📝 [LeaveRequestModal] Hourly leave data:', leaveData);
+      // Debug: ตรวจสอบข้อมูลก่อนส่ง
+      // console.log('📝 [LeaveRequestModal] Hourly leave data:', leaveData);
     }
 
     // Validate against leave rules
@@ -515,9 +515,9 @@ function LeaveRequestModal({ closeModal }) {
       currentUser: user
     });
     
-    // ⚠️ ตรวจสอบว่า userId และ userName ไม่เป็น undefined
+    // ตรวจสอบว่า userId และ userName ไม่เป็น undefined
     if (!leaveData.userId || !leaveData.userName) {
-      console.error('❌ Missing userId or userName!', { user, leaveData });
+      console.error('Missing userId or userName!', { user, leaveData });
       showAlertDialog('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง');
       return;
     }
@@ -528,7 +528,7 @@ function LeaveRequestModal({ closeModal }) {
     // Close modal after showing success
     setTimeout(() => {
       closeModal();
-    }, 3000);
+    }, 1500);
   };
 
   return (
@@ -1352,7 +1352,7 @@ function LeaveRequestModal({ closeModal }) {
               }}
               rows={formData.requestType === 'lateArrival' ? 4 : 3}
               placeholder={formData.requestType === 'lateArrival' 
-                ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตแ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
+                ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตุ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
                 : "กรุณาระบุเหตุผลในการลา..."}
               className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none transition-colors resize-none ${
                 validationErrors.reason 

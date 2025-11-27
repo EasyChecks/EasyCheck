@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { leaveData as initialLeaveList } from '../data/usersData'; // ดึงข้อมูลรายการลาเริ่มต้นมาจากไฟล์ข้อมูลกลาง
 
 // สร้าง Context สำหรับจัดการข้อมูลการลาทั้งหมด - ทำให้คอมโพเนนต์ไหนก็เข้าถึงข้อมูลลาได้หมด
 const LeaveContext = createContext();
@@ -14,10 +13,10 @@ export const useLeave = () => {
 };
 
 export const LeaveProvider = ({ children }) => {
-    // เก็บรายการลาทั้งหมด - ถ้ามีใน localStorage จะเอามาใช้ ถ้าไม่มีจะใช้ข้อมูลเริ่มต้น
+    // เก็บรายการลาทั้งหมด - อ่านจาก localStorage เท่านั้น ไม่ใช้ mock data
     const [leaveList, setLeaveList] = useState(() => {
         const saved = localStorage.getItem('leaveList');
-        return saved ? JSON.parse(saved) : initialLeaveList;
+        return saved ? JSON.parse(saved) : []; // เริ่มต้นเป็น array ว่าง
     });
 
     // 🔥 กำหนดจำนวนวันลาที่มีสิทธิ์สำหรับแต่ละประเภทการลา - อ่านจาก localStorage (แก้ไขได้โดย HR Admin)
@@ -131,8 +130,22 @@ export const LeaveProvider = ({ children }) => {
                 return matchType && matchUser;
             })
             .reduce((total, leave) => {
-                const days = parseInt(leave.days) || 0; // แปลงจำนวนวันเป็นตัวเลข ถ้าแปลงไม่ได้ใช้ 0
-                return total + days; // รวมจำนวนวันทั้งหมด
+                // 🔥 แปลงเป็นวันตามประเภท
+                let daysCount = 0;
+                
+                if (leave.leaveMode === 'hourly') {
+                    // ลารายชั่วโมง - แยกชั่วโมงออกมา
+                    const hourMatch = leave.days.match(/(\d+)\s*ชม/);
+                    const hours = hourMatch ? parseInt(hourMatch[1]) : 0;
+                    
+                    // ตามกฎ: ≤ 4 ชม. = 0.5 วัน, > 4 ชม. = 1 วัน
+                    daysCount = hours <= 4 ? 0.5 : 1;
+                } else {
+                    // ลาเต็มวัน - แปลงตัวเลขจาก "4 วัน" เป็น 4
+                    daysCount = parseFloat(leave.days) || 0;
+                }
+                
+                return total + daysCount;
             }, 0); // เริ่มนับจาก 0
     };
 
@@ -222,7 +235,7 @@ export const LeaveProvider = ({ children }) => {
         return newLeave; // ส่งข้อมูลลากลับไปให้ผู้เรียกใช้
     };
 
-    // ฟังก์ชันเพิ่มคำขอเข้างานสาย - คล้ายกับ addLeave แต่เฉพาะกับการมาสาย
+    // ฟังก์ชันเพิ่มคำขอเข้างานสาย - บันทึกใน leaveList เหมือนการลาปกติ
     const addLateArrival = (lateArrivalData) => {
         // คำนวณระยะเวลาที่สายจากเวลาเริ่มต้นและสิ้นสุด
         const [startHour, startMin] = lateArrivalData.startTime.split(':').map(Number);
@@ -246,13 +259,27 @@ export const LeaveProvider = ({ children }) => {
             endDate: lateArrivalData.date,
             startTime: lateArrivalData.startTime,
             endTime: lateArrivalData.endTime,
+            leaveMode: 'hourly', // 🔥 ระบุว่าเป็นลารายชั่วโมง
             reason: lateArrivalData.reason,
             status: 'รออนุมัติ',
             statusColor: 'yellow',
-            documents: lateArrivalData.documents || []
+            documents: lateArrivalData.documents || [],
+            userId: lateArrivalData.userId,
+            userName: lateArrivalData.userName
         };
         
-        setLateArrivalList(prev => [newLateArrival, ...prev]); // เพิ่มในรายการเข้างานสาย
+        // 🔥 บันทึกใน leaveList แทน lateArrivalList
+        setLeaveList(prev => [newLateArrival, ...prev]);
+        
+        // 🔥 บันทึกลง localStorage ทันที
+        const updatedList = [newLateArrival, ...leaveList];
+        localStorage.setItem('leaveList', JSON.stringify(updatedList));
+        
+        // ส่งสัญญาณแจ้งเตือนทันทีที่มีการขอเข้างานสาย
+        window.dispatchEvent(new CustomEvent('leaveRequestCreated', {
+            detail: { leave: newLateArrival }
+        }));
+        
         return newLateArrival;
     };
 
@@ -270,16 +297,10 @@ export const LeaveProvider = ({ children }) => {
 
     // ยกเลิกคำขอลา - ใช้ได้เฉพาะสถานะ "รออนุมัติ" เท่านั้น (ถ้าอนุมัติแล้วจะยกเลิกไม่ได้)
     const cancelLeave = (id) => {
-        // เช็คในรายการลาปกติก่อน
+        // เช็คในรายการลา (รวมทั้งลาปกติและเข้างานสาย)
         const leave = leaveList.find(l => l.id === id);
         if (leave && leave.status === 'รออนุมัติ') {
             deleteLeave(id); // ถ้าเจอและยังรออนุมัติก็ลบได้
-            return true;
-        }
-        // ถ้าไม่เจอก็เช็คในรายการเข้างานสาย
-        const lateArrival = lateArrivalList.find(l => l.id === id);
-        if (lateArrival && lateArrival.status === 'รออนุมัติ') {
-            setLateArrivalList(prev => prev.filter(item => item.id !== id));
             return true;
         }
         return false; // ถ้าไม่เจอหรือไม่ใช่รออนุมัติ ก็ยกเลิกไม่ได้

@@ -985,7 +985,7 @@ function CreateForm({ type, position, onSubmit, onCancel, user, onShowError, isS
               label="เลือกพนักงานรายบุคคล"
               selected={formData.assignedUsers}
               onChange={(values) => setFormData({ ...formData, assignedUsers: values })}
-              options={usersData.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => ({
+              options={usersData.filter(u => u.role !== 'superadmin').map(u => ({
                 value: u.id,
                 label: u.name,
                 secondary: `${u.department} - ${u.position}`
@@ -1520,7 +1520,7 @@ function EditForm({ type, item, onSubmit, onCancel, user, onShowError, isSubmitt
               label="เลือกพนักงาน"
               selected={formData.assignedUsers}
               onChange={(values) => setFormData({ ...formData, assignedUsers: values })}
-              options={usersData.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => ({
+              options={usersData.filter(u => u.role !== 'superadmin').map(u => ({
                 value: u.id,
                 label: u.name,
                 secondary: `${u.department} - ${u.position}`
@@ -1687,6 +1687,20 @@ function MappingAndEvents() {
   }
 
   const filteredItems = getFilteredItems()
+
+  // Filter markers for map display based on activeTab
+  const getMapLocations = () => {
+    if (activeTab === 'events') return [] // Hide location markers when viewing events only
+    return filteredLocations
+  }
+
+  const getMapEvents = () => {
+    if (activeTab === 'locations') return [] // Hide event markers when viewing locations only
+    return filteredEvents
+  }
+
+  const mapLocations = getMapLocations()
+  const mapEvents = getMapEvents()
 
   // Helper function to translate location display name to Thai-friendly format
   const formatLocationName = (result) => {
@@ -3017,7 +3031,7 @@ function MappingAndEvents() {
 
               {/* Auto-fit bounds to show all markers (disabled when flying to search marker) */}
               <FitBoundsToMarkers 
-                locations={[...locations, ...events]} 
+                locations={[...mapLocations, ...mapEvents]} 
                 disabled={isFlying || searchMarkerPosition !== null}
               />
 
@@ -3041,7 +3055,7 @@ function MappingAndEvents() {
               )}
 
               {/* Location Markers (Green) */}
-              {filteredLocations.map((location) => {
+              {mapLocations.map((location) => {
                 const markerId = `location-${location.id}`;
                 
                 return (
@@ -3109,7 +3123,7 @@ function MappingAndEvents() {
               })}
 
               {/* Event Markers (Orange) */}
-              {filteredEvents.map((event) => {
+              {mapEvents.map((event) => {
                 const markerId = `event-${event.id}`;
                 
                 return (

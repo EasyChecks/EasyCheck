@@ -3,6 +3,7 @@ import { AuthContext } from './AuthContextValue'
 import { calculateAttendanceStats } from '../utils/attendanceCalculator'
 import {
   calculateAttendanceStatus,
+  getApprovedLateArrivalRequest,
   handleConsecutiveShifts,
   autoCheckoutAtMidnight,
   handleCrossMidnightShift,
@@ -43,6 +44,8 @@ export const AuthProvider = ({ children }) => {
     late: 0,
     absent: 0
   })
+  // สถิติแยก: current stats (ของช่วงนี้) และ combined stats (รวม historical baseline)
+  const [attendanceStatsWithBaseline, setAttendanceStatsWithBaseline] = useState(null)
 
   // Helper function: คำนวณ stats จาก records + historical baseline
   const calculateStatsWithBaseline = (records, userId) => {
@@ -92,9 +95,11 @@ export const AuthProvider = ({ children }) => {
             const records = JSON.parse(savedRecords)
             setAttendanceRecords(records)
             
-            // ใช้ helper function คำนวณ stats + baseline
-            const statsWithBaseline = calculateStatsWithBaseline(records, userData.id)
-            setAttendanceStats(statsWithBaseline)
+            // 🔥 ใช้ helper function คำนวณ stats + baseline
+              const currentStats = calculateAttendanceStats(records)
+              const statsWithBaseline = calculateStatsWithBaseline(records, userData.id)
+              setAttendanceStats(currentStats)
+              setAttendanceStatsWithBaseline(statsWithBaseline)
           } else {
             // ไม่มีข้อมูล ให้เริ่มต้นเป็น array ว่าง
             setAttendanceRecords([])
@@ -159,8 +164,10 @@ export const AuthProvider = ({ children }) => {
         if (e.newValue) {
           const records = JSON.parse(e.newValue)
           setAttendanceRecords(records)
+          const currentStats = calculateAttendanceStats(records)
           const statsWithBaseline = calculateStatsWithBaseline(records, user.id)
-          setAttendanceStats(statsWithBaseline)
+          setAttendanceStats(currentStats)
+          setAttendanceStatsWithBaseline(statsWithBaseline)
         }
       }
       // Sync attendance state across tabs
@@ -200,8 +207,10 @@ export const AuthProvider = ({ children }) => {
           // เปรียบเทียบว่าข้อมูลเปลี่ยนหรือไม่
           if (JSON.stringify(records) !== JSON.stringify(attendanceRecords)) {
             setAttendanceRecords(records)
+            const currentStats = calculateAttendanceStats(records)
             const statsWithBaseline = calculateStatsWithBaseline(records, user.id)
-            setAttendanceStats(statsWithBaseline)
+            setAttendanceStats(currentStats)
+            setAttendanceStatsWithBaseline(statsWithBaseline)
           }
         }
       }
@@ -380,8 +389,11 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // ใช้ logic calculateAttendanceStatus
-      const attendanceResult = calculateAttendanceStatus(time, workTimeStart, false)
+      // 🔥 ตรวจสอบคำขอเข้างานสายที่อนุมัติแล้ว
+      const lateArrivalRequest = getApprovedLateArrivalRequest(user.id, todayThaiFormat);
+      
+      // 🎯 ใช้ logic ใหม่: calculateAttendanceStatus (พร้อมตรวจสอบคำขอเข้างานสาย)
+      const attendanceResult = calculateAttendanceStatus(time, workTimeStart, false, lateArrivalRequest)
       const { status, lateMinutes, shouldAutoCheckout, message } = attendanceResult
       
       // ตรวจจับกะติดกัน (ถ้ามี user.shifts)
@@ -468,7 +480,9 @@ export const AuthProvider = ({ children }) => {
         }
         
         const stats = calculateAttendanceStats(updatedRecords)
+        const statsWithBaseline = calculateStatsWithBaseline(updatedRecords, user?.id)
         setAttendanceStats(stats)
+        setAttendanceStatsWithBaseline(statsWithBaseline)
         
         window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
           detail: { userId: user?.id, stats, records: updatedRecords } 
@@ -511,7 +525,9 @@ export const AuthProvider = ({ children }) => {
         }
         
         const stats = calculateAttendanceStats(updatedRecords)
+        const statsWithBaseline = calculateStatsWithBaseline(updatedRecords, user?.id)
         setAttendanceStats(stats)
+        setAttendanceStatsWithBaseline(statsWithBaseline)
         
         window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
           detail: { userId: user?.id, stats, records: updatedRecords } 
@@ -634,7 +650,9 @@ export const AuthProvider = ({ children }) => {
       }
       
       const stats = calculateAttendanceStats(updatedRecords)
+      const statsWithBaseline = calculateStatsWithBaseline(updatedRecords, user?.id)
       setAttendanceStats(stats)
+      setAttendanceStatsWithBaseline(statsWithBaseline)
       
       // เช็คว่าทุกกะ checkout หมดหรือยัง
       const allShiftsCheckedOut = updatedRecords[existingDayIndex].shifts.every(s => 
@@ -721,6 +739,7 @@ export const AuthProvider = ({ children }) => {
     resetAttendance,
     attendanceRecords,
     attendanceStats,
+    attendanceStatsWithBaseline,
     setAttendanceRecords
   }
 

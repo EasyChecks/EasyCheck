@@ -1,5 +1,5 @@
 import React, { createContext, useState } from 'react';
-import { mockTeamMembers, mockPendingLeaves } from '../data/usersData';
+import { mockTeamMembers } from '../data/usersData';
 
 const TeamContext = createContext();
 
@@ -7,8 +7,8 @@ export const TeamProvider = ({ children }) => {
   // ใช้ Mock Data จาก usersData.js
   const [teamMembers] = useState(mockTeamMembers);
 
-  // ใช้ Mock Data จาก usersData.js
-  const [pendingLeaves, setPendingLeaves] = useState(mockPendingLeaves);
+  // ไม่ใช้ Mock Data - อ่านจาก LeaveContext แทน
+  const [pendingLeaves, setPendingLeaves] = useState([]);
 
   // สถิติทีม
   const getTeamStats = () => {

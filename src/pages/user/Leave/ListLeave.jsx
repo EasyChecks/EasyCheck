@@ -67,11 +67,7 @@ function ListLeave() {
                         </svg>
                     </button>
                     <h1 className="text-white text-base sm:text-lg lg:text-xl font-bold drop-shadow-md truncate px-2">
-                        {viewType === 'lateArrival' 
-                            ? 'รายการขอเข้างานสาย' 
-                            : selectedLeaveType 
-                                ? `รายการ${selectedLeaveType}` 
-                                : 'รายการการลา'}
+                        {selectedLeaveType ? `รายการ${selectedLeaveType}` : 'รายการการลา'}
                     </h1>
                     <div className="w-5 sm:w-6"></div>
                 </div>
@@ -86,7 +82,7 @@ function ListLeave() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             <p className="text-gray-400 text-lg">
-                                {viewType === 'lateArrival' ? 'ไม่มีรายการขอเข้างานสาย' : 'ไม่มีรายการการลา'}
+                                ไม่มีรายการการลา
                             </p>
                         </div>
                     </div>

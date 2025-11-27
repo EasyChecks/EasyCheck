@@ -9,6 +9,7 @@
  */
 
 import ATTENDANCE_CONFIG from '../config/attendanceConfig';
+import { getApprovedLateArrivalRequest } from './attendanceLogic';
 
 /**
  * 🔍 ตรวจสอบว่าพนักงานมีการลาที่ได้รับอนุมัติในวันนี้หรือไม่
@@ -22,61 +23,61 @@ export const getApprovedLeaveForDate = (userId, date) => {
     // ดึงข้อมูลการลาจาก localStorage
     const leaveList = localStorage.getItem('leaveList');
     if (!leaveList) {
-      console.log('🚨 No leaveList in localStorage');
+      // console.log('🚨 No leaveList in localStorage');
       return null;
     }
 
     const leaves = JSON.parse(leaveList);
     
-    console.log(`🔍 [getApprovedLeaveForDate] Searching:`, { userId, date });
-    console.log(`🔍 [getApprovedLeaveForDate] Total leaves:`, leaves.length);
-    console.log(`🔍 [getApprovedLeaveForDate] All leaves:`, leaves.map(l => ({
-      id: l.id,
-      userId: l.userId,
-      status: l.status,
-      startDate: l.startDate,
-      endDate: l.endDate
-    })));
+    // console.log(`🔍 [getApprovedLeaveForDate] Searching:`, { userId, date });
+    // console.log(`🔍 [getApprovedLeaveForDate] Total leaves:`, leaves.length);
+    // console.log(`🔍 [getApprovedLeaveForDate] All leaves:`, leaves.map(l => ({
+    //   id: l.id,
+    //   userId: l.userId,
+    //   status: l.status,
+    //   startDate: l.startDate,
+    //   endDate: l.endDate
+    // })));
     
     // กรองเฉพาะการลาที่:
     // 1. เป็นของ user คนนี้ (ถ้ามีข้อมูล userId)
     // 2. สถานะ = 'อนุมัติ'
     // 3. วันที่ตรงกับที่ส่งมา
     const approvedLeave = leaves.find(leave => {
-      console.log(`  ↳ Checking leave:`, {
-        id: leave.id,
-        type: leave.leaveType,
-        status: leave.status,
-        leaveUserId: leave.userId,
-        targetUserId: userId,
-        start: leave.startDate,
-        end: leave.endDate
-      });
+      // console.log(`  ↳ Checking leave:`, {
+      //   id: leave.id,
+      //   type: leave.leaveType,
+      //   status: leave.status,
+      //   leaveUserId: leave.userId,
+      //   targetUserId: userId,
+      //   start: leave.startDate,
+      //   end: leave.endDate
+      // });
       
-      // 🔥 เช็ค userId ก่อน (สำคัญมาก!)
+      //  เช็ค userId ก่อน (สำคัญมาก!)
       if (leave.userId !== undefined && leave.userId !== null && leave.userId !== userId) {
-        console.log(`  ⛔ Skip: Different user (${leave.userId} vs ${userId})`);
+        // console.log(`  ⛔ Skip: Different user (${leave.userId} vs ${userId})`);
         return false;
       }
       
       // เช็คสถานะ
       if (leave.status !== 'อนุมัติ') {
-        console.log(`  ⛔ Skip: Not approved (status: ${leave.status})`);
+        // console.log(`  ⛔ Skip: Not approved (status: ${leave.status})`);
         return false;
       }
       
       // เช็ควันที่
       // รองรับทั้ง fullday (มี startDate, endDate) และ hourly (มี period)
       if (leave.startDate && leave.endDate) {
-        // 🔥 เปรียบเทียบแบบ string ก่อน (ง่ายและแม่นยำ)
+        //  เปรียบเทียบแบบ string ก่อน (ง่ายและแม่นยำ)
         const isExactMatch = leave.startDate === date || leave.endDate === date;
         
         if (isExactMatch) {
-          console.log('✅ [EXACT MATCH] Found approved leave:', {
-            userId: leave.userId,
-            leaveType: leave.leaveType,
-            date: date
-          });
+          // console.log('✅ [EXACT MATCH] Found approved leave:', {
+          //   userId: leave.userId,
+          //   leaveType: leave.leaveType,
+          //   date: date
+          // });
           return true;
         }
         
@@ -88,24 +89,24 @@ export const getApprovedLeaveForDate = (userId, date) => {
           
           const isInRange = checkDate >= startDate && checkDate <= endDate;
           
-          console.log(`  🔍 Date range check:`, {
-            checkDate: date,
-            startDate: leave.startDate,
-            endDate: leave.endDate,
-            checkDateObj: checkDate.toDateString(),
-            startDateObj: startDate.toDateString(),
-            endDateObj: endDate.toDateString(),
-            isInRange
-          });
+          // console.log(`  🔍 Date range check:`, {
+          //   checkDate: date,
+          //   startDate: leave.startDate,
+          //   endDate: leave.endDate,
+          //   checkDateObj: checkDate.toDateString(),
+          //   startDateObj: startDate.toDateString(),
+          //   endDateObj: endDate.toDateString(),
+          //   isInRange
+          // });
           
           if (isInRange) {
-            console.log('✅ [RANGE MATCH] Found approved leave:', {
-              userId: leave.userId,
-              leaveType: leave.leaveType,
-              startDate: leave.startDate,
-              endDate: leave.endDate,
-              checkDate: date
-            });
+            // console.log('✅ [RANGE MATCH] Found approved leave:', {
+            //   userId: leave.userId,
+            //   leaveType: leave.leaveType,
+            //   startDate: leave.startDate,
+            //   endDate: leave.endDate,
+            //   checkDate: date
+            // });
           }
           
           return isInRange;
@@ -118,7 +119,7 @@ export const getApprovedLeaveForDate = (userId, date) => {
       // กรณี hourly leave ดูจาก period
       if (leave.period) {
         const matches = leave.period.includes(date);
-        console.log(`  🔍 Period check: ${leave.period} includes ${date}? ${matches}`);
+        // console.log(`  🔍 Period check: ${leave.period} includes ${date}? ${matches}`);
         return matches;
       }
       
@@ -128,13 +129,13 @@ export const getApprovedLeaveForDate = (userId, date) => {
     
     if (!approvedLeave) {
       console.log('❌ [getApprovedLeaveForDate] No approved leave found for:', { userId, date });
-      console.log('💡 [TIP] Check if:', {
-        hasApprovedLeaves: leaves.filter(l => l.status === 'อนุมัติ').length,
-        hasUserLeaves: leaves.filter(l => l.userId === userId).length,
-        dateFormat: 'dd/mm/yyyy (พ.ศ.)'
-      });
+      // console.log('💡 [TIP] Check if:', {
+      //   hasApprovedLeaves: leaves.filter(l => l.status === 'อนุมัติ').length,
+      //   hasUserLeaves: leaves.filter(l => l.userId === userId).length,
+      //   dateFormat: 'dd/mm/yyyy (พ.ศ.)'
+      // });
     } else {
-      console.log('✅ [getApprovedLeaveForDate] SUCCESS:', approvedLeave);
+      // console.log('✅ [getApprovedLeaveForDate] SUCCESS:', approvedLeave);
     }
 
     return approvedLeave || null;
@@ -145,7 +146,7 @@ export const getApprovedLeaveForDate = (userId, date) => {
 };
 
 /**
- * 📅 แปลงวันที่จาก dd/mm/yyyy เป็น Date object
+ * แปลงวันที่จาก dd/mm/yyyy เป็น Date object
  * 
  * @param {string} dateStr - วันที่ในรูปแบบ dd/mm/yyyy
  * @returns {Date}
@@ -158,7 +159,7 @@ const convertDateToObject = (dateStr) => {
 };
 
 /**
- * 📝 สร้าง attendance record สำหรับวันที่ลา
+ * สร้าง attendance record สำหรับวันที่ลา
  * 
  * @param {string} userId - รหัสพนักงาน
  * @param {string} userName - ชื่อพนักงาน
@@ -227,7 +228,7 @@ export const createLeaveAttendanceRecord = (userId, userName, date, leaveData, s
       detail: { userId, date, type: 'leave' }
     }));
     
-    console.log('✅ Created leave attendance record for', userName, 'on', date);
+    // console.log('✅ Created leave attendance record for', userName, 'on', date);
   } catch (error) {
     console.error('Error creating leave attendance record:', error);
   }
@@ -248,16 +249,16 @@ export const syncApprovedLeavesToAttendance = (userId, userName) => {
   try {
     const leaveList = localStorage.getItem('leaveList');
     if (!leaveList) {
-      console.log('🚨 No leave list found');
+      // console.log('🚨 No leave list found');
       return 0;
     }
 
     const leaves = JSON.parse(leaveList);
     let syncedCount = 0;
     
-    console.log('🔍 Total leaves in system:', leaves.length);
+    // console.log('🔍 Total leaves in system:', leaves.length);
     
-    // 🔥 กรองเฉพาะการลาที่อนุมัติแล้ว และเป็นของ user นี้
+    //  กรองเฉพาะการลาที่อนุมัติแล้ว และเป็นของ user นี้
     const approvedLeaves = leaves.filter(leave => {
       const isApproved = leave.status === 'อนุมัติ';
       const isMyLeave = !leave.userId || leave.userId === userId; // backward compatible
@@ -269,15 +270,15 @@ export const syncApprovedLeavesToAttendance = (userId, userName) => {
       return isApproved && isMyLeave;
     });
     
-    console.log(`✅ Found ${approvedLeaves.length} approved leaves for user ${userId}`);
+    // console.log(`✅ Found ${approvedLeaves.length} approved leaves for user ${userId}`);
     
     approvedLeaves.forEach(leave => {
-      console.log('📄 Processing leave:', {
-        type: leave.leaveType,
-        start: leave.startDate,
-        end: leave.endDate,
-        userId: leave.userId
-      });
+      // console.log('📄 Processing leave:', {
+      //   type: leave.leaveType,
+      //   start: leave.startDate,
+      //   end: leave.endDate,
+      //   userId: leave.userId
+      // });
       
       // สร้าง attendance records สำหรับทุกวันในช่วงการลา
       if (leave.startDate && leave.endDate) {
@@ -300,7 +301,7 @@ export const syncApprovedLeavesToAttendance = (userId, userName) => {
       }
     });
     
-    console.log(`✅ Synced ${syncedCount} approved leaves to attendance records`);
+    // console.log(`✅ Synced ${syncedCount} approved leaves to attendance records`);
     return syncedCount;
   } catch (error) {
     console.error('Error syncing approved leaves:', error);
@@ -395,7 +396,7 @@ export const shouldBlockCheckIn = (userId, date) => {
 export const setupLeaveApprovalListener = (userId, userName) => {
   const handleLeaveStatusUpdated = (event) => {
     if (event.detail && event.detail.status === 'อนุมัติ') {
-      console.log('🔔 Leave approved, syncing to attendance...');
+      // console.log('🔔 Leave approved, syncing to attendance...');
       syncApprovedLeavesToAttendance(userId, userName);
     }
   };
@@ -410,6 +411,7 @@ export const setupLeaveApprovalListener = (userId, userName) => {
 
 export default {
   getApprovedLeaveForDate,
+  getApprovedLateArrivalRequest, // 🔥 export จาก attendanceLogic.js
   createLeaveAttendanceRecord,
   syncApprovedLeavesToAttendance,
   shouldBlockCheckIn,
