@@ -186,13 +186,13 @@ function AdminDashboard() {
       // เช็คจาก attendanceRecords
       const todayRecord = user.attendanceRecords?.find(r => r.date === todayStr)
       
-      if (!todayRecord || !todayRecord.checkIn) {
+      // 🔥 ตรวจสอบ status = 'leave' ก่อน
+      if (todayRecord && (todayRecord.status === 'leave' || todayRecord.checkIn?.status === 'leave')) {
+        // วันลาที่อนุมัติแล้ว = ลา ไม่ขาด
+        leaveUsers.push(user)
+      } else if (!todayRecord || !todayRecord.checkIn) {
         // ไม่มีข้อมูลเข้างาน = ขาด (เว้นแต่จะลา)
-        if (user.status === 'leave') {
-          leaveUsers.push(user)
-        } else {
-          absentUsers.push(user)
-        }
+        absentUsers.push(user)
       } else {
         // มีข้อมูลเข้างาน - เช็คสถานะ
         const checkInStatus = todayRecord.checkIn.status
