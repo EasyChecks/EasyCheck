@@ -50,12 +50,12 @@ function TakePhoto() {
     
     setScheduleTimes({ start: startTime, end: endTime });
     
-    console.log('⏰ Schedule Times:', {
-      schedule: schedule.time,
-      start: startTime.toLocaleTimeString('th-TH'),
-      end: endTime.toLocaleTimeString('th-TH'),
-      now: now.toLocaleTimeString('th-TH')
-    });
+    // console.log('⏰ Schedule Times:', {
+    //   schedule: schedule.time,
+    //   start: startTime.toLocaleTimeString('th-TH'),
+    //   end: endTime.toLocaleTimeString('th-TH'),
+    //   now: now.toLocaleTimeString('th-TH')
+    // });
 
     if (attendance.status === 'checked_in' && now < endTime) {
       setIsEarlyCheckout(true);

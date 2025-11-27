@@ -86,7 +86,7 @@ function Auth() {
       const response = await mockLoginAPI(username, password)
 
       if (response.success) {
-        // 🚫 ตรวจสอบสถานะผู้ใช้ - ห้าม login ถ้าเป็น leave หรือ suspended
+        // ตรวจสอบสถานะผู้ใช้ - ห้าม login ถ้าเป็น leave หรือ suspended
         const userStatus = response.user.status?.toLowerCase()
         
         if (userStatus === 'leave' || userStatus === 'suspended') {
@@ -100,7 +100,7 @@ function Auth() {
         }
         
         // 🔍 Debug: ตรวจสอบ role ก่อน login
-        console.log('✅ Login Success:', {
+        console.log('Login Success:', {
           username,
           name: response.user.name,
           role: response.user.role,

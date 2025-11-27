@@ -52,14 +52,14 @@ function UserDashboard() {
       if (e.key === 'scheduleUpdateTrigger' && e.newValue) {
         try {
           const update = JSON.parse(e.newValue)
-          console.log('📢 [Cross Tab User] Schedule update:', update.action)
+          console.log(' [Cross Tab User] Schedule update:', update.action)
           setRefreshKey(prev => prev + 1)
         } catch (error) {
           console.error('Error parsing schedule update:', error)
         }
       } else if (e.key === 'attendanceSchedules') {
-        // 🔥 ฟังการเปลี่ยนแปลงของ attendanceSchedules โดยตรง (ตอนลบ/แก้ไข)
-        console.log('📢 [Cross Tab User] attendanceSchedules changed')
+        //  ฟังการเปลี่ยนแปลงของ attendanceSchedules โดยตรง (ตอนลบ/แก้ไข)
+        // console.log('📢 [Cross Tab User] attendanceSchedules changed')
         setRefreshKey(prev => prev + 1)
       }
     }
@@ -75,7 +75,7 @@ function UserDashboard() {
     }
   }, [])
 
-  // 🔄 STEP 2: ตรวจสอบว่าวันนี้มีการลาที่อนุมัติหรือไม่
+  // STEP 2: ตรวจสอบว่าวันนี้มีการลาที่อนุมัติหรือไม่
   useEffect(() => {
     if (user) {
       const today = new Date().toLocaleDateString('th-TH', {
@@ -87,13 +87,13 @@ function UserDashboard() {
       const blockInfo = shouldBlockCheckIn(user.id, today)
       setLeaveBlockInfo(blockInfo)
       
-      console.log('🏖️ [UserDashboard] Leave check:', {
-        userId: user.id,
-        date: today,
-        blocked: blockInfo.blocked,
-        reason: blockInfo.reason,
-        leaveData: blockInfo.leaveData
-      });
+      // console.log('[UserDashboard] Leave check:', {
+      //   userId: user.id,
+      //   date: today,
+      //   blocked: blockInfo.blocked,
+      //   reason: blockInfo.reason,
+      //   leaveData: blockInfo.leaveData
+      // });
       
       // 🔍 Debug: ตรวจสอบ leaveList
       const leaveList = JSON.parse(localStorage.getItem('leaveList') || '[]');
@@ -101,7 +101,7 @@ function UserDashboard() {
       const approvedLeaves = myLeaves.filter(l => l.status === 'อนุมัติ');
       const pendingLeaves = myLeaves.filter(l => l.status === 'รออนุมัติ');
       
-      console.log('📄 [UserDashboard] Leave summary:', {
+      console.log('[UserDashboard] Leave summary:', {
         total: leaveList.length,
         myLeaves: myLeaves.length,
         approved: approvedLeaves.length,
@@ -113,11 +113,11 @@ function UserDashboard() {
     }
   }, [user, refreshKey]) // refreshKey เพื่อให้ตรวจสอบใหม่เมื่อมีการอัพเดท
   
-  // 🔔 STEP 2.1: ฟังการเปลี่ยนแปลงของ leaveList (เมื่อ admin อนุมัติ)
+  // STEP 2.1: ฟังการเปลี่ยนแปลงของ leaveList (เมื่อ admin อนุมัติ)
   useEffect(() => {
     const handleLeaveUpdate = (e) => {
       if (e.key === 'leaveList') {
-        console.log('📢 leaveList updated, refreshing leave status...');
+        // console.log('📢 leaveList updated, refreshing leave status...');
         setRefreshKey(prev => prev + 1); // Force refresh
       }
     };
@@ -127,7 +127,7 @@ function UserDashboard() {
     
     // ฟัง custom event (same tab)
     const handleLeaveStatusUpdated = (e) => {
-      console.log('📢 Leave status updated event:', e.detail);
+      console.log('Leave status updated event:', e.detail);
       setRefreshKey(prev => prev + 1); // Force refresh
     };
     window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
@@ -153,7 +153,7 @@ function UserDashboard() {
       const today = new Date()
       today.setHours(0, 0, 0, 0) // ตั้งเวลาเป็นเที่ยงคืนเพื่อเปรียบเทียบวันที่
       
-      // 🔐 User เห็นตารางที่มีชื่อตัวเอง หรือถ้าเป็น Admin ของสาขานั้น
+      // User เห็นตารางที่มีชื่อตัวเอง หรือถ้าเป็น Admin ของสาขานั้น
       const userVisibleSchedules = schedules.filter(schedule => {
         // ถ้าตารางมีรายชื่อสมาชิก ให้เช็คว่า user อยู่ในรายชื่อหรือไม่
         if (schedule.members && schedule.members.trim()) {
@@ -184,8 +184,8 @@ function UserDashboard() {
       
       // กรองตารางตาม teams (แผนก/ตำแหน่ง) และวันที่
       const userSchedules = userVisibleSchedules.filter(schedule => {
-        // 🔐 ตรวจสอบว่า user อยู่ในรายชื่อสมาชิกหรือไม่
-        // ⚠️ ยกเว้นตารางเก่าที่ไม่มี createdBy (ตารางตัวอย่าง)
+        // ตรวจสอบว่า user อยู่ในรายชื่อสมาชิกหรือไม่
+        // ยกเว้นตารางเก่าที่ไม่มี createdBy (ตารางตัวอย่าง)
         if (schedule.createdBy && schedule.members && schedule.members.trim()) {
           const memberNames = schedule.members.split(',').map(name => name.trim().toLowerCase())
           const isInMemberList = memberNames.includes(user?.name?.toLowerCase())
@@ -242,7 +242,7 @@ function UserDashboard() {
     }
   }, [user, refreshKey])
 
-  // 🆕 หากะที่ check-in แล้ว (สำหรับแสดงสถานะ)
+  // หากะที่ check-in แล้ว (สำหรับแสดงสถานะ)
   const shiftsCheckedIn = useMemo(() => {
     const today = new Date().toLocaleDateString('th-TH', {
       day: '2-digit',
@@ -276,7 +276,7 @@ function UserDashboard() {
     return R * c // ระยะทางเป็นเมตร
   }
 
-  // ✅ แก้ไขความช้า: ตรวจสอบตำแหน่งปัจจุบันแบบ optimized
+  // แก้ไขความช้า: ตรวจสอบตำแหน่งปัจจุบันแบบ optimized
   useEffect(() => {
     let watchId = null
     
@@ -309,7 +309,7 @@ function UserDashboard() {
         (error) => {
           console.warn('Location error:', error.message)
           setCheckingLocation(false)
-          // ✅ ไม่แสดง error ให้ user เห็น แต่อนุญาตใช้งานได้
+          // ไม่แสดง error ให้ user เห็น แต่อนุญาตใช้งานได้
           setIsWithinAllowedArea(true)
         },
         {
@@ -369,7 +369,7 @@ function UserDashboard() {
     hideLoading()
   }, [hideLoading])
 
-  // ✅ บังคับให้โหลดข้อมูล attendance ใหม่เมื่อ component mount หรือ user เปลี่ยน
+  // บังคับให้โหลดข้อมูล attendance ใหม่เมื่อ component mount หรือ user เปลี่ยน
   useEffect(() => {
     if (user) {
       // Trigger storage event เพื่อให้ AuthProvider โหลดข้อมูลใหม่
@@ -387,7 +387,7 @@ function UserDashboard() {
     }
   }, [user])
 
-  // ✅ ฟังการเปลี่ยนแปลงของ attendance แบบ real-time
+  // ฟังการเปลี่ยนแปลงของ attendance แบบ real-time
   useEffect(() => {
     const handleAttendanceUpdate = (event) => {
       // อัพเดต UI ทันทีเมื่อมีการเช็คชื่อสำเร็จ
@@ -401,7 +401,7 @@ function UserDashboard() {
     return () => window.removeEventListener('attendanceUpdated', handleAttendanceUpdate)
   }, [user])
 
-  // 🔥 ฟังการอัปเดต timeSummary real-time (สำหรับ AttendanceStatsRow)
+  // ฟังการอัปเดต timeSummary real-time (สำหรับ AttendanceStatsRow)
   useEffect(() => {
     const handleTimeSummaryUpdate = (e) => {
       if (e.detail.userId === user?.id) {
@@ -588,7 +588,7 @@ function UserDashboard() {
     setBuddyError('') // ล้าง error เมื่อพิมพ์
   }
 
-  // ✅ ฟังก์ชันสำหรับจัดการคลิกปุ่มเช็คอิน/เช็คเอาท์
+  // ฟังก์ชันสำหรับจัดการคลิกปุ่มเช็คอิน/เช็คเอาท์
   const handleCheckInOutClick = async (e) => {
     // ถ้าไม่อยู่ในพื้นที่อนุญาต
     if (isButtonDisabled) {
@@ -598,7 +598,7 @@ function UserDashboard() {
       return
     }
 
-    // 🔥 บังคับเลือกกะเมื่อมีหลายกะ
+    // บังคับเลือกกะเมื่อมีหลายกะ
     if (allSchedules.length > 1 && !selectedShift) {
       e.preventDefault()
       setPopupInfoMessage('กรุณาเลือกกะงานก่อนทำรายการ');
@@ -661,7 +661,7 @@ function UserDashboard() {
           </div>
         )}
         
-        {/* 🆕 UI เลือกกะ (แสดงเมื่อมีมากกว่า 1 กะ) */}
+        {/* UI เลือกกะ (แสดงเมื่อมีมากกว่า 1 กะ) */}
         {allSchedules.length > 1 && (
           <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <h4 className="text-sm font-bold text-gray-800 mb-3">เลือกกะที่ต้องการเข้างาน:</h4>
@@ -724,7 +724,7 @@ function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            {/* 🔄 STEP 2: แสดงปุ่ม disabled ถ้ามีการลา */}
+            {/* STEP 2: แสดงปุ่ม disabled ถ้ามีการลา */}
             {checkingCamera ? (
               <button
                 disabled
@@ -762,7 +762,7 @@ function UserDashboard() {
                     setShowInfoPopup(true);
                     return;
                   }
-                  // 🆕 เช็คว่าต้องเลือกกะก่อน (ถ้ามี > 1 กะ)
+                  // เช็คว่าต้องเลือกกะก่อน (ถ้ามี > 1 กะ)
                   if (allSchedules.length > 1 && !selectedShift) {
                     e.preventDefault();
                     setPopupInfoMessage('กรุณาเลือกกะที่ต้องการเข้างานก่อน');
@@ -953,27 +953,6 @@ function UserDashboard() {
                               {shifts.length} {shifts.length === 1 ? 'กะ' : 'กะ'}
                             </p>
                           </div>
-                          {/* <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            shifts.some(s => s.status === 'late') ? 'bg-yellow-100 text-yellow-700' :
-                            shifts.some(s => s.status === 'on_time') ? 'bg-green-100 text-green-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {shifts.some(s => s.status === 'late') ? (
-                              <span className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                มาสาย
-                              </span>
-                            ) : shifts.some(s => s.status === 'on_time') ? (
-                              <span className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                ตรงเวลา
-                              </span>
-                            ) : '📝 บันทึกแล้ว'}
-                          </div> */}
                         </div>
                         
                         <div className="space-y-3">

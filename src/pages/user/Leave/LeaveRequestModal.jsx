@@ -13,7 +13,7 @@ function LeaveRequestModal({ closeModal }) {
   // Debug: ตรวจสอบว่า user ที่ใช้ส่งคำขอลาคือใคร
   useEffect(() => {
     if (user) {
-      console.log('🔍 [LeaveRequestModal] Current user:', {
+      console.log(' [LeaveRequestModal] Current user:', {
         id: user?.id,
         name: user?.name,
         username: user?.username,
@@ -470,12 +470,12 @@ function LeaveRequestModal({ closeModal }) {
         reason: formData.reason,
         documents: formData.documents,
         leaveMode: 'fullday',
-        userId: user?.id, // เพิ่ม userId สำหรับ integration
-        userName: user?.name // เพิ่ม userName สำหรับ integration
+        userId: user?.id, //  เพิ่ม userId สำหรับ integration
+        userName: user?.name //  เพิ่ม userName สำหรับ integration
       };
       
-      // Debug: ตรวจสอบข้อมูลก่อนส่ง
-      console.log('[LeaveRequestModal] Fullday leave data:', leaveData);
+      // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
+      // console.log('[LeaveRequestModal] Fullday leave data:', leaveData);
     } else {
       // Hourly leave
       leaveData = {
@@ -492,7 +492,7 @@ function LeaveRequestModal({ closeModal }) {
       };
       
       // Debug: ตรวจสอบข้อมูลก่อนส่ง
-      console.log('[LeaveRequestModal] Hourly leave data:', leaveData);
+      // console.log('📝 [LeaveRequestModal] Hourly leave data:', leaveData);
     }
 
     // Validate against leave rules

@@ -128,7 +128,7 @@ export function LocationProvider({ children }) {
     return locations
   }
 
-  // ✅ Get filtered locations based on user role and branch
+  // Get filtered locations based on user role and branch
   const getFilteredLocations = (user) => {
     if (!user) return []
     

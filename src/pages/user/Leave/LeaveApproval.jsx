@@ -40,21 +40,21 @@ function LeaveApproval() {
     hideLoading()
   }, [hideLoading])
 
-  // 🔥 Real-time listener สำหรับ leave request ใหม่
+  // Real-time listener สำหรับ leave request ใหม่
   useEffect(() => {
     const handleLeaveRequestCreated = () => {
-      console.log('📢 LeaveApproval: New leave request detected - refreshing...');
+      // console.log('📢 LeaveApproval: New leave request detected - refreshing...');
       setRefreshTrigger(prev => prev + 1); // 👈 Force re-render
     };
 
     const handleLeaveStatusUpdated = () => {
-      console.log('📢 LeaveApproval: Leave status updated - refreshing...');
+      // console.log('📢 LeaveApproval: Leave status updated - refreshing...');
       setRefreshTrigger(prev => prev + 1); // 👈 Force re-render
     };
 
     const handleStorageChange = (e) => {
       if (e.key === 'leaveList') {
-        console.log('📢 LeaveApproval: Storage changed - refreshing...');
+        // console.log('📢 LeaveApproval: Storage changed - refreshing...');
         setRefreshTrigger(prev => prev + 1); // 👈 Force re-render
       }
     };
@@ -118,13 +118,13 @@ function LeaveApproval() {
   };
 
   const activePendingLeaves = useMemo(() => {
-    console.log('🔄 [LeaveApproval] Processing leaveList:', leaveList);
+    // console.log('[LeaveApproval] Processing leaveList:', leaveList);
     
     // แปลงข้อมูลจาก leaveList ให้เป็นรูปแบบที่ LeaveApproval ใช้
     let filtered = leaveList
       .filter(leave => leave.status === 'รออนุมัติ')
       .map(leave => {
-        console.log('📋 [LeaveApproval] Processing leave:', {
+        console.log('[LeaveApproval] Processing leave:', {
           leaveId: leave.id,
           userId: leave.userId,
           userName: leave.userName,
