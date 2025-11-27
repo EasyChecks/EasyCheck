@@ -12,7 +12,6 @@
  */
 export const migrateAttendanceData = (users) => {
   if (!Array.isArray(users)) {
-    console.warn('migrateAttendanceData: users is not an array');
     return users;
   }
 
@@ -61,7 +60,6 @@ export const migrateAttendanceData = (users) => {
  */
 export const migrateTimeSummary = (users) => {
   if (!Array.isArray(users)) {
-    console.warn('migrateTimeSummary: users is not an array');
     return users;
   }
 
@@ -98,7 +96,6 @@ export const runAttendanceMigration = () => {
   try {
     const storedUsers = localStorage.getItem('usersData');
     if (!storedUsers) {
-      console.log('No usersData found in localStorage, skipping migration');
       return;
     }
 
@@ -111,10 +108,8 @@ export const runAttendanceMigration = () => {
     // บันทึกกลับ localStorage
     localStorage.setItem('usersData', JSON.stringify(migratedUsers));
     
-    console.log('✅ Attendance data migration completed successfully (includes timeSummary)');
     return migratedUsers;
   } catch (error) {
-    console.error('❌ Attendance data migration failed:', error);
     return null;
   }
 };
