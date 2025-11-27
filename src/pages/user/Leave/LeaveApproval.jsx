@@ -468,14 +468,12 @@ function LeaveApproval() {
                 </div>
 
                 {/* Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-xl">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">วันที่เริ่มต้น</p>
-                    <p className="font-semibold text-gray-800 whitespace-nowrap">{leave.startDate}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">วันที่สิ้นสุด</p>
-                    <p className="font-semibold text-gray-800 whitespace-nowrap">{leave.endDate}</p>
+                    <p className="text-xs text-gray-500 mb-1">ช่วงเวลา</p>
+                    <p className="font-semibold text-gray-800 whitespace-nowrap">
+                      {leave.startDate} → {leave.endDate}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">จำนวน</p>

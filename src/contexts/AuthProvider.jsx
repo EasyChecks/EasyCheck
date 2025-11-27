@@ -3,6 +3,7 @@ import { AuthContext } from './AuthContextValue'
 import { calculateAttendanceStats } from '../utils/attendanceCalculator'
 import {
   calculateAttendanceStatus,
+  getApprovedLateArrivalRequest,
   handleConsecutiveShifts,
   autoCheckoutAtMidnight,
   handleCrossMidnightShift,
@@ -380,8 +381,11 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // 🎯 ใช้ logic ใหม่: calculateAttendanceStatus
-      const attendanceResult = calculateAttendanceStatus(time, workTimeStart, false)
+      // 🔥 ตรวจสอบคำขอเข้างานสายที่อนุมัติแล้ว
+      const lateArrivalRequest = getApprovedLateArrivalRequest(user.id, todayThaiFormat);
+      
+      // 🎯 ใช้ logic ใหม่: calculateAttendanceStatus (พร้อมตรวจสอบคำขอเข้างานสาย)
+      const attendanceResult = calculateAttendanceStatus(time, workTimeStart, false, lateArrivalRequest)
       const { status, lateMinutes, shouldAutoCheckout, message } = attendanceResult
       
       // 🔥 ตรวจจับกะติดกัน (ถ้ามี user.shifts)

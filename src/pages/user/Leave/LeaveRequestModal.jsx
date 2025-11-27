@@ -420,7 +420,7 @@ function LeaveRequestModal({ closeModal }) {
 
       setTimeout(() => {
         closeModal();
-      }, 3000);
+      }, 1500);
       return;
     }
 
@@ -528,7 +528,7 @@ function LeaveRequestModal({ closeModal }) {
     // Close modal after showing success
     setTimeout(() => {
       closeModal();
-    }, 3000);
+    }, 1500);
   };
 
   return (
@@ -1352,7 +1352,7 @@ function LeaveRequestModal({ closeModal }) {
               }}
               rows={formData.requestType === 'lateArrival' ? 4 : 3}
               placeholder={formData.requestType === 'lateArrival' 
-                ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตแ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
+                ? "กรุณาระบุเหตุผล เช่น รถเสีย อุบัติเหตุ เจอเหตุฉุกเฉินในระหว่างทาง ฯลฯ" 
                 : "กรุณาระบุเหตุผลในการลา..."}
               className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none transition-colors resize-none ${
                 validationErrors.reason 
