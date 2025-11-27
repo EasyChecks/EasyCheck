@@ -68,7 +68,7 @@ function SettingsScreen() {
           >
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="http://www.w3.org/2000/svg" width="20px" fill="#22C55E">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#00A63E">
                   <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
                 </svg>
               </div>
@@ -77,7 +77,7 @@ function SettingsScreen() {
                 <p className="text-sm text-gray-600">อัปเดตรหัสผ่านของคุณ</p>
               </div>
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="http://www.w3.org/2000/svg" width="24px" fill="#9CA3AF">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#9CA3AF">
               <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
             </svg>
           </button>
@@ -124,8 +124,8 @@ function SettingsScreen() {
         onClick={handleLogout}
         className="flex items-center justify-center w-full py-4 space-x-2 font-bold text-white transition-colors bg-red-500 shadow-md rounded-2xl hover:bg-red-600"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="http://www.w3.org/2000/svg" width="24px" fill="white">
-          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffffff">
+          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"></path>
         </svg>
         <span>ออกจากระบบ</span>
       </button>
