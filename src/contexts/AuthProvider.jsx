@@ -7,7 +7,7 @@ import {
   autoCheckoutAtMidnight,
   handleCrossMidnightShift,
   hasCheckedInToday,
-  hasCheckedInForShift // 🆕 เพิ่มฟังก์ชันตรวจสอบ per-shift
+  hasCheckedInForShift // เพิ่มฟังก์ชันตรวจสอบ per-shift
 } from '../utils/attendanceLogic'
 import { 
   syncApprovedLeavesToAttendance, 
@@ -44,11 +44,11 @@ export const AuthProvider = ({ children }) => {
     absent: 0
   })
 
-  // 🔥 Helper function: คำนวณ stats จาก records + historical baseline
+  // Helper function: คำนวณ stats จาก records + historical baseline
   const calculateStatsWithBaseline = (records, userId) => {
     const currentStats = calculateAttendanceStats(records)
     
-    // 🔥 ดึง historical baseline จาก usersData
+    // ดึง historical baseline จาก usersData
     const usersDataJson = localStorage.getItem('usersData')
     if (usersDataJson && userId) {
       try {
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
           const userData = JSON.parse(savedUser)
           setUser(userData)
           
-          // 🔥 โหลด attendanceRecords เฉพาะ user นี้
+          // โหลด attendanceRecords เฉพาะ user นี้
           const userAttendanceKey = `attendanceRecords_user_${userData.id}_${userData.name}`
           const savedRecords = localStorage.getItem(userAttendanceKey)
           
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
             const records = JSON.parse(savedRecords)
             setAttendanceRecords(records)
             
-            // 🔥 ใช้ helper function คำนวณ stats + baseline
+            // ใช้ helper function คำนวณ stats + baseline
             const statsWithBaseline = calculateStatsWithBaseline(records, userData.id)
             setAttendanceStats(statsWithBaseline)
           } else {
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
             setAttendanceRecords([])
           }
           
-          // 🔥 โหลด attendance state ของ user นี้และตรวจสอบว่าเป็นวันนี้หรือไม่
+          // โหลด attendance state ของ user นี้และตรวจสอบว่าเป็นวันนี้หรือไม่
           const userAttendanceStateKey = `attendance_user_${userData.id}_${tabId}`
           const savedAttendanceState = localStorage.getItem(userAttendanceStateKey)
           
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
             const savedState = JSON.parse(savedAttendanceState)
             const today = new Date().toISOString().split('T')[0]
             
-            // 🔥 เช็คว่า attendance state นี้เป็นของวันนี้หรือไม่
+            // เช็คว่า attendance state นี้เป็นของวันนี้หรือไม่
             const stateDate = localStorage.getItem(`${userAttendanceStateKey}_date`)
             
             if (stateDate === today) {
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [tabId])
 
-  // 🔄 STEP 1: Sync การลาที่อนุมัติแล้ว กับ attendance records
+  // STEP 1: Sync การลาที่อนุมัติแล้ว กับ attendance records
   useEffect(() => {
     if (user) {
       // Sync การลาทั้งหมดที่อนุมัติแล้ว
@@ -154,7 +154,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const handleStorageChange = (e) => {
-      // 🔥 ฟังการเปลี่ยนแปลงของ attendanceRecords ของ user นี้
+      // ฟังการเปลี่ยนแปลงของ attendanceRecords ของ user นี้
       if (user && e.key === `attendanceRecords_user_${user.id}_${user.name}`) {
         if (e.newValue) {
           const records = JSON.parse(e.newValue)
@@ -163,7 +163,7 @@ export const AuthProvider = ({ children }) => {
           setAttendanceStats(statsWithBaseline)
         }
       }
-      // 🔥 Sync attendance state across tabs
+      // Sync attendance state across tabs
       else if (user && e.key === `attendance_user_${user.id}_${tabId}`) {
         if (e.newValue) {
           const newAttendance = JSON.parse(e.newValue)
@@ -177,7 +177,7 @@ export const AuthProvider = ({ children }) => {
           const updatedUsers = JSON.parse(e.newValue)
           const updatedUser = updatedUsers.find(u => u.id === user.id)
           if (updatedUser) {
-            // 🔒 ป้องกันไม่ให้ role จาก usersData ทับ role ที่ convert แล้ว
+            // ป้องกันไม่ให้ role จาก usersData ทับ role ที่ convert แล้ว
             const mergedUser = user.isAdminAccount === false
               ? { ...user, ...updatedUser, role: user.role }
               : { ...user, ...updatedUser }
@@ -189,7 +189,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    // 🔥 เพิ่ม interval ตรวจสอบทุก 2 วินาที (สำหรับ same-tab updates)
+    // เพิ่ม interval ตรวจสอบทุก 2 วินาที (สำหรับ same-tab updates)
     const interval = setInterval(() => {
       if (user) {
         const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
@@ -235,7 +235,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(`user_${tabId}`)
   }
 
-  // ✅ ฟังก์ชันอัพเดตข้อมูลการเข้า-ออกงานไปยัง usersData.js
+  // ฟังก์ชันอัพเดตข้อมูลการเข้า-ออกงานไปยัง usersData.js
   const updateUserAttendanceInUsersData = (checkInTime, checkOutTime, checkInPhoto, checkOutPhoto, status, checkInGPS = null, checkInAddress = null, checkOutGPS = null, checkOutAddress = null, checkInDistance = null, checkOutDistance = null) => {
     if (!user) return
     
@@ -304,7 +304,7 @@ export const AuthProvider = ({ children }) => {
         users[userIndex].attendanceRecords = users[userIndex].attendanceRecords.slice(0, 30)
       }
       
-      // 🔥 คำนวณและอัพเดท timeSummary จากข้อมูลจริง
+      // คำนวณและอัพเดท timeSummary จากข้อมูลจริง
       const userRecords = users[userIndex].attendanceRecords || []
       const stats = calculateAttendanceStats(
         userRecords.map(record => ({
@@ -367,7 +367,7 @@ export const AuthProvider = ({ children }) => {
         year: 'numeric'
       })
       
-      // 🔥 ตรวจสอบว่า check-in ไปแล้วหรือยัง
+      // ตรวจสอบว่า check-in ไปแล้วหรือยัง
       // ถ้ามี shiftId ใช้ hasCheckedInForShift (รองรับหลายกะ)
       // ถ้าไม่มี shiftId ใช้ hasCheckedInToday (backward compatible - กะเดียว)
       if (shiftId) {
@@ -380,16 +380,16 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // 🎯 ใช้ logic ใหม่: calculateAttendanceStatus
+      // ใช้ logic calculateAttendanceStatus
       const attendanceResult = calculateAttendanceStatus(time, workTimeStart, false)
       const { status, lateMinutes, shouldAutoCheckout, message } = attendanceResult
       
-      // 🔥 ตรวจจับกะติดกัน (ถ้ามี user.shifts)
+      // ตรวจจับกะติดกัน (ถ้ามี user.shifts)
       let consecutiveInfo = null
       if (user?.shifts && user.shifts.length > 0) {
         consecutiveInfo = handleConsecutiveShifts(time, user.shifts)
         if (consecutiveInfo.coveredShifts.length > 1) {
-          console.log('✅ กะติดกัน:', consecutiveInfo.message)
+          
         }
       }
       
@@ -408,7 +408,7 @@ export const AuthProvider = ({ children }) => {
       
       setAttendance(newAttendance)
       
-      // 🔥 บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
+      // บันทึก attendance แยกตาม user และบันทึกวันที่ด้วย
       if (user) {
         const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
         if (!finalAutoCheckOut) {
@@ -420,18 +420,18 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
+      // อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
       const { gps: checkInGPS, address: checkInAddress, distance: checkInDistance } = locationInfo
       
       // status จาก ATTENDANCE_CONFIG อยู่ในรูป 'on_time', 'late', 'absent' อยู่แล้ว
       // ไม่ต้องแปลง เพราะ updateUserAttendanceInUsersData รับ 'on_time', 'late', 'absent'
       
       if (finalAutoCheckOut) {
-        // 🔥 Auto check-out: บันทึกทั้ง check-in และ check-out พร้อมกัน
+        // Auto check-out: บันทึกทั้ง check-in และ check-out พร้อมกัน
         updateUserAttendanceInUsersData(time, time, photo, photo, status, checkInGPS, checkInAddress, checkInGPS, checkInAddress, checkInDistance, checkInDistance)
         
         const shiftRecord = {
-          shiftId: shiftId || null, // 🆕 shiftId (ใช้ schedule.time เป็น identifier)
+          shiftId: shiftId || null, // shiftId (ใช้ schedule.time เป็น identifier)
           checkIn: time,
           checkOut: time,
           checkInPhoto: photo,
@@ -474,7 +474,7 @@ export const AuthProvider = ({ children }) => {
           detail: { userId: user?.id, stats, records: updatedRecords } 
         }))
       } else {
-        // 🔥 ปกติ: บันทึก check-in อย่างเดียว
+        // ปกติ: บันทึก check-in อย่างเดียว
         const shiftRecord = {
           shiftId: shiftId || null, // 🆕 shiftId (ใช้ schedule.time เป็น identifier)
           checkIn: time,
@@ -533,7 +533,7 @@ export const AuthProvider = ({ children }) => {
         year: 'numeric'
       })
       
-      // 🔥 หากะที่ต้องการ checkout
+      // หากะที่ต้องการ checkout
       const todayRecord = attendanceRecords.find(r => r.date === todayThaiFormat)
       if (!todayRecord || !todayRecord.shifts || todayRecord.shifts.length === 0) {
         throw new Error('ไม่พบข้อมูลการ check-in')
@@ -566,7 +566,7 @@ export const AuthProvider = ({ children }) => {
       
       const targetShift = todayRecord.shifts[targetShiftIndex]
       
-      // 🔥 ตรวจสอบกะข้ามวัน - ถ้าเลยเที่ยงให้ตัดอัตโนมัติ
+      // ตรวจสอบกะข้ามวัน - ถ้าเลยเที่ยงให้ตัดอัตโนมัติ
       let finalCheckoutTime = time
       let isAutoCheckout = false
       let autoCheckoutReason = null
@@ -589,7 +589,6 @@ export const AuthProvider = ({ children }) => {
           finalCheckoutTime = crossMidnightResult.time
           isAutoCheckout = true
           autoCheckoutReason = crossMidnightResult.autoCheckoutReason
-          console.log('🌙 กะข้ามวัน - ตัด checkout ที่เที่ยงอัตโนมัติ')
         }
         
         // ตรวจสอบลืม checkout
@@ -603,12 +602,11 @@ export const AuthProvider = ({ children }) => {
             finalCheckoutTime = midnightCheckout.time
             isAutoCheckout = true
             autoCheckoutReason = midnightCheckout.autoCheckoutReason
-            console.log('🌙 ลืม checkout - ระบบทำให้อัตโนมัติที่เที่ยงคืน')
           }
         }
       }
       
-      // 🔥 อัพเดทข้อมูล checkout ในกะที่ถูกต้อง
+      // อัพเดทข้อมูล checkout ในกะที่ถูกต้อง
       const updatedRecords = [...attendanceRecords]
       const existingDayIndex = updatedRecords.findIndex(r => r.date === todayThaiFormat)
       
@@ -629,7 +627,7 @@ export const AuthProvider = ({ children }) => {
       
       setAttendanceRecords(updatedRecords)
       
-      // 🔥 บันทึก attendanceRecords แยกตาม user
+      // บันทึก attendanceRecords แยกตาม user
       if (user) {
         const userAttendanceKey = `attendanceRecords_user_${user.id}_${user.name}`
         localStorage.setItem(userAttendanceKey, JSON.stringify(updatedRecords))
@@ -638,7 +636,7 @@ export const AuthProvider = ({ children }) => {
       const stats = calculateAttendanceStats(updatedRecords)
       setAttendanceStats(stats)
       
-      // 🔥 เช็คว่าทุกกะ checkout หมดหรือยัง
+      // เช็คว่าทุกกะ checkout หมดหรือยัง
       const allShiftsCheckedOut = updatedRecords[existingDayIndex].shifts.every(s => 
         s.checkOut || s.checkOutTime
       )
@@ -657,7 +655,7 @@ export const AuthProvider = ({ children }) => {
         setAttendance({ status: 'checked_in' })
       }
       
-      // ✅ อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
+      // อัพเดตข้อมูลใน usersData.js ทันที - ส่ง location info
       const { gps: checkOutGPS, address: checkOutAddress, distance: checkOutDistance } = locationInfo
       updateUserAttendanceInUsersData(
         targetShift.checkIn, 
@@ -670,7 +668,7 @@ export const AuthProvider = ({ children }) => {
         null, checkOutDistance
       )
       
-      // ✅ Trigger custom event สำหรับ real-time sync
+      // Trigger custom event สำหรับ real-time sync
       window.dispatchEvent(new CustomEvent('attendanceUpdated', { 
         detail: { userId: user?.id, stats, records: updatedRecords } 
       }))
@@ -688,7 +686,7 @@ export const AuthProvider = ({ children }) => {
     }
     setAttendance(newAttendance)
     
-    // 🔥 Reset attendance แยกตาม user
+    // Reset attendance แยกตาม user
     if (user) {
       const userAttendanceKey = `attendance_user_${user.id}_${tabId}`
       localStorage.setItem(userAttendanceKey, JSON.stringify(newAttendance))
