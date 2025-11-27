@@ -10,7 +10,7 @@ function LeaveRequestModal({ closeModal }) {
   const { addLeave, addLateArrival, calculateDays, validateLeaveRequest, getLeaveRules } = useLeave(); // ดึงฟังก์ชันจาก LeaveContext
   const { user } = useAuth(); // ดึงข้อมูล user ปัจจุบัน
   
-  // 🔍 Debug: ตรวจสอบว่า user ที่ใช้ส่งคำขอลาคือใคร
+  // Debug: ตรวจสอบว่า user ที่ใช้ส่งคำขอลาคือใคร
   useEffect(() => {
     if (user) {
       console.log(' [LeaveRequestModal] Current user:', {
@@ -84,7 +84,7 @@ function LeaveRequestModal({ closeModal }) {
     documents: ''
   });
 
-  // Close time pickers when clicking outside
+  // ปิด dropdown และ time picker เมื่อคลิกข้างนอก
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (timeStartPickerRef.current && !timeStartPickerRef.current.contains(event.target)) {
@@ -109,7 +109,7 @@ function LeaveRequestModal({ closeModal }) {
   const convertDateFormat = (dateStr) => {
     if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
-    // 🔥 แปลง ค.ศ. เป็น พ.ศ. (+543)
+    // แปลง ค.ศ. เป็น พ.ศ. (+543)
     const buddhistYear = parseInt(year) + 543;
     return `${day}/${month}/${buddhistYear}`;
   };
@@ -127,17 +127,17 @@ function LeaveRequestModal({ closeModal }) {
     return convertDateFormat(isoDate);
   };
 
-  // Get minimum date based on leave type
-  // ลาป่วย and ลากิจ can be retroactive (no min date)
-  // Other leave types can only select today or future dates
+  // กำหนดวันที่เริ่มต้นที่เลือกได้ based on leave type
+  // ลาป่วย and ลากิจ สามารถเลือกย้อนหลังได้
+  // การลาอื่นๆ เลือกได้ตั้งแต่วันปัจจุบันเป็นต้นไป
   const getMinDate = () => {
     if (formData.leaveType === 'ลาป่วย' || formData.leaveType === 'ลากิจ') {
-      return ''; // No restriction for sick leave and personal leave
+      return '';
     }
-    return getTodayDate(); // Today's date as minimum for other leave types
+    return getTodayDate();
   };
 
-  // Calculate total days
+  // คำนวณจํานวนวันที่ลาได้
   const getTotalDays = () => {
     if (formData.startDate && formData.endDate) {
       const startFormatted = convertDateFormat(formData.startDate);
@@ -147,7 +147,7 @@ function LeaveRequestModal({ closeModal }) {
     return 0;
   };
 
-  // Calculate total hours
+  // คำนวณชั่วโมงที่ลารายชั่วโมงได้
   const getTotalHours = () => {
     if (formData.startTime && formData.endTime) {
       const [startHour, startMin] = formData.startTime.split(':').map(Number);
@@ -167,12 +167,11 @@ function LeaveRequestModal({ closeModal }) {
     return 0;
   };
 
-  // Generate hours for 24-hour format (00-23)
+  // สร้างตัวเลือกชั่วโมงและนาทีสำหรับ time picker
   const hours24 = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  // Generate minutes (00-59)
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
-  // Normalize time input (auto-complete)
+  // แปลงรูปแบบเวลาให้เป็น 24 ชั่วโมง
   const normalizeTime = (input) => {
     if (!input) return '';
     
@@ -211,7 +210,7 @@ function LeaveRequestModal({ closeModal }) {
     return input;
   };
 
-  // Handle time selection from picker (ไม่ปิด picker ทันที)
+  // (ไม่ปิด picker ทันที)
   const handleTimeSelect = (hour, minute, isStart) => {
     if (isStart) {
       setTempStartTime({ hour, minute });
@@ -220,7 +219,7 @@ function LeaveRequestModal({ closeModal }) {
     }
   };
 
-  // Confirm time selection and close picker
+  // ยืนยันการเลือกเวลา
   const confirmTimeSelection = (isStart) => {
     const todayDate = getTodayDate();
     if (isStart) {
@@ -244,7 +243,7 @@ function LeaveRequestModal({ closeModal }) {
     }
   };
 
-  // Open time picker and set initial temp values
+  // เปิด Time Picker
   const openTimePicker = (isStart) => {
     if (isStart) {
       if (formData.startTime) {
@@ -261,11 +260,11 @@ function LeaveRequestModal({ closeModal }) {
     }
   };
 
-  // Handle file upload
+  // จัดการการเปลี่ยนแปลงไฟล์เอกสารแนบ
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     
-    // Check file types
+    // ตรวจสอบชนิดและนามสกุลของไฟล์
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
     
@@ -284,12 +283,12 @@ function LeaveRequestModal({ closeModal }) {
         'ไฟล์ไม่ถูกต้อง', 
         `ไฟล์ต่อไปนี้ไม่รองรับ: ${invalidNames}\n\nรองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .pdf เท่านั้น`
       );
-      // Clear the input
+      // ล้างค่า input fileselector
       e.target.value = '';
       return;
     }
 
-    // 🔥 แปลงไฟล์เป็น base64 URL แทนที่จะเก็บแค่ชื่อไฟล์
+    // แปลงไฟล์เป็น base64 URL แทนที่จะเก็บแค่ชื่อไฟล์
     const fileReaders = files.map(file => {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -362,7 +361,7 @@ function LeaveRequestModal({ closeModal }) {
     return isValid;
   };
 
-  // Clear validation error for specific field
+  // Clear error message
   const clearError = (field) => {
     setValidationErrors(prev => ({ ...prev, [field]: '' }));
   };
@@ -370,7 +369,7 @@ function LeaveRequestModal({ closeModal }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Clear previous validation errors
+    // clear previous errors
     setValidationErrors({
       leaveType: '',
       startDate: '',
@@ -424,8 +423,8 @@ function LeaveRequestModal({ closeModal }) {
       return;
     }
 
-    // Handle regular leave request
-    // Validate based on leave mode
+    // จัดการคำขอลาปกติ
+    // Validate dates
     if (formData.leaveMode === 'fullday') {
       if (new Date(formData.endDate) < new Date(formData.startDate)) {
         showAlertDialog('error', 'ข้อผิดพลาด', 'วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มต้น');
@@ -448,7 +447,7 @@ function LeaveRequestModal({ closeModal }) {
     }
 
     // Validate document requirements
-    // Check if sick leave for 3+ days requires medical certificate
+    // ตรวจสอบกรณีลาป่วย 3 วันขึ้นไป ต้องแนบใบรับรองแพทย์
     if (formData.leaveType === 'ลาป่วย' && formData.leaveMode === 'fullday') {
       const totalDays = calculateDays(
         convertDateFormat(formData.startDate),
@@ -460,7 +459,7 @@ function LeaveRequestModal({ closeModal }) {
       }
     }
 
-    // Prepare leave data
+    // เตรียมข้อมูลสำหรับส่งคำขอลา
     let leaveData;
 
     if (formData.leaveMode === 'fullday') {
@@ -482,14 +481,14 @@ function LeaveRequestModal({ closeModal }) {
       leaveData = {
         leaveType: formData.leaveType,
         startDate: convertDateFormat(formData.startDate),
-        endDate: convertDateFormat(formData.startDate), // Same day for hourly
+        endDate: convertDateFormat(formData.startDate), // วันเดียวกับ startDate
         startTime: formData.startTime,
         endTime: formData.endTime,
         reason: formData.reason,
         documents: formData.documents,
         leaveMode: 'hourly',
-        userId: user?.id, // 🆕 เพิ่ม userId สำหรับ integration
-        userName: user?.name // 🆕 เพิ่ม userName สำหรับ integration
+        userId: user?.id, // เพิ่ม userId สำหรับ integration
+        userName: user?.name // เพิ่ม userName สำหรับ integration
       };
       
       // Debug: ตรวจสอบข้อมูลก่อนส่ง
@@ -505,8 +504,8 @@ function LeaveRequestModal({ closeModal }) {
       return;
     }
 
-    // 🔍 Debug: ตรวจสอบข้อมูลก่อนส่ง
-    console.log('📤 [LeaveRequestModal] Submitting leave:', {
+    // Debug: ตรวจสอบข้อมูลก่อนส่ง
+    console.log('[LeaveRequestModal] Submitting leave:', {
       userId: leaveData.userId,
       userName: leaveData.userName,
       leaveType: leaveData.leaveType,
@@ -588,7 +587,7 @@ function LeaveRequestModal({ closeModal }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} id="leave-request-form" className="p-4 sm:p-5 lg:p-6 leave-form-space space-y-3 sm:space-y-4 lg:space-y-5 max-h-[70vh] overflow-y-auto">
-          {/* Request Type Selection */}
+          {/* เลือกประเภทคำขอ */}
           <div>
             <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
               ประเภทคำขอ <span className="text-red-500">*</span>
@@ -641,7 +640,7 @@ function LeaveRequestModal({ closeModal }) {
             </div>
           </div>
 
-          {/* Leave Type - Only show for regular leave */}
+          {/* ประเภทการลา */}
           {formData.requestType === 'leave' && (
             <div>
               <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
@@ -702,7 +701,7 @@ function LeaveRequestModal({ closeModal }) {
                 </div>
               )}  
 
-              {/* Show leave rules when type is selected */}
+              {/* แสดงเงื่อนไขการลา */}
               {formData.leaveType && (
                 <>
                   <div className="p-3 mt-3 border-2 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 rounded-xl sm:p-4">
@@ -728,7 +727,7 @@ function LeaveRequestModal({ closeModal }) {
             </div>
           )}
 
-          {/* Show late arrival rules */}
+          {/* แสดงเงื่อนไขการขอเข้างานสาย */}
           {formData.requestType === 'lateArrival' && (
             <>
               <div className="p-3 border-2 bg-gradient-to-br from-orange-50 to-orange-50 border-orange-200 rounded-xl sm:p-4">
@@ -785,11 +784,10 @@ function LeaveRequestModal({ closeModal }) {
             </div>
           )}
 
-          {/* Date/Time Fields */}
-          {/* For Late Arrival - Only show time selection */}
+          {/* Time Selection */}
+          {/* สำหรับขอเข้างานสาย */}
           {formData.requestType === 'lateArrival' ? (
             <div className="space-y-3 sm:space-y-4">
-              {/* Date - Display Today in dd/mm/yyyy (Locked) */}
               <div>
                 <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
                   วันที่ขอเข้างานสาย <span className="text-red-500">*</span>
@@ -816,7 +814,7 @@ function LeaveRequestModal({ closeModal }) {
                 </p>
               </div>
 
-              {/* Time Range - 24 Hour Format */}
+              {/* Start Time */}
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-gray-700 font-semibold text-sm sm:text-base mb-1.5 sm:mb-2">
@@ -1369,7 +1367,7 @@ function LeaveRequestModal({ closeModal }) {
               </div>
             )}
             
-            {/* Warning messages below reason textarea */}
+            {/* ข้อความเตือน */}
             {formData.requestType === 'lateArrival' && (
               <div className="flex items-start gap-2 mt-2 p-2.5 bg-red-50 border border-red-200 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1441,7 +1439,7 @@ function LeaveRequestModal({ closeModal }) {
             {formData.documents.length > 0 && (
               <div className="mt-2 space-y-2">
                 {formData.documents.map((doc, index) => {
-                  // 🔥 เช็คว่าเป็นรูปภาพหรือ PDF
+                  // เช็คว่าเป็นรูปภาพหรือ PDF
                   const isImage = doc.startsWith('data:image');
                   
                   return (
