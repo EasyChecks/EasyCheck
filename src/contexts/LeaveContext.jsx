@@ -19,7 +19,7 @@ export const LeaveProvider = ({ children }) => {
         return saved ? JSON.parse(saved) : []; // เริ่มต้นเป็น array ว่าง
     });
 
-    // 🔥 กำหนดจำนวนวันลาที่มีสิทธิ์สำหรับแต่ละประเภทการลา - อ่านจาก localStorage (แก้ไขได้โดย HR Admin)
+    // กำหนดจำนวนวันลาที่มีสิทธิ์สำหรับแต่ละประเภทการลา - อ่านจาก localStorage (แก้ไขได้โดย HR Admin)
     const [leaveQuota, setLeaveQuota] = useState(() => {
         const saved = localStorage.getItem('leaveQuotaSettings');
         if (saved) {
@@ -39,7 +39,7 @@ export const LeaveProvider = ({ children }) => {
         };
     });
 
-    // 🔥 Sync leaveQuota กับ localStorage เมื่อมีการเปลี่ยนแปลง
+    // Sync leaveQuota กับ localStorage เมื่อมีการเปลี่ยนแปลง
     useEffect(() => {
         const handleQuotaChange = () => {
             const saved = localStorage.getItem('leaveQuotaSettings');
@@ -48,7 +48,7 @@ export const LeaveProvider = ({ children }) => {
             }
         };
 
-        // ฟังการเปลี่ยนแปลงจาก localStorage
+        // ดูการเปลี่ยนแปลงจาก localStorage
         window.addEventListener('storage', handleQuotaChange);
         window.addEventListener('leaveQuotaUpdated', handleQuotaChange);
 
@@ -74,12 +74,11 @@ export const LeaveProvider = ({ children }) => {
         localStorage.setItem('leaveList', JSON.stringify(leaveList));
     }, [leaveList]);
 
-    // ระบบ Real-time Sync - ฟังการเปลี่ยนแปลงจากแท็บอื่นหรือคอมโพเนนต์อื่น
+    // ระบบ Real-time Sync - ดูการเปลี่ยนแปลงจากแท็บอื่นหรือคอมโพเนนต์อื่น
     useEffect(() => {
         // จับเหตุการณ์เมื่อ localStorage เปลี่ยน (เช่นแท็บอื่นเพิ่มการลาใหม่)
         const handleStorageChange = (e) => {
             if (e.key === 'leaveList' && e.newValue) {
-                console.log('LeaveContext: Storage changed, syncing leaveList...');
                 const newList = JSON.parse(e.newValue);
                 setLeaveList(newList); // อัพเดทรายการลาให้ตรงกับแท็บอื่น
             }
@@ -87,7 +86,6 @@ export const LeaveProvider = ({ children }) => {
 
         // จับเหตุการณ์เมื่อมีการสร้างคำขอลาใหม่
         const handleLeaveRequestCreated = () => {
-            console.log('LeaveContext: New leave request, reloading from localStorage...');
             const saved = localStorage.getItem('leaveList');
             if (saved) {
                 setLeaveList(JSON.parse(saved)); // โหลดข้อมูลใหม่ทันทีที่มีคำขอลาใหม่
@@ -96,14 +94,13 @@ export const LeaveProvider = ({ children }) => {
 
         // จับเหตุการณ์เมื่อมีการอัพเดทสถานะการลา (อนุมัติ/ไม่อนุมัติ)
         const handleLeaveStatusUpdated = () => {
-            console.log('LeaveContext: Leave status updated, reloading from localStorage...');
             const saved = localStorage.getItem('leaveList');
             if (saved) {
                 setLeaveList(JSON.parse(saved)); // รีเฟรชข้อมูลให้เห็นสถานะใหม่ทันที
             }
         };
 
-        // ลงทะเบียนฟังเหตุการณ์ทั้งหมด
+        // ตรวจดูการเปลี่ยนแปลงจาก localStorage และเหตุการณ์ทั้งหมด
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('leaveRequestCreated', handleLeaveRequestCreated);
         window.addEventListener('leaveStatusUpdated', handleLeaveStatusUpdated);
@@ -117,7 +114,7 @@ export const LeaveProvider = ({ children }) => {
     }, []);
 
     // คำนวณจำนวนวันลาที่ใช้ไปแล้วสำหรับแต่ละประเภท - นับเฉพาะที่ได้รับอนุมัติเท่านั้น
-    // 🔥 รองรับการนับแยกตาม userId หรือนับรวมทุกคน (ถ้าไม่ส่ง userId มา)
+    // รองรับการนับแยกตาม userId หรือนับรวมทุกคน (ถ้าไม่ส่ง userId มา)
     const getUsedDays = (leaveType, userId = null) => {
         return leaveList
             .filter(leave => {
@@ -130,7 +127,7 @@ export const LeaveProvider = ({ children }) => {
                 return matchType && matchUser;
             })
             .reduce((total, leave) => {
-                // 🔥 แปลงเป็นวันตามประเภท
+                // แปลงเป็นวันตามประเภท
                 let daysCount = 0;
                 
                 if (leave.leaveMode === 'hourly') {
@@ -174,8 +171,6 @@ export const LeaveProvider = ({ children }) => {
 
     // ฟังก์ชันเพิ่มคำขอลาใหม่ - หัวใจสำคัญของระบบลา
     const addLeave = (leaveData) => {
-        // 🔍 Debug: ตรวจสอบข้อมูลที่รับเข้ามา
-        console.log('📥 [LeaveContext.addLeave] Received leaveData:', leaveData);
         
         let days, period;
         
@@ -215,15 +210,13 @@ export const LeaveProvider = ({ children }) => {
             status: 'รออนุมัติ', // สถานะเริ่มต้นเป็นรออนุมัติเสมอ
             statusColor: 'yellow', // สีเหลืองสำหรับรออนุมัติ
             documents: leaveData.documents || [],
-            userId: leaveData.userId, // 🆕 เก็บ userId สำหรับ integration
-            userName: leaveData.userName // 🆕 เก็บ userName สำหรับ integration
+            userId: leaveData.userId, // เก็บ userId สำหรับ integration
+            userName: leaveData.userName // เก็บ userName สำหรับ integration
         };
         
-        // 🔍 Debug: ตรวจสอบ newLeave object ที่สร้างขึ้น
-        console.log('✅ [LeaveContext.addLeave] Created newLeave:', newLeave);
         setLeaveList(prev => [newLeave, ...prev]); // เพิ่มเข้าไปด้านหน้าสุด (รายการใหม่อยู่บนสุด)
         
-        // 🔥 บันทึกลง localStorage ทันที
+        // บันทึกลง localStorage ทันที
         const updatedList = [newLeave, ...leaveList];
         localStorage.setItem('leaveList', JSON.stringify(updatedList));
         
@@ -259,7 +252,7 @@ export const LeaveProvider = ({ children }) => {
             endDate: lateArrivalData.date,
             startTime: lateArrivalData.startTime,
             endTime: lateArrivalData.endTime,
-            leaveMode: 'hourly', // 🔥 ระบุว่าเป็นลารายชั่วโมง
+            leaveMode: 'hourly', // ระบุว่าเป็นลารายชั่วโมง
             reason: lateArrivalData.reason,
             status: 'รออนุมัติ',
             statusColor: 'yellow',
@@ -268,10 +261,10 @@ export const LeaveProvider = ({ children }) => {
             userName: lateArrivalData.userName
         };
         
-        // 🔥 บันทึกใน leaveList แทน lateArrivalList
+        // บันทึกใน leaveList แทน lateArrivalList
         setLeaveList(prev => [newLateArrival, ...prev]);
         
-        // 🔥 บันทึกลง localStorage ทันที
+        // บันทึกลง localStorage ทันที
         const updatedList = [newLateArrival, ...leaveList];
         localStorage.setItem('leaveList', JSON.stringify(updatedList));
         
@@ -307,12 +300,12 @@ export const LeaveProvider = ({ children }) => {
     };
 
     // สร้างข้อมูลสรุปสิทธิ์การลาทั้งหมด - แสดงบนหน้า Dashboard
-    // 🔥 รองรับการแสดงสรุปของ user เฉพาะคน หรือของทุกคน (ถ้าไม่ส่ง userId)
+    // รองรับการแสดงสรุปของ user เฉพาะคน หรือของทุกคน (ถ้าไม่ส่ง userId)
     const getLeaveSummary = (userId = null) => {
         return Object.keys(leaveQuota).map(type => ({
             title: type, // ชื่อประเภทลา เช่น "ลาป่วย"
             description: getLeaveDescription(type), // คำอธิบายเงื่อนไข
-            daysUsed: getUsedDays(type, userId), // 🔥 วันที่ใช้ไปแล้วของ user นี้ (หรือทุกคนถ้าไม่ส่ง userId)
+            daysUsed: getUsedDays(type, userId), // วันที่ใช้ไปแล้วของ user นี้ (หรือทุกคนถ้าไม่ส่ง userId)
             totalDays: leaveQuota[type].totalDays, // วันที่มีสิทธิ์ทั้งหมด
             rules: getLeaveRules(type) // กฎเกณฑ์การลา
         }));
@@ -405,8 +398,6 @@ export const LeaveProvider = ({ children }) => {
 
     // ฟังก์ชันสำหรับ Manager - เปลี่ยนสถานะลาโดยตรง
     const updateLeaveStatus = (id, newStatus) => {
-        console.log('LeaveContext - Updating leave status:', { id, newStatus })
-        
         const statusColors = {
             'รออนุมัติ': 'yellow',
             'อนุมัติ': 'green',
@@ -421,7 +412,6 @@ export const LeaveProvider = ({ children }) => {
                         status: newStatus,
                         statusColor: statusColors[newStatus] || 'yellow'
                     };
-                    console.log('Updated leave:', updatedLeave)
                     
                     // ส่งสัญญาณแจ้งเตือนทันทีที่มีการอนุมัติ/ไม่อนุมัติ - ทำให้คอมโพเนนต์อื่นรู้ทันที
                     window.dispatchEvent(new CustomEvent('leaveStatusUpdated', {
@@ -432,9 +422,8 @@ export const LeaveProvider = ({ children }) => {
                 }
                 return leave;
             });
-            console.log('All leaves after update:', updated)
             
-            // 🔥 บันทึกลง localStorage (สำคัญมาก!)
+            // บันทึกลง localStorage (สำคัญมาก!)
             localStorage.setItem('leaveList', JSON.stringify(updated));
             
             // ส่งสัญญาณไปที่แท็บอื่นด้วย - cross-tab sync
@@ -453,7 +442,7 @@ export const LeaveProvider = ({ children }) => {
         const { leaveType, startDate, endDate, documents, leaveMode, userId } = leaveData;
         const errors = []; // เก็บข้อผิดพลาดทั้งหมด
 
-        // 🔥 ดึงเงื่อนไขการลาจาก leaveQuota (อ่านจาก localStorage)
+        // ดึงเงื่อนไขการลาจาก leaveQuota (อ่านจาก localStorage)
         const quotaConfig = leaveQuota[leaveType];
         
         if (!quotaConfig) {
@@ -467,7 +456,7 @@ export const LeaveProvider = ({ children }) => {
             totalDays = calculateDays(startDate, endDate);
         }
 
-        // 🔥 เช็คเงื่อนไขเอกสารแนบตามที่ HR Admin ตั้งไว้
+        // เช็คเงื่อนไขเอกสารแนบตามที่ HR Admin ตั้งไว้
         if (quotaConfig.requireDocument) {
             const needDocument = quotaConfig.documentAfterDays === 0 
                 ? true  // ต้องแนบทุกครั้ง
@@ -482,7 +471,7 @@ export const LeaveProvider = ({ children }) => {
             }
         }
         
-        // 🔥 เช็คว่ามีวันลาเหลือพอไหม - นับเฉพาะของ user นี้
+        // เช็คว่ามีวันลาเหลือพอไหม - นับเฉพาะของ user นี้
         const daysUsed = getUsedDays(leaveType, userId);
         const daysAvailable = quotaConfig.totalDays - daysUsed;
         

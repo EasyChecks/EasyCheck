@@ -49,7 +49,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
       
       <p className="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed mb-3 sm:mb-4 line-clamp-2">{description}</p>
       
-      {/* Days Used Info */}
+      {/* วันที่ใช้/วันที่เหลือ */}
       <p className="text-xs sm:text-sm text-gray-500 mb-1.5 sm:mb-2">
         ใช้ไป {daysUsed} วัน จาก {totalDays} วัน
       </p>
@@ -62,7 +62,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
         />
       </div>
 
-      {/* Expandable Rules Section */}
+      {/* ส่วนเงื่อนไข */}
       {leaveRules && (
         <div className="border-t border-gray-200 pt-3">
           <button
@@ -81,7 +81,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
             </svg>
           </button>
 
-          {/* Expanded Content */}
+          {/* ส่วนเงื่อนไข */}
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
               isExpanded ? 'max-h-[500px] opacity-100 mt-3' : 'max-h-0 opacity-0'
@@ -111,7 +111,7 @@ const LeaveCard = ({ title, description, daysUsed, totalDays, onClick, leaveRule
 };
 
 // Component หลักที่แสดงรายการสิทธิ์การลาทั้งหมด + การ์ดขอเข้างานสาย
-function LeaveList({ leaveItems }) {
+function LeaveDashboard({ leaveItems }) {
   const navigate = useNavigate();
 
   // ไปหน้ารายการลาตามประเภท
@@ -126,7 +126,7 @@ function LeaveList({ leaveItems }) {
 
   return (
     <>
-      {/* Late Arrival Card */}
+      {/* การ์ดขอเข้างานสาย */}
       <div className="p-4 sm:p-5 lg:p-6 mb-3 sm:mb-4 bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 relative z-10 border border-white/50">
         <div className="flex items-start justify-between mb-1.5 sm:mb-2">
           <h3 className="font-bold text-gray-800 text-base sm:text-lg lg:text-xl flex items-center gap-2">
@@ -171,7 +171,7 @@ function LeaveList({ leaveItems }) {
         </div>
       </div>
 
-      {/* Regular Leave Cards */}
+      {/* แสดงรายการการลา */}
       {leaveItems.map((leave, index) => (
         <LeaveCard
           key={index}
@@ -187,4 +187,4 @@ function LeaveList({ leaveItems }) {
   );
 }
 
-export default LeaveList;
+export default LeaveDashboard;

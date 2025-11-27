@@ -4,37 +4,44 @@ import { usersData } from '../../data/usersData';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 
+// หน้าจัดการโควต้าการลา - สำหรับ HR Admin และ Super Admin
+// ใช้ตั้งค่าจำนวนวันลาและเงื่อนไขการลาสำหรับพนักงาน (ทั้งแบบทั่วไปและรายบุคคล)
 function LeaveQuotaManagement() {
-  const { leaveQuota } = useLeave();
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { leaveQuota } = useLeave(); // ดึงข้อมูลโควต้าการลาจาก Context
+  const { user } = useAuth(); // ดึงข้อมูลผู้ใช้งานที่ล็อกอินอยู่
+  const navigate = useNavigate(); // ใช้สำหรับเปลี่ยนหน้า
 
-  // ตรวจสอบสิทธิ์: ต้องเป็น HR Admin หรือ Super Admin
+  // ตรวจสอบสิทธิ์การเข้าถึง - ต้องเป็น HR Admin หรือ Super Admin เท่านั้น
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+      navigate('/auth'); // ถ้ายังไม่ล็อกอิน ส่งไปหน้า login
       return;
     }
     
+    // เช็คว่าเป็น HR Admin (admin/superadmin ที่อยู่แผนก HR) หรือ Super Admin
     const isHRAdmin = (user.role === 'admin' || user.role === 'superadmin') && 
                       user.department === 'HR';
     const isSuperAdmin = user.role === 'superadmin';
     
+    // ถ้าไม่ใช่ HR Admin และไม่ใช่ Super Admin ไม่ให้เข้า
     if (!isHRAdmin && !isSuperAdmin) {
       alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้\nเฉพาะ HR Admin หรือ Super Admin เท่านั้น');
-      navigate('/admin/dashboard');
+      navigate('/admin/dashboard'); // ส่งกลับไปหน้า dashboard
     }
   }, [user, navigate]);
   
-  const [activeTab, setActiveTab] = useState('global');
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState('');
-  const [filterBranch, setFilterBranch] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // === State สำหรับควบคุมหน้าจอ ===
+  const [activeTab, setActiveTab] = useState('global'); // แท็บที่เลือก: 'global' (โควต้าทั่วไป) หรือ 'individual' (รายบุคคล)
+  const [selectedUser, setSelectedUser] = useState(null); // พนักงานที่เลือก (ใช้ในแท็บรายบุคคล)
+  const [searchQuery, setSearchQuery] = useState(''); // คำค้นหาพนักงาน
+  const [filterDepartment, setFilterDepartment] = useState(''); // กรองตามแผนก
+  const [filterBranch, setFilterBranch] = useState(''); // กรองตามสาขา (สำหรับ Super Admin)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // เปิด/ปิด dropdown รายชื่อพนักงาน
   
+  // โควต้าทั่วไป - ใช้กับทุกคน (เก็บใน localStorage)
   const [quotaSettings, setQuotaSettings] = useState(() => {
     const saved = localStorage.getItem('leaveQuotaSettings');
+    // ถ้ามีข้อมูลใน localStorage ให้ใช้ ถ้าไม่มีใช้ค่าเริ่มต้น
     return saved ? JSON.parse(saved) : {
       'ลาป่วย': { totalDays: 60, requireDocument: true, documentAfterDays: 3 },
       'ลากิจ': { totalDays: 45, requireDocument: false, documentAfterDays: 0 },
@@ -47,45 +54,56 @@ function LeaveQuotaManagement() {
     };
   });
 
+  // โควต้าพิเศษรายบุคคล - เก็บโควต้าพิเศษของพนักงานแต่ละคน (key = userId)
   const [individualQuotas, setIndividualQuotas] = useState(() => {
     const saved = localStorage.getItem('individualLeaveQuotas');
-    return saved ? JSON.parse(saved) : {};
+    return saved ? JSON.parse(saved) : {}; // เริ่มต้นเป็น object ว่าง
   });
 
-  const [editingType, setEditingType] = useState(null);
+  // === State สำหรับ Modal แก้ไข ===
+  const [editingType, setEditingType] = useState(null); // ประเภทการลาที่กำลังแก้ไข (null = ไม่เปิด modal)
   const [editForm, setEditForm] = useState({
-    totalDays: 0,
-    requireDocument: false,
-    documentAfterDays: 0
+    totalDays: 0, // จำนวนวันลา
+    requireDocument: false, // บังคับแนบเอกสารหรือไม่
+    documentAfterDays: 0 // แนบเอกสารเมื่อลากี่วันขึ้นไป (0 = แนบทุกครั้ง)
   });
 
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  // === State สำหรับ Dialog แจ้งเตือน ===
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false); // เปิด/ปิด dialog
+  const [successMessage, setSuccessMessage] = useState(''); // ข้อความที่แสดงใน dialog
 
+  // บันทึกโควต้าทั่วไปลง localStorage ทุกครั้งที่มีการเปลี่ยนแปลง
   useEffect(() => {
     localStorage.setItem('leaveQuotaSettings', JSON.stringify(quotaSettings));
   }, [quotaSettings]);
 
+  // บันทึกโควต้ารายบุคคลลง localStorage ทุกครั้งที่มีการเปลี่ยนแปลง
   useEffect(() => {
     localStorage.setItem('individualLeaveQuotas', JSON.stringify(individualQuotas));
   }, [individualQuotas]);
 
+  // เปิด Modal แก้ไข - โหลดค่าปัจจุบันเข้าฟอร์ม
   const handleEdit = (leaveType) => {
-    setEditingType(leaveType);
+    setEditingType(leaveType); // เก็บว่ากำลังแก้ไขประเภทไหน
+    // ถ้าอยู่แท็บทั่วไป ใช้ค่าจาก quotaSettings
+    // ถ้าอยู่แท็บรายบุคคล ใช้ค่าพิเศษของคนนั้น (ถ้าไม่มีก็ใช้ค่าทั่วไป)
     const currentSettings = activeTab === 'global' 
       ? quotaSettings[leaveType]
       : (individualQuotas[selectedUser?.id]?.[leaveType] || quotaSettings[leaveType]);
     
-    setEditForm(currentSettings);
+    setEditForm(currentSettings); // โหลดค่าปัจจุบันเข้าฟอร์ม
   };
 
+  // ปิด Modal และล้างฟอร์ม
   const handleCancel = () => {
-    setEditingType(null);
-    setEditForm({ totalDays: 0, requireDocument: false, documentAfterDays: 0 });
+    setEditingType(null); // ปิด modal
+    setEditForm({ totalDays: 0, requireDocument: false, documentAfterDays: 0 }); // รีเซ็ตฟอร์ม
   };
 
+  // บันทึกการแก้ไขโควต้า
   const handleSave = () => {
     if (activeTab === 'global') {
+      // บันทึกโควต้าทั่วไป (ใช้กับทุกคน)
       setQuotaSettings(prev => ({
         ...prev,
         [editingType]: {
@@ -96,10 +114,11 @@ function LeaveQuotaManagement() {
       }));
       setSuccessMessage(`บันทึกการตั้งค่า "${editingType}" สำหรับทุกคนเรียบร้อยแล้ว`);
     } else {
+      // บันทึกโควต้าพิเศษรายบุคคล
       setIndividualQuotas(prev => ({
         ...prev,
         [selectedUser.id]: {
-          ...prev[selectedUser.id],
+          ...prev[selectedUser.id], // เก็บโควต้าเดิมของคนนี้
           [editingType]: {
             totalDays: editForm.totalDays === '' ? 0 : parseInt(editForm.totalDays),
             requireDocument: editForm.requireDocument,
@@ -110,19 +129,22 @@ function LeaveQuotaManagement() {
       setSuccessMessage(`บันทึกการตั้งค่า "${editingType}" สำหรับ ${selectedUser.name} เรียบร้อยแล้ว`);
     }
     
+    // ส่งสัญญาณแจ้ง Context ว่ามีการเปลี่ยนแปลงโควต้า
     window.dispatchEvent(new Event('leaveQuotaUpdated'));
-    setShowSuccessDialog(true);
-    setEditingType(null);
-    setTimeout(() => setShowSuccessDialog(false), 2000);
+    setShowSuccessDialog(true); // แสดง dialog สำเร็จ
+    setEditingType(null); // ปิด modal
+    setTimeout(() => setShowSuccessDialog(false), 2000); // ปิด dialog อัตโนมัติหลัง 2 วินาที
   };
 
+  // รีเซ็ตโควต้าพิเศษกลับไปใช้ค่าทั่วไป
   const handleResetToGlobal = (leaveType) => {
-    if (!selectedUser) return;
+    if (!selectedUser) return; // ป้องกันกรณีไม่ได้เลือกพนักงาน
     
     setIndividualQuotas(prev => {
       const newQuotas = { ...prev };
       if (newQuotas[selectedUser.id]) {
-        delete newQuotas[selectedUser.id][leaveType];
+        delete newQuotas[selectedUser.id][leaveType]; // ลบโควต้าพิเศษของประเภทนี้
+        // ถ้าลบหมดแล้ว ลบ userId ทิ้งด้วย
         if (Object.keys(newQuotas[selectedUser.id]).length === 0) {
           delete newQuotas[selectedUser.id];
         }
@@ -135,44 +157,47 @@ function LeaveQuotaManagement() {
     setTimeout(() => setShowSuccessDialog(false), 2000);
   };
 
+  // ดึงโควต้าที่จะแสดงในการ์ด (ถ้ามีโควต้าพิเศษก็แสดงพิเศษ ไม่มีก็แสดงทั่วไป)
   const getDisplayQuota = (leaveType) => {
     if (activeTab === 'individual' && selectedUser) {
+      // ถ้ามีโควต้าพิเศษของคนนี้ ให้แสดงพิเศษ ไม่มีให้แสดงทั่วไป
       return individualQuotas[selectedUser.id]?.[leaveType] || quotaSettings[leaveType];
     }
-    return quotaSettings[leaveType];
+    return quotaSettings[leaveType]; // แท็บทั่วไปแสดงค่าทั่วไป
   };
 
+  // เช็คว่ามีโควต้าพิเศษหรือไม่ (ใช้แสดง badge "พิเศษ")
   const hasCustomQuota = (leaveType) => {
     return activeTab === 'individual' && selectedUser && individualQuotas[selectedUser.id]?.[leaveType];
   };
 
-  // ฟังก์ชันกรองและค้นหาพนักงาน
+  // กรองและค้นหาพนักงานตามเงื่อนไขต่างๆ
   const getFilteredUsers = () => {
     let filtered = [];
     
-    // กรองตามสิทธิ์
+    // กรองตามสิทธิ์ของผู้ใช้ที่ล็อกอินอยู่
     if (user.role === 'superadmin') {
-      // Super Admin สามารถจัดการทุกคน (รวม admin และ superadmin) ยกเว้นตัวเอง
+      // Super Admin เห็นทุกคนยกเว้นตัวเอง (จัดการได้ทั้ง admin, manager, user)
       filtered = usersData.filter(u => u.id !== user.id);
     } else if (user.role === 'admin' && user.department === 'HR') {
-      // HR Admin จัดการได้เฉพาะ user และ manager ในสาขาตัวเอง
+      // HR Admin จัดการได้เฉพาะ user และ manager ในสาขาเดียวกัน
       filtered = usersData.filter(u => 
         (u.role === 'user' || u.role === 'manager') && 
         u.provinceCode === user.provinceCode
       );
     }
     
-    // กรองตามสาขา (สำหรับ Super Admin)
+    // กรองตามสาขา (dropdown) - เฉพาะ Super Admin
     if (user.role === 'superadmin' && filterBranch) {
       filtered = filtered.filter(u => u.provinceCode === filterBranch);
     }
     
-    // กรองตามแผนก
+    // กรองตามแผนก (dropdown)
     if (filterDepartment) {
       filtered = filtered.filter(u => u.department === filterDepartment);
     }
     
-    // ค้นหาตามชื่อหรือรหัสพนักงาน
+    // ค้นหาตามชื่อหรือรหัสพนักงาน (search box)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(u => 
@@ -184,46 +209,48 @@ function LeaveQuotaManagement() {
     return filtered;
   };
 
-  // ดึงรายชื่อแผนกและสาขาทั้งหมด
-  const departments = [...new Set(usersData.map(u => u.department))].filter(Boolean);
-  // ใช้ provinceCode แทน branchCode
-  const branches = [...new Set(usersData.map(u => u.provinceCode))].filter(Boolean).sort();
+  // ดึงรายชื่อแผนกและสาขาทั้งหมดไว้ใช้ใน dropdown
+  const departments = [...new Set(usersData.map(u => u.department))].filter(Boolean); // ลบค่าซ้ำและค่าว่าง
+  const branches = [...new Set(usersData.map(u => u.provinceCode))].filter(Boolean).sort(); // เรียงตาม A-Z
   
-  // Mapping provinceCode กับชื่อจังหวัด
+  // แปลง provinceCode เป็นชื่อจังหวัดที่อ่านง่าย
   const branchNames = {
     'BKK': 'กรุงเทพมหานคร',
     'CNX': 'เชียงใหม่',
     'PKT': 'ภูเก็ต'
   };
 
-  // Handle user selection
+  // === Handler Functions สำหรับจัดการพนักงาน ===
+  
+  // เลือกพนักงานจาก dropdown
   const handleSelectUser = (user) => {
-    setSelectedUser(user);
-    setSearchQuery(user ? `${user.name} (${user.employeeId})` : '');
-    setIsDropdownOpen(false);
+    setSelectedUser(user); // เก็บพนักงานที่เลือก
+    setSearchQuery(user ? `${user.name} (${user.employeeId})` : ''); // แสดงชื่อใน search box
+    setIsDropdownOpen(false); // ปิด dropdown
   };
 
-  // Handle search input focus
+  // คลิกที่ search box - เปิด dropdown
   const handleSearchFocus = () => {
     setIsDropdownOpen(true);
   };
 
-  // Handle search input change
+  // พิมพ์ค้นหาในช่อง search
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setIsDropdownOpen(true);
+    setIsDropdownOpen(true); // เปิด dropdown ให้เห็นผลการค้นหา
     if (!e.target.value) {
-      setSelectedUser(null);
+      setSelectedUser(null); // ถ้าลบข้อความหมด ยกเลิกการเลือก
     }
   };
 
-  // Clear search
+  // กดปุ่ม X เคลียร์ search
   const handleClearSearch = () => {
     setSearchQuery('');
     setSelectedUser(null);
     setIsDropdownOpen(false);
   };
 
+  // คำอธิบายแต่ละประเภทการลา (แสดงใต้ชื่อในการ์ด)
   const getDescription = (type) => {
     const descriptions = {
       'ลาป่วย': 'ลาเนื่องจากเจ็บป่วย สามารถใช้สิทธิ์ได้ตามจำนวนวันที่กำหนด',
@@ -577,9 +604,6 @@ function LeaveQuotaManagement() {
                     วัน
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  หมายเหตุ: จำนวนวันลาต่อปี สูงสุด 365 วัน
-                </p>
               </div>
 
               <div className="border-2 border-gray-200 rounded-xl p-4 bg-gray-50">

@@ -35,7 +35,7 @@ const LeaveQuotaManagement = lazy(() => import("./pages/admin/LeaveQuotaManageme
 const TakePhoto = lazy(() => import("./pages/user/takept/takept.jsx"));
 const LeaveScreen = lazy(() => import("./pages/user/Leave/LeaveScreen.jsx"));
 const LeaveDetail = lazy(() => import("./pages/user/Leave/LeaveDetail.jsx"));
-const ListLeave = lazy(() => import("./pages/user/Leave/ListLeave.jsx"));
+const LeaveHistory = lazy(() => import("./pages/user/Leave/LeaveHistory.jsx"));
 const EventRouter = lazy(() => import("./pages/user/Event/EventRouter.jsx"));
 const ProfileScreen = lazy(() => import("./pages/user/Profile/ProfileScreen.jsx"));
 const SettingsScreen = lazy(() => import("./pages/user/Settings/SettingsScreen.jsx"));
@@ -170,7 +170,7 @@ const router = createBrowserRouter([
     path: '/user/leave/list',
     element: (
       <ProtectedRoute allowedRoles={['user', 'manager']}>
-        <Suspense fallback={<PageLoader />}><ListLeave /></Suspense>
+        <Suspense fallback={<PageLoader />}><LeaveHistory /></Suspense>
       </ProtectedRoute>
     )
   },
