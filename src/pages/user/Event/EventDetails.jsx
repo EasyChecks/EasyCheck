@@ -21,7 +21,7 @@ export default function EventDetails() {
   const { getFilteredEvents, canJoinEvent, getTimeRemainingToJoin } = useEvents();
   const { checkIn, attendance, user } = useAuth()
   
-  // 🔥 กรองกิจกรรมตาม user ก่อน
+  // กรองกิจกรรมตาม user ก่อน
   const filteredEvents = getFilteredEvents(user);
   const event = filteredEvents.find((e) => e.id === parseInt(id));
   const [timeRemaining, setTimeRemaining] = React.useState(null);

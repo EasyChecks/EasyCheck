@@ -11,7 +11,7 @@ export default function EventList() {
   let events = [];
   try {
     const context = useEvents();
-    // 🔥 ใช้ getFilteredEvents แทน events โดยตรง
+    // ใช้ getFilteredEvents แทน events โดยตรง
     events = context?.getFilteredEvents(user) || [];
   } catch (error) {
     console.error('EventContext error:', error);
@@ -60,8 +60,8 @@ export default function EventList() {
               </h2>
               <p className="text-gray-600 mb-2">{event.description}</p>
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>📅 {event.startDate || event.date}</span>
-                <span>📍 {event.locationName || event.location || 'ไม่ระบุสถานที่'}</span>
+                <span>{event.startDate || event.date}</span>
+                <span>{event.locationName || event.location || 'ไม่ระบุสถานที่'}</span>
               </div>
             </div>
           ))}

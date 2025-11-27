@@ -176,9 +176,9 @@ function DownloadData() {
 
     // Generate preview data
     const data = generateRealData();
-    console.log('Preview data generated:', data?.length, 'records');
+    // console.log('Preview data generated:', data?.length, 'records');
     if (data && data.length > 0) {
-      console.log('First record keys:', Object.keys(data[0]));
+      // console.log('First record keys:', Object.keys(data[0]));
     }
     setPreviewData(data);
     setShowPreview(true);

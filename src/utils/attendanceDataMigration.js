@@ -1,5 +1,5 @@
 /**
- * 📦 Attendance Data Migration Utility
+ *  Attendance Data Migration Utility
  * 
  * ฟังก์ชันสำหรับอัพเดทข้อมูลเก่าที่ไม่มี address และ distance
  * ให้มีค่า default เพื่อให้แสดงผลได้ถูกต้อง
@@ -104,14 +104,14 @@ export const runAttendanceMigration = () => {
 
     const users = JSON.parse(storedUsers);
     
-    // 🔥 Run migrations
+    // Run migrations
     let migratedUsers = migrateAttendanceData(users);
     migratedUsers = migrateTimeSummary(migratedUsers);
     
     // บันทึกกลับ localStorage
     localStorage.setItem('usersData', JSON.stringify(migratedUsers));
     
-    console.log('✅ Attendance data migration completed successfully (includes timeSummary)');
+    // console.log('✅ Attendance data migration completed successfully (includes timeSummary)');
     return migratedUsers;
   } catch (error) {
     console.error('❌ Attendance data migration failed:', error);

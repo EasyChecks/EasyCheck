@@ -368,7 +368,14 @@ export const hasCheckedInToday = (attendanceRecords, date) => {
   if (!attendanceRecords || !Array.isArray(attendanceRecords)) return false;
   
   const todayRecord = attendanceRecords.find(record => record.date === date);
-  return todayRecord && todayRecord.checkIn;
+  if (!todayRecord) return false;
+  // Legacy format: top-level checkIn
+  if (todayRecord.checkIn) return true;
+  // New format: shifts array
+  if (todayRecord.shifts && Array.isArray(todayRecord.shifts)) {
+    return todayRecord.shifts.some(shift => shift.checkIn || shift.checkInTime)
+  }
+  return false;
 };
 
 /**

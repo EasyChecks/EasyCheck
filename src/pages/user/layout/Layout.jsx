@@ -106,12 +106,12 @@ function Layout() {
     };
     
     const handleLeaveRequestCreated = (e) => {
-      console.log('📢 Leave request created:', e.detail);
+      console.log('Leave request created:', e.detail);
       handleLeaveUpdate();
     };
     
     const handleLeaveStatusUpdated = (e) => {
-      console.log('📢 Leave status updated:', e.detail);
+      console.log('Leave status updated:', e.detail);
       handleLeaveUpdate();
     };
     
