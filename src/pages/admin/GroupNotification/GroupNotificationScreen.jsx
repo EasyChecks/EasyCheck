@@ -5,7 +5,7 @@ import { usersData } from '../../../data/usersData';
 // (เหมือนเดิม)
 const Toast = ({ message, type, onClose }) => {
     useEffect(() => {
-        const timer = setTimeout(onClose, 1500);
+        const timer = setTimeout(onClose, 4000);
         return () => clearTimeout(timer);
     }, [onClose]);
 
@@ -326,7 +326,7 @@ const ConfirmSendModal = ({ data, channels, onConfirm, onClose, recipientOptions
 // (เหมือนเดิม)
 const SuccessModal = ({ onClose }) => {
     useEffect(() => {
-        const timer = setTimeout(onClose, 2000);
+        const timer = setTimeout(onClose, 1500);
         return () => clearTimeout(timer);
     }, [onClose]);
 
