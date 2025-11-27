@@ -352,7 +352,7 @@ export default function EventDetails() {
           </p>
           <p className="text-center mt-2">
             <span className="text-2xl font-bold text-orange-900">
-              คุณสามารถเข้าร่วมได้อีก {formatTimeRemaining(timeRemaining)}
+              คุณไม่สามารถเข้าร่วมได้อีก {formatTimeRemaining(timeRemaining)}
             </span>
           </p>
         </div>
