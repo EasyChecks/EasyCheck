@@ -381,7 +381,7 @@ function Layout() {
             {/* User Profile */}
             <div className="flex items-center space-x-3">
               {/* Notification Bell */}
-              <div className="relative">
+              <div className="hidden relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="relative p-2 hover:bg-white/10 rounded-lg transition-colors"
