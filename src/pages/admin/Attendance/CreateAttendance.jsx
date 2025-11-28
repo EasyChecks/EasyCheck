@@ -499,7 +499,7 @@ export default function CreateAttendance({ onClose, onCreate, initialData, onUpd
     'ฝ่ายบริการ': ['Service', 'ฝ่ายบริการ', 'service', 'customer service']
   }
   
-  // รายการสาขาที่มี (ตรงกับภาพ)
+  // รายการสาขาที่มี 
   const availableBranches = [
     { code: 'BKK', name: 'กรุงเทพฯ', shortName: 'BKK (กรุงเทพฯ)', provinceCode: 'BKK' },
     { code: 'CNX', name: 'เชียงใหม่', shortName: 'CNX (เชียงใหม่)', provinceCode: 'CNX' },
